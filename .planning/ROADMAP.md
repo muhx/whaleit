@@ -37,13 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. New users see WhaleIt-branded onboarding/welcome screens with "Your friendly finance companion" messaging
   4. GitHub repository metadata, README, and documentation reflect WhaleIt branding
   5. Internal crate names remain unchanged (wealthfolio-*) — no code-internal renames
-**Plans**: 5 plans
-Plans:
-- [x] 01-01-PLAN.md — Visual identity (color palette + whale icon assets)
-- [x] 01-02-PLAN.md — Backend & config rebrand (Tauri, Rust strings, docs, Docker)
-- [x] 01-03-PLAN.md — Frontend rebrand (package scope, directory rename, onboarding)
-- [x] 01-04-PLAN.md — Codebase health (web adapter split + types.ts split)
-- [x] 01-05-PLAN.md — Gap closure: browser title, PWA manifest, onboarding tagline
+**Plans**: TBD
 
 ### Phase 2: Dual Database Engine
 **Goal**: Both SQLite and PostgreSQL work as storage backends through shared repository traits
@@ -188,7 +182,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5/6/7/8/11/12 (Phase 4 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Codebase Health & Rebrand | 4/5 | Gap closure | - |
+| 1. Codebase Health & Rebrand | 0/? | Not started | - |
 | 2. Dual Database Engine | 0/? | Not started | - |
 | 3. Bank Accounts & Credit Cards | 0/? | Not started | - |
 | 4. Transaction Core | 0/? | Not started | - |
