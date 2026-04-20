@@ -328,7 +328,7 @@ async fn backup_database_to_path_route(
         let normalized_backup_dir = normalize_file_path(&target_dir);
 
         let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
-        let backup_filename = format!("wealthfolio_backup_{}.db", timestamp);
+        let backup_filename = format!("whaleit_backup_{}.db", timestamp);
         let backup_path = StdPath::new(&normalized_backup_dir).join(&backup_filename);
 
         let backup_path_str = backup_path
