@@ -17,7 +17,7 @@ export interface Asset {
   isActive?: boolean;
 
   // Valuation
-  quoteMode: "MARKET" | "MANUAL";
+  quoteMode: QuoteMode;
   quoteCcy: string; // Currency prices/valuations are quoted in
 
   // Instrument identity (null for non-market assets)

@@ -13,7 +13,10 @@ export function handleUpdateAccount(
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
   const data = payload as { accountUpdate: { id: string } & Record<string, unknown> };
-  return { url: `${url}/${data.accountUpdate.id}`, body: JSON.stringify(data.accountUpdate) };
+  return {
+    url: `${url}/${encodeURIComponent(data.accountUpdate.id)}`,
+    body: JSON.stringify(data.accountUpdate),
+  };
 }
 
 export function handleDeleteAccount(
@@ -21,7 +24,7 @@ export function handleDeleteAccount(
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
   const data = payload as { accountId: string };
-  return { url: `${url}/${data.accountId}`, body: undefined };
+  return { url: `${url}/${encodeURIComponent(data.accountId)}`, body: undefined };
 }
 
 export function handleGetAccounts(

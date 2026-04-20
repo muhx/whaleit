@@ -61,7 +61,7 @@ export interface MarketData {
   date: Date;
   id: string;
   marketPrice: number;
-  state: "CLOSE"; // assuming state can only be 'CLOSE', expand this as needed
+  state: string; // backend-provided market state; do not assume only "CLOSE"
   symbol: string;
   symbolProfileId: string;
 }
