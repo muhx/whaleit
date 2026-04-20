@@ -2,541 +2,333 @@
 
 **Analysis Date:** 2026-04-20
 
-## Overview
+## TypeScript Conventions
 
-This monorepo enforces two parallel conventions — **TypeScript/React** (frontend
-
-- packages) and **Rust** (Tauri desktop, Axum server, core crates). Both are
-  kept consistent by `pnpm check` (format + lint + type-check) and
-  `cargo fmt/clippy` via CI (`.github/workflows/pr-check.yml`).
-
-```
-pnpm check          → format:check + lint:quiet + type-check
-cargo fmt --check   → check formatting
-cargo clippy -D warnings  → lint (warnings fail CI)
-```
-
----
-
-## TypeScript / React
-
-### Code Style
-
-**Formatter:** Prettier 3 (`.prettierrc.cjs`)
-
-Key settings:
-
-- `printWidth: 100`
-- `tabWidth: 2`, `useTabs: false`
-- `semi: true`
-- `singleQuote: false` → use double quotes (`"foo"`)
-- `trailingComma: "all"`
-- `arrowParens: "always"` → `(x) => ...`
-- `endOfLine: "lf"`
-- Markdown overridden to `printWidth: 80`, `proseWrap: "always"`
-- `prettier-plugin-tailwindcss` enforces Tailwind class ordering
-
-**Linter:** ESLint flat config (`eslint.base.config.js`, `eslint.config.js`,
-`apps/frontend/eslint.config.js`, `packages/*/eslint.config.js`)
-
-Stack:
-
-- `typescript-eslint` recommended + type-checked + stylistic
-- `eslint-plugin-react` (recommended + jsx-runtime)
-- `eslint-plugin-react-hooks`
-- `eslint-plugin-react-refresh`
-- `@tanstack/eslint-plugin-query` (recommended)
-- `eslint-config-prettier` applied last
-- `typescript-eslint` uses `parserOptions.projectService: true` for typed
-  linting
-
-Notable rules:
-
-- `no-unused-vars`: **error**, ignores `^_` prefix
-- `prefer-const`: **error**
-- `no-var`: **error**
-- `no-console`: **warn** (allows `warn`, `error`)
-- `@typescript-eslint/no-explicit-any`: **warn** (tolerated but discouraged)
-- `@typescript-eslint/no-unsafe-*`: **warn** (relaxed)
-- `@typescript-eslint/no-floating-promises`: **off**
-- `@typescript-eslint/no-misused-promises`: `checksVoidReturn: false` (allow
-  async JSX handlers)
-
-Per-workspace ignores: `dist/**`, `coverage/**`, `*.config.*`, `**/*.d.ts`,
-generated Recharts/react-qr-code patches.
-
-### TypeScript Compiler
-
-Inherits `tsconfig.base.json`:
-
-- `target: "ES2022"`, `module: "ESNext"`, `moduleResolution: "bundler"`
-- `strict: true` plus `noUnusedLocals`, `noUnusedParameters`,
-  `noFallthroughCasesInSwitch`, `noImplicitOverride`
-- `composite: true` for project references (root `tsconfig.json` references
-  `apps/frontend`, `packages/ui`, `packages/addon-sdk`)
-- `jsx: "react-jsx"`
-
-Frontend `tsconfig.json` (`apps/frontend/tsconfig.json`) adds:
-
-- `types: ["@tauri-apps/api", "vitest/globals"]`
-- Path aliases:
-  - `@/*` → `./src/*`
-  - `@wealthfolio/ui` → `../../packages/ui/src`
-  - `@wealthfolio/addon-sdk` → `../../packages/addon-sdk/src`
-  - `#platform` → `./src/adapters/tauri/core` (swapped to `web/core` at build
-    time)
-
-Vite resolves `@/adapters` conditionally via `BUILD_TARGET` env
-(`apps/frontend/vite.config.ts`) — `tauri` vs `web`.
-
-### Naming Patterns
+### Naming
 
 **Files:**
+- Components: `kebab-case.tsx` — e.g., `privacy-toggle.tsx`, `header.tsx`, `accounts-summary.tsx`
+- Hooks: `use-kebab-case.ts` — e.g., `use-accounts.ts`, `use-settings.ts`
+- Utilities/lib: `kebab-case.ts` — e.g., `activity-utils.ts`, `query-keys.ts`
+- Types: `types.ts` (single file per domain area) — e.g., `src/lib/types.ts`
+- Tests: co-located `*.test.ts` or `*.test.tsx` — e.g., `activity-utils.test.ts`
+- Test groups within `__tests__/` subdirectory — e.g., `components/forms/__tests__/buy-form.test.tsx`
 
-- `kebab-case.ts` / `kebab-case.tsx` for everything except test colocation.
-  Examples: `use-accounts.ts`, `buy-form.tsx`, `query-keys.ts`,
-  `activity-utils.ts`.
-- Tests mirror the source name with `.test.ts` / `.test.tsx`: `schemas.ts` →
-  `schemas.test.ts`.
-- Some directories use `__tests__/` subfolders:
-  `apps/frontend/src/pages/activity/components/forms/__tests__/`.
+**Variables & Functions:**
+- `camelCase` for variables and functions — e.g., `formatAmount`, `parseDecimalInput`
+- `PascalCase` for React components, types, interfaces, enums — e.g., `AccountSummaryView`, `ActivityType`
+- `UPPER_SNAKE_CASE` for constants — e.g., `DECIMAL_PRECISION`, `DISPLAY_DECIMAL_PRECISION`
 
-**Directories:** `lowercase-with-dashes` (per `AGENTS.md`). Example:
-`apps/frontend/src/features/devices-sync/`.
+**Types:**
+- Prefer `interface` for object shapes — e.g., `Account`, `Settings`, `Activity`
+- Use `type` for unions, intersections, utility types — e.g., `type TrackingMode = "TRANSACTIONS" | "HOLDINGS" | "NOT_SET"`
+- Avoid `enum` — use `const` objects with `as const` and derived types instead:
+  ```typescript
+  export const ImportType = { ACTIVITY: "CSV_ACTIVITY", HOLDINGS: "CSV_HOLDINGS" } as const;
+  export type ImportType = (typeof ImportType)[keyof typeof ImportType];
+  ```
 
-**Functions & variables:** `camelCase` (`getActivities`, `searchActivities`,
-`normalizeStringArray`).
+### Export Patterns
 
-**React components:** `PascalCase` exported as named exports (`BuyForm`,
-`TransferForm`, `Header`).
-
-**Hooks:** `useXxx` camelCase function, file `use-xxx.ts`
-(`apps/frontend/src/hooks/use-accounts.ts`, `use-settings-mutation.ts`).
-
-**Types / interfaces:** `PascalCase` (`ActivityFilters`, `RunEnv`,
-`PlatformInfo`, `BackendSyncStateResult`). Prefer `interface` over `type` per
-`AGENTS.md`; use `type` for unions and utility types.
-
-**Enums:** avoided. Use `as const` object patterns instead
-(`apps/frontend/src/adapters/types.ts:6-14`,
-`apps/frontend/src/lib/schemas.ts:41-45`):
-
-```ts
-export const RunEnvs = { DESKTOP: "desktop", WEB: "web" } as const;
-export type RunEnv = (typeof RunEnvs)[keyof typeof RunEnvs];
-```
-
-**Constants & query keys:** SCREAMING_SNAKE_CASE inside `as const` object. See
-`apps/frontend/src/lib/query-keys.ts:1-136`:
-
-```ts
-export const QueryKeys = {
-  ACCOUNTS: "accounts",
-  valuationHistory: (id: string) => [QueryKeys.HISTORY_VALUATION, id],
-} as const;
-```
+- **Named exports** for everything — no default exports except `App.tsx`
+- Components: `export function ComponentName()` — always named function declarations
+- Utilities: `export function utilityName()` or `export const utilityName = () => {}`
+- Barrel exports via `index.ts` files — e.g., `src/hooks/index.ts` uses `export * from "./use-accounts"`
+- Types file re-exports from constants: `export { AccountType, ActivityType } from "./constants"`
 
 ### Import Organization
 
-Observed order (no auto-sort plugin, but consistent across codebase):
+Implicit order observed in code:
+1. External libraries (`react`, `@tanstack/react-query`, `zod`, `date-fns`)
+2. UI library (`@wealthfolio/ui/...`)
+3. Adapter layer (`@/adapters`)
+4. Hooks (`@/hooks/...`)
+5. Library utilities (`@/lib/...`)
+6. Relative imports (`./...`)
 
-1. External packages (`react`, `@tanstack/react-query`, `@tauri-apps/api`)
-2. Internal alias imports (`@/lib/...`, `@/adapters`, `@/hooks/...`,
-   `@wealthfolio/ui`)
-3. Relative imports (`./constants`, `../schemas`)
-4. Type-only imports may be inlined with `import type { Foo }` or grouped with
-   values
+**Path aliases** (configured in `apps/frontend/vite.config.ts` and `tsconfig.json`):
+- `@/*` → `./src/*`
+- `@/adapters` → resolves to `./src/adapters/tauri` or `./src/adapters/web` based on `BUILD_TARGET`
+- `#platform` → `./src/adapters/tauri/core` or `./src/adapters/web/core`
+- `@wealthfolio/ui` → `../../packages/ui/src`
+- `@wealthfolio/addon-sdk` → `../../packages/addon-sdk/src`
 
-Example (`apps/frontend/src/adapters/shared/activities.ts:1-22`):
+### Component Patterns
 
-```ts
-import { ImportType } from "@/lib/types";
-import type { Activity, ActivityCreate, ... } from "@/lib/types";
-
-import { invoke, logger } from "./platform";
-```
-
-**Path alias quick reference:**
-
-| Alias                    | Resolves to                                | Purpose                        |
-| ------------------------ | ------------------------------------------ | ------------------------------ |
-| `@/*`                    | `apps/frontend/src/*`                      | Frontend app internals         |
-| `@/adapters`             | `src/adapters/tauri` or `src/adapters/web` | Build-target specific          |
-| `#platform`              | `src/adapters/{target}/core`               | Used by shared adapter modules |
-| `@wealthfolio/ui`        | `packages/ui/src`                          | Shared UI package              |
-| `@wealthfolio/addon-sdk` | `packages/addon-sdk/src`                   | Addon SDK types/runtime        |
-
-### Adapter / Backend Call Pattern
-
-Every backend call wraps `invoke` (Tauri) or fetch (web) through a thin module
-in `apps/frontend/src/adapters/shared/<domain>.ts`. The adapter:
-
-1. Accepts typed args, returns typed `Promise<T>`.
-2. Wraps call in `try/catch`, logs via `logger.error`, rethrows.
-3. Uses `invoke<T>("snake_case_command", { camelCaseArgs })` — arguments are
-   camelCase, serde rename_all handles conversion to snake_case in Rust.
-
-Example (`apps/frontend/src/adapters/shared/activities.ts:100-107`):
-
-```ts
-export const createActivity = async (
-  activity: ActivityCreate,
-): Promise<Activity> => {
-  try {
-    return await invoke<Activity>("create_activity", { activity });
-  } catch (err) {
-    logger.error("Error creating activity.");
-    throw err;
-  }
-};
-```
-
-The `invoke` helper (`apps/frontend/src/adapters/tauri/core.ts:29-47`) adds a
-120 s timeout and logs failures.
-
-**Never import `@tauri-apps/api` directly from components.** Always go through
-`@/adapters`. This keeps web build working.
-
-### React Component Patterns
-
-- **Functional components only.** No class components.
-- **Named exports** — no default exports for components
-  (`export function BuyForm(...)`).
-- Strict mode + React 19.2.
-- Props typed inline with `interface` or `type`.
-- Hooks placed in `apps/frontend/src/hooks/` (shared) or
-  `src/pages/<domain>/hooks/` (domain-specific).
-
-### Data Fetching (TanStack Query)
-
-Patterns enforced by `@tanstack/eslint-plugin-query`:
-
-- `exhaustive-deps`: **warn**
-- `no-unstable-deps`: **warn**
-
-**Query key discipline:** always reference `QueryKeys` constants from
-`apps/frontend/src/lib/query-keys.ts`. Parameterized keys are factory functions:
-
-```ts
-// Static key
-useQuery({ queryKey: [QueryKeys.ACCOUNTS, includeArchived], ... })
-
-// Parameterized key
-useQuery({ queryKey: QueryKeys.aiThreadMessages(threadId), ... })
-```
-
-**Hook shape** (`apps/frontend/src/hooks/use-accounts.ts:7-33`):
-
-```ts
-export function useAccounts(options?: {...}) {
-  const { data = [], isLoading, isError, error, refetch } = useQuery<T, Error>({
-    queryKey: [...],
-    queryFn: () => getAccounts(...),
-  });
-  // transform data with useMemo
-  return { accounts, isLoading, isError, error, refetch };
-}
-```
-
-**Mutation shape** (`apps/frontend/src/hooks/use-settings-mutation.ts`):
-
-```ts
-return useMutation({
-  mutationFn: updateSettings,
-  onSuccess: (data) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKeys.SETTINGS] });
-    toast({ title: "...", variant: "success" });
-  },
-  onError: (error) => {
-    logger.error(`Error updating settings: ${error}`);
-    toast({ variant: "destructive", ... });
-  },
-});
-```
-
-### Forms
-
-- **`react-hook-form` + `zod`** (resolved via `@hookform/resolvers/zod`).
-- Form schemas live alongside the form component or in
-  `apps/frontend/src/lib/schemas.ts`.
-- Shared schemas use `z.object({ ... })`, unions via `z.discriminatedUnion`,
-  branded primitives via `z.enum`.
-- Schemas exported for reuse in tests
-  (`apps/frontend/src/pages/activity/components/forms/__tests__/form-schemas.test.ts`).
-
-Example (`apps/frontend/src/lib/schemas.ts:47-74`):
-
-```ts
-export const importMappingSchema = z.object({
-  accountId: z.string(),
-  importType: z
-    .enum([ImportType.ACTIVITY, ImportType.HOLDINGS])
-    .default(ImportType.ACTIVITY),
-  symbolMappingMeta: z
-    .record(
-      z.string(),
-      z.object({
-        exchangeMic: z.string().optional(),
-        quoteMode: quoteModeSchema.optional(),
-      }),
-    )
-    .optional(),
-});
-```
-
-### Error Handling
-
-**Frontend:**
-
-- Adapter functions: `try/catch`, `logger.error(message)`, `throw err`.
-- Mutation callers: surface via `toast({ variant: "destructive" })` in
-  `onError`.
-- Avoid bare `console.log` — ESLint warns. Use `logger.*` from `@/adapters`.
-  `console.warn` / `console.error` are permitted.
-
-### Logging
-
-- Use `logger` exported from `@/adapters` (Tauri → `@tauri-apps/plugin-log`; web
-  → wrapped `console`). See `apps/frontend/src/adapters/tauri/core.ts:11-27`.
-- Never log secrets, passwords, or financial values (`AGENTS.md:149-150`).
-
-### Module Design
-
-- **Named exports** preferred. Default exports only for Vite entry points
-  (`main.tsx`) and framework files that require them.
-- Barrel files (`index.ts`) are used in adapters and hooks directories to
-  centralize public API (`apps/frontend/src/adapters/index.ts`,
-  `apps/frontend/src/hooks/index.ts`).
-
-### Comments
-
-- JSDoc blocks for public exports, especially in `adapters/` and `lib/` (e.g.,
-  `/** Preview which assets would be created... */`).
-- Inline comments explain non-obvious intent, never describe what the code does.
-- `TODO` / `FIXME` are fine but should reference context.
-
----
-
-## Rust
-
-### Code Style
-
-- **Formatter:** `rustfmt` default (no custom `rustfmt.toml` at root) — run
-  `cargo fmt --all` before commits. CI enforces `cargo fmt --all -- --check`.
-- **Linter:**
-  `cargo clippy --workspace --all-targets --all-features -- -D warnings` (CI
-  fails on any warning).
-- **Workspace lints** (`Cargo.toml:14-18`):
-  ```toml
-  [workspace.lints.rust]
-  unsafe_code = "forbid"
-  [workspace.lints.clippy]
-  all = "warn"
+- **Functional components only** — no class components
+- Named function declarations: `export function ComponentName(props: Props)`
+- Props defined as inline `interface` above the component
+- Destructure props in function signature
+- Use `cn()` utility for conditional class merging:
+  ```typescript
+  className={cn("base-classes", conditionalClass, className)}
   ```
-  → `unsafe` is **forbidden** repo-wide.
-- **Edition:** `2021` (`Cargo.toml:12`).
+- Wrap with `React.StrictMode` at root (`src/main.tsx`)
 
-### Workspace Layout
+### State Management
 
-`Cargo.toml` workspace (`members = ["apps/tauri", "apps/server", "crates/*"]`)
-uses `workspace.dependencies` to pin shared crate versions (tokio, serde,
-diesel, chrono, thiserror, rust_decimal, async-trait, log, etc.).
-
-Per-crate `Cargo.toml` references workspace deps with `{ workspace = true }`.
-
-### Naming Patterns
-
-- **Crates:** kebab-case on disk (`crates/market-data/`), `snake_case` in
-  `Cargo.toml` (`wealthfolio-core`, `wealthfolio-market-data`).
-- **Modules:** `snake_case` (`activities_model`, `activities_service`,
-  `device_sync_engine`).
-- **Files:** `snake_case.rs`. Common splits: `<domain>_model.rs`,
-  `<domain>_service.rs`, `<domain>_traits.rs`, `<domain>_errors.rs`, plus
-  `<domain>_model_tests.rs` / `<domain>_service_tests.rs` for inline test
-  modules.
-- **Types:** `PascalCase` (`ActivityService`, `ActivityError`, `NewActivity`).
-- **Functions:** `snake_case`.
-- **Constants:** `SCREAMING_SNAKE_CASE`.
-
-### Module Structure
-
-Each domain follows a consistent shape (`crates/core/src/activities/mod.rs`):
-
-```
-<domain>/
-├── mod.rs                    # re-exports public API
-├── <domain>_constants.rs
-├── <domain>_errors.rs
-├── <domain>_model.rs         # structs, enums, DTOs
-├── <domain>_model_tests.rs   # #[cfg(test)] mod tests
-├── <domain>_service.rs       # business logic
-├── <domain>_service_tests.rs # #[cfg(test)] mod tests
-└── <domain>_traits.rs        # ServiceTrait + RepositoryTrait
-```
-
-`mod.rs` declares private submodules and re-exports only the public surface:
-
-```rust
-mod activities_model;
-mod activities_service;
-
-#[cfg(test)]
-mod activities_service_tests;
-
-pub use activities_model::{Activity, NewActivity, ...};
-pub use activities_service::ActivityService;
-pub use activities_traits::{ActivityRepositoryTrait, ActivityServiceTrait};
-```
+- **Server state:** `@tanstack/react-query` — all backend data goes through React Query
+  - Query keys centralized in `src/lib/query-keys.ts` as `QueryKeys` const object
+  - Custom hooks wrap queries: `useAccounts()`, `useSettings()`
+  - Default stale time: 5 minutes, no refetch on window focus, no retry
+- **Client state:** `zustand` for complex client state
+- **Form state:** `react-hook-form` + `zod` schemas
+  - Schemas in `src/lib/schemas.ts`
+  - Resolver: `@hookform/resolvers/zod`
+- **Context:** React Context for providers — e.g., `auth-context.tsx`, `privacy-context.tsx`
 
 ### Error Handling
 
-- **`thiserror`** for all domain error enums (`crates/core/src/errors.rs`,
-  `crates/core/src/activities/activities_errors.rs`).
-- Each crate has its own error enum that the core `Error` converts `From` via
-  `#[from]`.
-- **`Result<T>`** type alias per crate
-  (`pub type Result<T> = std::result::Result<T, Error>`, `errors.rs:15`).
-- Propagate with `?`.
-- **Never `unwrap()` in library code.** Only tests and `main()` helpers.
-- `From<Error> for String` lets Tauri commands call
-  `.map_err(|e| e.to_string())`.
+- Use `Result`-like patterns in Rust, try/catch in TypeScript
+- React Query handles async errors — hooks return `{ isError, error }`
+- Validation via `zod` schemas with `.safeParse()` — check `result.success`
+- Logger abstraction via `@/adapters` (`logger.warn()`, `logger.error()`)
+- Never log secrets or financial data (security requirement from AGENTS.md)
 
-Example (`crates/core/src/errors.rs:22-74`):
+### Type Safety
 
-```rust
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("Database operation failed: {0}")]
-    Database(#[from] DatabaseError),
-    #[error("{0}")]
-    Validation(#[from] ValidationError),
-    #[error("Activity error: {0}")]
-    Activity(#[from] ActivityError),
-    // ...
-}
-```
-
-### Tauri IPC Commands
-
-Live in `apps/tauri/src/commands/<domain>.rs` (see
-`apps/tauri/src/commands/activity.rs` for the canonical shape). Rules:
-
-1. `#[tauri::command]` + `pub async fn`.
-2. Arguments are **snake_case** (serde translates camelCase frontend args).
-3. Last argument is always `state: State<'_, Arc<ServiceContext>>`.
-4. Return type `Result<T, String>` (Tauri serializes error as string).
-5. **Thin** — parse inputs, delegate to `state.<service>()`, map error to
-   string.
-6. Use `log::debug!` at entry for trace visibility.
-
-Example (`apps/tauri/src/commands/activity.rs:55-67`):
-
-```rust
-#[tauri::command]
-pub async fn create_activity(
-    activity: NewActivity,
-    state: State<'_, Arc<ServiceContext>>,
-) -> Result<Activity, String> {
-    debug!("Creating activity...");
-    state
-        .activity_service()
-        .create_activity(activity)
-        .await
-        .map_err(|e| e.to_string())
-}
-```
-
-### Axum Handlers (`apps/server/src/api/`)
-
-1. Each module exports `pub fn router() -> Router<Arc<AppState>>` merged in
-   `apps/server/src/api.rs:88-120`.
-2. Handlers are `async fn` returning `ApiResult<Json<T>>`.
-3. Use `State(state): State<Arc<AppState>>` + `Json(body): Json<Body>` /
-   `Query<...>` / `Path<...>` extractors.
-4. Body/query structs use `#[derive(Deserialize)]` with
-   `#[serde(rename = "...")]` or `serde(rename_all = "camelCase")` to match
-   frontend.
-5. Errors bubble via the shared `ApiError` enum
-   (`apps/server/src/error.rs:13-31`) which maps variants to HTTP status codes
-   in `IntoResponse`.
-6. OpenAPI annotations via `#[utoipa::path(...)]` on public handlers.
-
-Example (`apps/server/src/api/activities.rs:56-98`):
-
-```rust
-async fn search_activities(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<ActivitySearchBody>,
-) -> ApiResult<Json<ActivitySearchResponse>> {
-    // ...parse inputs...
-    let resp = state.activity_service.search_activities(...)?;
-    Ok(Json(resp))
-}
-```
-
-### Service / Repository Traits
-
-- Services accept repository trait objects to enable mock substitution in tests.
-- `#[async_trait]` for async trait methods
-  (`crates/core/src/activities/activities_traits.rs`).
-- Business logic lives in `crates/core`. Tauri/Axum layers only translate
-  transport.
-
-### Core Principles (from `AGENTS.md:140-145`)
-
-- Small, focused functions.
-- `Result`/`Option` with `?` propagation.
-- `thiserror` for domain errors.
-- Thin Tauri/Axum commands, delegate to `crates/core`.
-- Migrations in `crates/storage-sqlite/migrations`.
-- Secrets in OS keyring, never disk/localStorage.
-- Never log secrets or financial data.
-
-### Dependencies
-
-Central workspace deps in root `Cargo.toml:20-65`:
-
-- Async: `tokio` (multi-thread, macros, sync), `async-trait`, `futures`
-- Serde: `serde` (derive), `serde_json`
-- DB: `diesel` (sqlite, chrono, r2d2), `diesel_migrations`, `rusqlite`, `r2d2`
-- Errors: `thiserror`, `anyhow` (anyhow only in apps layer)
-- Numbers: `rust_decimal` + `rust_decimal_macros` (money), `num-traits`
-- Time: `chrono` (serde feature)
-- HTTP: `reqwest` (rustls-tls, json)
-- Crypto: `chacha20poly1305`, `x25519-dalek`, `hkdf`, `sha2`, `rand`
-- Logging: `log` (tracing/tracing-subscriber in server only)
-- IDs: `uuid` (v4, v7, serde)
+- **Strict mode enabled** with all strict flags (`strictNullChecks`, `noImplicitAny`, etc.)
+- `noUnusedLocals: true` and `noUnusedParameters: true` — no dead code
+- `noImplicitOverride: true` — explicit overrides
+- Unused vars/params prefixed with `_` (ESLint rule: `argsIgnorePattern: "^_"`)
+- `no-explicit-any: warn` — avoid `any`, use `unknown` when type is truly unknown
 
 ---
 
-## Git & Commits
+## React Conventions
 
-Style observed in `git log` — conventional-commits-ish, **not** strictly
-enforced:
+### Component Structure
 
-- `feat(<scope>): ...`
-- `fix(<scope>): ...`
-- `refactor(<scope>): ...`
-- `chore(<scope>): ...`
-- `perf(<scope>): ...`
+```typescript
+// 1. Imports
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
-Common scopes: `ai-assistant`, `ai-import`, `ai`, `core`, `clippy`, `import`,
-etc.
+// 2. Types/Interfaces for props
+interface ComponentProps {
+  className?: string;
+  data: SomeType;
+}
 
-Per `CONTRIBUTING.md:49-52`: "Write clear, concise commit messages". CLA
-required for all PRs.
+// 3. Named export function
+export function Component({ className, data }: ComponentProps) {
+  // hooks at top
+  const query = useQuery(...);
+  
+  // derived state
+  const computed = useMemo(() => ..., [deps]);
+  
+  // handlers
+  const handleClick = () => { ... };
+  
+  // render
+  return (
+    <div className={cn("base-classes", className)}>
+      ...
+    </div>
+  );
+}
+```
+
+### Hook Patterns
+
+- Custom hooks in `src/hooks/` with `use-` prefix
+- Follow React Query patterns:
+  ```typescript
+  export function useAccounts(options?: { filterActive?: boolean }) {
+    const { data, isLoading, isError, error, refetch } = useQuery<Account[], Error>({
+      queryKey: [QueryKeys.ACCOUNTS],
+      queryFn: () => getAccounts(),
+    });
+    return { accounts: data ?? [], isLoading, isError, error, refetch };
+  }
+  ```
+- Hooks barrel-exported from `src/hooks/index.ts`
+
+### Props Typing
+
+- Inline interface above component (not in separate file)
+- Optional props use `?` with reasonable defaults destructured in function signature
+- Children typed as `React.ReactNode`
+- Event handlers typed inline or with `React.ButtonHTMLAttributes<HTMLElement>`
+
+### Component Composition
+
+- Page components in `src/pages/<domain>/` directories
+- Shared components in `src/components/`
+- Feature modules in `src/features/<feature-name>/` with self-contained components, hooks, services
+- UI primitives from `@wealthfolio/ui` package (shadcn-based)
 
 ---
 
-## Validation Workflow (AGENTS.md:156-161)
+## Rust Conventions
 
-Before completing any task:
+### Naming
 
-- [ ] Builds: `pnpm build` (web) or `pnpm tauri dev` (desktop) or `cargo check`
-- [ ] Tests pass: `pnpm test` **and/or** `cargo test`
-- [ ] Both desktop and web compile if touching shared code
-- [ ] Changes are minimal and surgical
+- `snake_case` for files, functions, variables, modules
+- `PascalCase` (CamelCase) for types, traits, enums, structs
+- `SCREAMING_SNAKE_CASE` for constants
+- Module directories: `snake_case` with `mod.rs` — e.g., `crates/core/src/portfolio/mod.rs`
+
+### Error Handling
+
+- Use `thiserror` for domain errors — `#[derive(Error, Debug)]`
+- Propagate with `?` operator
+- Type alias: `pub type Result<T> = std::result::Result<T, Error>;`
+- Error hierarchy:
+  ```rust
+  #[derive(Error, Debug)]
+  pub enum Error {
+      #[error("Database operation failed: {0}")]
+      Database(#[from] DatabaseError),
+      #[error("Asset operation failed: {0}")]
+      Asset(String),
+      #[error("Validation: {0}")]
+      Validation(#[from] ValidationError),
+      // ...
+  }
+  ```
+- Module-specific error enums: `ActivityError`, `FxError`, `MarketDataError`, `CalculatorError`
+- Use `anyhow` for application-level errors where specificity isn't needed
+
+### Module Organization
+
+- `mod.rs` as module entry point — re-exports sub-modules
+- `model.rs` for data structures (DB models, DTOs)
+- `repository.rs` for database operations
+- Domain modules grouped by feature: `accounts/`, `activities/`, `portfolio/`, `assets/`
+- Core crate is database-agnostic; `storage-sqlite` implements storage traits
+- Keep Tauri/Axum command handlers thin — delegate to `crates/core`
+
+### Trait Patterns
+
+- Domain traits defined in `crates/core` — e.g., repository traits
+- Implemented in `crates/storage-sqlite`
+- `async_trait` for async trait methods
+
+### Async Patterns
+
+- `tokio` runtime with `rt-multi-thread` feature
+- `async/await` with `?` propagation
+- `futures` crate for combinators
+
+### Linting
+
+- `unsafe_code = "forbid"` at workspace level
+- `clippy::all = "warn"` at workspace level
+- `cargo fmt` enforced in CI (check via `cargo fmt --all -- --check`)
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings` in CI
 
 ---
 
-_Convention analysis: 2026-04-20_
+## CSS/Styling Conventions
+
+### Approach
+
+- **Tailwind CSS v4** with `@tailwindcss/vite` plugin
+- **No CSS modules** — utility-first with Tailwind classes
+- Custom CSS only in `src/globals.css` using Tailwind v4 `@theme`, `@utility`, `@custom-variant`
+- `prettier-plugin-tailwindcss` for automatic class sorting
+
+### Theme/Token System
+
+- Custom color palette defined as CSS custom properties in `@theme {}` block in `globals.css`
+- Base colors: `--color-base-*` (50-950 scale, warm paper tones)
+- Semantic colors: `--color-red-*`, `--color-green-*`, `--color-blue-*` etc.
+- Special tokens: `--color-paper` (background), `--color-black`
+- Font families: `--font-sans` (Inter), `--font-serif` (Merriweather), `--font-mono` (IBM Plex Mono)
+
+### Responsive Design
+
+- Mobile-first approach using Tailwind breakpoints (`sm:`, `md:`, `lg:`)
+- Mobile-specific components suffixed with `-mobile.tsx` — e.g., `account-selector-mobile.tsx`
+- Test responsive layouts in both desktop (Tauri) and web
+
+### Dark Mode
+
+- Class-based dark mode via `@custom-variant dark (&:where(.dark, .dark *));`
+- Dark theme tokens also defined in `globals.css` `@theme {}` block
+
+---
+
+## Git Conventions
+
+### Commit Messages
+
+- No enforced conventional commits format detected
+- CI checks: format, lint, type-check, test, build
+
+### CI Pipeline
+
+- **PR Check** (`.github/workflows/pr-check.yml`): Two parallel jobs:
+  1. `frontend-check`: format → lint → type-check → test → build
+  2. `rust-check`: fmt → clippy → test → release check
+
+### Branch Strategy
+
+- PRs target `main`, `develop`, or `feature/**` branches
+- Concurrency groups prevent parallel runs on same PR
+
+---
+
+## File Organization Patterns
+
+### Where New Files Go
+
+**New page/route:**
+- Create directory: `apps/frontend/src/pages/<domain>/`
+- Add component file: `apps/frontend/src/pages/<domain>/<page-name>.tsx`
+- Register route in `apps/frontend/src/routes.tsx`
+
+**New hook:**
+- Create: `apps/frontend/src/hooks/use-<name>.ts`
+- Export from: `apps/frontend/src/hooks/index.ts`
+
+**New shared component:**
+- Create: `apps/frontend/src/components/<component-name>.tsx`
+
+**New feature module:**
+- Create directory: `apps/frontend/src/features/<feature-name>/`
+- Structure: `components/`, `hooks/`, `services/`, `types.ts`
+
+**New backend service (Rust):**
+- Domain logic: `crates/core/src/<domain>/`
+- Storage impl: `crates/storage-sqlite/src/<domain>/`
+- Tauri command: `apps/tauri/src/commands/`
+- Web endpoint: `apps/server/src/api/`
+
+**New adapter function:**
+- Add to both: `apps/frontend/src/adapters/tauri/` AND `apps/frontend/src/adapters/web/`
+- The `@/adapters` alias auto-resolves based on `BUILD_TARGET`
+
+### Barrel Exports
+
+- `src/hooks/index.ts` — re-exports all hooks
+- `src/lib/types.ts` — central type definitions with re-exports from constants
+- `src/adapters/index.ts` — re-exports from platform-specific adapter
+- Rust: `mod.rs` files serve as module entry points
+
+### Index File Patterns
+
+- TypeScript: `index.ts` for barrel exports only (not component files)
+- Rust: `mod.rs` for module declarations and re-exports
+
+---
+
+## Anti-patterns to Avoid
+
+1. **Never use default exports** except for `App.tsx` — use named exports everywhere
+2. **Never import from `@/adapters/core` directly** — use `#platform` alias or `@/adapters`
+3. **Never log secrets or financial data** — use `logger` abstraction, not `console.log`
+4. **Never store secrets on disk or in localStorage** — use OS keyring
+5. **Never put business logic in Tauri/Axum handlers** — keep them thin, delegate to `crates/core`
+6. **Never use `any` type** — use `unknown` and narrow with type guards
+7. **Never use `enum` in TypeScript** — use `const` objects with `as const`
+8. **Never use `unsafe` in Rust** — forbidden at workspace level
+9. **Never use `console.log`** — use `logger.warn()` or `logger.error()` (ESLint warns on console)
+10. **Never add Tailwind default color scales that are disabled** — many color ranges are set to `initial` in `globals.css`
+11. **Avoid improving adjacent code** when making surgical changes — match existing style
+
+---
+
+*Convention analysis: 2026-04-20*

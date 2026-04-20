@@ -2,704 +2,571 @@
 
 **Analysis Date:** 2026-04-20
 
-## Directory Layout
+## Repository Root
 
 ```
-whaleit/                              # repo root (Wealthfolio)
-├── apps/
-│   ├── frontend/                     # React + Vite SPA (pnpm workspace)
-│   │   ├── index.html                # Vite entry HTML
-│   │   ├── vite.config.ts            # Vite config, adapter alias switching
-│   │   ├── package.json
-│   │   ├── public/                   # Static assets served as-is
-│   │   └── src/
-│   │       ├── main.tsx              # React root + addon bootstrap
-│   │       ├── App.tsx               # Providers + auth gate
-│   │       ├── routes.tsx            # React Router routes
-│   │       ├── globals.css           # Tailwind + global styles
-│   │       ├── lockdown.ts           # Desktop lockdown (SES) install
-│   │       ├── use-global-event-listener.ts  # Global event bridge → React Query
-│   │       ├── vite-env.d.ts
-│   │       ├── adapters/             # Backend adapters (Tauri | Web)
-│   │       │   ├── shared/           # Domain wrappers (identical for both)
-│   │       │   ├── tauri/            # Tauri IPC implementation
-│   │       │   ├── web/              # REST + SSE implementation
-│   │       │   ├── index.ts          # Default re-export (for TS type-check)
-│   │       │   └── types.ts          # Cross-adapter types
-│   │       ├── addons/               # Addon host + loader
-│   │       │   ├── addons-core.ts
-│   │       │   ├── addons-loader.ts
-│   │       │   ├── addons-dev-mode.ts
-│   │       │   ├── addons-runtime-context.ts
-│   │       │   └── type-bridge.ts
-│   │       ├── assets/               # Image/font assets
-│   │       ├── components/           # Reusable UI components
-│   │       │   ├── classification/
-│   │       │   └── page/
-│   │       ├── context/              # React contexts (auth, privacy, sync)
-│   │       ├── features/             # Feature modules
-│   │       │   ├── ai-assistant/
-│   │       │   ├── devices-sync/
-│   │       │   └── wealthfolio-connect/
-│   │       ├── hooks/                # Reusable React hooks
-│   │       ├── lib/                  # Utilities, schemas, types, constants
-│   │       │   └── types/            # Ambient TS types
-│   │       ├── pages/                # Route-level pages
-│   │       │   ├── account/
-│   │       │   ├── activity/
-│   │       │   ├── ai-assistant/
-│   │       │   ├── asset/
-│   │       │   ├── auth/
-│   │       │   ├── dashboard/
-│   │       │   ├── fire-planner/
-│   │       │   ├── health/
-│   │       │   ├── holdings/
-│   │       │   ├── income/
-│   │       │   ├── insights/
-│   │       │   ├── layouts/
-│   │       │   ├── net-worth/
-│   │       │   ├── onboarding/
-│   │       │   ├── performance/
-│   │       │   ├── settings/
-│   │       │   └── not-found.tsx
-│   │       ├── test/                 # Vitest setup (setup.ts)
-│   │       └── types/                # Global .d.ts
-│   │
-│   ├── tauri/                        # Tauri v2 desktop + mobile host (Rust)
-│   │   ├── Cargo.toml
-│   │   ├── tauri.conf.json
-│   │   ├── build.rs
-│   │   ├── Info.plist / Info.ios.plist / Entitlements.plist
-│   │   ├── capabilities/             # Tauri capability JSON per platform
-│   │   ├── gen/apple/                # Generated Xcode project for iOS
-│   │   ├── icons/                    # App icons (desktop + iOS)
-│   │   ├── scripts/                  # Build helper scripts
-│   │   └── src/
-│   │       ├── main.rs               # Binary entry → run()
-│   │       ├── lib.rs                # run() + invoke_handler! registration
-│   │       ├── commands/             # #[tauri::command] per domain
-│   │       ├── context/              # ServiceContext + initialize_context
-│   │       ├── domain_events/        # Sink + debounced queue worker + planner
-│   │       ├── services/             # Host-only services (ConnectService)
-│   │       ├── events.rs             # Event-name constants + emit helpers
-│   │       ├── listeners.rs          # Global AppHandle listeners
-│   │       ├── scheduler.rs          # Broker + startup sync schedulers
-│   │       ├── secret_store.rs       # OS keyring secret store
-│   │       ├── menu.rs               # Desktop application menu (desktop only)
-│   │       └── updater.rs            # Tauri updater wiring (desktop only)
-│   │
-│   └── server/                       # Axum web server (Rust, web mode)
-│       ├── Cargo.toml
-│       ├── tests/                    # Integration tests (auth, health, static)
-│       └── src/
-│           ├── main.rs               # #[tokio::main] entry
-│           ├── main_lib.rs           # AppState builder + init_tracing
-│           ├── api.rs                # app_router + OpenAPI + middleware
-│           ├── api/                  # One file per domain (handlers)
-│           ├── domain_events/        # WebDomainEventSink + queue worker
-│           ├── secrets/              # File-based encrypted SecretStore
-│           ├── ai_environment.rs     # ServerAiEnvironment impl
-│           ├── auth.rs               # JWT + Argon2 authentication
-│           ├── config.rs             # Config::from_env
-│           ├── error.rs              # ApiError / ApiResult
-│           ├── events.rs             # EventBus + ServerEvent
-│           ├── features.rs           # Runtime feature helpers
-│           ├── models.rs             # API DTOs (Account, NewAccount, …)
-│           ├── scheduler.rs          # Broker sync scheduler
-│           └── api.rs                # Router composition
-│
-├── crates/                           # Rust library crates (Cargo workspace)
-│   ├── ai/                           # wealthfolio-ai (LLM orchestration)
-│   │   ├── Cargo.toml
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── chat.rs, env.rs, error.rs, types.rs
-│   │       ├── providers.rs, provider_model.rs, provider_service.rs
-│   │       ├── prompt_template.rs, prompt_template_service.rs
-│   │       ├── stream_hook.rs, title_generator.rs
-│   │       ├── system_prompt.txt
-│   │       ├── ai_providers.json    # Compiled-in catalog
-│   │       ├── tools/                # Tool implementations
-│   │       └── eval/                 # Behavioral test harness
-│   ├── connect/                      # wealthfolio-connect (cloud broker sync)
-│   │   └── src/{lib.rs, client.rs, token_lifecycle.rs, broker/, broker_ingest/, platform/}
-│   ├── core/                         # wealthfolio-core (domain logic, traits)
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── constants.rs, errors.rs
-│   │       ├── accounts/, activities/, addons/, assets/, custom_provider/
-│   │       ├── events/               # DomainEvent + DomainEventSink
-│   │       ├── fx/, goals/, health/, limits/
-│   │       ├── portfolio/            # allocation, fire, holdings, income,
-│   │       │                         # net_worth, performance, snapshot, valuation
-│   │       ├── quotes/               # QuoteService, providers wrapper
-│   │       ├── secrets/, settings/, sync/, taxonomies/, utils/
-│   ├── device-sync/                  # wealthfolio-device-sync (E2EE)
-│   │   └── src/{lib.rs, client.rs, crypto.rs, engine/, enroll_service.rs, types.rs, time.rs}
-│   ├── market-data/                  # wealthfolio-market-data
-│   │   └── src/{lib.rs, models/, provider/, registry/, resolver/, errors/}
-│   └── storage-sqlite/               # wealthfolio-storage-sqlite (Diesel)
-│       ├── Cargo.toml
-│       ├── diesel.toml
-│       ├── migrations/               # Diesel migrations (embedded via macro)
-│       └── src/
-│           ├── lib.rs
-│           ├── db/                   # Pool + WriteHandle + migrations
-│           ├── schema.rs             # Diesel schema
-│           ├── utils.rs              # SQLite chunk helpers
-│           ├── errors.rs
-│           └── {accounts,activities,ai_chat,assets,custom_provider,
-│                fx,goals,health,limits,market_data,portfolio,
-│                settings,sync,taxonomies}/
-│
-├── packages/                         # Shared TS packages (pnpm workspace)
-│   ├── addon-sdk/                    # Public addon SDK (@wealthfolio/addon-sdk)
-│   │   ├── package.json
-│   │   ├── tsup.config.ts
-│   │   └── src/{index.ts, host-api.ts, manifest.ts, permissions.ts,
-│   │              data-types.ts, goal-progress.ts, query-keys.ts,
-│   │              types.ts, utils.ts, version.ts}
-│   ├── ui/                           # Reusable components (@wealthfolio/ui)
-│   │   ├── package.json
-│   │   ├── tsup.config.ts
-│   │   └── src/{index.ts, components/, hooks/, lib/, styles.css}
-│   └── addon-dev-tools/              # Addon scaffolding CLI
-│       ├── package.json, cli.js, dev-server.js, scaffold.js
-│       └── templates/
-│
-├── addons/                           # Bundled first-party addons
-│   ├── goal-progress-tracker/
-│   ├── investment-fees-tracker/
-│   └── swingfolio-addon/
-│
-├── e2e/                              # Playwright end-to-end tests
-│   ├── playwright fixtures + helpers.ts
-│   └── 01-*.spec.ts … 10-*.spec.ts
-│
-├── scripts/                          # Build / dev / e2e orchestration (Node)
-│   ├── dev-web.mjs
-│   ├── prep-e2e.mjs
-│   ├── run-e2e.mjs
-│   └── wait-for-both-servers-to-be-ready.sh
-│
-├── db/                               # SQL snapshots / seed data
-├── docs/                             # Docs assets
-├── assets/                           # Repo-level marketing assets
-├── .github/ / .devcontainer/ / .claude/ / .cursor/ / .vscode/
-│
-├── Cargo.toml                        # Cargo workspace manifest
-├── Cargo.lock
-├── pnpm-workspace.yaml               # pnpm workspace manifest
-├── pnpm-lock.yaml
-├── package.json                      # Root pnpm scripts (dev, test, build)
-├── tsconfig.base.json                # Shared TS compiler config
-├── tsconfig.json / tsconfig.node.json / tsconfig.test.json
-├── eslint.base.config.js / eslint.config.js
-├── .prettierrc.cjs / .prettierignore
-├── playwright.config.ts
-├── Dockerfile / compose.yml / compose.dev.yml / .dockerignore
-├── .env.example / .env.web.example   # (committed) env templates
-├── .env.web                          # Runtime env (NOT read by mapper)
-├── .node-version                     # Node version pin
-├── AGENTS.md / CLA.md / CONTRIBUTING.md / LICENSE / README.md
-├── ROADMAP.md / TRADEMARKS.md
-└── app-icon.png
+whaleit/
+├── apps/                    # Application shells (frontend, tauri, server)
+├── crates/                  # Rust core crates (business logic, storage, integrations)
+├── packages/                # Shared npm packages (UI lib, addon SDK, dev tools)
+├── addons/                  # Example/third-party addons (3 addons)
+├── scripts/                 # Dev scripts (web dev, e2e runner)
+├── e2e/                     # Playwright end-to-end tests
+├── docs/                    # Documentation
+├── db/                      # Database files (gitignored)
+├── assets/                  # Static assets
+├── .github/                 # GitHub Actions workflows
+├── .claude/                 # Claude AI configuration
+├── .planning/               # GSD planning directory
+├── package.json             # Root monorepo config (pnpm workspaces)
+├── Cargo.toml               # Rust workspace root
+├── Cargo.lock               # Rust dependency lockfile
+├── pnpm-workspace.yaml      # pnpm workspace definition
+├── pnpm-lock.yaml           # Node dependency lockfile
+├── tsconfig.base.json       # Shared TypeScript config
+├── tsconfig.json            # Root TypeScript config
+├── eslint.base.config.js    # Shared ESLint config
+├── eslint.config.js         # Root ESLint config
+├── playwright.config.ts     # E2E test configuration
+├── vite.config.d.ts         # Vite config type declarations
+├── Dockerfile               # Multi-stage Docker build
+├── compose.yml              # Production Docker Compose
+├── compose.dev.yml           # Development Docker Compose
+├── AGENTS.md                # AI agent behavioral guide
+├── ROADMAP.md               # Project roadmap
+└── README.md                # Project overview
 ```
 
-## Directory Purposes
-
-**`apps/frontend/`:**
-
-- Purpose: Only UI surface. React 19 SPA served by Vite.
-- Contains: pages, features, adapters, addons, hooks, contexts, components.
-- Key files: `src/main.tsx` (bootstrap), `src/App.tsx` (providers),
-  `src/routes.tsx` (router), `vite.config.ts` (adapter alias via
-  `BUILD_TARGET`), `package.json` (scripts: `dev` = web mode, `dev:tauri` =
-  Tauri mode).
-
-**`apps/frontend/src/adapters/`:**
-
-- Purpose: isolate every backend call behind a typed function so UI code never
-  knows whether it runs against Tauri IPC or HTTP.
-- Contains: `shared/` (platform-neutral domain wrappers), `tauri/` (Tauri IPC
-  impl + platform-specific helpers), `web/` (REST + SSE impl).
-- Key files: `shared/*.ts`, `tauri/index.ts`, `tauri/core.ts`, `web/index.ts`,
-  `web/core.ts` (contains the `COMMANDS` → REST map).
-- Selection: `vite.config.ts` aliases `@/adapters` → `tauri/` or `web/` and
-  `#platform` → `tauri/core` or `web/core` based on `BUILD_TARGET`.
-
-**`apps/frontend/src/pages/`:**
-
-- Purpose: route-level screens. One subdirectory per top-level route.
-- Contains: one `*-page.tsx` per route plus co-located components and hooks
-  specific to that page.
-- Key files: `dashboard/portfolio-page.tsx`, `layouts/app-layout.tsx`,
-  `layouts/onboarding-layout.tsx`, `settings/settings-layout.tsx`,
-  `holdings/holdings-page.tsx`, `performance/performance-page.tsx`,
-  `ai-assistant/ai-assistant-page.tsx`, `fire-planner/fire-planner-page.tsx`.
-
-**`apps/frontend/src/features/`:**
-
-- Purpose: cross-page feature modules with their own components/hooks/types.
-- Contains: `ai-assistant/` (chat UI, types, streaming hooks),
-  `wealthfolio-connect/` (broker cloud connect onboarding), `devices-sync/`
-  (E2EE device sync UI, crypto helpers, pairing flow).
-
-**`apps/frontend/src/components/`:**
-
-- Purpose: reusable UI widgets not tied to one page.
-- Notable files: `app-launcher.tsx`, `account-selector.tsx`,
-  `benchmark-symbol-selector.tsx`, `symbol-selector-mobile.tsx`,
-  `history-chart.tsx`, `performance-chart.tsx`, `theme-selector.tsx`,
-  `update-dialog.tsx`, `ticker-search.tsx`, `mobile-actions-menu.tsx`.
-- Sub-dirs: `classification/` (taxonomy pickers), `page/` (`swipable-page.tsx`,
-  `swipable-routes-page.tsx`).
-
-**`apps/frontend/src/hooks/`:**
-
-- Purpose: reusable React hooks wrapping adapters + TanStack Query.
-- Notable: `use-accounts.ts`, `use-holdings.ts`, `use-settings.ts`,
-  `use-platform.ts`, `use-pull-to-refresh.ts`, `use-taxonomies.ts`,
-  `use-health.ts`, `use-updater.ts`, `use-quote-import.ts`.
-
-**`apps/frontend/src/lib/`:**
-
-- Purpose: utilities, shared types, Zod schemas, query keys, constants.
-- Key files: `types.ts` (all TS domain types), `schemas.ts` (Zod + React Hook
-  Form), `utils.ts`, `constants.ts`, `query-keys.ts`, `activity-utils.ts`,
-  `asset-utils.ts`, `portfolio-helper.ts`, `settings-provider.tsx`,
-  `is-tauri.ts`.
-
-**`apps/frontend/src/addons/`:**
-
-- Purpose: runtime host for user-installable addons.
-- Key files: `addons-loader.ts` (production + dev-server loading),
-  `addons-core.ts`, `addons-runtime-context.ts` (AddonContext + dynamic routes),
-  `addons-dev-mode.ts` (local dev servers), `type-bridge.ts` (wraps adapters
-  into the SDK host API).
-
-**`apps/tauri/`:**
-
-- Purpose: Tauri v2 desktop + mobile shell.
-- Key files: `src/main.rs` (binary entry), `src/lib.rs` (`run()` + full
-  `invoke_handler!`), `tauri.conf.json` (bundle + plugins), `Cargo.toml`
-  (feature flags `connect-sync`, `device-sync`, `appstore`), `build.rs` (Tauri
-  build script).
-
-**`apps/tauri/src/commands/`:**
-
-- Purpose: one file per domain containing `#[tauri::command]` async functions.
-- Notable: `account.rs`, `activity.rs`, `portfolio.rs` (large — 39KB),
-  `market_data.rs`, `ai_chat.rs`, `addon.rs`, `brokers_sync.rs`, `device_sync/`
-  (subdir with multiple files), `health.rs`, `fire.rs`, `taxonomy.rs`,
-  `sync_crypto.rs`.
-- Pattern: each command pulls `State<'_, Arc<ServiceContext>>`, calls one trait
-  method, maps errors to `String`.
-
-**`apps/tauri/src/context/`:**
-
-- Purpose: DI container + builder for services.
-- Files: `registry.rs` (`ServiceContext` with ~30 services), `providers.rs`
-  (`initialize_context`), `ai_environment.rs` (`TauriAiEnvironment`), `mod.rs`
-  (public exports).
-
-**`apps/tauri/src/domain_events/`:**
-
-- Purpose: bridge `DomainEvent`s from core services to Tauri emit + background
-  work.
-- Files: `sink.rs` (`TauriDomainEventSink` wrapping `tokio::mpsc`),
-  `queue_worker.rs` (1s debounce + planners), `planner.rs` (decides
-  portfolio/asset/broker actions), `mod.rs`.
-
-**`apps/tauri/src/services/`:**
-
-- Purpose: host-only services that don't belong to a crate.
-- Files: `connect_service.rs` (Wealthfolio Connect cloud bridge +
-  `cloud_api_base_url`), `mod.rs`.
-
-**`apps/server/`:**
-
-- Purpose: Axum HTTP server for web mode. Hosts same services as Tauri plus auth
-  and static file serving.
-- Key files: `src/main.rs`, `src/main_lib.rs` (`AppState`, `build_state`,
-  `init_tracing`), `src/api.rs` (router composition + OpenAPI), `src/config.rs`,
-  `src/auth.rs`, `tests/*.rs` (integration tests).
-
-**`apps/server/src/api/`:**
-
-- Purpose: HTTP handler modules — one per domain, mirroring
-  `apps/tauri/src/commands/`.
-- Notable: `accounts.rs`, `holdings/` (subdir `handlers.rs`, `dto.rs`,
-  `mappers.rs`, `fixtures/`), `portfolio.rs`, `performance.rs`,
-  `market_data.rs`, `ai_chat.rs`, `connect.rs` (very large — 48KB),
-  `device_sync.rs` (29KB), `device_sync_engine.rs` (69KB), `taxonomies.rs`,
-  `shared.rs` (portfolio job runner), `addons.rs`.
-
-**`crates/core/`:**
-
-- Purpose: domain entities, services, traits, domain events. Framework-free,
-  Diesel-free (no direct Diesel types on the public surface).
-- Contains one folder per aggregate: `accounts/`, `activities/`, `assets/`,
-  `custom_provider/`, `fx/`, `goals/`, `health/`, `limits/`, `portfolio/` (with
-  sub-aggregates), `quotes/`, `secrets/`, `settings/`, `sync/`, `taxonomies/`,
-  `addons/`, plus cross-cutting `events/`, `errors.rs`, `constants.rs`,
-  `utils/`.
-- Pattern per aggregate: `mod.rs` + `*_model.rs` + `*_service.rs` +
-  `*_traits.rs` + `*_constants.rs` (+ tests).
-
-**`crates/storage-sqlite/`:**
-
-- Purpose: the only place Diesel is used. Implements repository traits from
-  `wealthfolio-core`.
-- Contains: `db/` (pool + write actor + migrations harness), `schema.rs`, one
-  folder per entity with `model.rs` + `repository.rs`, `migrations/` (dated
-  directories, embedded at build time).
-- Migration naming: `YYYY-MM-DD-HHMMSS_description/` each containing `up.sql` +
-  `down.sql`.
-
-**`crates/market-data/`:**
-
-- Purpose: provider-agnostic quote / symbol fetching.
-- Sub-dirs: `models/` (domain types), `provider/` (Yahoo, AlphaVantage, Finnhub,
-  BoerseFrankfurt, MarketDataApp, MetalPriceApi, OpenFigi, UsTreasuryCalc,
-  CustomScraper), `registry/` (rate-limit, circuit-breaker, validator),
-  `resolver/` (instrument resolution chain + MIC/exchange map), `errors/`.
-
-**`crates/connect/`, `crates/device-sync/`, `crates/ai/`:**
-
-- Isolated capabilities behind Cargo features. See ARCHITECTURE.md for module
-  roles.
-
-**`packages/`:**
-
-- Purpose: TypeScript libraries published to npm or consumed by workspace.
-- `addon-sdk/` — public addon SDK. `ui/` — reusable components.
-  `addon-dev-tools/` — CLI for scaffolding new addons.
-- Pattern: each package has `package.json`, `tsconfig.json`, `tsup.config.ts`,
-  `src/index.ts`, README.
-
-**`addons/`:**
-
-- Purpose: first-party addons shipped with the app. Each has its own `src/`,
-  `manifest.json`, `vite.config.ts`, `package.json`.
-
-**`e2e/`:**
-
-- Purpose: Playwright specs that run against the web build via
-  `scripts/run-e2e.mjs`.
-- Files: numbered `NN-description.spec.ts` + shared `helpers.ts`.
-
-**`scripts/`:**
-
-- Node/Bash helpers invoked from root `package.json` (dev-web, e2e
-  orchestration).
-
-**`db/`:**
-
-- Purpose: SQL snapshots / sample databases used by docs and dev setup.
-
-## Key File Locations
-
-**Entry Points:**
-
-- `apps/frontend/src/main.tsx` — React root + addon bootstrap.
-- `apps/frontend/src/App.tsx` — Provider tree + `AuthGate`.
-- `apps/frontend/src/routes.tsx` — route definitions.
-- `apps/tauri/src/main.rs` — Tauri binary entry.
-- `apps/tauri/src/lib.rs` — `run()` + `invoke_handler!` (registers ~170
-  commands).
-- `apps/server/src/main.rs` — Axum binary entry.
-- `apps/server/src/main_lib.rs` — `AppState` / `build_state`.
-- `apps/server/src/api.rs` — router composition.
-
-**Configuration:**
-
-- `package.json` (root) — pnpm scripts for dev/build/test/e2e.
-- `pnpm-workspace.yaml` — `apps/frontend`, `packages/*`, `addons/*`.
-- `Cargo.toml` (root) — workspace members `apps/tauri`, `apps/server`,
-  `crates/*`.
-- `apps/frontend/vite.config.ts` — Vite + BUILD_TARGET alias switching.
-- `apps/frontend/package.json` — frontend deps + scripts.
-- `apps/tauri/tauri.conf.json` — bundle/plugins/deep-link/updater.
-- `apps/tauri/capabilities/*.json` — Tauri capability sets per platform.
-- `apps/server/src/config.rs` — env parsing for server mode.
-- `.env.example`, `.env.web.example` — committed env templates.
-- `tsconfig.base.json`, `tsconfig.json`, `tsconfig.node.json`,
-  `tsconfig.test.json` — TS configs.
-- `eslint.base.config.js`, `eslint.config.js` — ESLint configs.
-- `.prettierrc.cjs` — Prettier config.
-- `playwright.config.ts` — E2E config.
-- `crates/storage-sqlite/diesel.toml` — Diesel CLI config.
-
-**Core Logic:**
-
-- `crates/core/src/lib.rs` — public module roster.
-- `crates/core/src/events/domain_event.rs` — domain events.
-- `crates/core/src/accounts/accounts_service.rs` + `accounts_traits.rs` —
-  reference pattern for every aggregate.
-- `crates/core/src/portfolio/` — all portfolio math (snapshot, valuation,
-  performance, holdings, allocation, net_worth, income, fire).
-- `crates/core/src/quotes/service.rs` — quote orchestration (large: 96KB).
-- `crates/core/src/activities/activities_service.rs` — activity CRUD + CSV
-  import (large: 173KB).
-- `crates/storage-sqlite/src/db/mod.rs` — pool + migrations bootstrapping.
-- `crates/storage-sqlite/src/db/write_actor.rs` — serialized writer handle.
-- `crates/storage-sqlite/src/schema.rs` — Diesel schema definition.
-
-**Testing:**
-
-- `apps/frontend/src/test/setup.ts` — Vitest setup.
-- `apps/frontend/src/**/*.{test,spec}.{ts,tsx}` — frontend unit tests
-  (co-located).
-- `crates/*/src/**/*_tests.rs` + `#[cfg(test)] mod tests` — Rust unit tests.
-- `crates/ai/src/eval/` — AI behavioral eval harness (test-only).
-- `apps/server/tests/*.rs` — Axum integration tests (`auth.rs`, `health.rs`,
-  `static_routes.rs`).
-- `e2e/*.spec.ts` — Playwright end-to-end suites.
-- `scripts/run-e2e.mjs` — orchestrator used by `pnpm test:e2e`.
-
-**Adapters / IPC:**
-
-- `apps/frontend/src/adapters/tauri/core.ts` — `invoke` + Tauri logger.
-- `apps/frontend/src/adapters/web/core.ts` — `COMMANDS` map (command name → HTTP
-  method + path) + fetch-based `invoke` + base64 helpers.
-- `apps/frontend/src/adapters/shared/platform.ts` — re-exports
-  `invoke`/`logger`/platform flags from `#platform` alias.
-- `apps/frontend/src/adapters/tauri/events.ts` — `listen` wrappers with
-  race-safe `adaptUnlisten`.
-- `apps/frontend/src/adapters/web/events.ts` — `ServerEventBridge` over
-  `EventSource`.
-
-**Events & background work:**
-
-- `apps/tauri/src/events.rs` — Tauri event-name constants + helpers.
-- `apps/server/src/events.rs` — `EventBus` + `ServerEvent`.
-- `apps/tauri/src/domain_events/queue_worker.rs`,
-  `apps/server/src/domain_events/queue_worker.rs` — debounced workers.
-
-## Naming Conventions
-
-**Files (TypeScript):**
-
-- Kebab-case for all source files: `account-selector.tsx`, `use-accounts.ts`,
-  `activity-utils.ts`.
-- Pages suffixed with `-page.tsx`: `portfolio-page.tsx`, `holdings-page.tsx`.
-- Hooks prefixed with `use-`: `use-holdings.ts`, `use-platform.ts`,
-  `use-settings-mutation.ts`.
-- Tests next to source with `.test.ts`/`.test.tsx`/`.spec.ts`:
-  `activity-utils.test.ts`, `type-bridge.test.ts`.
-- Context providers: `*-context.tsx` (e.g. `auth-context.tsx`,
-  `privacy-context.tsx`).
-
-**Files (Rust):**
-
-- `snake_case.rs` throughout. One concept per file.
-- Trait modules suffixed `_traits.rs`, models `_model.rs`, services
-  `_service.rs`, constants `_constants.rs`, tests `_tests.rs`.
-- Module directories expose `mod.rs`. Re-exports happen in `mod.rs`.
-
-**Directories:**
-
-- `kebab-case` for TS packages and addons (`addon-sdk`,
-  `goal-progress-tracker`).
-- `snake_case` for Rust modules (`domain_events`, `broker_ingest`,
-  `storage-sqlite` is the only kebab-case Rust crate name, mapped from the Cargo
-  package name).
-- `crates/*`, `apps/*`, `packages/*` — flat one level deep.
-
-**Commands / routes:**
-
-- Rust command names: `snake_case` (`get_accounts`, `create_account`,
-  `sync_market_data`, `update_tool_result`).
-- Frontend adapter function names: `camelCase` (`getAccounts`, `createAccount`,
-  `updateToolResult`). The translation happens inside each adapter wrapper.
-- REST paths: `/api/v1/<resource>` kebab-case with REST verbs (see
-  `apps/frontend/src/adapters/web/core.ts` `COMMANDS` map).
-- Event names: `kebab-case` with `domain:action` format
-  (`portfolio:update-start`, `market:sync-complete`, `broker:sync-error`,
-  `asset:enrichment-progress`, `app:ready`, `deep-link-received`).
-
-**TypeScript types:**
-
-- PascalCase for types/interfaces (`Account`, `NewAccount`, `AiStreamEvent`).
-- Domain types defined in `apps/frontend/src/lib/types.ts`.
-
-**Rust types:**
-
-- PascalCase for structs/enums/traits (`ServiceContext`, `DomainEvent`,
-  `AccountServiceTrait`).
-- Traits generally suffixed `Trait` (e.g. `AccountServiceTrait`,
-  `BrokerSyncServiceTrait`).
-
-**Env vars:**
-
-- `UPPER_SNAKE_CASE`, typically prefixed with `WF_` (`WF_DB_PATH`,
-  `WF_SECRET_FILE`, `WF_LOG_FORMAT`, `WF_API_TARGET`, `WF_ENABLE_VITE_PROXY`) or
-  `VITE_`/`TAURI_`/`CONNECT_` (honored by `envPrefix` in `vite.config.ts`).
-
-**Migrations:**
-
-- `YYYY-MM-DD-HHMMSS_snake_case_description/` with `up.sql` + `down.sql` (Diesel
-  convention).
-
-## Where to Add New Code
-
-**New frontend domain call (CRUD on a resource):**
-
-1. Add the Tauri command in `apps/tauri/src/commands/<domain>.rs` and register
-   it in the `generate_handler!` list in `apps/tauri/src/lib.rs`.
-2. Add the Axum handler in `apps/server/src/api/<domain>.rs` and mount its
-   `router()` inside `apps/server/src/api.rs::app_router`.
-3. Add a REST mapping for the command in
-   `apps/frontend/src/adapters/web/core.ts` `COMMANDS` map + any body/query
-   shaping below.
-4. Add/extend the typed adapter function in
-   `apps/frontend/src/adapters/shared/<domain>.ts` (platform-neutral) or
-   `tauri/` + `web/` if the shapes diverge; re-export from the matching
-   `index.ts`.
-5. Add a TanStack Query hook in `apps/frontend/src/hooks/use-<domain>.ts`.
-6. Add UI in `apps/frontend/src/pages/<area>/` or
-   `apps/frontend/src/features/<area>/`.
-
-**New domain entity / aggregate (Rust):**
-
-1. Add a module folder `crates/core/src/<aggregate>/` with `mod.rs` +
-   `<aggregate>_model.rs` + `<aggregate>_service.rs` + `<aggregate>_traits.rs`;
-   re-export publicly from `mod.rs` and register in `crates/core/src/lib.rs`.
-2. Add storage impl
-   `crates/storage-sqlite/src/<aggregate>/{model.rs,repository.rs,mod.rs}`; add
-   Diesel schema entries to `crates/storage-sqlite/src/schema.rs`.
-3. Create a Diesel migration under
-   `crates/storage-sqlite/migrations/YYYY-MM-DD-HHMMSS_*/` with `up.sql` +
-   `down.sql`.
-4. Emit any mutations as `DomainEvent`s via the injected
-   `Arc<dyn DomainEventSink>` (see
-   `crates/core/src/accounts/accounts_service.rs` for pattern).
-5. Wire the service in `apps/tauri/src/context/providers.rs` and
-   `apps/server/src/main_lib.rs::build_state`.
-6. Add commands + handlers as above.
-
-**New React page/route:**
-
-1. Add `apps/frontend/src/pages/<area>/<area>-page.tsx`.
-2. Register the route in `apps/frontend/src/routes.tsx`.
-3. Co-locate components/hooks/utilities inside
-   `apps/frontend/src/pages/<area>/`.
-4. Update navigation in `apps/frontend/src/pages/layouts/navigation/`.
-
-**New reusable component:**
-
-- If used in ≥2 places inside the frontend → `apps/frontend/src/components/`.
-- If designed to be consumed by addons too → `packages/ui/src/components/` and
-  export from `packages/ui/src/index.ts`.
-
-**New React hook:**
-
-- Cross-feature → `apps/frontend/src/hooks/use-*.ts`.
-- Feature-specific → `apps/frontend/src/features/<feature>/hooks/`.
-
-**New addon:**
-
-- Use `pnpm addon:create` (runs `packages/addon-dev-tools/cli.js`). Output goes
-  under `addons/<name>/` with `manifest.json` + `src/`.
-
-**New market-data provider:**
-
-- `crates/market-data/src/provider/<provider>.rs`; register with
-  `ProviderRegistry`.
-
-**New AI tool:**
-
-- `crates/ai/src/tools/<tool>.rs`; register in the `ToolSet` builder; ensure
-  both `TauriAiEnvironment` and `ServerAiEnvironment` expose the needed
-  services.
-
-**New integration test:**
-
-- Axum: `apps/server/tests/<name>.rs` (one `#[tokio::test]` per case).
-- Frontend unit: `apps/frontend/src/**/*.test.ts(x)` next to source.
-- E2E: `e2e/NN-<name>.spec.ts`.
-
-**Shared utilities:**
-
-- TS helpers (frontend-only) → `apps/frontend/src/lib/utils.ts` (growing; be
-  selective).
-- TS helpers usable by addons → `packages/addon-sdk/src/utils.ts`.
-- Rust helpers for core → `crates/core/src/utils/`.
-- Rust helpers for storage → `crates/storage-sqlite/src/utils.rs`.
-
-## Special Directories
-
-**`apps/tauri/gen/apple/`:**
-
-- Purpose: generated Xcode project for iOS (created by `tauri ios init`).
-- Generated: Yes (by Tauri CLI).
-- Committed: Yes (required for iOS builds).
-
-**`crates/storage-sqlite/migrations/`:**
-
-- Purpose: Diesel SQL migrations; embedded at compile time via
-  `embed_migrations!` macro (`crates/storage-sqlite/src/db/mod.rs:21`).
-- Generated: No (authored by hand).
-- Committed: Yes. Never edit a migration after it has been released.
-
-**`apps/frontend/public/`:**
-
-- Purpose: static assets copied verbatim to the final bundle (manifest.json,
-  icons, logo, sound files).
-- Generated: No.
-- Committed: Yes.
-
-**`apps/tauri/icons/`:**
-
-- Purpose: app icons consumed by `tauri.conf.json`. Includes macOS `.icns`,
-  Windows `.ico`, iOS AppIcon sets.
-- Committed: Yes.
-
-**`target/` (root):**
-
-- Purpose: Cargo build artefacts for the entire workspace.
-- Generated: Yes.
-- Committed: No (ignored).
-
-**`node_modules/` (root + packages):**
-
-- Purpose: pnpm-installed deps. Single root store with per-package symlinks.
-- Committed: No.
-
-**`dist/` (root, unchecked but referenced):**
-
-- Purpose: Vite output from frontend build (`outDir: "../../dist"` in
-  `vite.config.ts`). Consumed by `tauri.conf.json`'s
-  `frontendDist: "../../dist"` and by Axum's static file service in web mode.
-- Generated: Yes.
-- Committed: No.
-
-**`.planning/`:**
-
-- Purpose: agent-authored planning docs (codebase map, phase plans). This
-  document lives here.
-- Generated: Yes (by agents).
-- Committed: optional.
-
-**`.claude/`, `.cursor/`, `.vscode/`, `.devcontainer/`, `.github/`:**
-
-- Editor / CI / agent configuration. Committed.
-
-**`e2e/`:**
-
-- Playwright specs. Run against the built web mode via `scripts/run-e2e.mjs`.
-
-**`db/`:**
-
-- SQL fixtures for docs / support workflows. Not used at runtime.
-
-**`.env` files:**
-
-- `.env.example`, `.env.web.example` — committed templates.
-- `.env`, `.env.web` — runtime env (existence only; contents must not be read;
-  may contain secrets).
+## apps/frontend/src/ (579 TypeScript files, ~129K lines)
+
+```
+apps/frontend/src/
+├── adapters/                     # Transport abstraction layer
+│   ├── index.ts                  # Re-exports from tauri adapter (default)
+│   ├── types.ts                  # Shared adapter types (RunEnv, PlatformInfo, etc.)
+│   ├── tauri/                    # Desktop-specific implementations (10 files)
+│   │   ├── core.ts               #   Tauri invoke() wrapper, logger, platform flags
+│   │   ├── index.ts              #   Barrel export for all Tauri adapters
+│   │   ├── activities.ts         #   CSV parsing (Tauri-specific)
+│   │   ├── addons.ts             #   Addon zip install (Tauri-specific)
+│   │   ├── ai-streaming.ts       #   AI chat streaming via Tauri Channel
+│   │   ├── crypto.ts             #   Sync crypto commands (Tauri IPC)
+│   │   ├── events.ts             #   Tauri event listeners
+│   │   ├── files.ts              #   Native file dialogs
+│   │   ├── fire-planner.ts       #   FIRE planner commands
+│   │   └── settings.ts           #   Settings + backup/restore/update
+│   ├── web/                      # Web-specific implementations (10 files)
+│   │   ├── core.ts               #   HTTP fetch() wrapper, COMMANDS map (~1400 lines)
+│   │   ├── index.ts              #   Barrel export for all web adapters
+│   │   ├── activities.ts         #   CSV parsing (web upload)
+│   │   ├── addons.ts             #   Addon install via HTTP
+│   │   ├── ai-streaming.ts       #   AI chat streaming via fetch SSE
+│   │   ├── crypto.ts             #   Crypto stubs (throws in web mode)
+│   │   ├── events.ts             #   SSE event listeners
+│   │   ├── files.ts              #   Web file picker fallbacks
+│   │   ├── fire-planner.ts       #   FIRE planner stubs (desktop-only)
+│   │   └── settings.ts           #   Settings via HTTP API
+│   └── shared/                   # Platform-agnostic command wrappers (16 files)
+│       ├── accounts.ts           #   Account CRUD
+│       ├── activities.ts         #   Activity CRUD + import
+│       ├── ai-providers.ts       #   AI provider management
+│       ├── ai-threads.ts         #   AI thread management
+│       ├── alternative-assets.ts #   Alternative asset CRUD
+│       ├── connect.ts            #   Broker + device sync commands
+│       ├── contribution-limits.ts#   Contribution limit CRUD
+│       ├── custom-provider.ts    #   Custom market data providers
+│       ├── exchange-rates.ts     #   FX rate management
+│       ├── goals.ts              #   Goal CRUD + allocations
+│       ├── health.ts             #   Health check commands
+│       ├── market-data.ts        #   Market data sync + quotes
+│       ├── portfolio.ts          #   Holdings, snapshots, valuations
+│       ├── secrets.ts            #   Secret management
+│       ├── taxonomies.ts         #   Taxonomy CRUD
+│       └── platform.ts           #   Platform detection
+│
+├── addons/                       # Addon runtime system (6 files)
+│   ├── addons-core.ts            #   Addon lifecycle management
+│   ├── addons-dev-mode.ts        #   Development mode support
+│   ├── addons-loader.ts          #   Dynamic addon loading
+│   ├── addons-runtime-context.ts #   Runtime context for addons (dynamic routes)
+│   ├── type-bridge.ts            #   Type bridging for addon API
+│   └── type-bridge.test.ts       #   Type bridge tests
+│
+├── components/                   # Shared UI components (33 entries)
+│   ├── classification/           #   Asset classification components
+│   ├── page/                     #   Page-level layout components
+│   ├── account-selector.tsx      #   Account dropdown selector
+│   ├── action-palette.tsx        #   Command palette (Cmd+K)
+│   ├── header.tsx                #   App header with navigation
+│   ├── history-chart.tsx         #   Portfolio history chart
+│   ├── performance-chart.tsx     #   Performance visualization
+│   ├── ticker-search.tsx         #   Symbol/ticker search
+│   ├── update-dialog.tsx         #   App update notification
+│   └── ...                       #   (other shared components)
+│
+├── context/                      # React context providers (3 files)
+│   ├── auth-context.tsx          #   Web auth state management
+│   ├── portfolio-sync-context.tsx#   Portfolio sync orchestration
+│   └── privacy-context.tsx       #   Balance privacy toggle
+│
+├── features/                     # Self-contained feature modules (3 features)
+│   ├── ai-assistant/             #   AI chat feature
+│   │   ├── api/                  #     API calls
+│   │   ├── components/           #     Chat UI components
+│   │   ├── hooks/                #     Chat-specific hooks
+│   │   ├── types.ts              #     AI-specific types
+│   │   └── index.ts              #     Feature barrel export
+│   ├── devices-sync/             #   Device sync feature
+│   │   ├── components/           #     Device management UI
+│   │   ├── crypto/               #     Client-side crypto
+│   │   ├── hooks/                #     Sync-specific hooks
+│   │   ├── services/             #     Sync services
+│   │   ├── storage/              #     Sync state persistence
+│   │   ├── types.ts              #     Sync-specific types
+│   │   └── index.ts              #     Feature barrel export
+│   └── wealthfolio-connect/      #   Broker connection feature
+│       ├── components/           #     Connection management UI
+│       ├── hooks/                #     Connection-specific hooks
+│       ├── lib/                  #     Connection utilities
+│       ├── pages/                #     Auth callback, connect page
+│       ├── providers/            #     Broker-specific adapters
+│       ├── services/             #     Connection services
+│       ├── types.ts              #     Connection-specific types
+│       └── index.ts              #     Feature barrel export
+│
+├── hooks/                        # Shared React hooks (26 files)
+│   ├── index.ts                  #   Barrel export
+│   ├── use-accounts.ts           #   Account queries/mutations
+│   ├── use-holdings.ts           #   Holdings queries
+│   ├── use-settings.ts           #   Settings queries/mutations
+│   ├── use-calculate-portfolio.ts#   Portfolio calculation trigger
+│   ├── use-platform.ts           #   Platform detection hook
+│   ├── use-quote-history.ts      #   Quote history queries
+│   └── ...                       #   (other hooks)
+│
+├── lib/                          # Utility libraries (26 files)
+│   ├── query-keys.ts             #   TanStack Query key definitions (~136 lines)
+│   ├── schemas.ts                #   Zod validation schemas
+│   ├── schemas.test.ts           #   Schema tests
+│   ├── constants.ts              #   App-wide constants
+│   ├── utils.ts                  #   General utilities
+│   ├── is-tauri.ts               #   Tauri runtime detection
+│   ├── connect-config.ts         #   Wealthfolio Connect config
+│   ├── settings-provider.tsx     #   Settings context provider
+│   ├── auth-token.ts             #   JWT token management (web)
+│   ├── cookie-utils.ts           #   Cookie helpers (web)
+│   ├── portfolio-helper.ts       #   Portfolio calculation helpers
+│   ├── asset-utils.ts            #   Asset utility functions
+│   ├── activity-utils.ts         #   Activity utility functions
+│   ├── export-utils.ts           #   CSV export utilities
+│   ├── device-utils.ts           #   Device detection utilities
+│   ├── id.ts                     #   ID generation
+│   ├── isin.ts                   #   ISIN validation
+│   ├── occ-symbol.ts             #   OCC symbol parsing
+│   ├── types.ts                  #   Shared TypeScript types
+│   ├── types/                    #   Additional type definitions
+│   ├── ai-prompt-templates.json  #   AI prompt templates
+│   └── ...                       #   (other utils)
+│
+├── pages/                        # Route pages (17 directories)
+│   ├── account/                  #   Account detail page
+│   ├── activity/                 #   Activity list + manager + import pages
+│   ├── ai-assistant/             #   AI assistant page
+│   ├── asset/                    #   Asset list + profile pages
+│   ├── auth/                     #   Auth pages (web mode)
+│   ├── dashboard/                #   Main portfolio dashboard
+│   ├── fire-planner/             #   FIRE planner page
+│   ├── health/                   #   Health diagnostics page
+│   ├── holdings/                 #   Holdings list + insights pages
+│   ├── income/                   #   Income summary page
+│   ├── insights/                 #   Portfolio insights page
+│   ├── layouts/                  #   App layout + onboarding layout
+│   ├── net-worth/                #   Net worth tracking page
+│   ├── onboarding/               #   First-run onboarding page
+│   ├── performance/              #   Performance analysis page
+│   ├── settings/                 #   Settings sub-pages (13 sub-pages)
+│   │   ├── about/                #     About page
+│   │   ├── accounts/             #     Account management
+│   │   ├── addons/               #     Addon management
+│   │   ├── ai-providers/         #     AI provider configuration
+│   │   ├── appearance/           #     Theme + font settings
+│   │   ├── contribution-limits/  #     Contribution limits
+│   │   ├── exports/              #     Data export
+│   │   ├── fire-planner/         #     FIRE planner settings
+│   │   ├── general/              #     General settings
+│   │   ├── goals/                #     Goal management
+│   │   ├── market-data/          #     Market data providers + import
+│   │   ├── taxonomies/           #     Taxonomy management
+│   │   └── wealthfolio-connect/  #     Broker connection settings
+│   └── not-found.tsx             #   404 page
+│
+├── types/                        # Global type definitions
+│   └── global.d.ts               #   Window type augmentations (addons, debug)
+│
+├── test/                         # Test configuration
+│   └── setup.ts                  #   Vitest global setup
+│
+├── App.tsx                       # Root app component
+├── main.tsx                      # Entry point (platform detection, addon loading)
+├── routes.tsx                    # Route definitions (BrowserRouter)
+├── globals.css                   # Tailwind v4 global styles + CSS variables
+├── lockdowm.ts                   # Desktop security lockdown (context menu, text selection)
+├── use-global-event-listener.ts  #   Global keyboard shortcut handler
+└── vite-env.d.ts                 #   Vite type declarations
+```
+
+## apps/tauri/src/ (48 Rust files, ~11.7K lines)
+
+```
+apps/tauri/src/
+├── commands/                     # Tauri IPC command handlers (27 modules)
+│   ├── mod.rs                    #   Module declarations + feature gates
+│   ├── account.rs                #   Account CRUD commands
+│   ├── activity.rs               #   Activity CRUD + import commands
+│   ├── addon.rs                  #   Addon lifecycle commands
+│   ├── ai_chat.rs                #   AI chat streaming + thread management
+│   ├── ai_providers.rs           #   AI provider configuration
+│   ├── alternative_assets.rs     #   Alternative asset commands
+│   ├── asset.rs                  #   Asset CRUD commands
+│   ├── brokers_sync.rs           #   Broker sync commands (feature-gated: connect-sync)
+│   ├── custom_provider.rs        #   Custom market data provider commands
+│   ├── device_enroll_service.rs  #   Device enroll high-level commands (feature-gated: device-sync)
+│   ├── device_sync/              #   Device sync commands (feature-gated: device-sync)
+│   ├── error.rs                  #   Tauri command error conversion
+│   ├── fire.rs                   #   FIRE planner commands
+│   ├── goal.rs                   #   Goal CRUD commands
+│   ├── health.rs                 #   Health diagnostic commands
+│   ├── limits.rs                 #   Contribution limit commands
+│   ├── market_data.rs            #   Market data sync + quote commands
+│   ├── platform.rs               #   Platform detection commands
+│   ├── portfolio.rs              #   Portfolio, holdings, snapshot commands
+│   ├── providers_settings.rs     #   Market data provider settings
+│   ├── secrets.rs                #   Secret management commands
+│   ├── settings.rs               #   Settings + exchange rate commands
+│   ├── sync_crypto.rs            #   E2EE crypto commands (feature-gated: device-sync)
+│   ├── taxonomy.rs               #   Taxonomy CRUD + migration commands
+│   ├── utilities.rs              #   Backup/restore, update check commands
+│   └── wealthfolio_connect.rs    #   Sync session management
+│
+├── context/                      # Service context and DI (4 files)
+│   ├── mod.rs                    #   Context module entry
+│   ├── ai_environment.rs         #   Tauri-specific AI environment
+│   ├── providers.rs              #   Service construction + wiring (~387 lines)
+│   └── registry.rs               #   ServiceContext struct (~181 lines)
+│
+├── domain_events/                # Domain event processing (3 files)
+│   ├── mod.rs                    #   Module entry + TauriDomainEventSink
+│   ├── queue_worker.rs           #   Event queue consumer
+│   └── sink.rs                   #   Domain event sink implementation
+│
+├── services/                     # App-level services (2 files)
+│   ├── mod.rs                    #   Module entry
+│   └── connect_service.rs        #   Wealthfolio Connect service
+│
+├── lib.rs                        # App setup + command registration (~633 lines)
+├── main.rs                       # Desktop entry point
+├── events.rs                     #   Tauri event definitions + emitters
+├── listeners.rs                  #   Frontend event listener setup
+├── scheduler.rs                  #   Periodic sync scheduler
+├── secret_store.rs               #   OS keyring secret store
+├── menu.rs                       #   Application menu (desktop-only)
+└── updater.rs                    #   Auto-update handler (desktop-only)
+```
+
+## apps/server/src/ (45 Rust files, ~12.3K lines)
+
+```
+apps/server/src/
+├── api/                          # Axum HTTP handlers (25 modules)
+│   ├── accounts.rs               #   /accounts endpoints
+│   ├── activities.rs             #   /activities endpoints
+│   ├── addons.rs                 #   /addons endpoints
+│   ├── ai_chat.rs                #   /ai/chat endpoints
+│   ├── ai_providers.rs           #   /ai/providers endpoints
+│   ├── alternative_assets.rs     #   /alternative-assets endpoints
+│   ├── assets.rs                 #   /assets endpoints
+│   ├── connect.rs                #   /connect endpoints (feature-gated)
+│   ├── custom_providers.rs       #   /custom-providers endpoints
+│   ├── device_sync.rs            #   /device-sync endpoints (feature-gated)
+│   ├── device_sync_engine.rs     #   Engine control endpoints (feature-gated)
+│   ├── exchange_rates.rs         #   /exchange-rates endpoints
+│   ├── goals.rs                  #   /goals endpoints
+│   ├── health.rs                 #   /health endpoints
+│   ├── holdings/                 #   /holdings endpoints (sub-module)
+│   ├── limits.rs                 #   /contribution-limits endpoints
+│   ├── market_data.rs            #   /market-data endpoints
+│   ├── net_worth.rs              #   /net-worth endpoints
+│   ├── performance.rs            #   /performance endpoints
+│   ├── portfolio.rs              #   /portfolio endpoints
+│   ├── secrets.rs                #   /secrets endpoints
+│   ├── settings.rs               #   /settings endpoints
+│   ├── shared.rs                 #   Shared API utilities
+│   ├── sync_crypto.rs            #   /sync-crypto endpoints (feature-gated)
+│   └── taxonomies.rs             #   /taxonomies endpoints
+│
+├── domain_events/                # Domain event processing (4 files)
+│   ├── mod.rs                    #   Module entry
+│   ├── planner.rs                #   Event planning logic
+│   ├── queue_worker.rs           #   Event queue consumer
+│   └── sink.rs                   #   WebDomainEventSink implementation
+│
+├── secrets/                      # Secret management (1 file)
+│   └── mod.rs                    #   File-based encrypted secret store
+│
+├── api.rs                        # Router composition + middleware (~179 lines)
+├── auth.rs                       # JWT + Argon2id authentication (~473 lines)
+├── config.rs                     # Environment config (~128 lines)
+├── main.rs                       # Server binary entry point
+├── main_lib.rs                   # AppState construction (~491 lines)
+├── lib.rs                        # Crate public exports
+├── models.rs                     # API request/response models
+├── events.rs                     # SSE EventBus implementation
+├── scheduler.rs                  # Periodic sync scheduler
+├── ai_environment.rs             # Server-specific AI environment
+└── features.rs                   # Feature flag helpers
+```
+
+## crates/ (307 Rust files, ~134K lines)
+
+```
+crates/
+├── core/                         # Domain logic + service traits
+│   └── src/
+│       ├── accounts/             #   Account service + traits
+│       ├── activities/           #   Activity service + traits
+│       ├── addons/               #   Addon service trait
+│       ├── assets/               #   Asset, alternative asset services + traits
+│       ├── constants.rs          #   Domain constants
+│       ├── custom_provider/      #   Custom provider service
+│       ├── errors.rs             #   Core error types
+│       ├── events/               #   Domain event types + sink trait
+│       │   ├── mod.rs            #     Module entry
+│       │   ├── domain_event.rs   #     DomainEvent enum (~250 lines)
+│       │   └── sink.rs           #     DomainEventSink trait
+│       ├── fx/                   #   FX/exchange rate service + traits
+│       ├── goals/                #   Goal service + traits
+│       ├── health/               #   Health diagnostic service + traits
+│       ├── limits/               #   Contribution limit service + traits
+│       ├── portfolio/            #   Portfolio domain (largest module)
+│       │   ├── allocation/       #     Allocation service + traits
+│       │   ├── fire/             #     FIRE planner (Monte Carlo, SORR, sensitivity)
+│       │   ├── holdings/         #     Holdings, valuation services + traits
+│       │   ├── income/           #     Income service + traits
+│       │   ├── net_worth/        #     Net worth service + traits
+│       │   ├── performance/      #     Performance calculation service + traits
+│       │   ├── snapshot/         #     Snapshot service + traits
+│       │   └── valuation/        #     Valuation service + traits
+│       ├── quotes/               #   Quote service + traits + scheduler
+│       ├── secrets/              #   SecretStore trait
+│       ├── settings/             #   Settings service + traits
+│       ├── sync/                 #   Sync-related types
+│       ├── taxonomies/           #   Taxonomy service + traits
+│       ├── utils/                #   Shared utilities
+│       └── lib.rs                #   Crate public exports
+│
+├── storage-sqlite/               # SQLite database layer
+│   ├── migrations/               #   29 Diesel migrations (2023-11 → 2026-03)
+│   └── src/
+│       ├── db/                   #   Connection pool, write actor, initialization
+│       ├── accounts/             #   Account repository (Diesel)
+│       ├── activities/           #   Activity repository (Diesel)
+│       ├── ai_chat/              #   AI chat thread/message repository
+│       ├── assets/               #   Asset + alternative asset repositories
+│       ├── custom_provider/      #   Custom provider repository
+│       ├── fx/                   #   FX rate repository
+│       ├── goals/                #   Goal repository
+│       ├── health/               #   Health dismissal repository
+│       ├── limits/               #   Contribution limit repository
+│       ├── market_data/          #   Market data + quote sync state repositories
+│       ├── portfolio/            #   Snapshot + valuation repositories
+│       │   ├── snapshot/         #     Snapshot repository
+│       │   └── valuation/        #     Valuation repository
+│       ├── settings/             #   Settings repository (key-value)
+│       ├── sync/                 #   Sync state repositories (app, broker, platform, import)
+│       ├── taxonomies/           #   Taxonomy repository
+│       ├── schema.rs             #   Diesel schema declarations
+│       ├── errors.rs             #   Storage error types
+│       ├── utils.rs              #   Storage utilities
+│       └── lib.rs                #   Crate public exports
+│
+├── market-data/                  # Market data provider abstraction
+│   └── src/
+│       ├── errors/               #   Provider error types
+│       ├── models/               #   Quote model types
+│       ├── provider/             #   Provider implementations (Yahoo Finance, etc.)
+│       ├── registry/             #   Provider registry
+│       ├── resolver/             #   Symbol resolution logic
+│       └── lib.rs                #   Crate public exports
+│
+├── connect/                      # Broker sync (Wealthfolio Connect)
+│   └── src/
+│       ├── broker/               #   Broker sync service + orchestrator
+│       │   ├── mapping.rs        #     Data mapping logic
+│       │   ├── models.rs         #     Broker data models
+│       │   ├── orchestrator.rs   #     Sync orchestration
+│       │   ├── progress.rs       #     Progress tracking
+│       │   ├── service.rs        #     BrokerSyncService
+│       │   └── traits.rs         #   BrokerSyncServiceTrait
+│       ├── broker_ingest/        #   Broker data ingestion
+│       ├── platform/             #   Platform detection
+│       ├── client.rs             #   HTTP client for Connect API
+│       ├── token_lifecycle.rs    #   Token lifecycle management
+│       └── lib.rs                #   Crate public exports
+│
+├── device-sync/                  # E2EE device synchronization
+│   └── src/
+│       ├── engine/               #   Sync engine runtime
+│       │   ├── mod.rs            #     Engine module
+│       │   ├── ports.rs          #     Port interfaces
+│       │   └── runtime.rs        #     Runtime state management
+│       ├── client.rs             #   Sync API client
+│       ├── crypto.rs             #   X25519, ChaCha20Poly1305, HKDF operations
+│       ├── enroll_service.rs     #   Device enrollment service
+│       ├── error.rs              #   Sync error types
+│       ├── time.rs               #   Time utilities
+│       ├── types.rs              #   Sync types
+│       └── lib.rs                #   Crate public exports
+│
+└── ai/                           # AI/LLM integration
+    └── src/
+        ├── tools/                #   AI tool implementations (15 tools)
+        │   ├── accounts.rs       #     Account query tool
+        │   ├── activities.rs     #     Activity query tool
+        │   ├── allocation.rs     #     Allocation query tool
+        │   ├── cash_balances.rs  #     Cash balance tool
+        │   ├── constants.rs      #     Tool constants
+        │   ├── goals.rs          #     Goal query tool
+        │   ├── health.rs         #     Health check tool
+        │   ├── holdings.rs       #     Holdings query tool
+        │   ├── import_csv.rs     #     CSV import tool
+        │   ├── income.rs         #     Income query tool
+        │   ├── performance.rs    #     Performance query tool
+        │   ├── record_activities.rs #  Batch activity recording
+        │   ├── record_activity.rs #    Single activity recording
+        │   └── valuation.rs      #     Valuation query tool
+        ├── eval/                  #   AI evaluation framework
+        ├── ai_providers.json     #   Provider catalog (embedded at compile time)
+        ├── chat.rs                #   Chat service with streaming
+        ├── env.rs                 #   AI environment trait
+        ├── error.rs               #   AI error types
+        ├── lib.rs                 #   Crate public exports
+        ├── prompt_template.rs     #   Prompt template model
+        ├── prompt_template_service.rs # Template service
+        ├── provider_model.rs     #   Provider model definitions
+        ├── provider_service.rs   #   Provider management service
+        ├── providers.rs           #   Provider implementations
+        ├── stream_hook.rs         #   Streaming hook for AI responses
+        ├── system_prompt.txt      #   System prompt for AI assistant
+        ├── title_generator.rs     #   Thread title auto-generation
+        └── types.rs               #   AI-specific types
+```
+
+## packages/ (3 packages)
+
+```
+packages/
+├── ui/                           # @wealthfolio/ui — Shared component library
+│   └── src/
+│       ├── components/           #   shadcn/ui components (re-exported)
+│       ├── hooks/                #   Shared UI hooks
+│       ├── lib/                  #   Utility functions
+│       ├── chart.ts              #   Chart component
+│       ├── separator.ts          #   Separator component
+│       ├── skeleton.ts           #   Skeleton component
+│       ├── styles.css            #   Base styles
+│       └── index.ts              #   Barrel exports
+│
+├── addon-sdk/                    # @wealthfolio/addon-sdk — Addon development kit
+│   └── src/
+│       ├── data-types.ts         #   Shared data type definitions
+│       ├── goal-progress.ts      #   Goal progress API
+│       ├── host-api.ts           #   Host API for addons
+│       ├── manifest.ts           #   Addon manifest types
+│       ├── permissions.ts        #   Permission system
+│       ├── query-keys.ts         #   Query key definitions for addons
+│       ├── types.ts              #   Core addon types
+│       ├── utils.ts              #   Utility functions
+│       ├── version.ts            #   SDK version
+│       └── index.ts              #   Barrel exports
+│
+└── addon-dev-tools/              # @wealthfolio/addon-dev-tools — Dev tooling
+    ├── cli.js                    #   CLI for creating/managing addons
+    ├── dev-server.js             #   Dev server for addon development
+    ├── index.js                  #   Main entry
+    ├── scaffold.js               #   Addon scaffolding
+    └── templates/                #   Addon project templates
+```
+
+## addons/ (3 example addons)
+
+```
+addons/
+├── goal-progress-tracker/        # Goal progress tracking addon
+├── investment-fees-tracker/      # Investment fee tracking addon
+└── swingfolio-addon/             # Swing trading addon
+```
+
+## Key Files Index
+
+| File | Purpose |
+|------|---------|
+| `apps/frontend/src/main.tsx` | Frontend entry point — platform detection, addon loading, React render |
+| `apps/frontend/src/routes.tsx` | All route definitions with BrowserRouter |
+| `apps/frontend/src/App.tsx` | Root component with providers |
+| `apps/frontend/src/adapters/index.ts` | Adapter barrel (swapped at build time) |
+| `apps/frontend/src/adapters/tauri/core.ts` | Tauri `invoke()` wrapper with timeout |
+| `apps/frontend/src/adapters/web/core.ts` | HTTP `fetch()` wrapper with COMMANDS map |
+| `apps/frontend/src/adapters/shared/` | Platform-agnostic command wrappers (16 modules) |
+| `apps/frontend/src/lib/query-keys.ts` | TanStack Query key registry |
+| `apps/frontend/src/lib/schemas.ts` | Zod validation schemas |
+| `apps/frontend/src/lib/is-tauri.ts` | Runtime Tauri detection |
+| `apps/frontend/src/context/portfolio-sync-context.tsx` | Portfolio sync orchestration |
+| `apps/tauri/src/lib.rs` | Tauri app setup + 70+ IPC command registration |
+| `apps/tauri/src/context/providers.rs` | Service construction and DI wiring |
+| `apps/tauri/src/context/registry.rs` | ServiceContext struct definition |
+| `apps/tauri/src/secret_store.rs` | OS keyring secret storage |
+| `apps/server/src/api.rs` | Axum router composition + middleware |
+| `apps/server/src/main_lib.rs` | AppState construction + service wiring |
+| `apps/server/src/config.rs` | Environment variable configuration |
+| `apps/server/src/auth.rs` | JWT + Argon2id authentication |
+| `apps/server/src/events.rs` | SSE EventBus for real-time updates |
+| `crates/core/src/lib.rs` | Core crate public API |
+| `crates/core/src/events/domain_event.rs` | DomainEvent enum (all event types) |
+| `crates/core/src/errors.rs` | Core error types |
+| `crates/core/src/portfolio/` | Portfolio domain (allocation, fire, holdings, income, performance, snapshot, valuation) |
+| `crates/storage-sqlite/src/schema.rs` | Diesel database schema |
+| `crates/storage-sqlite/src/db/` | Connection pool + write actor |
+| `crates/storage-sqlite/migrations/` | 29 Diesel migrations |
+| `crates/ai/src/chat.rs` | AI chat service with streaming |
+| `crates/ai/src/tools/` | 15 AI tool implementations |
+| `crates/connect/src/broker/service.rs` | Broker sync service |
+| `crates/device-sync/src/crypto.rs` | E2EE crypto primitives |
+| `package.json` | Root monorepo config (pnpm workspaces, scripts) |
+| `Cargo.toml` | Rust workspace config (members, dependencies, lints) |
+| `Dockerfile` | Multi-stage Docker build (Rust + Node) |
+| `compose.yml` | Production Docker Compose |
+| `pnpm-workspace.yaml` | Workspace package definitions |
+| `tsconfig.base.json` | Shared TypeScript configuration |
+| `AGENTS.md` | AI agent behavioral guide and playbooks |
+
+## Size Metrics
+
+- **Total source files:** ~1,238 (excluding node_modules, target, .git)
+- **Total lines of code:** ~320K (TypeScript + Rust)
+- **By component:**
+  - Frontend (TS/TSX): 579 files, ~129K lines
+  - Tauri app (Rust): 48 files, ~12K lines
+  - Server app (Rust): 45 files, ~12K lines
+  - Core crates (Rust): 307 files, ~134K lines
+- **By language:**
+  - TypeScript/TSX: ~161K lines
+  - Rust: ~158K lines
+- **Database migrations:** 29 migration directories
+- **Tauri IPC commands:** 70+ registered commands
+- **API endpoints:** 25+ Axum handler modules
+- **AI tools:** 15 tool implementations
+- **Shared adapter modules:** 16 platform-agnostic command wrappers
 
 ---
 
-_Structure analysis: 2026-04-20_
+*Structure analysis: 2026-04-20*

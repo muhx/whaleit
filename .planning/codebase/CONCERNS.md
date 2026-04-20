@@ -2,487 +2,175 @@
 
 **Analysis Date:** 2026-04-20
 
-Wealthfolio is a 158k-LoC Rust + 161k-LoC TS/TSX monorepo (Cargo workspace +
-pnpm workspace). It has three deployment surfaces (Tauri desktop, Axum web
-server, iOS/Android via Tauri mobile) that share a `crates/core` business-logic
-layer. The issues below are grouped by theme; file paths and line numbers point
-to the actual offending sites.
-
-## Tech Debt
-
-**Health auto-fix actions are stubs:**
-
-- Issue: Three `execute_fix` branches in the health service log
-  `"fix action not yet implemented"` and return `Ok(())`. The UI can offer "Fix
-  this" buttons that silently do nothing.
-- Files:
-  - `crates/core/src/health/service.rs:584` (`sync_prices`, `retry_sync`)
-  - `crates/core/src/health/service.rs:594` (`fetch_fx`)
-  - `crates/core/src/health/service.rs:603` (`migrate_classifications`)
-- Impact: Users click a remediation action, get no error, and assume the issue
-  is resolved. Undermines trust in the Health panel.
-- Fix approach: Wire the fix actions to `QuoteService::sync_assets`,
-  `FxService::refresh_rates`, and
-  `TaxonomyService::migrate_legacy_classifications`. The payload parsing is
-  already in place; just replace the `warn!` + `Ok(())` with the actual service
-  call.
-
-**AI chat tag API is a no-op on both backends:**
-
-- Issue: `add_tag`, `remove_tag` endpoints accept requests and return success
-  without persisting anything. The `ChatService` has no tag storage.
-- Files:
-  - `apps/server/src/api/ai_chat.rs:233` and
-    `apps/server/src/api/ai_chat.rs:244`
-  - `apps/tauri/src/commands/ai_chat.rs:154` and
-    `apps/tauri/src/commands/ai_chat.rs:165`
-- Impact: Frontend thinks tags are saved; reloading the thread reveals they
-  vanished.
-- Fix approach: Add a `thread_tags` table to `crates/storage-sqlite`, implement
-  `add_tag/remove_tag` on `ChatService`, and replace the TODO bodies with calls
-  through `state.ai_chat_service`.
-
-**Addon store ratings endpoint is empty (web mode):**
-
-- Issue: `get_addon_ratings_web` returns an empty `Vec` to "avoid UI errors".
-  Desktop/Tauri mode reaches the real store; web users silently see no ratings.
-- Files: `apps/server/src/api/addons.rs:187`
-- Impact: Feature parity gap between desktop and web. Docker users see a
-  less-useful addon catalog.
-- Fix approach: Proxy the web handler to `ADDON_STORE_API_BASE_URL`
-  (`crates/core/src/addons/service.rs:11`) the same way the Tauri command does.
-
-**Symbol-resolution "manual" defaults duplicated:**
-
-- Issue: `createManualSymbol` hardcodes fallback values that also live in
-  `create-custom-asset-dialog.tsx`. Drift guaranteed.
-- Files:
-  `apps/frontend/src/pages/activity/import/components/symbol-resolution-panel.tsx:17`
-- Impact: When one copy is updated (e.g., new `dataSource` value), the other
-  produces assets that look manual but route differently.
-- Fix approach: Extract to `apps/frontend/src/lib/manual-symbol.ts` and import
-  from both sites.
-
-**Permission "detection" for addons is substring matching:**
-
-- Issue: `detect_addon_permissions` does `file.content.contains(pattern)`
-  against bundled JS. A minifier renaming `getHoldings` to `e.gH()` evades
-  detection. The SDK merges declared + detected, so a malicious addon can just
-  omit declarations and evade detection simultaneously.
-- Files: `crates/core/src/addons/service.rs:148-475`, called from
-  `extract_addon_zip_internal` (`crates/core/src/addons/service.rs:570`) and
-  `install_addon_zip` (`crates/core/src/addons/service.rs:1418`).
-- Impact: The "Permissions required" consent screen shown to users can be
-  misleading.
-- Fix approach: Treat permission declarations as a manifest-only contract
-  (require `permissions[]`); enforce at the host API boundary by rejecting calls
-  from addons whose manifest didn't declare that category.
-
-**Large files with mixed responsibilities:**
-
-- Files (all >1500 lines, indicating missing splits):
-  - `crates/core/src/activities/activities_service.rs` (4279 lines)
-  - `crates/storage-sqlite/src/sync/app_sync/repository.rs` (3673 lines)
-  - `crates/core/src/quotes/service.rs` (2740 lines)
-  - `crates/core/src/quotes/sync.rs` (2446 lines)
-  - `apps/server/src/api/device_sync_engine.rs` (2001 lines)
-  - `crates/ai/src/chat.rs` (1973 lines)
-  - `crates/core/src/portfolio/snapshot/snapshot_service.rs` (1933 lines)
-  - `apps/tauri/src/commands/device_sync/mod.rs` (1885 lines)
-  - `packages/ui/src/components/data-grid/use-data-grid.ts` (3286 lines)
-  - `apps/frontend/src/lib/types.ts` (1929 lines — single file with all
-    cross-cutting types)
-  - `apps/frontend/src/adapters/web/core.ts` (1394 lines — giant `COMMANDS` map)
-- Impact: Slow compile, hard to review, merge conflicts, IDE sluggishness.
-- Fix approach: Split `activities_service.rs` into `activities_crud.rs` /
-  `activities_import.rs` / `activities_validation.rs`. Shard `lib/types.ts` by
-  domain.
-
-## Known Bugs / Recent Bug-Fix Signals
-
-Recent commits show a high concentration of fixes in two areas — hot fragility
-zones:
-
-**AI-assistant + CSV import flow (>=20 fix commits since last release):**
-
-- Symptoms: tool-call storms, language drift post-tool-call, stale CSV cards,
-  incorrect validation behavior when account unselected, empty `csvContent`
-  accepted silently.
-- Files:
-  `apps/frontend/src/features/ai-assistant/hooks/use-chat-import-session.ts`
-  (1025 lines),
-  `apps/frontend/src/features/ai-assistant/components/tool-uis/import-csv-tool-ui.tsx`,
-  `crates/ai/src/chat.rs`.
-- Workaround: N/A — fixes merged, but cluster suggests the feature is still
-  settling.
-- Indicator: >=15 consecutive `fix(ai-import): ...` commits on `main` within a
-  short window (e.g., `1c124078`, `d2f4d3d8`, `3a1f535c`, `6bd0c861`,
-  `431f4c84`, `fb06c517`, `417a83be`, `322d847a`, `cbd2881b`, `59478d36`,
-  `7b6578ac`, `5506d85f`, `3b4a3024`).
-
-**Symbol mapping validation churn:**
-
-- Symptoms: revalidation running after stale state; "Validate" button leaving UI
-  inconsistent.
-- Files:
-  `apps/frontend/src/pages/activity/import/steps/review-step.tsx:209-348`.
-- Indicator: commits `68676ddb`, `4722c50a`, `7d562698`, `d9bb9dbd`, `eea9f2da`
-  all touching the same flow.
-
-**Rust 1.95 clippy compatibility:**
-
-- Files: `f48f1a44` and `748531ca` show hand-fixing `sort_by` -> `sort_by_key`
-  across the codebase for a toolchain bump.
-- Indicator: No `rust-toolchain.toml` pinning means CI-breaking clippy surprises
-  on every minor Rust release.
-- Fix approach: Add `rust-toolchain.toml` with a known-good channel.
-
-## Security Considerations
-
-**No Content Security Policy on Tauri WebView:**
-
-- Risk: `"security": { "csp": null }` disables CSP entirely. The frontend loads
-  user-installed addon bundles as Blob URLs
-  (`apps/frontend/src/addons/addons-core.ts:127` creates a `Blob`, then
-  `URL.createObjectURL(blob)`, then `await import(blobUrl)`). With no CSP, a
-  malicious addon can inject a remote `<script>` element or fetch user data to
-  arbitrary hosts.
-- Files:
-  - `apps/tauri/tauri.conf.json:71` (`"csp": null`)
-  - `apps/frontend/src/addons/addons-core.ts:126-133` (blob-URL dynamic import)
-- Current mitigation: Permission declaration/detection (bypassable — see
-  "permission detection" above).
-- Recommendations:
-  1. Set a strict `csp` in `tauri.conf.json`
-     (`default-src 'self'; script-src 'self' blob:; connect-src 'self' https://wealthfolio.app https://api.wealthfolio.app ...`).
-  2. Enforce declared permissions at the host-API boundary, not just UI consent.
-  3. Audit `packages/addon-sdk/src/host-api.ts` (781 lines) to ensure every
-     function checks the calling addon's declared categories.
-
-**Custom quote-provider SSRF surface:**
-
-- Risk: `validate_url` explicitly allows arbitrary hosts ("self-hosted providers
-  on private networks are supported"). Any user with write access to
-  custom-provider settings can direct the backend to fetch
-  `http://169.254.169.254/...` (AWS metadata), internal databases, or rebind DNS
-  to exfiltrate.
-- Files: `crates/core/src/custom_provider/model.rs:60` (scheme check only),
-  fetched by `crates/core/src/quotes/custom_scraper_provider.rs:40` (reqwest
-  client with `redirect::Policy::none()` — good — but no host allow/deny list,
-  no DNS pinning).
-- Current mitigation: Redirects disabled, 15s timeout, response size cap
-  (`MAX_RESPONSE_BYTES`). Feature is explicitly documented as allowing private
-  networks (commit `b404c93a`).
-- Recommendations (desktop mode — single user — lower risk; web/docker mode —
-  multi-user — meaningful risk):
-  1. In web/server mode, add a configurable
-     `WF_CUSTOM_PROVIDER_ALLOW_PRIVATE=false` default.
-  2. Block RFC1918 / loopback / link-local ranges unless explicitly opted in.
-  3. Log every custom-provider fetch URL at INFO.
-
-**Addon dev server permissive CORS to hardcoded origins:**
-
-- Risk: `packages/addon-dev-tools/dev-server.js:37` whitelists
-  `http://localhost:1420` and `http://localhost:3000` with `credentials: true`.
-  Any process on the dev machine binding those ports can request addon source.
-  Lower risk (dev-only).
-- Files: `packages/addon-dev-tools/dev-server.js:37-41`
-- Current mitigation: Dev-only (not shipped), opt-in via
-  `VITE_ENABLE_ADDON_DEV_MODE`.
-
-**Rust `.unwrap()` density in crypto and sync:**
-
-- Risk: 1359 occurrences across 99 files. Concentrations in hot paths:
-  - `crates/device-sync/src/crypto.rs` — 15 unwraps in E2EE primitives.
-  - `crates/device-sync/src/client.rs` — 14 unwraps.
-  - `crates/device-sync/src/engine/mod.rs` — 5 unwraps in the sync engine.
-  - `crates/connect/src/client.rs` — 1 in HTTP client.
-  - `crates/core/src/quotes/sync.rs` — 16 unwraps including
-    `SYNC_LOCKS.lock().unwrap()` (panic if lock poisoned).
-  - `crates/core/src/portfolio/snapshot/holdings_calculator.rs` — 9 unwraps in
-    math.
-  - `crates/market-data/src/provider/alpha_vantage/mod.rs` — 28 unwraps in
-    response parsing.
-- Impact: Any unhandled poison or parse failure crashes the Tauri backend
-  (taking the whole app) or terminates an Axum request task. On mobile
-  (iOS/Android) this surfaces as app kills.
-- Current mitigation: 391 `expect()` calls add slightly more context, but don't
-  prevent panics.
-- Recommendations: Start with the cryptographic/sync paths — replace `unwrap()`
-  in `crates/device-sync/src/engine/runtime.rs:126-149` (5
-  `pairing_flows.lock().unwrap()`) with `.map_err(|_| ...Poisoned...)?`.
-
-**Secrets storage key derivation order:**
-
-- Observation: `apps/server/src/auth.rs:219` derives JWT + secrets keys from a
-  single `WF_SECRET_KEY` via HKDF (good). Rotating the master key requires
-  migrating all stored secrets — `FileSecretStore::persist_migrated`
-  (`apps/server/src/secrets/mod.rs:63`) exists for this. Verify it is actually
-  invoked on rotation; current code paths aren't obvious.
-- Files: `apps/server/src/auth.rs:218-231`, `apps/server/src/secrets/mod.rs:63`
-
-**Inline HTML injection sites (reviewed, currently safe):**
-
-- `apps/frontend/src/pages/settings/market-data/response-preview.tsx:88` — safe:
-  input is `escapeHtml`'d first (lines 60, 93-99), only numeric `jsonpath` spans
-  are re-injected. Must stay that way on future edits.
-- `packages/ui/src/components/ui/chart.tsx:78` — shadcn-generated CSS template,
-  safe.
-- No actively exploitable cases found. Flag in code review: any new inline HTML
-  injection site without prior escaping.
-
-## Performance Bottlenecks
-
-**N-assets loop in quote sync with per-provider batching:**
-
-- Problem: `QuoteSyncService::build_sync_plans` loops over every asset to group
-  by provider (`crates/core/src/quotes/sync.rs:431`), then calls
-  `get_quote_bounds_for_assets` once per provider. Good batching inside
-  providers, but for 1000+ holdings, `build_asset_sync_plan` still allocates per
-  asset.
-- Files: `crates/core/src/quotes/sync.rs:425-450`,
-  `crates/core/src/quotes/sync.rs:1265`, `:1318`, `:1359`, `:1374` (five
-  separate passes over `assets`).
-- Improvement path: Single fused pass building all three structures
-  (`assets_by_provider`, `quote_bounds`, plans) in one iteration.
-
-**Portfolio snapshot service operates on entire history:**
-
-- Problem: `SnapshotService` (1933 lines) recalculates account state snapshots.
-  `save_snapshots` does `diesel::replace_into` row-by-row
-  (`crates/storage-sqlite/src/portfolio/snapshot/repository.rs:51`), which in
-  SQLite triggers WAL writes per row rather than batched transactions.
-- Files: `crates/storage-sqlite/src/portfolio/snapshot/repository.rs:33-59`
-- Improvement path: Wrap the insert in a single transaction (already inside
-  `writer.exec` — verify all replacements share one commit).
-
-**`.unwrap()` on `scraper::Selector::parse`:**
-
-- Problem: Hot-path HTML parsing in `custom_scraper_provider` does
-  `Selector::parse("*").expect(...)` every invocation
-  (`crates/core/src/quotes/custom_scraper_provider.rs:787`, `:811`, `:812`).
-  Selector parsing is not free.
-- Improvement path: `LazyLock<Selector>` for the three static selectors.
-
-**AI chat service — 1973-line monolith:**
-
-- Problem: `crates/ai/src/chat.rs` holds streaming, tool-dispatch, history
-  persistence, provider tuning, and rig hooks in one struct. Each incoming
-  message walks through the whole file. Recent commits (`fa13d23d`, `43c2d893`,
-  `33286314`, `deba54c6`) all patched performance/correctness here.
-- Improvement path: Extract streaming into `crates/ai/src/streaming.rs`;
-  tool-call dispatch into `crates/ai/src/dispatch.rs`.
-
-**Mobile form with 34 `any` casts in one file:**
-
-- Problem:
-  `apps/frontend/src/pages/activity/components/mobile-forms/mobile-details-step.tsx`
-  contains 34 `any` occurrences (most as `any` casts on `setValue/watch`). Each
-  cast defeats memoization hints and increases re-render cost on mobile devices.
-- Files:
-  `apps/frontend/src/pages/activity/components/mobile-forms/mobile-details-step.tsx`
-- Improvement path: Type the form values properly (`NewActivityFormValues`
-  already exists); replace casts with `Path<NewActivityFormValues>`
-  discriminated unions.
-
-## Fragile Areas
-
-**Device sync engine state machine:**
-
-- Files: `crates/device-sync/src/engine/mod.rs` (1815 lines),
-  `crates/device-sync/src/client.rs` (1735 lines),
-  `apps/server/src/api/device_sync_engine.rs` (2001 lines),
-  `apps/tauri/src/commands/device_sync/mod.rs` (1885 lines).
-- Why fragile: E2EE + pairing + reconcile + outbox replay + two-phase init, all
-  touching `Mutex`/`RwLock` and calling `.unwrap()` on poisoned locks
-  (`crates/device-sync/src/engine/runtime.rs:126-149`).
-- Safe modification: Do not modify without running the full device-sync
-  integration test suite. Touch one phase (pair, push, pull, reconcile) at a
-  time.
-- Test coverage: Unknown — `crates/device-sync/src/engine/runtime.rs` uses
-  unwraps on lock guards; lock-poisoning paths are untested.
-
-**AI chat streaming + tool-call loops:**
-
-- Files: `crates/ai/src/chat.rs:1973`,
-  `apps/frontend/src/features/ai-assistant/hooks/use-chat-runtime.ts:995`,
-  `apps/frontend/src/features/ai-assistant/hooks/use-chat-import-session.ts:1025`.
-- Why fragile: 6 `rig` hook callbacks, streaming deltas, tool-call detection
-  state machine with module-level `Set`s (`1c124078`). Recent commit `fa13d23d`
-  literally named "prevent tool-call storms and text loops via rig hook".
-- Safe modification: Any change requires end-to-end test with at least two LLM
-  providers (Ollama + OpenAI) and a tool-heavy conversation (CSV import).
-- Test coverage: `types.test.ts` (898 lines) covers types, not runtime behavior.
-
-**Frontend single-file type registry:**
-
-- Files: `apps/frontend/src/lib/types.ts` (1929 lines).
-- Why fragile: Every feature imports from this file; circular-import risk; a
-  `git blame` hotspot; PR diffs frequently span 10+ sections.
-- Safe modification: Add new types in feature-local files; only promote here
-  when shared across 3+ features.
-
-**Snapshot + Holdings + Valuation + Performance coupling:**
-
-- Files: `crates/core/src/portfolio/snapshot/snapshot_service.rs`,
-  `holdings/holdings_service.rs`, `valuation/valuation_service.rs`,
-  `performance/performance_service.rs`.
-- Why fragile: All four services must agree on timezone handling
-  (`new_with_timezone` variants). Cross-service event wiring in
-  `apps/server/src/main_lib.rs:231-290`.
-- Safe modification: Change `timezone` handling in all four services together,
-  with regression tests.
-
-**Activities service import + validation:**
-
-- Files: `crates/core/src/activities/activities_service.rs` (4279 lines).
-- Why fragile: Handles CSV parsing, FX normalization, symbol resolution, asset
-  creation, idempotency keys — all in one service. Recent fix `d2f4d3d8` made
-  per-account validation failures handled "gracefully" after regressions.
-
-## Scaling Limits
-
-**SQLite single-writer:**
-
-- Current capacity: Single `write_actor` task
-  (`crates/storage-sqlite/src/db/write_actor.rs`). All writes serialize through
-  one mpsc channel.
-- Limit: Write throughput around 100-500 tx/s depending on WAL checkpointing.
-- Scaling path: Acceptable for desktop + single-user web. For multi-tenant
-  hosted deployments, would need per-user databases or migration to Postgres.
-
-**Market-data provider rate limits:**
-
-- Alpha Vantage free tier: 5 calls/minute (documented in
-  `crates/market-data/src/provider/alpha_vantage/mod.rs:9`).
-- Finnhub: rate-limited in `crates/market-data/src/registry/circuit_breaker.rs`.
-- Limit: A user with 1000 symbols syncing initial history will hit provider
-  limits and the circuit breaker opens.
-- Scaling path: Already implemented — circuit breaker
-  (`HALF_OPEN_SUCCESS_THRESHOLD` in
-  `crates/market-data/src/registry/circuit_breaker.rs:60`). Verify it is tuned.
-
-**Frontend bundle size risk:**
-
-- `packages/ui/src/components/data-grid/use-data-grid.ts` (3286 lines) +
-  `packages/ui/src/components/data-grid/data-grid-cell-variants.tsx` (2970
-  lines) all imported by default. Tree-shaking may not eliminate unused
-  variants.
-- Scaling path: Split variants into separate files; lazy-load the grid on routes
-  that use it.
-
-## Dependencies at Risk
-
-**Rig (AI framework):**
-
-- Risk: `crates/ai/src/chat.rs` comments reference "rig hook" (`fa13d23d`). Rig
-  is a newer crate with a smaller ecosystem; breaking changes more likely.
-- Impact: AI assistant feature breaks on upgrade.
-- Migration plan: Abstraction via `AiProviderService` trait exists
-  (`crates/ai/src/providers.rs`); swapping implementations is possible but
-  requires rewriting tool-call plumbing.
-
-**Recharts typing:**
-
-- Three `@ts-expect-error` comments on recharts interactions:
-  - `apps/frontend/src/components/history-chart-symbol.tsx:60`
-  - `addons/investment-fees-tracker/src/components/donut-chart.tsx:146`
-- Risk: Recharts major-version bump silently breaks charts; the
-  `@ts-expect-error` comments become stale.
-- Migration plan: Pin recharts major version; add visual regression tests for
-  charts.
-
-**Diesel + SQLite 3.35+ feature:**
-
-- Workspace Cargo.toml enables `returning_clauses_for_sqlite_3_35`. Target
-  systems on Debian Stable (older libsqlite) may fail.
-- Current mitigation: `rusqlite = { version = "0.34", features = ["bundled"] }`
-  ships its own SQLite.
-
-**Tauri v2 updater plugin:**
-
-- Endpoint:
-  `https://wealthfolio.app/releases/{{target}}/{{arch}}/{{current_version}}`
-  (`apps/tauri/tauri.conf.json:41`). Single point of failure — outage blocks
-  auto-updates for all desktop users.
-- Public key is pinned (good).
-
-## Missing Critical Features
-
-**From ROADMAP.md (checked, not yet implemented):**
-
-- Options trading support (Phase 4, explicit `- [ ]` in `ROADMAP.md:65`).
-- Portfolio analysis: sector allocation, concentration risk, dividend yield
-  (Phase 5, `ROADMAP.md:71`).
-- Monte Carlo projection (Phase 5, `ROADMAP.md:72`).
-- Retirement/FIRE planner withdrawal strategies (Phase 5, `ROADMAP.md:73`).
-  Note: `apps/frontend/src/pages/fire-planner/` and
-  `crates/core/src/portfolio/fire/calculator.rs` exist — basic planner is there,
-  but withdrawal strategies missing.
-- Addons marketplace (Phase 6, `ROADMAP.md:77`).
-- Budgeting and spend tracking module (`ROADMAP.md:81` — noted with typo:
-  "Sprend").
-
-**Operational gaps observed:**
-
-- No `rust-toolchain.toml` — toolchain drift causes CI breakage (see commits
-  `748531ca`, `f4403a7e`, `f48f1a44`, `644dcb6e` all fixing Rust 1.95 issues).
-- No Dependabot / renovate config found in `.github/` for Rust crate updates.
-- No `.github/CODEOWNERS` observed — review routing is implicit.
+## Architecture Concerns
+
+### Monolithic Web Adapter Command Router
+- Issue: `apps/frontend/src/adapters/web/core.ts` (1,394 lines) contains a single `invoke()` function with a 184-case `switch` statement that maps every backend command to HTTP request construction. Each case manually destructures `payload as { ... }` (123 type assertions) with no compile-time validation that payload shapes match what the server expects.
+- Files: `apps/frontend/src/adapters/web/core.ts`
+- Impact: Adding any new backend command requires editing this giant switch. Payload shape mismatches between frontend and server are only caught at runtime. The file grows linearly with every new API endpoint.
+- Fix approach: Generate the command-to-HTTP mapping from a shared schema (e.g., OpenAPI or a typed definition file). At minimum, extract each command group into separate modules (activities, sync, ai, etc.) and compose them.
+
+### Giant Types File
+- Issue: `apps/frontend/src/lib/types.ts` is 1,929 lines containing every TypeScript interface in the frontend — from `Account` to `TaxonomyInstrumentMappingJson` to `ProviderTuningOverrides`. This is a "God file" that couples all feature modules together.
+- Files: `apps/frontend/src/lib/types.ts`
+- Impact: Any change to any type re-compiles every import. Circular import risks. Difficult to navigate and find relevant types.
+- Fix approach: Co-locate types with their features. Domain types like `Activity`, `Account`, `Holding` belong in `features/` or `commands/`. Shared utility types stay in `lib/types.ts`. Split by domain: `types/activity.ts`, `types/portfolio.ts`, `types/sync.ts`, etc.
+
+### Massive Rust Service Files
+- Issue: Several core service files exceed healthy complexity thresholds: `crates/core/src/activities/activities_service.rs` (4,279 lines), `crates/storage-sqlite/src/sync/app_sync/repository.rs` (3,673 lines), `crates/core/src/quotes/service.rs` (2,740 lines). These contain business-critical logic that is hard to reason about in a single file.
+- Files: `crates/core/src/activities/activities_service.rs`, `crates/storage-sqlite/src/sync/app_sync/repository.rs`, `crates/core/src/quotes/service.rs`
+- Impact: High cognitive load for any change. Difficult to test individual responsibilities in isolation. Merge conflict magnet.
+- Fix approach: Extract sub-responsibilities into dedicated modules. For `activities_service.rs`, split CSV import logic, symbol resolution, and activity CRUD into separate files behind the existing trait interface. For the sync repository, split snapshot export/restore, outbox management, and LWW application into separate modules.
+
+### Dual-Platform Adapter Drift Risk
+- Issue: The Tauri (`apps/frontend/src/adapters/tauri/`) and Web (`apps/frontend/src/adapters/web/`) adapters are separate implementations of the same interface. The web adapter is a 1,394-line monolith while Tauri adapter files delegate to Tauri IPC. There is no shared type contract ensuring both adapters accept/return the same shapes.
+- Files: `apps/frontend/src/adapters/tauri/*.ts`, `apps/frontend/src/adapters/web/*.ts`
+- Impact: API drift between desktop and web modes. A change in one adapter may not be reflected in the other, causing runtime errors in one mode but not the other.
+- Fix approach: Define typed adapter interfaces in a shared module that both adapters implement. Add integration tests that verify both adapters produce identical outputs for identical inputs.
+
+## Code Quality Concerns
+
+### Hand-Rolled SQL in Sync Repository
+- Issue: The sync repository constructs SQL strings manually using `format!()` with `escape_sqlite_str()` for sanitization (14 call sites) and `quote_identifier()` for column/table names. This includes dynamic INSERT/UPDATE with `json_value_to_sql_literal()` which serializes JSON values to SQL literals.
+- Files: `crates/storage-sqlite/src/sync/app_sync/repository.rs` (lines 435-636, 672+)
+- Impact: While the `escape_sqlite_str` function handles single quotes, hand-rolled SQL is inherently riskier than parameterized queries. Any missed escaping path could lead to SQL injection. The `json_value_to_sql_literal()` function in particular constructs values by string concatenation.
+- Fix approach: Migrate dynamic SQL to Diesel's query builder where possible. For the JSON-to-SQL upsert path (`upsert_json_row`), use parameterized bindings via `diesel::sql_query(...).bind::<Text, _>(...)` instead of string interpolation.
+
+### Type Safety Gaps in Web Adapter
+- Issue: 123 `payload as { ... }` type assertions in `apps/frontend/src/adapters/web/core.ts` with no runtime validation. Any payload shape mismatch silently produces incorrect HTTP requests. The `invoke<T>()` function also casts responses with no validation (`JSON.parse(text) as T`).
+- Files: `apps/frontend/src/adapters/web/core.ts`
+- Impact: Silent type mismatches between frontend and backend cause hard-to-debug errors at runtime. No TypeScript compiler protection for the actual HTTP request payloads.
+- Fix approach: Define Zod schemas for command payloads (the project already uses Zod). Validate at the adapter boundary. At minimum, add runtime type checks for critical commands.
+
+### Deprecated `ActivityLegacy` Interface Still Present
+- Issue: `ActivityLegacy` interface at line 70 of `types.ts` is marked `@deprecated` but remains in the codebase. The `Activity` interface (line 90) is the replacement. The deprecated type still exists alongside the new one.
+- Files: `apps/frontend/src/lib/types.ts` (line 70)
+- Impact: Confusion about which type to use. Risk of new code accidentally using the legacy type.
+- Fix approach: Audit all usages of `ActivityLegacy` and migrate to `Activity`. Remove the deprecated interface.
+
+### 14 Untyped `Record<string, unknown>` in types.ts
+- Issue: The types file contains 14 instances of `Record<string, unknown>` for fields like `metadata`, `providerConfig`, `payload`, `checkpointJson`, etc. These are effectively untyped objects that could contain anything.
+- Files: `apps/frontend/src/lib/types.ts`
+- Impact: No IDE autocompletion or type checking for these fields. Consumers must cast or use type assertions. Bugs from incorrect property access are not caught at compile time.
+- Fix approach: Define proper interfaces for each metadata shape. Start with the most commonly accessed ones (e.g., `Asset.metadata`, `Asset.providerConfig`, `FixAction.payload`).
+
+## Performance Concerns
+
+### No Evidence of Pagination in Activity Queries
+- Issue: The `activities_service.rs` (4,279 lines) handles activity search and import. While the frontend sends pagination params, the service's query construction should be verified for proper LIMIT/OFFSET usage and index utilization. The repository file (`crates/storage-sqlite/src/activities/repository.rs`) is 2,020 lines.
+- Files: `crates/core/src/activities/activities_service.rs`, `crates/storage-sqlite/src/activities/repository.rs`
+- Impact: Large activity datasets could cause slow queries or memory issues if pagination is not properly enforced at the SQL level.
+- Fix approach: Verify all activity queries use `LIMIT`/`OFFSET` with proper WHERE clause indexing. Add query plan analysis for common search patterns.
+
+### Quote Service Complexity
+- Issue: `crates/core/src/quotes/service.rs` (2,740 lines) handles quote CRUD, provider management, sync, and import — all in one service. Quote sync in particular (`crates/core/src/quotes/sync.rs`, 2,446 lines) orchestrates multi-provider data fetching.
+- Files: `crates/core/src/quotes/service.rs`, `crates/core/src/quotes/sync.rs`
+- Impact: Quote sync is likely the most I/O-intensive operation in the app. Any inefficiency in the sync orchestration (sequential vs parallel fetching, retry logic, batch size) directly impacts startup and refresh times.
+- Fix approach: Profile quote sync with realistic data. Ensure parallel provider fetching where possible. Consider batching quote writes to reduce SQLite transaction overhead.
+
+### Large Frontend Components with Heavy State
+- Issue: Several React components exceed 1,000 lines with many `useState` hooks: `provider-settings-card.tsx` (1,476 lines, 8 `useState`), `device-sync-section.tsx` (1,441 lines, 16 `useState`), `source-config-panel.tsx` (1,370 lines). These monolithic components re-render on every state change.
+- Files: `apps/frontend/src/features/ai-assistant/components/provider-settings-card.tsx`, `apps/frontend/src/features/devices-sync/components/device-sync-section.tsx`, `apps/frontend/src/pages/settings/market-data/source-config-panel.tsx`
+- Impact: Excessive re-renders in complex forms. State management is difficult to follow. Components are hard to test and maintain.
+- Fix approach: Extract sub-components with their own state. Use `useReducer` for complex state machines (especially device-sync which has an explicit state machine). Move form state to `react-hook-form` (already in the project) instead of individual `useState` calls.
+
+## Security Concerns
+
+### Dynamic SQL Construction in Device Sync
+- Issue: The sync repository constructs SQL dynamically via `format!()` for operations like upserting JSON rows, applying taxonomy events, and exporting/importing snapshots. While `escape_sqlite_str()` and `quote_identifier()` provide basic sanitization, this pattern is inherently more risky than parameterized queries.
+- Files: `crates/storage-sqlite/src/sync/app_sync/repository.rs` (lines 435-636, 672+)
+- Risk: SQL injection if any escaping path is missed or if a new code path forgets to use the escape functions.
+- Current mitigation: `escape_sqlite_str()` handles single-quote doubling, `quote_identifier()` handles backtick wrapping, `validate_sync_table()` restricts tables to a known allowlist.
+- Recommendations: Migrate `upsert_json_row()` to use Diesel's parameterized query API. Add fuzz testing for the SQL construction paths. Consider using `diesel::insert_into(...).on_conflict(...).values(...)` instead of raw SQL.
+
+### Secrets Management in Web Mode
+- Issue: The web adapter (`apps/frontend/src/adapters/web/core.ts`) sends API keys and secrets via JSON body to the server's `/api/v1/secrets` endpoint. The server stores them (presumably in SQLite). In desktop mode, secrets go through OS keyring via Tauri.
+- Files: `apps/frontend/src/adapters/web/core.ts` (lines 770-787), `crates/core/src/secrets/`
+- Risk: Web mode stores secrets server-side. If the server is accessed over an insecure network, secrets could be intercepted. The `.env.web` file exists (not read, but present).
+- Current mitigation: Credentials use `same-origin` fetch policy. HTTPS should be enforced in production.
+- Recommendations: Verify that web server enforces HTTPS. Ensure secret encryption at rest. Document the security model difference between desktop and web modes.
+
+### E2EE Key Material Handling
+- Issue: Device sync uses E2EE with key envelopes, pairing challenges, and recovery envelopes. The frontend handles these cryptographic operations and passes key material through the adapter layer.
+- Files: `apps/frontend/src/features/devices-sync/`, `crates/device-sync/`
+- Risk: Any leak of key material in logs, error messages, or state persistence could compromise encrypted sync data.
+- Current mitigation: AGENTS.md explicitly states "Never log secrets or financial data."
+- Recommendations: Audit all logging paths in `crates/device-sync/` for accidental key material logging. Ensure React state containing key material is cleared after use.
+
+## Maintainability Concerns
+
+### Low Frontend Test Coverage
+- Issue: 579 TypeScript/TSX source files vs 42 test files (~7% file coverage). Testing is concentrated in activity forms (7 test files in `__tests__/`), with many feature modules having zero tests: holdings page, settings pages, AI assistant hooks, market data pages, net worth, alternative assets.
+- Files: `apps/frontend/src/` (579 source vs 42 test files)
+- Risk: Frontend refactoring and feature changes have low safety net. UI regressions can go undetected.
+- Priority: High — new features are being added without corresponding test coverage.
+
+### Rust Test Co-location Creates Large Files
+- Issue: Test files are co-located in the same source files as implementation, inflating file sizes: `snapshot_service.rs` tests = 5,314 lines, `activities_service_tests.rs` = 5,147 lines, `holdings_calculator_tests.rs` = 5,136 lines. The actual `activities_service.rs` is 4,279 lines of implementation.
+- Files: `crates/core/src/portfolio/snapshot/snapshot_service_tests.rs`, `crates/core/src/activities/activities_service_tests.rs`, `crates/core/src/portfolio/snapshot/holdings_calculator_tests.rs`
+- Impact: Very large files make code review harder. Test and implementation in the same PR review diff increases cognitive load.
+- Fix approach: Consider moving test files to a `tests/` directory at the crate level. This is a style preference and not urgent — the existing approach is valid Rust convention.
+
+### Web Core Must Track Every Backend Command
+- Issue: Every new backend command (Tauri IPC or Axum HTTP endpoint) requires a corresponding entry in the web adapter's `COMMANDS` map AND a `case` in the `switch` statement. There are currently 100+ command entries. Missing either the map entry or the case handler causes a runtime error.
+- Files: `apps/frontend/src/adapters/web/core.ts`
+- Impact: High maintenance burden. Easy to forget adding both entries when creating a new backend command.
+- Fix approach: Generate the COMMANDS map and request construction from a single source of truth (e.g., a shared API definition file or OpenAPI spec).
+
+### COMMANDS Map and Server Routes Must Stay Synchronized
+- Issue: The `COMMANDS` map in `apps/frontend/src/adapters/web/core.ts` maps command names to `{ method, path }`. The Axum server in `apps/server/src/api/` must define matching routes. There is no compile-time or build-time verification that these match.
+- Files: `apps/frontend/src/adapters/web/core.ts`, `apps/server/src/api/`
+- Impact: Route mismatches between frontend and server cause 404s at runtime. Method mismatches (GET vs POST) cause silent failures.
+- Fix approach: Share route definitions between frontend and server, or generate them from a common spec. Add an integration test that verifies all COMMANDS entries resolve to valid server endpoints.
+
+## Dependency Risks
+
+### Supabase Client for Web Auth
+- Issue: `@supabase/supabase-js` (v2.95.3) is a dependency in `apps/frontend/package.json`. This is likely used for web authentication mode. Supabase is a full backend-as-a-service platform — using only the auth portion adds significant bundle weight.
+- Files: `apps/frontend/package.json`
+- Impact: Increased bundle size. Supabase client brings its own realtime engine and postgrest client. Version pinning to `^2.x` allows breaking changes in minor versions.
+- Fix approach: Evaluate if a lighter auth library could replace Supabase for the web mode use case. Pin to exact version if keeping it.
+
+### `lodash` for Utility Functions
+- Issue: `lodash` (v4.17.23) is listed as a dependency. Modern JavaScript/TypeScript has native equivalents for most lodash functions. Tree-shaking may not fully eliminate unused lodash code.
+- Files: `apps/frontend/package.json`
+- Impact: Potential bundle size bloat from unused lodash utilities.
+- Fix approach: Audit which lodash functions are actually used and replace with native alternatives or smaller focused packages (e.g., `just-throttle`, `just-debounce-it`).
+
+### Multiple Tauri Plugin Dependencies
+- Issue: The frontend depends on 10+ `@tauri-apps/plugin-*` packages (dialog, fs, haptics, log, shell, updater, window-state, barcode-scanner, mobile-share, web-auth). Each plugin has its own version constraints and update cadence.
+- Files: `apps/frontend/package.json`
+- Impact: Version compatibility matrix between Tauri core and plugins must be maintained. Plugin updates may introduce breaking changes.
+- Fix approach: Regularly audit and update all Tauri plugins together. Consider pinning to exact versions for stability.
+
+## Scaling Concerns
+
+### SQLite Single-Writer Limitation
+- Issue: The app uses SQLite via Diesel with a connection pool (`r2d2`). SQLite supports only one concurrent writer. The sync repository, quote sync, and activity import all perform write operations that could contend.
+- Files: `crates/storage-sqlite/src/`
+- Impact: As data volume grows (more activities, more sync operations), write contention could cause perceived latency. The `WriteHandle` abstraction in `crates/storage-sqlite/src/db.rs` suggests write serialization is already in place.
+- Fix approach: Ensure all write paths go through the write handle serialization. Consider WAL mode optimization. For extreme scale, evaluate if certain bulk operations can be batched into single transactions.
+
+### Snapshot Export/Restore Performance
+- Issue: The sync repository handles snapshot export/import by iterating over all sync tables, applying filters, and copying data. For users with large datasets (thousands of activities, years of quotes), this could be slow.
+- Files: `crates/storage-sqlite/src/sync/app_sync/repository.rs` (lines 372-636)
+- Impact: Device sync pairing and bootstrap could take prohibitively long for users with large portfolios.
+- Fix approach: Add progress reporting for snapshot operations. Consider incremental sync instead of full snapshot transfer. Benchmark with realistic data sizes (10K+ activities).
 
 ## Test Coverage Gaps
 
-**Frontend tests: 42 test files for 579 source files (~7% file coverage):**
+### Untested Frontend Feature Modules
+- What's not tested: Holdings page, net worth page, alternative assets pages, market data settings, AI assistant core hooks (`use-chat-runtime.ts` at 995 lines untested), device sync service layer, account page, goal management.
+- Files: `apps/frontend/src/pages/holdings/`, `apps/frontend/src/pages/fire-planner/`, `apps/frontend/src/features/ai-assistant/hooks/`, `apps/frontend/src/features/devices-sync/services/`
+- Risk: UI regressions and state management bugs go undetected.
+- Priority: High — AI assistant and device sync are complex features with low test coverage.
 
-- What's not tested:
-  - AI assistant streaming flows
-    (`apps/frontend/src/features/ai-assistant/hooks/use-chat-runtime.ts`,
-    `use-chat-import-session.ts`).
-  - Addon loading + context creation (`apps/frontend/src/addons/addons-core.ts`,
-    `addons-runtime-context.ts`).
-  - Device sync UI (`apps/frontend/src/features/devices-sync/`).
-  - Wealthfolio Connect auth flow
-    (`apps/frontend/src/features/wealthfolio-connect/`).
-- Risk: UI regressions in security-critical flows (OAuth callback, device
-  pairing) ship undetected.
-- Priority: **High** for addon loading and auth flows; **Medium** elsewhere.
-
-**Rust test concentration is uneven:**
-
-- Heavy: `crates/core/src/activities/activities_service_tests.rs` (5147),
-  `crates/core/src/portfolio/snapshot/snapshot_service_tests.rs` (5314),
-  `crates/core/src/portfolio/snapshot/holdings_calculator_tests.rs` (5136).
-- Light/Missing:
-  - `crates/device-sync/` — no `*_tests.rs` files visible at top level. Lock
-    poisoning, pairing phase transitions untested.
-  - `crates/connect/` — broker service (1692 lines) has limited visible tests.
-  - `crates/ai/src/chat.rs` (1973 lines) — no `chat_tests.rs` found.
-  - `crates/core/src/addons/tests.rs` exists but addon path validation &
-    permission detection edge cases (see zip-slip code
-    `crates/core/src/addons/service.rs:92-130`) should have fuzz coverage.
-- Priority: **High** for device-sync engine state transitions; **High** for
-  addon zip extraction (security-critical); **Medium** for AI chat.
-
-**E2E coverage:**
-
-- 10 Playwright specs (`e2e/01-happy-path.spec.ts` through
-  `e2e/10-symbol-mapping-validation.spec.ts`). Covers happy path, activities,
-  FX, CSV import, form validation, data grid, asset creation,
-  holdings/performance, bulk holdings, symbol mapping.
-- What's not covered: Device sync pairing, addon installation, AI assistant
-  flows, Wealthfolio Connect login, backup/restore.
-- Priority: **Medium** — these are the features most likely to have UI
-  regressions given their recent churn.
-
-**Addon SDK version compatibility:**
-
-- Issue: `validateAddonCompatibility` in
-  `apps/frontend/src/addons/addons-core.ts:49` only warns on SDK version
-  mismatch — never blocks. Comment explicitly says "Future: implement proper
-  semver compatibility if needed."
-- Risk: Old addons break silently on SDK major bumps.
-- Priority: **Medium**.
+### No E2E Test Visibility
+- Issue: The project has `playwright.config.ts` and `e2e/` directory but the actual E2E test coverage is unknown. E2E tests for the dual-platform architecture (desktop + web) would be particularly valuable.
+- Files: `playwright.config.ts`, `e2e/`
+- Risk: Integration between frontend adapters and backend may break without detection.
+- Priority: Medium — E2E tests are expensive to maintain but critical for the adapter layer.
 
 ---
 
-_Concerns audit: 2026-04-20_
+*Concerns audit: 2026-04-20*

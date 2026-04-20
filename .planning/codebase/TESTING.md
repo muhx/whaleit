@@ -2,134 +2,237 @@
 
 **Analysis Date:** 2026-04-20
 
-## Overview
+## Test Framework
 
-Three test layers:
+### Frontend (TypeScript)
 
-| Layer                   | Tool                 | Runs against                               |
-| ----------------------- | -------------------- | ------------------------------------------ |
-| TS unit / integration   | **Vitest 3** + jsdom | Frontend logic, hooks, React components    |
-| Rust unit / integration | **`cargo test`**     | `crates/*`, `apps/tauri`, `apps/server`    |
-| E2E                     | **Playwright**       | Web build (not Tauri) against real backend |
+**Runner:** Vitest 3.2.x
+- Config: `apps/frontend/vite.config.ts` (test section)
+- Environment: `jsdom`
+- Globals: `true` (no need to import `describe`, `it`, `expect` — but tests still import explicitly)
+- Setup: `apps/frontend/src/test/setup.ts`
 
-CI (`.github/workflows/pr-check.yml`) runs the first two in parallel jobs
-(`frontend-check`, `rust-check`). E2E is **not** wired into PR CI — it is run
-locally via `pnpm test:e2e`.
+**Assertion Library:**
+- Vitest built-in (`expect`)
+- `@testing-library/jest-dom` for DOM assertions (`toBeInTheDocument`, `toHaveTextContent`, etc.)
+- `@testing-library/react` for component testing
+- `@testing-library/user-event` for user interaction simulation
+
+**Build Tool:** Vite 7.x (shared config with dev server)
+
+### Backend (Rust)
+
+**Runner:** `cargo test` (built-in Rust test framework)
+- Property-based testing: `proptest` crate (used in `crates/core/tests/`)
+- Dev dependencies: `tempfile`, `proptest`
+
+### E2E
+
+**Runner:** Playwright 1.58.x
+- Config: `playwright.config.ts` (project root)
+- Browser: Chromium only (headless)
+- Sequential execution (`fullyParallel: false`, `workers: 1`)
 
 ---
 
-## TypeScript — Vitest
+## Run Commands
 
-### Framework
+| Command | What it runs | Working directory |
+|---------|-------------|-------------------|
+| `pnpm test` | All Vitest unit tests | Project root |
+| `pnpm test:watch` | Vitest in watch mode | Project root |
+| `pnpm test:ui` | Vitest with UI | Project root |
+| `pnpm test:coverage` | Vitest with V8 coverage | Project root |
+| `pnpm test:e2e` | Playwright E2E tests (starts dev servers) | Project root |
+| `pnpm test:e2e:ui` | Playwright with UI | Project root |
+| `cargo test` | All Rust tests | Project root |
+| `cargo test --workspace` | All workspace crate tests | Project root |
+| `cargo test -p wealthfolio-core` | Tests for specific crate | Project root |
+| `pnpm check` | format:check + lint + type-check (no tests) | Project root |
 
-- **Runner:** Vitest `^3.2.4`
-- **Environment:** `jsdom` (`jsdom ^28.0.0`)
-- **Globals:** enabled (`globals: true` in `apps/frontend/vite.config.ts:92-97`)
-  — `describe`, `it`, `expect`, `vi` are available without import but code still
-  imports them explicitly from `vitest` for clarity.
-- **Assertion extras:** `@testing-library/jest-dom` matchers extended onto
-  `expect` in `apps/frontend/src/test/setup.ts:5-7`.
-- **Coverage provider:** `@vitest/coverage-v8`
-- **Type:** `types: ["@tauri-apps/api", "vitest/globals"]` in
-  `apps/frontend/tsconfig.json:4`
+---
 
-### Config
+## Test File Organization
 
-`apps/frontend/vite.config.ts:92-98`:
+### Frontend
 
-```ts
-test: {
-  globals: true,
-  environment: "jsdom",
-  setupFiles: "./src/test/setup.ts",
-  include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-}
+**Location:** Co-located with source files
+
+**Patterns:**
+1. **Same directory co-location** — test file next to source file:
+   - `src/lib/activity-utils.ts` → `src/lib/activity-utils.test.ts`
+   - `src/lib/schemas.ts` → `src/lib/schemas.test.ts`
+   - `src/lib/portfolio-helper.ts` → `src/lib/portfolio-helper.test.ts`
+
+2. **`__tests__` subdirectory** — grouped tests for larger components:
+   - `src/pages/activity/components/forms/__tests__/buy-form.test.tsx`
+   - `src/pages/activity/components/forms/__tests__/sell-form.test.tsx`
+   - `src/pages/activity/components/forms/__tests__/deposit-form.test.tsx`
+   - `src/pages/activity/components/forms/__tests__/transfer-form.test.tsx`
+   - `src/pages/activity/components/forms/__tests__/form-schemas.test.ts`
+   - `src/pages/activity/components/mobile-forms/__tests__/validate-transfer-fields.test.ts`
+
+**Naming:** `<source-name>.test.ts` or `<source-name>.test.tsx`
+
+**Current test count:** ~41 test files
+
+### Backend (Rust)
+
+**Location:** Two patterns:
+
+1. **Inline tests** — `#[cfg(test)]` module at bottom of source file:
+   - Most Rust source files have inline test modules
+   - ~1150 `#[test]` annotations across all Rust source files
+   - Examples: `crates/storage-sqlite/src/ai_chat/repository.rs`, `crates/market-data/src/resolver/rules_resolver.rs`
+
+2. **Integration tests** — `crates/<crate>/tests/` directory:
+   - `crates/core/tests/health_property_tests.rs` — property-based tests using `proptest`
+
+### E2E
+
+**Location:** `e2e/` directory at project root
+
+**Naming:** Numbered spec files for execution order:
+- `e2e/01-happy-path.spec.ts` — Onboarding and main flow
+- `e2e/02-activities.spec.ts`
+- `e2e/03-fx-cash-balance.spec.ts`
+- `e2e/04-csv-import.spec.ts`
+- `e2e/05-form-validation.spec.ts`
+- `e2e/06-activity-data-grid.spec.ts`
+- `e2e/07-asset-creation.spec.ts`
+- `e2e/08-holdings-and-performance.spec.ts`
+- `e2e/09-bulk-holdings.spec.ts`
+- `e2e/10-symbol-mapping-validation.spec.ts`
+
+**Helpers:** `e2e/helpers.ts` — shared utilities (`fillDateField`, `createAccount`, `loginIfNeeded`, etc.)
+
+---
+
+## Test Setup
+
+### Frontend Setup File
+
+**Location:** `apps/frontend/src/test/setup.ts`
+
+```typescript
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { vi, afterEach } from "vitest";
+import * as matchers from "@testing-library/jest-dom/matchers";
+
+expect.extend(matchers);
+
+afterEach(() => {
+  cleanup();
+});
+
+// Mock window.matchMedia for components using media queries
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 ```
 
-Setup file (`apps/frontend/src/test/setup.ts`):
+---
 
-- Extends `expect` with `@testing-library/jest-dom/matchers`
-- Registers `afterEach(cleanup)` from `@testing-library/react`
-- Mocks `window.matchMedia` (needed by Radix / theme components)
+## Test Structure
 
-### Run Commands
+### Unit Tests (TypeScript)
 
-Defined in `package.json:23-26` (root) and `apps/frontend/package.json:13-16`:
-
-```bash
-pnpm test              # vitest (runs once in CI because Vitest defaults to run in CI)
-pnpm test:watch        # vitest --watch
-pnpm test:ui           # vitest --ui
-pnpm test:coverage     # vitest --coverage
-```
-
-The root `pnpm test` delegates to `pnpm --filter frontend test`.
-
-### Test File Organization
-
-- **Co-located** next to source: `schemas.ts` + `schemas.test.ts`,
-  `activity-utils.ts` + `activity-utils.test.ts` in `apps/frontend/src/lib/`.
-- **`__tests__/` folder** when multiple related tests exist:
-  `apps/frontend/src/pages/activity/components/forms/__tests__/`,
-  `.../fields/__tests__/`.
-- **Extensions:** `.test.ts` for logic, `.test.tsx` for component tests.
-
-Coverage across the repo (non-exhaustive):
-
-- Schema/validation: `apps/frontend/src/lib/schemas.test.ts`,
-  `.../forms/__tests__/form-schemas.test.ts`
-- Pure utils: `apps/frontend/src/lib/activity-utils.test.ts`,
-  `utils.timezone.test.ts`, `export-utils.test.ts`, `portfolio-helper.test.ts`
-- React components:
-  `apps/frontend/src/pages/activity/components/forms/__tests__/buy-form.test.tsx`,
-  `transfer-form.test.tsx`, `sell-form.test.tsx`, `deposit-form.test.tsx`,
-  `dividend-split-forms.test.tsx`, `simple-forms.test.tsx`
-- Form fields: `.../forms/fields/date-picker.test.tsx`,
-  `.../fields/__tests__/symbol-search.test.tsx`, `account-select.test.tsx`
-- Hooks: `apps/frontend/src/pages/activity/hooks/use-activity-form.test.ts`,
-  `apps/frontend/src/features/ai-assistant/hooks/use-chat-import-session.test.tsx`
-- Services:
-  `apps/frontend/src/features/devices-sync/services/sync-service.pairing.test.ts`
-- Device-sync components:
-  `apps/frontend/src/features/devices-sync/components/pairing-flow/index.test.tsx`,
-  `device-sync-section.test.tsx`, `recovery-dialog.test.tsx`
-- Pure logic utilities in features: `ai-assistant/types.test.ts`,
-  `ai-assistant/components/tool-uis/record-activities-tool-utils.test.ts`
-
-### Test Structure
-
-Standard pattern (`apps/frontend/src/lib/schemas.test.ts:5-56`):
-
-```ts
+```typescript
 import { describe, expect, it } from "vitest";
-import { importMappingSchema } from "./schemas";
+import { functionUnderTest } from "./module";
 
-describe("schemas", () => {
-  describe("importMappingSchema", () => {
-    it("should accept valid quoteMode values in symbolMappingMeta", () => {
-      const validMapping = { accountId: "test-account", ... };
-      const result = importMappingSchema.safeParse(validMapping);
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.symbolMappingMeta?.AAPL.quoteMode).toBe(QuoteMode.MARKET);
-      }
+describe("Module Name", () => {
+  describe("functionUnderTest", () => {
+    it("should handle normal case", () => {
+      expect(functionUnderTest(input)).toBe(expected);
+    });
+
+    it("should handle edge case", () => {
+      expect(functionUnderTest(edgeInput)).toBe(fallback);
     });
   });
 });
 ```
 
-- Nested `describe` for grouping (module → function → scenario).
-- Explicit imports from `vitest` (even though globals are on) for readability.
-- `beforeEach(() => vi.clearAllMocks())` to reset state between tests
-  (`apps/frontend/src/pages/activity/components/forms/__tests__/buy-form.test.tsx:118-120`).
+**Pattern:** Nested `describe` blocks grouping related functions, with `it` blocks describing expected behavior.
 
-### Mocking
+### Component Tests (TypeScript)
 
-Tool: `vi` from `vitest`.
+```typescript
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-**Module mocking** — use `vi.mock(path, factory)` at top of file:
+// Mock external dependencies
+vi.mock("@/adapters", () => ({
+  calculatePerformanceSummary: vi.fn(),
+}));
 
-```ts
+vi.mock("@/hooks/use-accounts", () => ({
+  useAccounts: vi.fn(),
+}));
+
+// Create typed mock references
+const mockUseAccounts = vi.mocked(useAccounts);
+
+// Factory functions for test data
+function createAccount(overrides: Partial<Account>): Account {
+  return {
+    id: overrides.id ?? "account-1",
+    name: overrides.name ?? "Account 1",
+    // ... defaults
+    ...overrides,
+  };
+}
+
+// Helper render function with providers
+function renderComponent(props) {
+  mockUseAccounts.mockReturnValue({ accounts: props.accounts, isLoading: false });
+  return render(
+    <MemoryRouter>
+      <ComponentUnderTest />
+    </MemoryRouter>,
+  );
+}
+
+describe("ComponentName", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should render correctly", async () => {
+    const user = userEvent.setup();
+    renderComponent({ accounts: [createAccount()] });
+    expect(screen.getByText("Account 1")).toBeInTheDocument();
+  });
+});
+```
+
+**Key patterns:**
+- `vi.mock()` at top level for all external dependencies
+- `vi.mocked()` for typed mock references
+- Factory functions (`createAccount`, `createValuation`) for test data
+- `vi.clearAllMocks()` in `beforeEach`
+- Wrap in `MemoryRouter` when testing routed components
+- `userEvent.setup()` for realistic user interactions
+- `data-testid` attributes for stable selectors
+
+### Mocking Patterns
+
+**Mock hooks:**
+```typescript
 vi.mock("@/hooks/use-settings", () => ({
   useSettings: () => ({
     data: { baseCurrency: "USD" },
@@ -139,206 +242,53 @@ vi.mock("@/hooks/use-settings", () => ({
 }));
 ```
 
-**Hoisted refs** — when factory needs to reference mutable mocks, use
-`vi.hoisted` so the mocks exist before `vi.mock` factory runs
-(`apps/frontend/src/pages/activity/hooks/use-activity-form.test.ts:8-35`):
-
-```ts
-const mutationMocks = vi.hoisted(() => ({
-  addMutateAsync: vi.fn(),
-  updateMutateAsync: vi.fn(),
-}));
-
-vi.mock("./use-activity-mutations", () => ({
-  useActivityMutations: () => ({
-    addActivityMutation: { mutateAsync: mutationMocks.addMutateAsync, ... },
-  }),
+**Mock adapter layer:**
+```typescript
+vi.mock("@/adapters", () => ({
+  calculatePerformanceSummary: vi.fn(),
+  getSettings: vi.fn(),
 }));
 ```
 
-**Heavy adapter mocking** — common in services tests
-(`apps/frontend/src/features/devices-sync/services/sync-service.pairing.test.ts:3-66`)
-where the entire `@/adapters`, `../storage/keyring`, and `../crypto` modules are
-replaced with hoisted `vi.fn()` collections, then imports of the real service
-are placed **after** the `vi.mock` calls.
-
-**UI component stubs** — replace `@wealthfolio/ui/components/ui/*` with minimal
-DOM stubs to isolate logic from styling
-(`apps/frontend/src/pages/activity/components/forms/__tests__/buy-form.test.tsx:61-107`):
-
-```ts
+**Mock UI components (simplified stubs):**
+```typescript
 vi.mock("@wealthfolio/ui/components/ui/button", () => ({
-  Button: ({ children, type, onClick, disabled }) => (
-    <button type={type} onClick={onClick} disabled={disabled}>{children}</button>
-  ),
+  Button: ({ children, ...props }) => <button {...props}>{children}</button>,
 }));
 ```
 
-**What to mock:**
-
-- Hooks that touch the backend (`useSettings`, `useAccounts`, mutation hooks).
-- Adapter modules (`@/adapters`) so tests don't rely on Tauri runtime.
-- Platform-specific packages (`@tauri-apps/plugin-log`, plugin dialogs).
-- Heavy UI components when testing logic, not visuals.
-
-**What NOT to mock:**
-
-- Pure Zod schemas — test them directly.
-- Pure utility functions (`lib/activity-utils.ts`, `lib/portfolio-helper.ts`).
-- `react-hook-form` — used in real form tests via `FormProvider` wrapper
-  (`apps/frontend/src/pages/activity/components/forms/fields/date-picker.test.tsx:39-49`).
-
-### React Component Tests
-
-- `@testing-library/react` + `@testing-library/user-event`.
-- Queries preferred in order: `getByRole`, `getByLabelText`, `getByTestId` (for
-  stubbed components) — consistent with React Testing Library guidance.
-- User interactions via `userEvent.setup()` then `await user.click(...)`.
-- Assertions via `expect(el).toBeInTheDocument()`, `.toBeDisabled()`, etc.
-  (jest-dom matchers).
-
-### Hooks Tests
-
-Use `renderHook` + `act` from `@testing-library/react`
-(`apps/frontend/src/pages/activity/hooks/use-activity-form.test.ts:51-57`):
-
-```ts
-const { result } = renderHook(() =>
-  useActivityForm({ accounts, selectedType: "DEPOSIT" }),
+**Mock with `vi.fn().mockImplementation()` for conditional behavior:**
+```typescript
+vi.mock("@tanstack/react-query", () => ({
+  useQueries: vi.fn(),
+}));
+// Then in test:
+mockUseQueries.mockImplementation(({ queries }) =>
+  queries.map(q => ({ isLoading: false, data: mockData[q.queryKey[2]] }))
 );
-// mockResolvedValue on mutation mocks before invoking
 ```
 
-### Fixtures & Test Data
+### Rust Tests
 
-No shared fixtures framework. Test data is defined inline per test, usually as
-`const mockAccounts: AccountSelectOption[] = [...]` at the top of the describe
-block.
-
-### Coverage
-
-- Provider: `@vitest/coverage-v8`
-- No enforced threshold in config (no `coverage.thresholds` entry).
-- Run with `pnpm test:coverage`, outputs to `coverage/` (gitignored).
-
----
-
-## Rust — `cargo test`
-
-### Framework
-
-- Standard `#[test]` and `#[tokio::test]` (Tokio `rt-multi-thread` from
-  workspace deps).
-- **Property-based:** `proptest` (`crates/core/Cargo.toml:59` dev-dep).
-- **Temp filesystem:** `tempfile` (`crates/core/Cargo.toml:58` dev-dep,
-  `apps/server/Cargo.toml:63` dev-dep).
-- **HTTP client for integration tests:** `reqwest` with `json` feature
-  (`apps/server/Cargo.toml:62`).
-- Async traits via `async-trait`.
-- Mock repositories hand-written, not via a framework (no `mockall`).
-
-### Run Commands
-
-```bash
-cargo test                       # All workspace tests
-cargo test --workspace           # Explicit workspace flag (used in CI)
-cargo test -p wealthfolio-core   # Single crate
-cargo test activities_service    # Filter by test name substring
-```
-
-CI (`pr-check.yml:87-92`) runs `cargo test --workspace` with
-`CONNECT_API_URL=http://test.local` env var (required by storage-sqlite outbox
-tests).
-
-### Test File Organization
-
-Three conventions observed:
-
-1. **Inline `#[cfg(test)]` module** in a dedicated file, declared from `mod.rs`:
-   - `crates/core/src/activities/mod.rs:13-17`:
-     ```rust
-     #[cfg(test)]
-     mod activities_service_tests;
-     #[cfg(test)]
-     mod activities_model_tests;
-     ```
-   - File itself: `crates/core/src/activities/activities_service_tests.rs`
-     (starts with `#[cfg(test)] mod tests { ... }`).
-
-2. **`tests/` subdirectory inside `src/`** for submodule-scoped tests:
-   - `crates/core/src/health/tests/mod.rs` + `property_tests.rs`.
-
-3. **Crate-level `tests/` directory** for integration tests that use only the
-   public API:
-   - `crates/core/tests/health_property_tests.rs` — uses `wealthfolio_core::...`
-     as an external consumer.
-   - `apps/server/tests/auth.rs` — full Axum integration test.
-
-### Test Structure
-
-**Unit test** (`crates/core/src/activities/activities_model_tests.rs:15-62`):
-
+**Inline unit tests:**
 ```rust
 #[cfg(test)]
 mod tests {
-    use crate::activities::activities_model::*;
-    use chrono::{TimeZone, Utc};
-    use rust_decimal_macros::dec;
+    use super::*;
 
     #[test]
-    fn test_activity_status_default() {
-        let status = ActivityStatus::default();
-        assert_eq!(status, ActivityStatus::Posted);
-    }
-
-    #[test]
-    fn test_activity_status_serialization_posted() {
-        let status = ActivityStatus::Posted;
-        let json = serde_json::to_string(&status).unwrap();
-        assert_eq!(json, r#""POSTED""#);
+    fn test_function_name() {
+        // arrange
+        let input = ...;
+        // act
+        let result = function_under_test(input);
+        // assert
+        assert_eq!(result, expected);
     }
 }
 ```
 
-Patterns:
-
-- Test factory functions (e.g. `fn create_test_activity() -> Activity`) near top
-  of the `mod tests` block for shared fixtures.
-- `rust_decimal_macros::dec!(150.50)` for money literals.
-- `serde_json::to_string(&value).unwrap()` for serialization tests.
-
-### Mocking Pattern (hand-written)
-
-Services depend on traits (`ActivityRepositoryTrait`, `AccountServiceTrait`).
-Tests implement minimal mocks
-(`crates/core/src/activities/activities_service_tests.rs:27-80`):
-
-```rust
-#[derive(Clone)]
-struct MockAccountService {
-    accounts: Arc<Mutex<Vec<Account>>>,
-}
-
-#[async_trait]
-impl AccountServiceTrait for MockAccountService {
-    async fn create_account(&self, _new: NewAccount) -> Result<Account> {
-        unimplemented!()
-    }
-    fn get_account(&self, account_id: &str) -> Result<Account> {
-        let accounts = self.accounts.lock().unwrap();
-        accounts.iter().find(|a| a.id == account_id).cloned()
-            .ok_or_else(|| Error::Unexpected("Account not found".into()))
-    }
-    // ... implement only the methods this test needs, stub others with
-    // unimplemented!()
-}
-```
-
-### Property-Based Tests
-
-Use `proptest` with generators
-(`crates/core/tests/health_property_tests.rs:14-80`):
-
+**Property-based tests (proptest):**
 ```rust
 use proptest::prelude::*;
 
@@ -352,270 +302,131 @@ fn arb_severity() -> impl Strategy<Value = Severity> {
 }
 
 proptest! {
-    #![proptest_config(ProptestConfig::with_cases(100))]
-
     #[test]
-    fn prop_global_status_reflects_highest_severity(
-        issues in arb_health_issues(50),
-    ) {
-        // ... assert invariant holds for all generated inputs
+    fn test_property_severity_ordering(severity in arb_severity()) {
+        // property that must hold for all generated values
     }
 }
 ```
 
-### Axum Integration Tests (`apps/server/tests/`)
-
-Full router exercised via `tower::ServiceExt::oneshot`
-(`apps/server/tests/auth.rs:15-100`):
-
-```rust
-async fn build_test_router(password: &str) -> axum::Router {
-    let tmp = tempdir().unwrap();
-    std::env::set_var("WF_DB_PATH", tmp.path().join("test.db"));
-    // ... set WF_AUTH_PASSWORD_HASH, WF_SECRET_KEY, WF_CORS_ALLOW_ORIGINS
-    let config = Config::from_env();
-    let state = build_state(&config).await.unwrap();
-    app_router(state, &config)
-}
-
-#[tokio::test]
-async fn login_and_access_protected_route() {
-    let app = build_test_router("super-secret").await;
-    let response = app.clone().oneshot(
-        Request::builder().uri("/api/v1/accounts").body(Body::empty()).unwrap()
-    ).await.unwrap();
-    assert_eq!(response.status(), 401);
-}
-```
-
-Key details:
-
-- `tempfile::tempdir` for isolated DB path.
-- Env vars set before calling `Config::from_env()`; `cleanup_env()` helper
-  resets them.
-- `tower::ServiceExt::oneshot` drives the router without a TCP listener.
-- `ConnectInfo` injected into request extensions for rate-limiter tests.
-
-### Coverage
-
-No coverage tool wired in. CI only runs `cargo test --workspace`.
-
 ---
 
-## E2E — Playwright
+## E2E Testing
 
 ### Framework
 
-- `@playwright/test ^1.58.2` (dev-dep in root `package.json:48`)
-- Config: `playwright.config.ts`
-- Target: **web build only** (`http://localhost:1420`), **not Tauri**
-  (`e2e/README.md:4-6`).
-- Browser: Chromium with system Chrome channel, headless
-  (`playwright.config.ts:37-40`).
+- **Playwright** — configured in `playwright.config.ts`
+- Chromium only, headless mode
+- Sequential execution (not parallel) — tests depend on order
 
-### Config Highlights (`playwright.config.ts`)
+### Test Scenarios Covered
 
-```ts
-testDir: "./e2e",
-fullyParallel: false,        // Tests share DB state
-workers: 1,                   // Serial execution required
-retries: process.env.CI ? 2 : 0,
-forbidOnly: !!process.env.CI,
-reporter: "html",
-use: { trace: "on-first-retry" },
-```
+| Spec | Description |
+|------|-------------|
+| `01-happy-path` | Full onboarding → create accounts → add activities → verify dashboard |
+| `02-activities` | Activity CRUD operations |
+| `03-fx-cash-balance` | Foreign exchange and cash balance handling |
+| `04-csv-import` | CSV file import workflow |
+| `05-form-validation` | Form validation rules |
+| `06-activity-data-grid` | Activity data grid interactions |
+| `07-asset-creation` | Asset creation flow |
+| `08-holdings-and-performance` | Holdings display and performance calculations |
+| `09-bulk-holdings` | Bulk holdings import |
+| `10-symbol-mapping-validation` | Symbol mapping during import |
 
-Tests run **serially** because spec 10 depends on spec 01 seeding data.
-`fullyParallel: false` + `workers: 1` is mandatory.
+### E2E Helpers
 
-### Run Commands
+Located in `e2e/helpers.ts`:
+- `loginIfNeeded(page)` — handles web mode authentication
+- `createAccount(page, name, currency, trackingMode)` — creates test account via UI
+- `fillDateField(page, daysAgo)` — fills React Aria date segments
+- `searchAndSelectSymbol(page, symbol)` — symbol search combobox interaction
+- `openAddActivitySheet(page)` — opens activity form sheet
+- `selectActivityType(page, type)` — selects activity type button
+- `waitForSyncToast(page)` — waits for market data sync to complete
+- `waitForOverlayClose(page)` — waits for dialog/sheet close
 
-```bash
-pnpm test:e2e            # node scripts/run-e2e.mjs — full automated run
-pnpm test:e2e:ui         # adds --ui for Playwright inspector
-```
+### E2E Runner
 
-`scripts/run-e2e.mjs` orchestrates:
+**Script:** `scripts/run-e2e.mjs`:
+1. Runs `scripts/prep-e2e.mjs` to prepare test environment
+2. Starts dev web server (`pnpm run dev:web`)
+3. Waits for frontend (localhost:1420) and backend (localhost:8088) to be healthy
+4. Runs Playwright tests
+5. Cleans up dev server on exit
 
-1. Calls `prepE2eEnv()` (`scripts/prep-e2e.mjs`) — rewrites `WF_DB_PATH` in
-   `.env.web` to a fresh timestamped SQLite file (e.g.
-   `./db/app-testing-20260411T120000Z.db`).
-2. Spawns `pnpm run dev:web` (launches frontend on `:1420` and Axum on `:8088`).
-3. Polls both servers via `fetch` with a 60 s / 120 s timeout.
-4. Runs `pnpm exec playwright test`.
-5. Cleans up dev server on exit/SIGINT/SIGTERM.
+**Environment variables:**
+- `WF_E2E_BASE_URL` — frontend URL (default: `http://localhost:1420`)
+- `WF_E2E_BACKEND_URL` — backend URL (default: `http://localhost:8088`)
 
-**Manual workflow** (for single-spec debugging) documented in
-`e2e/README.md:37-94`:
+---
 
-```bash
-node scripts/prep-e2e.mjs                    # fresh DB
-pnpm run dev:web > /tmp/wealthfolio-dev2.log 2>&1 &
-./scripts/wait-for-both-servers-to-be-ready.sh
-npx playwright test e2e/<spec>.spec.ts [--headed|--debug]
-```
+## Coverage
 
-### Test Structure
+**Frontend:**
+- Coverage tool: `@vitest/coverage-v8`
+- Command: `pnpm test:coverage`
+- No enforced coverage threshold detected
 
-**Serial mode + shared `page`** (`e2e/01-happy-path.spec.ts:3-9`):
-
-```ts
-test.describe.configure({ mode: "serial" });
-
-test.describe("Onboarding And Main Flow", () => {
-  const BASE_URL = "http://localhost:1420";
-  const TEST_PASSWORD = "password001";
-  let page: Page;
-
-  // test.beforeAll/afterAll for shared page/setup
-  // test steps use `page` as closure
-});
-```
-
-**Helpers** (`e2e/helpers.ts`):
-
-- `BASE_URL`, `TEST_PASSWORD` constants.
-- `loginIfNeeded(page)` — handles both onboarding and existing sessions.
-- `createAccount(page, name, currency, trackingMode)` — idempotent account
-  creation.
-- `openAddActivitySheet(page)`, `selectActivityType(page, type)`,
-  `searchAndSelectSymbol(page, symbol)`, `expandAdvancedOptions(page)` — domain
-  UI helpers.
-- `fillDateField(page, daysAgo)` — types into each React Aria `DateInput`
-  segment (`data-type="month"`, `"day"`, `"year"`, `"hour"`, `"minute"`,
-  `"dayPeriod"`).
-- `waitForOverlayClose(page)`, `waitForSyncToast(page, maxWaitMs)` — deals with
-  async UI.
-
-### Test Files (`e2e/`)
-
-| File                                   | Scope                                  |
-| -------------------------------------- | -------------------------------------- |
-| `01-happy-path.spec.ts`                | Onboarding, accounts, deposits, trades |
-| `02-activities.spec.ts`                | All activity types                     |
-| `03-fx-cash-balance.spec.ts`           | FX cash balances                       |
-| `04-csv-import.spec.ts`                | CSV activity import                    |
-| `05-form-validation.spec.ts`           | Form validation errors                 |
-| `06-activity-data-grid.spec.ts`        | Activity data grid                     |
-| `07-asset-creation.spec.ts`            | Manual asset creation/edit             |
-| `08-holdings-and-performance.spec.ts`  | Holdings + performance views           |
-| `09-bulk-holdings.spec.ts`             | Bulk holdings CSV import               |
-| `10-symbol-mapping-validation.spec.ts` | Symbol mapping real-time validation    |
-
-Naming: numeric prefix enforces execution order. Spec 10 depends on spec 01.
-
-### Locator Strategy
-
-In order of preference (observed in specs + helpers):
-
-1. `page.getByRole("button", { name: "Add Activities" })`
-2. `page.getByLabel("Account Name")`
-3. `page.getByPlaceholder("Search for symbol")`
-4. `page.getByTestId("date-picker")` — used for React Aria composites and custom
-   widgets
-5. `page.getByText(...)` / `page.locator('[data-type="month"]')` — last resort
-
-No mocks of backend services — tests exercise the real Axum server against a
-fresh SQLite DB.
-
-### Assertions
-
-Standard Playwright `expect`:
-
-- `await expect(locator).toBeVisible({ timeout: 15000 })`
-- `await expect(locator).not.toBeVisible({ timeout: 10000 })`
-- `await expect(locator).toBeHidden({ timeout: 15000 })`
-
-### Traces & Reports
-
-- `trace: "on-first-retry"` — traces only captured on retries (CI).
-- `reporter: "html"` — view with `npx playwright show-report`.
-- Reports and traces excluded from root ESLint (`eslint.config.js:25-27`:
-  `playwright-report/**`, `test-results/**`, `e2e/**`).
+**Backend (Rust):**
+- No coverage tooling configured
+- `cargo test --workspace` runs all tests in CI
 
 ---
 
 ## CI Integration
 
-**`.github/workflows/pr-check.yml`** runs on PRs to `main`, `develop`,
-`feature/**`:
+**PR Check workflow** (`.github/workflows/pr-check.yml`):
 
-### `frontend-check` job
+Frontend job:
+1. `pnpm install --frozen-lockfile`
+2. `pnpm run build:types`
+3. `pnpm format:check`
+4. `pnpm lint`
+5. `pnpm type-check`
+6. `pnpm test`
+7. `pnpm build`
 
-```yaml
-- pnpm install --frozen-lockfile
-- pnpm run build:types # Build @wealthfolio/ui + addon-sdk
-- pnpm format:check # Prettier
-- pnpm lint # ESLint
-- pnpm type-check # tsc --noEmit
-- pnpm test # Vitest
-- pnpm build # Vite web build
-```
+Rust job:
+1. `cargo fmt --all -- --check`
+2. `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+3. `cargo test --workspace` (with `CONNECT_API_URL=http://test.local`)
 
-### `rust-check` job
-
-```yaml
-- cargo fmt --all -- --check
-- cargo clippy --workspace --all-targets --all-features -- -D warnings
-- cargo test --workspace
-  env: { CONNECT_API_URL: http://test.local }
-- cargo check -p wealthfolio-server --release
-```
-
-### `build-status` job
-
-Gate that fails if either check fails or is cancelled.
-
-**E2E is not part of CI.** It must be run locally before shipping UI-affecting
-changes.
+E2E: Not run in CI (no workflow detected)
 
 ---
 
-## Common Patterns
+## Test Gaps
 
-### Async TS testing
+### Untested Areas
 
-```ts
-it("waits for mutation", async () => {
-  const { result } = renderHook(() => useSomething());
-  await act(async () => {
-    await result.current.mutate(input);
-  });
-  expect(mockMutateAsync).toHaveBeenCalledWith(expected);
-});
-```
+**Frontend:**
+- **Adapter layer** — `src/adapters/tauri/` and `src/adapters/web/` have no unit tests
+- **Context providers** — `auth-context.tsx`, `privacy-context.tsx`, `portfolio-sync-context.tsx`
+- **Pages with minimal testing** — Most page-level components lack tests
+- **Route definitions** — `routes.tsx` has no tests
+- **Addon system** — `src/addons/` runtime loader is untested except for `type-bridge.test.ts`
 
-### Error testing (Zod)
+**Backend (Rust):**
+- **Integration tests sparse** — Only `health_property_tests.rs` in `crates/core/tests/`
+- Most test coverage comes from inline `#[cfg(test)]` modules
+- `crates/ai/` — no dedicated test file detected
+- `crates/connect/` — broker integration tests depend on external services
 
-```ts
-const result = schema.safeParse(invalid);
-expect(result.success).toBe(false);
-if (!result.success) {
-  expect(result.error.issues[0].message).toBe("Please select an account.");
-}
-```
+**E2E:**
+- No mobile/responsive viewport testing
+- Only Chromium browser tested
+- No performance or load testing
+- Not integrated into CI pipeline
 
-### Rust async test
+### Critical Paths Needing Coverage
 
-```rust
-#[tokio::test]
-async fn login_and_access_protected_route() {
-    let app = build_test_router("password").await;
-    let response = app.oneshot(request).await.unwrap();
-    assert_eq!(response.status(), 200);
-}
-```
-
-### Rust serialization round-trip
-
-```rust
-#[test]
-fn test_activity_status_deserialization() {
-    let posted: ActivityStatus = serde_json::from_str(r#""POSTED""#).unwrap();
-    assert_eq!(posted, ActivityStatus::Posted);
-}
-```
+1. **Activity bulk mutation** — `ActivityBulkMutationRequest` path through adapters
+2. **Holdings snapshot import** — Full CSV import → validation → commit flow
+3. **Currency conversion** — FX rate application across accounts
+4. **Device sync pairing** — End-to-end encryption handshake
+5. **AI chat tool execution** — `record_activities` and `import_csv` tools
 
 ---
 
-_Testing analysis: 2026-04-20_
+*Testing analysis: 2026-04-20*
