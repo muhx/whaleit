@@ -79,7 +79,7 @@ export function ActivityForm({ accounts, activity, open, onClose }: ActivityForm
               ? "Update the details of your transaction"
               : "Record a new transaction in your account."}{" "}
             <ExternalLink
-              href="https://wealthfolio.app/docs/concepts/activity-types"
+              href="https://whaleit.app/docs/concepts/activity-types"
               className="underline"
             >
               Learn more

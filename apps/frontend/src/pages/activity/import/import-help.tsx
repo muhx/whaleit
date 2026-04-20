@@ -95,7 +95,7 @@ function ActivitiesHelpContent() {
         <p className="text-xs">
           For more details, see the{" "}
           <a
-            href="https://wealthfolio.app/docs/concepts/activity-types"
+            href="https://whaleit.app/docs/concepts/activity-types"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"

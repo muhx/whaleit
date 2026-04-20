@@ -92,7 +92,7 @@ export default function AboutSettingsPage() {
                 size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <ExternalLink href="https://wealthfolio.app">
+                <ExternalLink href="https://whaleit.app">
                   <Icons.Globe className="h-4 w-4" />
                   Website
                 </ExternalLink>
@@ -103,7 +103,7 @@ export default function AboutSettingsPage() {
                 size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <ExternalLink href="https://wealthfolio.app/docs/introduction/">
+                <ExternalLink href="https://whaleit.app/docs/introduction/">
                   <Icons.FileText className="h-4 w-4" />
                   Docs
                 </ExternalLink>
@@ -174,7 +174,7 @@ export default function AboutSettingsPage() {
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
               Have questions or found a bug? Please email us at{" "}
-              <span className="select-all font-mono font-semibold">support@wealthfolio.app</span>
+              <span className="select-all font-mono font-semibold">support@whaleit.app</span>
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -183,7 +183,7 @@ export default function AboutSettingsPage() {
                 size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <ExternalLink href="mailto:support@wealthfolio.app">
+                <ExternalLink href="mailto:support@whaleit.app">
                   <Icons.ExternalLink className="h-4 w-4" />
                   Email Us
                 </ExternalLink>
@@ -205,21 +205,21 @@ export default function AboutSettingsPage() {
 
             <p className="text-muted-foreground text-sm">
               <ExternalLink
-                href="https://wealthfolio.app/legal/privacy-policy"
+                href="https://whaleit.app/legal/privacy-policy"
                 className="hover:text-foreground underline underline-offset-4"
               >
                 Privacy Policy
               </ExternalLink>
               <span className="mx-2">•</span>
               <ExternalLink
-                href="https://wealthfolio.app/legal/terms-of-use"
+                href="https://whaleit.app/legal/terms-of-use"
                 className="hover:text-foreground underline underline-offset-4"
               >
                 Terms of Use
               </ExternalLink>
               <span className="mx-2">•</span>
               <ExternalLink
-                href="https://wealthfolio.app"
+                href="https://whaleit.app"
                 className="hover:text-foreground underline underline-offset-4"
               >
                 Website

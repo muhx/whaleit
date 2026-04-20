@@ -469,14 +469,14 @@ export function LoginForm() {
               <p className="text-muted-foreground text-center text-xs">
                 By continuing, you agree to our{" "}
                 <ExternalLink
-                  href="https://wealthfolio.app/connect/legal/terms-of-use"
+                  href="https://whaleit.app/connect/legal/terms-of-use"
                   className="hover:text-foreground underline underline-offset-4"
                 >
                   Terms of Use
                 </ExternalLink>{" "}
                 and{" "}
                 <ExternalLink
-                  href="https://wealthfolio.app/connect/legal/privacy-policy"
+                  href="https://whaleit.app/connect/legal/privacy-policy"
                   className="hover:text-foreground underline underline-offset-4"
                 >
                   Privacy Policy

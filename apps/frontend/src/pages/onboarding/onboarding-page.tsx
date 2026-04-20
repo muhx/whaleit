@@ -59,7 +59,7 @@ const OnboardingPage = () => {
           <img
             alt="WhaleIt"
             className="mb-3 h-16 w-16 sm:h-20 sm:w-20"
-            src="/logo-vantage.png"
+            src="/logo.png"
           />
 
           {/* Tagline */}

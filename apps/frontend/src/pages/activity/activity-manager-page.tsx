@@ -181,7 +181,7 @@ const ActivityManagerPage = () => {
         actions={
           <Button variant="ghost" size="sm" asChild>
             <ExternalLink
-              href="https://wealthfolio.app/docs/concepts/activity-types"
+              href="https://whaleit.app/docs/concepts/activity-types"
               className="flex items-center gap-1.5"
             >
               <Icons.HelpCircle className="h-4 w-4" />

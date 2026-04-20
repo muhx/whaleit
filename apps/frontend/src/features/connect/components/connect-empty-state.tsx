@@ -98,7 +98,7 @@ export function ConnectEmptyState() {
             </Button>
           </div>
           <ExternalLink
-            href="https://wealthfolio.app/connect/"
+            href="https://whaleit.app/connect/"
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
           >
             Learn more about Connect

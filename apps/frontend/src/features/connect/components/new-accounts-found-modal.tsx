@@ -148,7 +148,7 @@ export function NewAccountsFoundModal({
                   analytics. <strong>Holdings</strong> mode imports snapshots only with limited
                   metrics.{" "}
                   <ExternalLink
-                    href="https://wealthfolio.app/docs/concepts/activity-types"
+                    href="https://whaleit.app/docs/concepts/activity-types"
                     className="hover:text-foreground underline"
                   >
                     Learn more

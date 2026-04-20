@@ -215,13 +215,13 @@ export function SubscriptionPlans({
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">support@wealthfolio.app</span>
+                    <span className="text-sm">support@whaleit.app</span>
                     <Button
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
                       onClick={() => {
-                        navigator.clipboard.writeText("support@wealthfolio.app");
+                        navigator.clipboard.writeText("support@whaleit.app");
                         toast.success("Email copied to clipboard");
                       }}
                     >
@@ -277,13 +277,13 @@ export function SubscriptionPlans({
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">support@wealthfolio.app</span>
+                    <span className="text-sm">support@whaleit.app</span>
                     <Button
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
                       onClick={() => {
-                        navigator.clipboard.writeText("support@wealthfolio.app");
+                        navigator.clipboard.writeText("support@whaleit.app");
                         toast.success("Email copied to clipboard");
                       }}
                     >

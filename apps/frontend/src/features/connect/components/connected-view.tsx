@@ -624,7 +624,7 @@ export function ConnectedView() {
           Everything syncs securely via an aggregator to your local database. Device sync uses
           end-to-end encryption.{" "}
           <ExternalLink
-            href="https://wealthfolio.app/privacy"
+            href="https://whaleit.app/privacy"
             className="text-muted-foreground hover:text-foreground underline underline-offset-2"
           >
             Learn more
