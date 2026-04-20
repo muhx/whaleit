@@ -158,85 +158,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BRAND-01 | Phase 1: Codebase Health & Rebrand | Pending |
-| BRAND-02 | Phase 1: Codebase Health & Rebrand | Pending |
-| BRAND-03 | Phase 1: Codebase Health & Rebrand | Pending |
-| BRAND-04 | Phase 1: Codebase Health & Rebrand | Pending |
-| BRAND-05 | Phase 1: Codebase Health & Rebrand | Pending |
-| BRAND-06 | Phase 1: Codebase Health & Rebrand | Pending |
-| DB-01 | Phase 2: Dual Database Engine | Pending |
-| DB-02 | Phase 2: Dual Database Engine | Pending |
-| DB-03 | Phase 2: Dual Database Engine | Pending |
-| DB-04 | Phase 2: Dual Database Engine | Pending |
-| DB-05 | Phase 2: Dual Database Engine | Pending |
-| ACCT-01 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| ACCT-02 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| ACCT-03 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| ACCT-04 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| ACCT-05 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| ACCT-06 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| ACCT-07 | Phase 3: Bank Accounts & Credit Cards | Pending |
-| TXN-01 | Phase 4: Transaction Core | Pending |
-| TXN-02 | Phase 4: Transaction Core | Pending |
-| TXN-03 | Phase 4: Transaction Core | Pending |
-| TXN-04 | Phase 4: Transaction Core | Pending |
-| TXN-05 | Phase 4: Transaction Core | Pending |
-| TXN-06 | Phase 4: Transaction Core | Pending |
-| TXN-07 | Phase 4: Transaction Core | Pending |
-| TXN-08 | Phase 4: Transaction Core | Pending |
-| TXN-09 | Phase 4: Transaction Core | Pending |
-| BUDG-01 | Phase 5: Budgeting | Pending |
-| BUDG-02 | Phase 5: Budgeting | Pending |
-| BUDG-03 | Phase 5: Budgeting | Pending |
-| BUDG-04 | Phase 5: Budgeting | Pending |
-| BUDG-05 | Phase 5: Budgeting | Pending |
-| RPT-01 | Phase 6: Reporting & Net Worth | Pending |
-| RPT-02 | Phase 6: Reporting & Net Worth | Pending |
-| RPT-03 | Phase 6: Reporting & Net Worth | Pending |
-| RPT-04 | Phase 6: Reporting & Net Worth | Pending |
-| RPT-05 | Phase 6: Reporting & Net Worth | Pending |
-| SUBS-01 | Phase 7: Subscription & Bill Tracking | Pending |
-| SUBS-02 | Phase 7: Subscription & Bill Tracking | Pending |
-| SUBS-03 | Phase 7: Subscription & Bill Tracking | Pending |
-| SUBS-04 | Phase 7: Subscription & Bill Tracking | Pending |
-| SUBS-05 | Phase 7: Subscription & Bill Tracking | Pending |
-| AI-01 | Phase 8: AI Chat & Smart Entry | Pending |
-| AI-02 | Phase 8: AI Chat & Smart Entry | Pending |
-| AI-03 | Phase 8: AI Chat & Smart Entry | Pending |
-| AI-04 | Phase 8: AI Chat & Smart Entry | Pending |
-| AI-05 | Phase 8: AI Chat & Smart Entry | Pending |
-| AI-06 | Phase 8: AI Chat & Smart Entry | Pending |
-| AI-07 | Phase 8: AI Chat & Smart Entry | Pending |
-| AIREC-01 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-02 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-03 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-04 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-05 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-06 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-07 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-08 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-09 | Phase 9: AI Recommendations Engine | Pending |
-| AIREC-10 | Phase 9: AI Recommendations Engine | Pending |
-| GMAIL-01 | Phase 10: Gmail Integration | Pending |
-| GMAIL-02 | Phase 10: Gmail Integration | Pending |
-| GMAIL-03 | Phase 10: Gmail Integration | Pending |
-| GMAIL-04 | Phase 10: Gmail Integration | Pending |
-| MCP-01 | Phase 11: MCP Server | Pending |
-| MCP-02 | Phase 11: MCP Server | Pending |
-| MCP-03 | Phase 11: MCP Server | Pending |
-| MCP-04 | Phase 11: MCP Server | Pending |
-| FREEL-01 | Phase 12: Freelancer Mode | Pending |
-| FREEL-02 | Phase 12: Freelancer Mode | Pending |
-| FREEL-03 | Phase 12: Freelancer Mode | Pending |
-| FREEL-04 | Phase 12: Freelancer Mode | Pending |
-| FREEL-05 | Phase 12: Freelancer Mode | Pending |
-| FREEL-06 | Phase 12: Freelancer Mode | Pending |
+| (Populated during roadmap creation) | | |
 
 **Coverage:**
-- v1 requirements: 73 total
-- Mapped to phases: 73
-- Unmapped: 0 ✓
+- v1 requirements: 59 total
+- Mapped to phases: 0
+- Unmapped: 59 ⚠️
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-20 after roadmap creation*
+*Last updated: 2026-04-20 after initial definition*
