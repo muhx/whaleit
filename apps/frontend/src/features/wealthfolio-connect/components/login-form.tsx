@@ -1,25 +1,25 @@
 import { isDesktop } from "@/adapters";
 import { ExternalLink } from "@/components/external-link";
 import { getPreferredProvider, savePreferredProvider } from "@/lib/cookie-utils";
-import { Alert, AlertDescription } from "@wealthfolio/ui/components/ui/alert";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Alert, AlertDescription } from "@whaleit/ui/components/ui/alert";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
+} from "@whaleit/ui/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@wealthfolio/ui/components/ui/input-otp";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
+} from "@whaleit/ui/components/ui/collapsible";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@whaleit/ui/components/ui/input-otp";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { Separator } from "@whaleit/ui/components/ui/separator";
 import { useEffect, useState } from "react";
 import { useWealthfolioConnect } from "../providers/wealthfolio-connect-provider";
 import { ProviderButton } from "./provider-button";

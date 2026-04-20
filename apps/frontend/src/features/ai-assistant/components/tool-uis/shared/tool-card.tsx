@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui";
 
 export interface ToolCardProps {
   title: string;

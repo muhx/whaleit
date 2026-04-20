@@ -1,6 +1,6 @@
 import { TickerAvatar } from "@/components/ticker-avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui/components/ui/card";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import { HoldingType, isAlternativeAssetKind, type AssetKind } from "@/lib/constants";
 import { parseOccSymbol } from "@/lib/occ-symbol";
 import { Holding } from "@/lib/types";
@@ -12,8 +12,8 @@ import {
   GainPercent,
   Icons,
   usePersistentState,
-} from "@wealthfolio/ui";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
+} from "@whaleit/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";

@@ -1,4 +1,4 @@
-import type { AddonContext, SidebarItemHandle } from "@wealthfolio/addon-sdk";
+import type { AddonContext, SidebarItemHandle } from "@whaleit/addon-sdk";
 import React from "react";
 import { toast } from "sonner";
 import { createSDKHostAPIBridge } from "./type-bridge";

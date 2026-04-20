@@ -9,8 +9,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui";
-import { cn } from "@wealthfolio/ui/lib/utils";
+} from "@whaleit/ui";
+import { cn } from "@whaleit/ui/lib/utils";
 import { Link } from "react-router-dom";
 
 interface IssueDetailSheetProps {

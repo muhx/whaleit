@@ -1,4 +1,4 @@
-import { Button, Icons } from "@wealthfolio/ui";
+import { Button, Icons } from "@whaleit/ui";
 
 interface ValueHistoryToolbarProps {
   selectedRowCount: number;

@@ -11,8 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
   Form,
-} from "@wealthfolio/ui";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+} from "@whaleit/ui";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import { useCallback, useEffect } from "react";
 import { FormProvider, useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";

@@ -4,11 +4,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
-import { Progress } from "@wealthfolio/ui/components/ui/progress";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+} from "@whaleit/ui/components/ui/card";
+import { Progress } from "@whaleit/ui/components/ui/progress";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
 
 interface QuoteImportProgressProps {
   isImporting: boolean;

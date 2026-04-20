@@ -1,6 +1,6 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { useWealthfolioConnect } from "../providers/wealthfolio-connect-provider";
 import { hasBrokerSync } from "../lib/plan-capabilities";

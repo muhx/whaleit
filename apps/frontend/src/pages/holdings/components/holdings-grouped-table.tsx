@@ -1,12 +1,12 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Badge } from "@whaleit/ui/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
-import { AmountDisplay, GainPercent, QuantityDisplay } from "@wealthfolio/ui";
+} from "@whaleit/ui/components/ui/collapsible";
+import { AmountDisplay, GainPercent, QuantityDisplay } from "@whaleit/ui";
 import { TickerAvatar } from "@/components/ticker-avatar";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
 import { Holding, HOLDING_GROUP_ORDER } from "@/lib/types";

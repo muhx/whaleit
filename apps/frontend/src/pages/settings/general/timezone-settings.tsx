@@ -3,21 +3,21 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
+} from "@whaleit/ui/components/ui/card";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
+} from "@whaleit/ui/components/ui/form";
 import { useSettingsContext } from "@/lib/settings-provider";
 import { TimezoneInput } from "./timezone-input";
 

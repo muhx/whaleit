@@ -1,8 +1,8 @@
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import { GoalOperations } from "./goal-operations";
 import type { Goal } from "@/lib/types";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { formatAmount } from "@wealthfolio/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { formatAmount } from "@whaleit/ui";
 import { useSettingsContext } from "@/lib/settings-provider";
 
 export interface GoalItemProps {

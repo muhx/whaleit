@@ -1,8 +1,8 @@
 import { SyncStatusIcon } from "@/features/wealthfolio-connect/components/sync-status-icon";
 import { useAggregatedSyncStatus } from "@/features/wealthfolio-connect/hooks";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
-import { cn } from "@wealthfolio/ui/lib/utils";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
+import { cn } from "@whaleit/ui/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "react-router-dom";
 import { isPathActive } from "./app-navigation";

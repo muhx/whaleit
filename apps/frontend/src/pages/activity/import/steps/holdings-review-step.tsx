@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 
 import { checkHoldingsImport } from "@/adapters";
 import { useImportContext } from "../context";

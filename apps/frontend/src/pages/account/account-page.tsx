@@ -17,7 +17,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useMemo, useState } from "react";
 
 import { ActionPalette, type ActionPaletteGroup } from "@/components/action-palette";
@@ -45,8 +45,8 @@ import { PortfolioUpdateTrigger } from "@/pages/dashboard/portfolio-update-trigg
 import { HoldingsEditMode } from "@/pages/holdings/components/holdings-edit-mode";
 import { useCalculatePerformanceHistory } from "@/pages/performance/hooks/use-performance-data";
 import { useQuery } from "@tanstack/react-query";
-import { Icons, type Icon } from "@wealthfolio/ui";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Icons, type Icon } from "@whaleit/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -54,9 +54,9 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@wealthfolio/ui/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
+} from "@whaleit/ui/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -64,7 +64,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@wealthfolio/ui/components/ui/sheet";
+} from "@whaleit/ui/components/ui/sheet";
 import { format, parseISO, subMonths } from "date-fns";
 import { useNavigate, useParams } from "react-router-dom";
 import { AccountContributionLimit } from "./account-contribution-limit";

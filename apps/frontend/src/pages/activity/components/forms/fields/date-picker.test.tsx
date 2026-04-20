@@ -11,7 +11,7 @@ const { mockDatePickerInput } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@wealthfolio/ui", () => ({
+vi.mock("@whaleit/ui", () => ({
   DatePickerInput: mockDatePickerInput,
   FormField: ({
     render,

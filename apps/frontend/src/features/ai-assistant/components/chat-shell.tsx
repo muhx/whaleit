@@ -2,17 +2,17 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { cn } from "@/lib/utils";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Badge, EmptyPlaceholder } from "@wealthfolio/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Badge, EmptyPlaceholder } from "@whaleit/ui";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@wealthfolio/ui/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 import { Thread } from "./thread";
 import { ThreadList } from "./thread-list";
 import { ProviderPicker } from "./provider-picker";

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 
 import {
   Command,
@@ -11,14 +11,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@wealthfolio/ui/components/ui/command";
+} from "@whaleit/ui/components/ui/command";
 import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@wealthfolio/ui/components/ui/dialog";
+} from "@whaleit/ui/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -27,22 +27,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
+} from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui/components/ui/select";
+} from "@whaleit/ui/components/ui/select";
 import { useCustomProviders } from "@/hooks/use-custom-providers";
 import { useMarketDataProviders } from "@/hooks/use-market-data-providers";
 import { ExchangeRate } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { MoneyInput, worldCurrencies } from "@wealthfolio/ui";
+import { MoneyInput, worldCurrencies } from "@whaleit/ui";
 
 const exchangeRateSchema = z
   .object({

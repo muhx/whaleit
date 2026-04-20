@@ -3,7 +3,7 @@ import { ImportFormat, ImportMappingData, type SymbolSearchResult } from "@/lib/
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { saveAccountImportMapping, logger } from "@/adapters";
 import { QueryKeys } from "@/lib/query-keys";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import { createDefaultActivityMapping } from "../utils/default-activity-template";
 import { normalizeActivityLabel } from "../utils/activity-type-mapping";
 

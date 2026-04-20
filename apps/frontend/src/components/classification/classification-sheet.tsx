@@ -6,7 +6,7 @@ import {
   SheetTitle,
   SheetDescription,
   Skeleton,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useTaxonomies } from "@/hooks/use-taxonomies";
 import { SingleSelectTaxonomy } from "./single-select-taxonomy";
 import { MultiSelectTaxonomy } from "./multi-select-taxonomy";

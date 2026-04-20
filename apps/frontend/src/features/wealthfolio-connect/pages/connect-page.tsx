@@ -14,19 +14,19 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { WEALTHFOLIO_CONNECT_PORTAL_URL } from "@/lib/constants";
 import { QueryKeys } from "@/lib/query-keys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert } from "@wealthfolio/ui/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@wealthfolio/ui/components/ui/avatar";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+import { Alert } from "@whaleit/ui/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@whaleit/ui/components/ui/avatar";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";

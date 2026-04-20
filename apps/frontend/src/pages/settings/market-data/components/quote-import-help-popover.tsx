@@ -1,6 +1,6 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
 
 export function QuoteImportHelpPopover() {
   return (

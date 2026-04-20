@@ -9,7 +9,7 @@ import {
 import { type FC, memo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import remarkGfm from "remark-gfm";
 
 import { ExternalLink } from "@/components/external-link";

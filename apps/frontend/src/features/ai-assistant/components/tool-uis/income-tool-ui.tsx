@@ -14,7 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
   formatPercent,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { memo, useMemo } from "react";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
 import { Bar, BarChart, ResponsiveContainer, Tooltip as ChartTooltip, XAxis } from "recharts";

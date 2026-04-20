@@ -4,17 +4,17 @@ import { getAppInfo } from "@/adapters";
 import { ExternalLink } from "@/components/external-link";
 import { usePlatform } from "@/hooks/use-platform";
 import { useCheckForUpdates } from "@/hooks/use-updater";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+} from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Separator } from "@whaleit/ui/components/ui/separator";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import { SettingsHeader } from "../settings-header";
 
 export default function AboutSettingsPage() {

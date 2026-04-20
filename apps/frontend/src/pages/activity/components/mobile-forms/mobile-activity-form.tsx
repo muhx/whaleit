@@ -1,7 +1,7 @@
 import { logger } from "@/adapters";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Form } from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Form } from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Sheet,
   SheetContent,
@@ -9,7 +9,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui/components/ui/sheet";
+} from "@whaleit/ui/components/ui/sheet";
 import { ActivityType, METADATA_CONTRACT_MULTIPLIER, QuoteMode } from "@/lib/constants";
 import { isSymbolRequired } from "@/lib/activity-utils";
 import { buildOccSymbol, parseOccSymbol } from "@/lib/occ-symbol";

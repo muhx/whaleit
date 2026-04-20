@@ -10,8 +10,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui";
-import { AmountDisplay } from "@wealthfolio/ui/components/financial/amount-display";
+} from "@whaleit/ui";
+import { AmountDisplay } from "@whaleit/ui/components/financial/amount-display";
 import { format } from "date-fns";
 
 interface ActivityDetailSheetProps {

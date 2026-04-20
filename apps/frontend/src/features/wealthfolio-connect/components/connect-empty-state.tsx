@@ -1,7 +1,7 @@
 import { ExternalLink } from "@/components/external-link";
 import { WEALTHFOLIO_CONNECT_PORTAL_URL } from "@/lib/constants";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { Link } from "react-router-dom";
 import { ConnectFlowDiagram } from "./connect-flow-diagram";
 

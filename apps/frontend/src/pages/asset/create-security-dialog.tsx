@@ -4,8 +4,8 @@ import { useSettingsContext } from "@/lib/settings-provider";
 import type { NewAsset, SymbolSearchResult } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { CurrencyInput, SearchableSelect } from "@wealthfolio/ui";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { CurrencyInput, SearchableSelect } from "@whaleit/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@wealthfolio/ui/components/ui/dialog";
+} from "@whaleit/ui/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -21,17 +21,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+} from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui/components/ui/select";
-import { Textarea } from "@wealthfolio/ui/components/ui/textarea";
+} from "@whaleit/ui/components/ui/select";
+import { Textarea } from "@whaleit/ui/components/ui/textarea";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

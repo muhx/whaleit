@@ -1,4 +1,4 @@
-import { Button, Icons, Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui";
+import { Button, Icons, Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui";
 
 // Help popover component using shadcn Popover
 function HelpPopover() {

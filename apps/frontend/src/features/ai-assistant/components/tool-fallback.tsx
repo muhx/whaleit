@@ -1,7 +1,7 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { useState } from "react";
 
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 function hasResultMeta(

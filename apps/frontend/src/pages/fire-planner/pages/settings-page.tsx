@@ -1,7 +1,7 @@
 import type { Account, ActivityDetails, Holding } from "@/lib/types";
 import { generateId } from "@/lib/id";
 import { getLatestValuations } from "@/adapters";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import {
   Button,
   Card,
@@ -11,7 +11,7 @@ import {
   Input,
   Label,
   Switch,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useState, useEffect } from "react";
 import type { FireSettings, IncomeStream } from "../types";
 import { DEFAULT_SETTINGS } from "../lib/storage";

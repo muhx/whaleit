@@ -3,19 +3,19 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { TickerAvatar } from "@/components/ticker-avatar";
-import { Badge } from "@wealthfolio/ui";
-import { DataTable } from "@wealthfolio/ui/components/ui/data-table";
-import { DataTableColumnHeader } from "@wealthfolio/ui/components/ui/data-table/data-table-column-header";
-import { DataTableFacetedFilterProps } from "@wealthfolio/ui/components/ui/data-table/data-table-faceted-filter";
+import { Badge } from "@whaleit/ui";
+import { DataTable } from "@whaleit/ui/components/ui/data-table";
+import { DataTableColumnHeader } from "@whaleit/ui/components/ui/data-table/data-table-column-header";
+import { DataTableFacetedFilterProps } from "@whaleit/ui/components/ui/data-table/data-table-faceted-filter";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@wealthfolio/ui/components/ui/dropdown-menu";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+} from "@whaleit/ui/components/ui/dropdown-menu";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -23,8 +23,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@wealthfolio/ui/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 
 import { ASSET_KIND_DISPLAY_NAMES, LatestQuoteSnapshot } from "@/lib/types";
 import { parseOccSymbol } from "@/lib/occ-symbol";

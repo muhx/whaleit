@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { isDesktop, openUrlInBrowser } from "@/adapters";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@wealthfolio/ui/components/ui/carousel";
-import { Progress } from "@wealthfolio/ui/components/ui/progress";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+} from "@whaleit/ui/components/ui/carousel";
+import { Progress } from "@whaleit/ui/components/ui/progress";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import {
   useCheckUpdateOnStartup,
   useClearUpdate,
   useInstallUpdate,
   UPDATE_DISMISSED_KEY,
 } from "@/hooks/use-updater";
-import { Icons } from "@wealthfolio/ui";
-import { usePersistentState } from "@wealthfolio/ui/hooks/use-persistent-state";
+import { Icons } from "@whaleit/ui";
+import { usePersistentState } from "@whaleit/ui/hooks/use-persistent-state";
 
 interface DismissedUpdate {
   version: string;

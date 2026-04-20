@@ -1,6 +1,6 @@
-import { ApplicationShell } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
+import { ApplicationShell } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Separator } from "@whaleit/ui/components/ui/separator";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { SidebarNav } from "./sidebar-nav";
 

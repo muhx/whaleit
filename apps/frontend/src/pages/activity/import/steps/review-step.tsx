@@ -1,7 +1,7 @@
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { ProgressIndicator } from "@wealthfolio/ui/components/ui/progress-indicator";
-import { FacetedFilter } from "@wealthfolio/ui";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { ProgressIndicator } from "@whaleit/ui/components/ui/progress-indicator";
+import { FacetedFilter } from "@whaleit/ui";
 import { useCallback, useMemo, useState } from "react";
 import { ImportAlert } from "../components/import-alert";
 import { ImportReviewGrid } from "../components/import-review-grid";

@@ -5,18 +5,18 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Progress } from "@wealthfolio/ui/components/ui/progress";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Progress } from "@whaleit/ui/components/ui/progress";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
 import { useLatestValuations } from "@/hooks/use-latest-valuations";
 import { calculateGoalProgress } from "@/lib/portfolio-helper";
 import { Goal, GoalAllocation } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { AmountDisplay, formatPercent } from "@wealthfolio/ui";
+import { AmountDisplay, formatPercent } from "@whaleit/ui";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 

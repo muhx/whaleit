@@ -1,7 +1,7 @@
 import { useSettingsContext } from "@/lib/settings-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Icons } from "@wealthfolio/ui";
-import { Card, CardContent } from "@wealthfolio/ui/components/ui/card";
+import { Icons } from "@whaleit/ui";
+import { Card, CardContent } from "@whaleit/ui/components/ui/card";
 import {
   Form,
   FormControl,
@@ -9,9 +9,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
+} from "@whaleit/ui/components/ui/form";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { worldCurrencies } from "@whaleit/ui/lib/currencies";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";

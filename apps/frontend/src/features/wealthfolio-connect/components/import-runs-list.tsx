@@ -1,11 +1,11 @@
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
+} from "@whaleit/ui/components/ui/collapsible";
 import { format } from "date-fns";
 import { useState } from "react";
 import { Link } from "react-router-dom";

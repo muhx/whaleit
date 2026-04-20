@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@wealthfolio/ui/components/ui/card";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Card, CardContent } from "@whaleit/ui/components/ui/card";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { formatDate } from "@/lib/utils";
 import type { BrokerAccount } from "../types";
 

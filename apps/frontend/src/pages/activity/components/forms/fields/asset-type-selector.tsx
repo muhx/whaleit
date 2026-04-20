@@ -1,5 +1,5 @@
 import { useController, type Control, type FieldValues, type FieldPath } from "react-hook-form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { useId } from "react";

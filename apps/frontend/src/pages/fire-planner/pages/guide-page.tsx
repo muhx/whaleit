@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

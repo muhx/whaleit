@@ -15,12 +15,12 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { DataTableColumnHeader } from "@wealthfolio/ui/components/ui/data-table/data-table-column-header";
-import { DataTableFacetedFilterProps } from "@wealthfolio/ui/components/ui/data-table/data-table-faceted-filter";
-import { DataTablePagination } from "@wealthfolio/ui/components/ui/data-table/data-table-pagination";
-import { DataTableToolbar } from "@wealthfolio/ui/components/ui/data-table/data-table-toolbar";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { DataTableColumnHeader } from "@whaleit/ui/components/ui/data-table/data-table-column-header";
+import { DataTableFacetedFilterProps } from "@whaleit/ui/components/ui/data-table/data-table-faceted-filter";
+import { DataTablePagination } from "@whaleit/ui/components/ui/data-table/data-table-pagination";
+import { DataTableToolbar } from "@whaleit/ui/components/ui/data-table/data-table-toolbar";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Table,
   TableBody,
@@ -28,17 +28,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@wealthfolio/ui/components/ui/table";
+} from "@whaleit/ui/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/tooltip";
 import type { Account, ActivityImport } from "@/lib/types";
 import { cn, formatDateTime, toPascalCase } from "@/lib/utils";
 import { useSettingsContext } from "@/lib/settings-provider";
-import { formatAmount } from "@wealthfolio/ui";
+import { formatAmount } from "@whaleit/ui";
 import { motion } from "motion/react";
 
 // Helper function to check if a field has errors

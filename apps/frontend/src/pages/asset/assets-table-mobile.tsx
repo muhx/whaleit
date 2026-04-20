@@ -1,23 +1,23 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Badge, Card, Input } from "@wealthfolio/ui";
+import { Badge, Card, Input } from "@whaleit/ui";
 
 import { TickerAvatar } from "@/components/ticker-avatar";
 import { useSettingsContext } from "@/lib/settings-provider";
 import { ASSET_KIND_DISPLAY_NAMES, LatestQuoteSnapshot } from "@/lib/types";
 import { parseOccSymbol } from "@/lib/occ-symbol";
 import { cn, formatAmount, formatDate } from "@/lib/utils";
-import { ScrollArea, Separator } from "@wealthfolio/ui";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { ScrollArea, Separator } from "@whaleit/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@wealthfolio/ui/components/ui/dropdown-menu";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui/components/ui/dropdown-menu";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Sheet,
   SheetClose,
@@ -25,9 +25,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui/components/ui/sheet";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/sheet";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 import { isStaleQuote, ParsedAsset } from "./asset-utils";
 
 interface AssetsTableMobileProps {

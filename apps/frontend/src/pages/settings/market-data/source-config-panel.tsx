@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { Switch } from "@wealthfolio/ui/components/ui/switch";
-import { Textarea } from "@wealthfolio/ui/components/ui/textarea";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
+} from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { Switch } from "@whaleit/ui/components/ui/switch";
+import { Textarea } from "@whaleit/ui/components/ui/textarea";
+import { Badge } from "@whaleit/ui/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
+} from "@whaleit/ui/components/ui/collapsible";
 
 import { useTestCustomProviderSource } from "@/hooks/use-custom-providers";
 import type {

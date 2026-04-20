@@ -26,9 +26,9 @@ import {
   SheetHeader,
   SheetTitle,
   Switch,
-} from "@wealthfolio/ui";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+} from "@whaleit/ui";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Form,
   FormControl,
@@ -36,9 +36,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+} from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -47,14 +47,14 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui/components/ui/select";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wealthfolio/ui/components/ui/tabs";
-import { Textarea } from "@wealthfolio/ui/components/ui/textarea";
+} from "@whaleit/ui/components/ui/select";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui/components/ui/tabs";
+import { Textarea } from "@whaleit/ui/components/ui/textarea";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type Path, useFieldArray, useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import { useAssetProfileMutations } from "./hooks/use-asset-profile-mutations";
 
 // Schema for a single provider override (type is derived from asset kind)

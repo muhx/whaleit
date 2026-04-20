@@ -1,18 +1,18 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { ExternalLink } from "@/components/external-link";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { Switch } from "@wealthfolio/ui/components/ui/switch";
-import { Checkbox } from "@wealthfolio/ui/components/ui/checkbox";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { Switch } from "@whaleit/ui/components/ui/switch";
+import { Checkbox } from "@whaleit/ui/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
+} from "@whaleit/ui/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -20,7 +20,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@wealthfolio/ui/components/ui/command";
+} from "@whaleit/ui/components/ui/command";
 import { cn } from "@/lib/utils";
 import type {
   MergedProvider,

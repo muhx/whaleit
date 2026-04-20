@@ -6,12 +6,12 @@ import {
   parseCsv,
   saveImportTemplate,
 } from "@/adapters";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { CardContent } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wealthfolio/ui/components/ui/tabs";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { CardContent } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui/components/ui/tabs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CSVFileViewer } from "../components/csv-file-viewer";

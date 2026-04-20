@@ -1,8 +1,8 @@
 import { memo } from "react";
 
-import { Badge, Button } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
+import { Badge, Button } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
 
 import type { ImportCsvMappingOutput, MappingConfidence } from "../../types";
 

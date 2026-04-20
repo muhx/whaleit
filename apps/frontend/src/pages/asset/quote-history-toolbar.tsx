@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   Switch,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 
 interface QuoteHistoryToolbarProps {
   selectedRowCount: number;

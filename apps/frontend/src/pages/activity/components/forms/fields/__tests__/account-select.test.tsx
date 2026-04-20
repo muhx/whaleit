@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { AccountSelect, type AccountSelectOption } from "../account-select";
 
-vi.mock("@wealthfolio/ui", () => ({
+vi.mock("@whaleit/ui", () => ({
   FormControl: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   FormField: ({
     control,

@@ -16,8 +16,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@wealthfolio/ui";
-import { cn } from "@wealthfolio/ui/lib/utils";
+} from "@whaleit/ui";
+import { cn } from "@whaleit/ui/lib/utils";
 import { useState } from "react";
 import { IssueDetailSheet } from "./components/issue-detail-sheet";
 

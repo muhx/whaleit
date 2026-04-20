@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { Separator } from "@wealthfolio/ui";
+import { Separator } from "@whaleit/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,9 +10,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@wealthfolio/ui/components/ui/alert-dialog";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui/components/ui/alert-dialog";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { RefreshQuotesConfirmDialog } from "./refresh-quotes-confirm-dialog";
 
 import { useHoldings } from "@/hooks/use-holdings";

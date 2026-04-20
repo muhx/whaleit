@@ -18,8 +18,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { memo, useMemo, useState } from "react";
 import { useRuntimeContext } from "../../hooks/use-runtime-context";
 import type {

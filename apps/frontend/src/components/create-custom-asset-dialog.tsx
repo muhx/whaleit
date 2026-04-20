@@ -1,8 +1,8 @@
 import { useSettingsContext } from "@/lib/settings-provider";
 import type { SymbolSearchResult } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CurrencyInput } from "@wealthfolio/ui";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { CurrencyInput } from "@whaleit/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@wealthfolio/ui/components/ui/dialog";
+} from "@whaleit/ui/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -18,15 +18,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+} from "@whaleit/ui/components/ui/form";
+import { Input } from "@whaleit/ui/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui/components/ui/select";
+} from "@whaleit/ui/components/ui/select";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

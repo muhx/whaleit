@@ -13,26 +13,26 @@ import type { Account, ImportTemplateData } from "@/lib/types";
 import { ImportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wealthfolio/ui/components/ui/tabs";
-import { Checkbox } from "@wealthfolio/ui/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui/components/ui/tabs";
+import { Checkbox } from "@whaleit/ui/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
+} from "@whaleit/ui/components/ui/collapsible";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Label } from "@whaleit/ui/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui/components/ui/select";
+} from "@whaleit/ui/components/ui/select";
 import { TemplatePicker } from "../components/template-picker";
-import { SearchableSelect } from "@wealthfolio/ui";
+import { SearchableSelect } from "@whaleit/ui";
 import { DATE_FORMAT_OPTIONS, isPresetFormat } from "../utils/date-format-options";
 import { computeFieldMappings } from "../hooks/use-import-mapping";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

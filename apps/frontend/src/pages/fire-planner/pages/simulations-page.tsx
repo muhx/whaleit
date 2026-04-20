@@ -7,7 +7,7 @@ import {
   CardTitle,
   Skeleton,
   formatAmount,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import {
   Area,
   AreaChart,
@@ -20,7 +20,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "@wealthfolio/ui/chart";
+} from "@whaleit/ui/chart";
 import { useState, useMemo, useEffect } from "react";
 import type { FireSettings, MonteCarloResult } from "../types";
 import {

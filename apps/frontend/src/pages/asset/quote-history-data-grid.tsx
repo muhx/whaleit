@@ -6,7 +6,7 @@ import {
   Input,
   useDataGrid,
   formatAmount,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useCallback, useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import type { AssetKind, Quote } from "@/lib/types";

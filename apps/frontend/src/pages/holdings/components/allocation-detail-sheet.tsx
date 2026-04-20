@@ -1,4 +1,4 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Sheet,
   SheetClose,
@@ -6,9 +6,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui/components/ui/sheet";
-import { AmountDisplay, Skeleton } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui/components/ui/sheet";
+import { AmountDisplay, Skeleton } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

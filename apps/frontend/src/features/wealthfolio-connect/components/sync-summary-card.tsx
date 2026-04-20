@@ -1,7 +1,7 @@
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { formatDistanceToNow } from "date-fns";
 import type { AggregatedSyncStatus } from "../types";
 

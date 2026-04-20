@@ -7,8 +7,8 @@ import {
   CardTitle,
   Skeleton,
   formatAmount,
-} from "@wealthfolio/ui";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 import { useMemo } from "react";
 import type { FireSettings, IncomeStream } from "../types";
 import {

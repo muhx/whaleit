@@ -2,14 +2,14 @@ import React from "react";
 
 import { TickerAvatar } from "@/components/ticker-avatar";
 import { parseOccSymbol } from "@/lib/occ-symbol";
-import { DataTableColumnHeader } from "@wealthfolio/ui/components/ui/data-table/data-table-column-header";
+import { DataTableColumnHeader } from "@whaleit/ui/components/ui/data-table/data-table-column-header";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@wealthfolio/ui/components/ui/dropdown-menu";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui/components/ui/dropdown-menu";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@wealthfolio/ui/components/ui/table";
+} from "@whaleit/ui/components/ui/table";
 import {
   calculateActivityValue,
   isAssetBackedIncomeActivity,
@@ -42,7 +42,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Button, formatAmount } from "@wealthfolio/ui";
+import { Button, formatAmount } from "@whaleit/ui";
 import { Link } from "react-router-dom";
 import { useActivityMutations } from "../../hooks/use-activity-mutations";
 import { ActivityOperations } from "../activity-operations";

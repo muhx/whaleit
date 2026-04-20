@@ -1,6 +1,6 @@
 import type { FC } from "react";
-import { Badge, Tooltip, TooltipContent, TooltipTrigger } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge, Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { useChatModelContext } from "../hooks/use-chat-model-context";
 

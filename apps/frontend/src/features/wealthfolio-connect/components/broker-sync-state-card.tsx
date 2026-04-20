@@ -1,6 +1,6 @@
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Card, CardContent } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Card, CardContent } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { formatDistanceToNow } from "date-fns";
 import type { Account, Platform } from "@/lib/types";
 import type { BrokerSyncState, SyncStatus } from "../types";

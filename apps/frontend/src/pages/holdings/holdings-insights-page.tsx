@@ -1,6 +1,6 @@
-import { EmptyPlaceholder } from "@wealthfolio/ui";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { EmptyPlaceholder } from "@whaleit/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { useCallback, useMemo, useState } from "react";
 
 import { useHoldings } from "@/hooks/use-holdings";

@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { IssueDetailSheet } from "./issue-detail-sheet";
 
-vi.mock("@wealthfolio/ui", () => ({
+vi.mock("@whaleit/ui", () => ({
   ActionConfirm: ({ button }: { button: React.ReactNode }) => <>{button}</>,
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   Button: ({

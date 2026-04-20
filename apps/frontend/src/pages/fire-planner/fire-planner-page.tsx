@@ -8,7 +8,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useFireSettings } from "./hooks/use-fire-settings";
 import { usePortfolioData } from "./hooks/use-portfolio";
 import DashboardPage from "./pages/dashboard-page";

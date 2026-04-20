@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { ExternalLink } from "@/components/external-link";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Sheet,
   SheetContent,
@@ -12,9 +12,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui/components/ui/sheet";
-import { Alert, AlertDescription } from "@wealthfolio/ui/components/ui/alert";
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
+} from "@whaleit/ui/components/ui/sheet";
+import { Alert, AlertDescription } from "@whaleit/ui/components/ui/alert";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
 import { updateAccount } from "@/adapters";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

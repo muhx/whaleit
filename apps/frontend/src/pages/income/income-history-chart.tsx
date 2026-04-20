@@ -1,22 +1,22 @@
 import { cn } from "@/lib/utils";
 import type { IncomeByAccount } from "@/lib/types";
-import { AnimatedToggleGroup, formatAmount } from "@wealthfolio/ui";
+import { AnimatedToggleGroup, formatAmount } from "@whaleit/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
+} from "@whaleit/ui/components/ui/card";
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@wealthfolio/ui/components/ui/chart";
-import { EmptyPlaceholder } from "@wealthfolio/ui/components/ui/empty-placeholder";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui/components/ui/chart";
+import { EmptyPlaceholder } from "@whaleit/ui/components/ui/empty-placeholder";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { format, parseISO } from "date-fns";
 import React, { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";

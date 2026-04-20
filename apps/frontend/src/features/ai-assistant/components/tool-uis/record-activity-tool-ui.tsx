@@ -1,7 +1,7 @@
 import type { ToolCallMessagePartProps } from "@assistant-ui/react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { memo, useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";

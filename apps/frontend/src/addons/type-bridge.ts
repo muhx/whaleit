@@ -39,7 +39,7 @@ import type {
   UpdateAssetProfile,
 } from "@/lib/types";
 import type { HoldingInput } from "@/adapters";
-import type { HostAPI as SDKHostAPI } from "@wealthfolio/addon-sdk";
+import type { HostAPI as SDKHostAPI } from "@whaleit/addon-sdk";
 
 /**
  * Internal HostAPI interface that matches the actual command function signatures

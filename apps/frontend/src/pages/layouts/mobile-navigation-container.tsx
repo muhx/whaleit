@@ -1,7 +1,7 @@
 import { syncTriggerCycle, updatePortfolio } from "@/adapters";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useQueryClient } from "@tanstack/react-query";
-import { Icons, PageScrollContainer } from "@wealthfolio/ui";
+import { Icons, PageScrollContainer } from "@whaleit/ui";
 import { AnimatePresence } from "motion/react";
 import { useCallback } from "react";
 import { Outlet } from "react-router-dom";

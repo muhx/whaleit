@@ -9,9 +9,9 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@wealthfolio/ui/components/ui/alert-dialog";
-import { Icons } from "@wealthfolio/ui";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+} from "@whaleit/ui/components/ui/alert-dialog";
+import { Icons } from "@whaleit/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
 import { useSyncActions } from "../hooks";
 
 interface RecoveryDialogProps {

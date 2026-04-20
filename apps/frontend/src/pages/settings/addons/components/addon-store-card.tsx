@@ -16,7 +16,7 @@ import {
   DialogTrigger,
   Icons,
   StarRatingDisplay,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import React from "react";
 import { RatingDialog } from "./rating-dialog";
 

@@ -1,5 +1,5 @@
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import type { Account } from "@/lib/types";
 import { cn } from "@/lib/utils";
 

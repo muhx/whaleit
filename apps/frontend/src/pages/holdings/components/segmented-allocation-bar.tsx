@@ -1,15 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui/components/ui/card";
-import { EmptyPlaceholder } from "@wealthfolio/ui/components/ui/empty-placeholder";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
+import { EmptyPlaceholder } from "@whaleit/ui/components/ui/empty-placeholder";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/tooltip";
 import { TaxonomyAllocation } from "@/lib/types";
-import { formatPercent, PrivacyAmount } from "@wealthfolio/ui";
+import { formatPercent, PrivacyAmount } from "@whaleit/ui";
 import { useMemo } from "react";
 
 interface SegmentedAllocationBarProps {

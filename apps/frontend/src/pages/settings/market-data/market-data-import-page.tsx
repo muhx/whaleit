@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Separator } from "@whaleit/ui/components/ui/separator";
 
 import { useQuoteImport } from "@/hooks/use-quote-import";
 import { ImportQuotesSection } from "@/pages/settings/market-data/components/quote-import-section";

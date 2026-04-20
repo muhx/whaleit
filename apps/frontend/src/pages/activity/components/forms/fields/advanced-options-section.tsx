@@ -4,7 +4,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
+} from "@whaleit/ui/components/ui/collapsible";
 import {
   FormControl,
   FormField,
@@ -16,11 +16,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui";
-import { FormDescription } from "@wealthfolio/ui/components/ui/form";
-import { CurrencyInput, MoneyInput } from "@wealthfolio/ui/components/financial";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+} from "@whaleit/ui";
+import { FormDescription } from "@whaleit/ui/components/ui/form";
+import { CurrencyInput, MoneyInput } from "@whaleit/ui/components/financial";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   SUBTYPES_BY_ACTIVITY_TYPE,
   SUBTYPE_DISPLAY_NAMES,

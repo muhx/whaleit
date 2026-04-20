@@ -1,4 +1,4 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@wealthfolio/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@whaleit/ui";
 import type { LocalTransaction } from "./types";
 import { isPendingReview } from "./types";
 

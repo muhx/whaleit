@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
   type SymbolSearchResult,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 
 import {
   ActivityType,

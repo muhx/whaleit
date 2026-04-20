@@ -1,11 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wealthfolio/ui/components/ui/tabs";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
+import { Separator } from "@whaleit/ui/components/ui/separator";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui/components/ui/tabs";
 import { useMemo, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -24,15 +24,15 @@ import {
 import { QueryKeys } from "@/lib/query-keys";
 import type { CustomProviderWithSources } from "@/lib/types/custom-provider";
 import { cn } from "@/lib/utils";
-import { ActionConfirm } from "@wealthfolio/ui";
+import { ActionConfirm } from "@whaleit/ui";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { Switch } from "@wealthfolio/ui/components/ui/switch";
+} from "@whaleit/ui/components/ui/collapsible";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { Switch } from "@whaleit/ui/components/ui/switch";
 import {
   useDeleteApiKey,
   useMarketDataProviderSettings,

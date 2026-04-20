@@ -1,11 +1,11 @@
 /**
- * @wealthfolio/addon-sdk
+ * @whaleit/addon-sdk
  *
- * TypeScript SDK for building Wealthfolio addons with enhanced functionality,
+ * TypeScript SDK for building WhaleIt addons with enhanced functionality,
  * type safety, and comprehensive permission management.
  *
  * @version 1.0.0
- * @author Wealthfolio Team
+ * @author WhaleIt Team
  * @license MIT
  */
 

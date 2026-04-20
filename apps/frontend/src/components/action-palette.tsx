@@ -1,8 +1,8 @@
 import { useHapticFeedback } from "@/hooks";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
-import { cn } from "@wealthfolio/ui/lib/utils";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
+import { cn } from "@whaleit/ui/lib/utils";
 import * as React from "react";
 
 export interface ActionPaletteItem {
