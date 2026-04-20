@@ -50,7 +50,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 
 interface QuoteHistoryTableProps {
   data: Quote[];

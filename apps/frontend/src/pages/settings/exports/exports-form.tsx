@@ -1,8 +1,8 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Card, CardContent } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@wealthfolio/ui/components/ui/radio-group";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Card, CardContent } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@whaleit/ui/components/ui/radio-group";
 import { ExportDataType, ExportedFileFormat } from "@/lib/types";
 import { useState } from "react";
 import { useExportData } from "./use-export-data";

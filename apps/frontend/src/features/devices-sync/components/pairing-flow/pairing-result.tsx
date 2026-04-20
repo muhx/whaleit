@@ -3,8 +3,8 @@
 // ==========================================
 
 import { useEffect, useRef } from "react";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui";
 
 interface PairingResultProps {
   success: boolean;

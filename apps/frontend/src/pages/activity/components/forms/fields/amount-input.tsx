@@ -8,7 +8,7 @@ import {
   InputGroupAddon,
   InputGroupText,
   MoneyInput,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useFormContext, type FieldPath, type FieldValues } from "react-hook-form";
 
 interface AmountInputProps<TFieldValues extends FieldValues = FieldValues> {

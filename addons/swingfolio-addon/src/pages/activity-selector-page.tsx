@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
-} from "@wealthfolio/ui";
-import type { AddonContext } from "@wealthfolio/addon-sdk";
+} from "@whaleit/ui";
+import type { AddonContext } from "@whaleit/addon-sdk";
 import { useSwingActivities } from "../hooks/use-swing-activities";
 import { useSwingPreferences } from "../hooks/use-swing-preferences";
 import { format } from "date-fns";

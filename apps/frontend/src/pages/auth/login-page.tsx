@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { FormEvent, useState } from "react";
 
 export function LoginPage() {
@@ -37,12 +37,12 @@ export function LoginPage() {
             <div className="flex justify-center">
               <img
                 src="/logo-vantage.png"
-                alt="Wealthfolio logo vantage"
+                alt="WhaleIt logo vantage"
                 className="h-16 w-16 sm:h-20 sm:w-20"
               />
             </div>
             <div className="space-y-2">
-              <CardTitle>Wealthfolio</CardTitle>
+              <CardTitle>WhaleIt</CardTitle>
               <CardDescription>Your private portfolio tracker.</CardDescription>
             </div>
           </CardHeader>

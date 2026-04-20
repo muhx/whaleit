@@ -3,10 +3,10 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@wealthfolio/ui/components/ui/hover-card";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui/components/ui/hover-card";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   useUpdatePortfolioMutation,
   useRecalculatePortfolioMutation,

@@ -1,8 +1,8 @@
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@wealthfolio/ui/components/ui/tabs";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui/components/ui/tabs";
 import { usePlatform } from "@/hooks/use-platform";
 import {
   ScrollArea,
@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { downloadSampleCsv, downloadSampleHoldingsCsv } from "./utils/sample-csv";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ function ActivitiesHelpContent() {
         <p className="text-xs">
           For more details, see the{" "}
           <a
-            href="https://wealthfolio.app/docs/concepts/activity-types"
+            href="https://whaleit.app/docs/concepts/activity-types"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"

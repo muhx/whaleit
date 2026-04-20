@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui";
-import { AmountDisplay, Icons } from "@wealthfolio/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui";
+import { AmountDisplay, Icons } from "@whaleit/ui";
 import type { FeeAnalytics } from "../lib/fee-calculation.service";
 
 // Simple EmptyPlaceholder component since it's not exported from UI package

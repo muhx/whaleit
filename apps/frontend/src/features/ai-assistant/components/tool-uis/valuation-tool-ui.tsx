@@ -3,11 +3,11 @@ import { HistoryChart } from "@/components/history-chart";
 import { PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
 import { DateRange, TimePeriod } from "@/lib/types";
 import { makeAssistantToolUI } from "@assistant-ui/react";
-import { Badge, Card, CardContent, CardHeader, CardTitle, IntervalSelector } from "@wealthfolio/ui";
+import { Badge, Card, CardContent, CardHeader, CardTitle, IntervalSelector } from "@whaleit/ui";
 import { isAfter, parseISO, subMonths } from "date-fns";
 import { memo, useMemo, useState } from "react";
 
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { useSettingsContext } from "@/lib/settings-provider";
 import { CompactToolCard } from "./shared";
 

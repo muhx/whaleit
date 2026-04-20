@@ -5,12 +5,12 @@ import type { CSSProperties } from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
+} from "@whaleit/ui/components/ui/collapsible";
 
 import { cn } from "@/lib/utils";
 import {

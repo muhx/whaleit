@@ -1,7 +1,7 @@
 import type { Account, ActivityDetails, Holding } from "@/lib/types";
 import { generateId } from "@/lib/id";
 import { getLatestValuations } from "@/adapters";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import {
   Button,
   Card,
@@ -11,7 +11,7 @@ import {
   Input,
   Label,
   Switch,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useState, useEffect } from "react";
 import type { FireSettings, IncomeStream } from "../types";
 import { DEFAULT_SETTINGS } from "../lib/storage";
@@ -316,7 +316,7 @@ export default function SettingsPage({
                 autoConfigResult.expectedAnnualReturn === null &&
                 autoConfigResult.targetAllocations === null && (
                   <p className="text-muted-foreground">
-                    No data could be detected. Add activities and holdings to Wealthfolio first.
+                    No data could be detected. Add activities and holdings to WhaleIt first.
                   </p>
                 )}
             </div>
@@ -616,7 +616,7 @@ export default function SettingsPage({
         <CardContent className="space-y-2">
           {accounts.filter((a) => a.isActive && !a.isArchived).length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              No active accounts found in Wealthfolio.
+              No active accounts found in WhaleIt.
             </p>
           ) : (
             accounts
@@ -889,7 +889,7 @@ export default function SettingsPage({
                     </div>
                     <div className="col-span-full space-y-1">
                       <Label className="text-xs">
-                        Link to Wealthfolio account{" "}
+                        Link to WhaleIt account{" "}
                         <span className="text-muted-foreground">
                           (optional — syncs current value)
                         </span>

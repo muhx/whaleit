@@ -29,7 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
   type Icon,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 

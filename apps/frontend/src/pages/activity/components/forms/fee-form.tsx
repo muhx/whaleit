@@ -1,9 +1,9 @@
 import { useSettings } from "@/hooks/use-settings";
 import { ActivityType } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Card, CardContent } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Card, CardContent } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { useMemo } from "react";
 import { FormProvider, useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";

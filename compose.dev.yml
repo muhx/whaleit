@@ -1,4 +1,4 @@
-# Wealthfolio - Development overrides
+# WhaleIt - Development overrides
 #
 # Usage: docker compose -f compose.yml -f compose.dev.yml up
 #
@@ -7,7 +7,7 @@
 #   docker compose -f compose.yml -f compose.dev.yml --env-file .env.docker up
 
 services:
-  wealthfolio:
+  whaleit:
     # Build from source instead of pulling from Docker Hub
     build:
       context: .

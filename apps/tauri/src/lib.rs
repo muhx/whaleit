@@ -609,7 +609,7 @@ pub fn run() {
             commands::fire::run_fire_strategy_comparison,
         ])
         .build(tauri::generate_context!())
-        .expect("Failed to build Wealthfolio application")
+        .expect("Failed to build WhaleIt application")
         .run(|_handle, event| {
             #[cfg(desktop)]
             if matches!(

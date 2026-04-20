@@ -2,8 +2,8 @@
 // Shows the Short Authentication String for verification (issuer side only)
 // ======================================================
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui";
 
 interface SASVerificationProps {
   sas: string;

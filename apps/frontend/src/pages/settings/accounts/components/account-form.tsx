@@ -3,8 +3,8 @@ import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Checkbox } from "@wealthfolio/ui/components/ui/checkbox";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Checkbox } from "@whaleit/ui/components/ui/checkbox";
 
 import { newAccountSchema } from "@/lib/schemas";
 import {
@@ -13,8 +13,8 @@ import {
   RadioGroupItem,
   ResponsiveSelect,
   type ResponsiveSelectOption,
-} from "@wealthfolio/ui";
-import { Alert, AlertDescription } from "@wealthfolio/ui/components/ui/alert";
+} from "@whaleit/ui";
+import { Alert, AlertDescription } from "@whaleit/ui/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -23,14 +23,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@wealthfolio/ui/components/ui/alert-dialog";
+} from "@whaleit/ui/components/ui/alert-dialog";
 import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@wealthfolio/ui/components/ui/dialog";
+} from "@whaleit/ui/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -38,9 +38,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+} from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
 
 import { useAccountMutations } from "./use-account-mutations";
 
@@ -237,7 +237,7 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                       Choose how to track this account. This affects what data you enter and what
                       metrics are available.{" "}
                       <a
-                        href="https://wealthfolio.app/docs/concepts/activity-types"
+                        href="https://whaleit.app/docs/concepts/activity-types"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-foreground underline"
@@ -292,7 +292,7 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                     <AlertDescription className="text-xs">
                       Performance metrics will be limited without transaction history.{" "}
                       <a
-                        href="https://wealthfolio.app/docs/concepts/activity-types"
+                        href="https://whaleit.app/docs/concepts/activity-types"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-foreground underline"

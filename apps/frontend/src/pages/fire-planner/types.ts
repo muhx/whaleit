@@ -1,4 +1,4 @@
-// All monetary values in the user's base currency (from Wealthfolio settings)
+// All monetary values in the user's base currency (from WhaleIt settings)
 // All rates as decimals (0.065 = 6.5%)
 
 export type WithdrawalStrategy = "constant-dollar" | "constant-percentage";

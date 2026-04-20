@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
   Icons,
   worldCurrencies,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useAccounts } from "@/hooks/use-accounts";
 
 // ─────────────────────────────────────────────────────────────────────────────

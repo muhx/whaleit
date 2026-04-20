@@ -13,8 +13,8 @@ import FireSettingsForm from "@/pages/fire-planner/pages/settings-page";
 import GuidePage from "@/pages/fire-planner/pages/guide-page";
 import type { FireSettings } from "@/pages/fire-planner/types";
 import type { GoalAllocation } from "@/lib/types";
-import { Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@wealthfolio/ui";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import { SettingsHeader } from "../settings-header";
 
 export default function FirePlannerSettingsPage() {

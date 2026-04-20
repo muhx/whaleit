@@ -4,7 +4,9 @@ import { z } from "zod";
 export const DECIMAL_PRECISION = 8;
 export const DISPLAY_DECIMAL_PRECISION = 2;
 
-// Wealthfolio Connect Portal URL - centralized configuration
+// WhaleIt Connect Portal URL - centralized configuration.
+// NOTE: The underlying infrastructure URL is intentionally still on the
+// Wealthfolio domain until infra URL rebranding is completed.
 export const WEALTHFOLIO_CONNECT_PORTAL_URL = "https://connect.wealthfolio.app";
 
 export const PORTFOLIO_ACCOUNT_ID = "TOTAL";

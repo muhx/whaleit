@@ -1,7 +1,7 @@
 import { reloadAllAddons } from "@/addons/addons-core";
 import { updateAddon } from "@/adapters";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,12 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@wealthfolio/ui/components/ui/dialog";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
-import { useToast } from "@wealthfolio/ui/components/ui/use-toast";
-import type { AddonUpdateInfo } from "@wealthfolio/addon-sdk";
+} from "@whaleit/ui/components/ui/dialog";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
+import { Separator } from "@whaleit/ui/components/ui/separator";
+import { useToast } from "@whaleit/ui/components/ui/use-toast";
+import type { AddonUpdateInfo } from "@whaleit/addon-sdk";
 import { useState } from "react";
 
 interface AddonUpdateCardProps {
@@ -226,11 +226,11 @@ export function AddonUpdateCard({
         </div>
       </div>
 
-      {updateInfo.minWealthfolioVersion && (
+      {updateInfo.minWhaleItVersion && (
         <div className="mt-3 rounded-md bg-amber-100 p-2 dark:bg-amber-900/20">
           <p className="text-xs text-amber-800 dark:text-amber-200">
             <Icons.Info className="mr-1 inline h-3 w-3" />
-            Requires Wealthfolio {updateInfo.minWealthfolioVersion} or later
+            Requires WhaleIt {updateInfo.minWhaleItVersion} or later
           </p>
         </div>
       )}

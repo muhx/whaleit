@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from "react";
 
-import { Button } from "@wealthfolio/ui";
+import { Button } from "@whaleit/ui";
 
 import type { DraftActivity } from "@/pages/activity/import/context";
 import { ImportReviewGrid } from "@/pages/activity/import/components/import-review-grid";

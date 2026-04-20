@@ -35,7 +35,7 @@ export interface AddonManifest {
   /** License identifier (e.g., "MIT", "Apache-2.0") */
   license?: string;
   /** Minimum Wealthfolio version required */
-  minWealthfolioVersion?: string;
+  minWhaleItVersion?: string;
   /** Keywords for discoverability */
   keywords?: string[];
   /** Addon icon (base64 or relative path) */
@@ -165,7 +165,7 @@ export interface AddonUpdateInfo {
   /** Breaking changes in this update */
   hasBreakingChanges?: boolean;
   /** Minimum Wealthfolio version required for this update */
-  minWealthfolioVersion?: string;
+  minWhaleItVersion?: string;
 }
 
 /**

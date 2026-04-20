@@ -5,7 +5,7 @@
 
 import { backupDatabase, openFileSaveDialog } from "@/adapters";
 import { useQueryClient } from "@tanstack/react-query";
-import { Icons, Skeleton } from "@wealthfolio/ui";
+import { Icons, Skeleton } from "@whaleit/ui";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -14,37 +14,37 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@wealthfolio/ui/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@wealthfolio/ui/components/ui/avatar";
-import { Badge } from "@wealthfolio/ui/components/ui/badge";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+} from "@whaleit/ui/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@whaleit/ui/components/ui/avatar";
+import { Badge } from "@whaleit/ui/components/ui/badge";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
+} from "@whaleit/ui/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@wealthfolio/ui/components/ui/dialog";
+} from "@whaleit/ui/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@wealthfolio/ui/components/ui/dropdown-menu";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+} from "@whaleit/ui/components/ui/dropdown-menu";
+import { Input } from "@whaleit/ui/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/tooltip";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {

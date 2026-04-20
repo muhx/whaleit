@@ -1,12 +1,12 @@
 import { ThreadListPrimitive } from "@assistant-ui/react";
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 
-import { ActionConfirm } from "@wealthfolio/ui/components/common";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+import { ActionConfirm } from "@whaleit/ui/components/common";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import { useRuntimeContext } from "../hooks/use-runtime-context";
 import {
   flattenThreadPages,

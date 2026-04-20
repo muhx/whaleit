@@ -8,7 +8,7 @@ import {
   EmptyPlaceholder,
   formatAmount,
   Icons,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import {
   Bar,
   BarChart,
@@ -19,7 +19,7 @@ import {
   ChartTooltipContent,
   XAxis,
   YAxis,
-} from "@wealthfolio/ui/chart";
+} from "@whaleit/ui/chart";
 import { parseOccSymbol, formatOptionDescription } from "../lib/utils";
 import type { TradeDistribution } from "../types";
 

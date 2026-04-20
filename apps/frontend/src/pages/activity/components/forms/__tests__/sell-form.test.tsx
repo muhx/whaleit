@@ -65,7 +65,7 @@ vi.mock("../fields", () => ({
 }));
 
 // Mock UI components
-vi.mock("@wealthfolio/ui/components/ui/button", () => ({
+vi.mock("@whaleit/ui/components/ui/button", () => ({
   Button: ({
     children,
     type,
@@ -90,21 +90,21 @@ vi.mock("@wealthfolio/ui/components/ui/button", () => ({
   ),
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/card", () => ({
+vi.mock("@whaleit/ui/components/ui/card", () => ({
   Card: ({ children }: { children: React.ReactNode }) => <div data-testid="card">{children}</div>,
   CardContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="card-content">{children}</div>
   ),
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/alert", () => ({
+vi.mock("@whaleit/ui/components/ui/alert", () => ({
   Alert: ({ children }: { children: React.ReactNode }) => <div data-testid="alert">{children}</div>,
   AlertDescription: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="alert-description">{children}</div>
   ),
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/icons", () => ({
+vi.mock("@whaleit/ui/components/ui/icons", () => ({
   Icons: {
     Spinner: () => <span data-testid="spinner">Loading...</span>,
     Check: () => <span data-testid="check-icon">Check</span>,

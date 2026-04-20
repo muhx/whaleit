@@ -1,6 +1,6 @@
-import { ApplicationShell } from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
+import { ApplicationShell } from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Separator } from "@whaleit/ui/components/ui/separator";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { SidebarNav } from "./sidebar-nav";
 
@@ -78,7 +78,7 @@ const settingsSections = [
     title: "Connections",
     items: [
       {
-        title: "Wealthfolio Connect",
+        title: "WhaleIt Connect",
         href: "connect",
         subtitle: "Broker and device linking",
         icon: <Icons.CloudSync2 className="size-6 text-blue-400" />,
@@ -103,7 +103,7 @@ const settingsSections = [
       {
         title: "Add-ons",
         href: "addons",
-        subtitle: "Extend Wealthfolio with features",
+        subtitle: "Extend WhaleIt with features",
         icon: <Icons.Package className="size-5" />,
       },
     ],

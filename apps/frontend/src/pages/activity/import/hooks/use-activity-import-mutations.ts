@@ -1,7 +1,7 @@
 import { QueryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { logger, importActivities } from "@/adapters";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import type { ImportActivitiesResult, ActivityImport } from "@/lib/types";
 
 export function useActivityImportMutations({

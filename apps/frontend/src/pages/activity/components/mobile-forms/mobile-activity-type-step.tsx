@@ -1,7 +1,7 @@
-import { FormControl, FormField, FormItem } from "@wealthfolio/ui/components/ui/form";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { RadioGroup, RadioGroupItem } from "@wealthfolio/ui/components/ui/radio-group";
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
+import { FormControl, FormField, FormItem } from "@whaleit/ui/components/ui/form";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { RadioGroup, RadioGroupItem } from "@whaleit/ui/components/ui/radio-group";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 

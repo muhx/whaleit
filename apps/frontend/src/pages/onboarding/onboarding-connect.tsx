@@ -1,5 +1,5 @@
-import { Card } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Card } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import React from "react";
 
 const features = [
@@ -47,7 +47,7 @@ export const OnboardingConnect: React.FC = () => {
           <Icons.Sparkles className="h-3.5 w-3.5" />
           Optional
         </div>
-        <h2 className="mb-2 text-xl font-semibold">Wealthfolio Connect</h2>
+        <h2 className="mb-2 text-xl font-semibold">WhaleIt Connect</h2>
         <p className="text-muted-foreground text-sm">
           Automatically sync your brokers while keeping your data private.
         </p>
@@ -80,7 +80,7 @@ export const OnboardingConnect: React.FC = () => {
       {/* Learn more link */}
       <div className="flex justify-center">
         <a
-          href="https://wealthfolio.app/connect/"
+          href="https://whaleit.app/connect/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"

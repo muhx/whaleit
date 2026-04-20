@@ -3,16 +3,16 @@
 // One button: "Enable Device Sync" - handles enrollment + key init automatically
 // ===============================================================================
 
-import { Icons } from "@wealthfolio/ui";
-import { Alert, AlertDescription } from "@wealthfolio/ui/components/ui/alert";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Icons } from "@whaleit/ui";
+import { Alert, AlertDescription } from "@whaleit/ui/components/ui/alert";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@wealthfolio/ui/components/ui/card";
+} from "@whaleit/ui/components/ui/card";
 import { useSyncActions, useSyncStatus } from "../hooks";
 import { SyncStates } from "../types";
 

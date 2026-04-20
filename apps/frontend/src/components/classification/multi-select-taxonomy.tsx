@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Button } from "@wealthfolio/ui/components/ui/button";
+import { Button } from "@whaleit/ui/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -8,11 +8,11 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@wealthfolio/ui/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@wealthfolio/ui/components/ui/popover";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Icons } from "@wealthfolio/ui";
+} from "@whaleit/ui/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@whaleit/ui/components/ui/popover";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { Icons } from "@whaleit/ui";
 import { cn } from "@/lib/utils";
 import {
   useTaxonomy,

@@ -1,4 +1,4 @@
-import { TickerAvatar as BaseTickerAvatar } from "@wealthfolio/ui";
+import { TickerAvatar as BaseTickerAvatar } from "@whaleit/ui";
 import { parseOccSymbol } from "../lib/utils";
 
 interface TickerAvatarProps {

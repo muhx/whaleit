@@ -6,8 +6,8 @@ import { OnboardingLayout } from "@/pages/layouts/onboarding-layout";
 import SettingsLayout from "@/pages/settings/settings-layout";
 
 import { getDynamicRoutes, subscribeToNavigationUpdates } from "@/addons/addons-runtime-context";
-import AuthCallbackPage from "@/features/wealthfolio-connect/pages/auth-callback-page";
-import ConnectPage from "@/features/wealthfolio-connect/pages/connect-page";
+import AuthCallbackPage from "@/features/connect/pages/auth-callback-page";
+import ConnectPage from "@/features/connect/pages/connect-page";
 import ActivityManagerPage from "@/pages/activity/activity-manager-page";
 import ActivityPage from "@/pages/activity/activity-page";
 import ActivityImportPage from "@/pages/activity/import/activity-import-page";
@@ -36,7 +36,7 @@ import SettingsGoalsPage from "./pages/settings/goals/goals-page";
 import MarketDataImportPage from "./pages/settings/market-data/market-data-import-page";
 import MarketDataSettingsPage from "./pages/settings/market-data/market-data-settings";
 import TaxonomiesPage from "./pages/settings/taxonomies/taxonomies-page";
-import ConnectSettingsPage from "./pages/settings/wealthfolio-connect/connect-settings-page";
+import ConnectSettingsPage from "./pages/settings/connect/connect-settings-page";
 import FirePlannerPage from "./pages/fire-planner/fire-planner-page";
 import FirePlannerSettingsPage from "./pages/settings/fire-planner/fire-planner-settings-page";
 

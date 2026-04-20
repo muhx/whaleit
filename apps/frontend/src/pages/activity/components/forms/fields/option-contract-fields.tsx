@@ -3,7 +3,7 @@ import { buildOccSymbol, parseOccSymbol } from "@/lib/occ-symbol";
 import type { SymbolSearchResult } from "@/lib/types";
 import { normalizeCurrency } from "@/lib/utils";
 import { resolveSymbolQuote } from "@/adapters";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+import { Input } from "@whaleit/ui/components/ui/input";
 import {
   DatePickerInput,
   FormControl,
@@ -11,7 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useEffect, useRef } from "react";
 import { useFormContext, type FieldPath, type FieldValues } from "react-hook-form";
 

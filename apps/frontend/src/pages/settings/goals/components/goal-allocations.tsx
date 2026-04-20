@@ -1,8 +1,8 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 import { Account, Goal, GoalAllocation } from "@/lib/types";
-import { formatAmount } from "@wealthfolio/ui";
+import { formatAmount } from "@whaleit/ui";
 import { useSettingsContext } from "@/lib/settings-provider";
 import React, { useState, useEffect } from "react";
 

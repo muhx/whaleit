@@ -4,19 +4,19 @@ import { useSettingsContext } from "@/lib/settings-provider";
 import { SymbolSearchResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { CurrencyInput } from "@wealthfolio/ui/components/financial";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Input } from "@wealthfolio/ui/components/ui/input";
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
+import { CurrencyInput } from "@whaleit/ui/components/financial";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Input } from "@whaleit/ui/components/ui/input";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui/components/ui/select";
-import { Separator } from "@wealthfolio/ui/components/ui/separator";
+} from "@whaleit/ui/components/ui/select";
+import { Separator } from "@whaleit/ui/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -24,8 +24,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@wealthfolio/ui/components/ui/sheet";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+} from "@whaleit/ui/components/ui/sheet";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import { forwardRef, useState } from "react";
 
 interface SymbolSelectorMobileProps {

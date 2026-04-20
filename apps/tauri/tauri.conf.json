@@ -30,27 +30,27 @@
       "minimumSystemVersion": "10.13"
     }
   },
-  "productName": "Wealthfolio",
-  "mainBinaryName": "Wealthfolio",
+  "productName": "WhaleIt",
+  "mainBinaryName": "WhaleIt",
   "version": "3.2.1",
-  "identifier": "com.teymz.wealthfolio",
+  "identifier": "com.whaleit.app",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY0RjI4MkRFOUYwRDM3N0QKUldSOU53MmYzb0x5WlBySmErU21wcjVHZFNtMW9zdGcyZTBBRWpVcHRDMkoyKzF1bkQ1VmdKbkYK",
-      "endpoints": ["https://wealthfolio.app/releases/{{target}}/{{arch}}/{{current_version}}"],
+      "endpoints": ["https://whaleit.app/releases/{{target}}/{{arch}}/{{current_version}}"],
       "windows": {
         "installMode": "passive"
       }
     },
     "deep-link": {
       "mobile": [
-        { "host": "connect.wealthfolio.app", "pathPrefix": ["/deeplink"] },
-        { "host": "connect-staging.wealthfolio.app", "pathPrefix": ["/deeplink"] }
+        { "host": "connect.whaleit.app", "pathPrefix": ["/deeplink"] },
+        { "host": "connect-staging.whaleit.app", "pathPrefix": ["/deeplink"] }
       ],
       "desktop": {
-        "schemes": ["wealthfolio"]
+        "schemes": ["whaleit"]
       },
-      "schemes": ["wealthfolio"]
+      "schemes": ["whaleit"]
     }
   },
   "app": {
@@ -63,7 +63,7 @@
         "theme": "Light",
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "title": "Wealthfolio",
+        "title": "WhaleIt",
         "width": 1440,
         "height": 960
       }

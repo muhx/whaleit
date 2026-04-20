@@ -1,4 +1,4 @@
-import { getPlatforms } from "@/features/wealthfolio-connect";
+import { getPlatforms } from "@/features/connect";
 import { useAccounts } from "@/hooks/use-accounts";
 import { QueryKeys } from "@/lib/query-keys";
 import type { Account, Platform } from "@/lib/types";
@@ -11,8 +11,8 @@ import {
   Skeleton,
   ToggleGroup,
   ToggleGroupItem,
-} from "@wealthfolio/ui";
-import { Input } from "@wealthfolio/ui/components/ui/input";
+} from "@whaleit/ui";
+import { Input } from "@whaleit/ui/components/ui/input";
 import { useMemo, useState } from "react";
 import { SettingsHeader } from "../settings-header";
 import { AccountEditModal } from "./components/account-edit-modal";

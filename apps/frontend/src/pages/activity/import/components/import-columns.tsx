@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Checkbox, type SymbolSearchResult } from "@wealthfolio/ui";
+import { Checkbox, type SymbolSearchResult } from "@whaleit/ui";
 import {
   ActivityType,
   ActivityTypeNames,

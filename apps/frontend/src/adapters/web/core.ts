@@ -4,6 +4,25 @@
 import { notifyUnauthorized } from "@/lib/auth-token";
 import type { Logger } from "../types";
 
+import * as accountHandlers from "./modules/accounts";
+import * as activityHandlers from "./modules/activities";
+import * as holdingHandlers from "./modules/holdings";
+import * as portfolioHandlers from "./modules/portfolio";
+import * as goalHandlers from "./modules/goals";
+import * as exchangeRateHandlers from "./modules/exchange-rates";
+import * as aiHandlers from "./modules/ai";
+import * as connectHandlers from "./modules/connect";
+import * as marketDataHandlers from "./modules/market-data";
+import * as taxonomyHandlers from "./modules/taxonomies";
+import * as healthHandlers from "./modules/health";
+import * as deviceSyncHandlers from "./modules/device-sync";
+import * as settingsHandlers from "./modules/settings";
+import * as secretHandlers from "./modules/secrets";
+import * as assetHandlers from "./modules/assets";
+import * as addonHandlers from "./modules/addons";
+import * as utilityHandlers from "./modules/utilities";
+import * as alternativeAssetHandlers from "./modules/alternative-assets";
+
 /** True when running in the desktop (Tauri) environment */
 export const isDesktop = false;
 
@@ -196,7 +215,7 @@ export const COMMANDS: CommandMap = {
   get_pairing_flow_state: { method: "POST", path: "/sync/pairing/flow/state" },
   approve_pairing_overwrite: { method: "POST", path: "/sync/pairing/flow/approve-overwrite" },
   cancel_pairing_flow: { method: "POST", path: "/sync/pairing/flow/cancel" },
-  // Wealthfolio Connect (Broker Sync)
+  // WhaleIt Connect (Broker Sync)
   store_sync_session: { method: "POST", path: "/connect/session" },
   clear_sync_session: { method: "DELETE", path: "/connect/session" },
   get_sync_session_status: { method: "GET", path: "/connect/session/status" },
@@ -325,6 +344,8 @@ export function fromBase64(value: string): Uint8Array {
   return bytes;
 }
 
+type HandleResult = { url: string; body: string | undefined };
+
 /**
  * Invoke a command via REST API (internal - use typed adapter functions instead)
  */
@@ -334,1003 +355,9 @@ export const invoke = async <T>(command: string, payload?: Record<string, unknow
   let url = `${API_PREFIX}${config.path}`;
   let body: BodyInit | undefined;
 
-  switch (command) {
-    case "update_account": {
-      const data = payload as { accountUpdate: { id: string } & Record<string, unknown> };
-      url += `/${data.accountUpdate.id}`;
-      body = JSON.stringify(data.accountUpdate);
-      break;
-    }
-    case "delete_account": {
-      const data = payload as { accountId: string };
-      url += `/${data.accountId}`;
-      break;
-    }
-    case "create_account": {
-      const data = payload as { account: Record<string, unknown> };
-      body = JSON.stringify(data.account);
-      break;
-    }
-    case "backup_database_to_path": {
-      const { backupDir } = payload as { backupDir: string };
-      body = JSON.stringify({ backupDir });
-      break;
-    }
-    case "restore_database": {
-      const { backupFilePath } = payload as { backupFilePath: string };
-      body = JSON.stringify({ backupFilePath });
-      break;
-    }
-    case "update_settings": {
-      const data = payload as { settingsUpdate: Record<string, unknown> };
-      body = JSON.stringify(data.settingsUpdate);
-      break;
-    }
-    case "get_holdings": {
-      const p = payload as { accountId: string };
-      url += `?accountId=${encodeURIComponent(p.accountId)}`;
-      break;
-    }
-    case "get_holding": {
-      const { accountId, assetId } = payload as { accountId: string; assetId: string };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      params.set("assetId", assetId);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "get_asset_holdings": {
-      const p = payload as { assetId: string };
-      url += `?assetId=${encodeURIComponent(p.assetId)}`;
-      break;
-    }
-    case "get_historical_valuations": {
-      const p = payload as { accountId?: string; startDate?: string; endDate?: string };
-      const params = new URLSearchParams();
-      if (p?.accountId) params.set("accountId", p.accountId);
-      if (p?.startDate) params.set("startDate", p.startDate);
-      if (p?.endDate) params.set("endDate", p.endDate);
-      const qs = params.toString();
-      if (qs) url += `?${qs}`;
-      break;
-    }
-    case "get_latest_valuations": {
-      const p = payload as { accountIds?: string[] };
-      const params = new URLSearchParams();
-      if (Array.isArray(p?.accountIds)) {
-        for (const id of p.accountIds) params.append("accountIds[]", id);
-      }
-      const qs = params.toString();
-      if (qs) url += `?${qs}`;
-      break;
-    }
-    case "get_portfolio_allocations": {
-      const { accountId } = payload as { accountId: string };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      url += `?${params.toString()}`;
-      break;
-    }
-    // Snapshot management
-    case "get_snapshots": {
-      const { accountId, dateFrom, dateTo } = payload as {
-        accountId: string;
-        dateFrom?: string;
-        dateTo?: string;
-      };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      if (dateFrom) params.set("dateFrom", dateFrom);
-      if (dateTo) params.set("dateTo", dateTo);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "get_snapshot_by_date": {
-      const { accountId, date } = payload as { accountId: string; date: string };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      params.set("date", date);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "delete_snapshot": {
-      const { accountId, date } = payload as { accountId: string; date: string };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      params.set("date", date);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "save_manual_holdings": {
-      const { accountId, holdings, cashBalances, snapshotDate } = payload as {
-        accountId: string;
-        holdings: unknown[];
-        cashBalances: Record<string, string>;
-        snapshotDate?: string;
-      };
-      body = JSON.stringify({ accountId, holdings, cashBalances, snapshotDate });
-      break;
-    }
-    case "import_holdings_csv":
-    case "check_holdings_import": {
-      const { accountId, snapshots } = payload as {
-        accountId: string;
-        snapshots: unknown[];
-      };
-      body = JSON.stringify({ accountId, snapshots });
-      break;
-    }
-    case "calculate_accounts_simple_performance": {
-      const { accountIds } = (payload ?? {}) as { accountIds?: string[] };
-      body = JSON.stringify({ accountIds });
-      break;
-    }
-    case "get_accounts": {
-      const { includeArchived } = (payload ?? {}) as { includeArchived?: boolean };
-      if (includeArchived) {
-        const params = new URLSearchParams();
-        params.set("includeArchived", "true");
-        url += `?${params.toString()}`;
-      }
-      break;
-    }
-    case "calculate_performance_history": {
-      const { itemType, itemId, startDate, endDate, trackingMode } = payload as {
-        itemType: string;
-        itemId: string;
-        startDate?: string;
-        endDate?: string;
-        trackingMode?: string;
-      };
-      body = JSON.stringify({ itemType, itemId, startDate, endDate, trackingMode });
-      break;
-    }
-    case "calculate_performance_summary": {
-      const { itemType, itemId, startDate, endDate, trackingMode } = payload as {
-        itemType: string;
-        itemId: string;
-        startDate?: string;
-        endDate?: string;
-        trackingMode?: string;
-      };
-      body = JSON.stringify({ itemType, itemId, startDate, endDate, trackingMode });
-      break;
-    }
-    case "check_update": {
-      const { currentVersion, target, arch, force } = (payload ?? {}) as {
-        currentVersion?: string;
-        target?: string;
-        arch?: string;
-        force?: boolean;
-      };
-      const params = new URLSearchParams();
-      if (currentVersion) params.set("currentVersion", currentVersion);
-      if (target) params.set("target", target);
-      if (arch) params.set("arch", arch);
-      if (force) params.set("force", "true");
-      const qs = params.toString();
-      if (qs) url += `?${qs}`;
-      break;
-    }
-    case "get_income_summary": {
-      const { accountId: incomeAccountId } = payload as { accountId?: string };
-      if (incomeAccountId) {
-        url += `?accountId=${encodeURIComponent(incomeAccountId)}`;
-      }
-      break;
-    }
-    case "delete_goal": {
-      const { goalId } = payload as { goalId: string };
-      url += `/${encodeURIComponent(goalId)}`;
-      break;
-    }
-    case "create_goal": {
-      const { goal } = payload as { goal: Record<string, unknown> };
-      body = JSON.stringify(goal);
-      break;
-    }
-    case "update_goal": {
-      const { goal } = payload as { goal: Record<string, unknown> };
-      body = JSON.stringify(goal);
-      break;
-    }
-    case "update_goal_allocations": {
-      const { allocations } = payload as { allocations: Record<string, unknown> };
-      body = JSON.stringify(allocations);
-      break;
-    }
-    case "update_exchange_rate": {
-      const { rate } = payload as { rate: Record<string, unknown> };
-      body = JSON.stringify(rate);
-      break;
-    }
-    case "add_exchange_rate": {
-      const { newRate } = payload as { newRate: Record<string, unknown> };
-      body = JSON.stringify(newRate);
-      break;
-    }
-    case "delete_exchange_rate": {
-      const { rateId } = payload as { rateId: string };
-      url += `/${encodeURIComponent(rateId)}`;
-      break;
-    }
-    case "get_exchanges":
-    case "synch_quotes":
-      break;
-    case "search_activities": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "create_activity": {
-      const { activity } = payload as { activity: Record<string, unknown> };
-      body = JSON.stringify(activity);
-      break;
-    }
-    case "update_activity": {
-      const { activity } = payload as { activity: Record<string, unknown> };
-      body = JSON.stringify(activity);
-      break;
-    }
-    case "save_activities": {
-      const { request } = payload as { request: Record<string, unknown> };
-      body = JSON.stringify(request);
-      break;
-    }
-    case "delete_activity": {
-      const { activityId } = payload as { activityId: string };
-      url += `/${encodeURIComponent(activityId)}`;
-      break;
-    }
-    case "check_activities_import":
-    case "preview_import_assets":
-    case "import_activities": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "get_account_import_mapping": {
-      const { accountId, contextKind } = payload as { accountId: string; contextKind?: string };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      if (contextKind) params.set("contextKind", contextKind);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "save_account_import_mapping": {
-      const { mapping } = payload as { mapping: Record<string, unknown> };
-      body = JSON.stringify({ mapping });
-      break;
-    }
-    case "get_import_template":
-    case "delete_import_template": {
-      const { id } = payload as { id: string };
-      const params = new URLSearchParams();
-      params.set("id", id);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "save_import_template": {
-      const { template } = payload as { template: Record<string, unknown> };
-      body = JSON.stringify({ template });
-      break;
-    }
-    case "link_account_template": {
-      const { accountId, templateId, contextKind } = payload as {
-        accountId: string;
-        templateId: string;
-        contextKind?: string;
-      };
-      body = JSON.stringify({ accountId, templateId, contextKind });
-      break;
-    }
-    case "update_market_data_provider_settings": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "create_custom_provider": {
-      const { payload: cp } = payload as { payload: Record<string, unknown> };
-      body = JSON.stringify(cp);
-      break;
-    }
-    case "update_custom_provider": {
-      const { providerId, payload: cp } = payload as {
-        providerId: string;
-        payload: Record<string, unknown>;
-      };
-      url += `/${encodeURIComponent(providerId)}`;
-      body = JSON.stringify(cp);
-      break;
-    }
-    case "delete_custom_provider": {
-      const { providerId } = payload as { providerId: string };
-      url += `/${encodeURIComponent(providerId)}`;
-      break;
-    }
-    case "test_custom_provider_source": {
-      const { payload: tp } = payload as { payload: Record<string, unknown> };
-      body = JSON.stringify(tp);
-      break;
-    }
-    case "create_contribution_limit": {
-      const { newLimit } = payload as { newLimit: Record<string, unknown> };
-      body = JSON.stringify(newLimit);
-      break;
-    }
-    case "update_contribution_limit": {
-      const { id, updatedLimit } = payload as { id: string; updatedLimit: Record<string, unknown> };
-      url += `/${encodeURIComponent(id)}`;
-      body = JSON.stringify(updatedLimit);
-      break;
-    }
-    case "delete_contribution_limit": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}`;
-      break;
-    }
-    case "create_asset": {
-      const { payload: assetPayload } = payload as { payload: Record<string, unknown> };
-      body = JSON.stringify(assetPayload);
-      break;
-    }
-    case "delete_asset": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}`;
-      break;
-    }
-    case "calculate_deposits_for_contribution_limit": {
-      const { limitId } = payload as { limitId: string };
-      url += `/${encodeURIComponent(limitId)}/deposits`;
-      break;
-    }
-    case "get_asset_profile": {
-      const { assetId } = payload as { assetId: string };
-      const params = new URLSearchParams();
-      params.set("assetId", assetId);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "update_asset_profile": {
-      const { id, payload: bodyPayload } = payload as {
-        id: string;
-        payload: Record<string, unknown>;
-      };
-      url += `/${encodeURIComponent(id)}`;
-      body = JSON.stringify(bodyPayload);
-      break;
-    }
-    case "update_quote_mode": {
-      const { id, quoteMode } = payload as { id: string; quoteMode: string };
-      url += `/${encodeURIComponent(id)}`;
-      body = JSON.stringify({ quoteMode });
-      break;
-    }
-    case "search_symbol": {
-      const { query } = payload as { query: string };
-      const params = new URLSearchParams();
-      params.set("query", query);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "resolve_symbol_quote": {
-      const { symbol, exchangeMic, instrumentType, providerId, quoteCcy } = payload as {
-        symbol: string;
-        exchangeMic?: string;
-        instrumentType?: string;
-        providerId?: string;
-        quoteCcy?: string;
-      };
-      const params = new URLSearchParams();
-      params.set("symbol", symbol);
-      if (exchangeMic) params.set("exchangeMic", exchangeMic);
-      if (instrumentType) params.set("instrumentType", instrumentType);
-      if (providerId) params.set("providerId", providerId);
-      if (quoteCcy) params.set("quoteCcy", quoteCcy);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "get_quote_history": {
-      const { symbol } = payload as { symbol: string };
-      const params = new URLSearchParams();
-      params.set("symbol", symbol);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "get_latest_quotes": {
-      const { assetIds } = payload as { assetIds: string[] };
-      body = JSON.stringify({ assetIds });
-      break;
-    }
-    case "update_quote": {
-      const { symbol, quote } = payload as { symbol: string; quote: Record<string, unknown> };
-      url += `/${encodeURIComponent(symbol)}`;
-      body = JSON.stringify(quote);
-      break;
-    }
-    case "delete_quote": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}`;
-      break;
-    }
-    case "check_quotes_import": {
-      const { content, hasHeaderRow } = payload as { content: number[]; hasHeaderRow: boolean };
-      body = JSON.stringify({ content, hasHeaderRow });
-      break;
-    }
-    case "import_quotes_csv": {
-      const { quotes, overwriteExisting } = payload as {
-        quotes: unknown;
-        overwriteExisting: boolean;
-      };
-      body = JSON.stringify({ quotes, overwriteExisting });
-      break;
-    }
-    case "sync_market_data": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "set_secret": {
-      const { secretKey, secret } = payload as { secretKey: string; secret: string };
-      body = JSON.stringify({ secretKey, secret });
-      break;
-    }
-    case "get_secret": {
-      const { secretKey } = payload as { secretKey: string };
-      const params = new URLSearchParams();
-      params.set("secretKey", secretKey);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "delete_secret": {
-      const { secretKey } = payload as { secretKey: string };
-      const params = new URLSearchParams();
-      params.set("secretKey", secretKey);
-      url += `?${params.toString()}`;
-      break;
-    }
-    // Taxonomy commands
-    case "get_taxonomies":
-      break;
-    case "get_taxonomy": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}`;
-      break;
-    }
-    case "create_taxonomy": {
-      const { taxonomy } = payload as { taxonomy: Record<string, unknown> };
-      body = JSON.stringify(taxonomy);
-      break;
-    }
-    case "update_taxonomy": {
-      const { taxonomy } = payload as { taxonomy: Record<string, unknown> };
-      body = JSON.stringify(taxonomy);
-      break;
-    }
-    case "delete_taxonomy": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}`;
-      break;
-    }
-    case "create_category": {
-      const { category } = payload as { category: Record<string, unknown> };
-      body = JSON.stringify(category);
-      break;
-    }
-    case "update_category": {
-      const { category } = payload as { category: Record<string, unknown> };
-      body = JSON.stringify(category);
-      break;
-    }
-    case "delete_category": {
-      const { taxonomyId, categoryId } = payload as { taxonomyId: string; categoryId: string };
-      url += `/${encodeURIComponent(taxonomyId)}/categories/${encodeURIComponent(categoryId)}`;
-      break;
-    }
-    case "move_category": {
-      const { taxonomyId, categoryId, newParentId, position } = payload as {
-        taxonomyId: string;
-        categoryId: string;
-        newParentId: string | null;
-        position: number;
-      };
-      body = JSON.stringify({ taxonomyId, categoryId, newParentId, position });
-      break;
-    }
-    case "import_taxonomy_json": {
-      const { jsonStr } = payload as { jsonStr: string };
-      body = JSON.stringify({ jsonStr });
-      break;
-    }
-    case "export_taxonomy_json": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}/export`;
-      break;
-    }
-    case "get_asset_taxonomy_assignments": {
-      const { assetId } = payload as { assetId: string };
-      url += `/${encodeURIComponent(assetId)}`;
-      break;
-    }
-    case "assign_asset_to_category": {
-      const { assignment } = payload as { assignment: Record<string, unknown> };
-      body = JSON.stringify(assignment);
-      break;
-    }
-    case "remove_asset_taxonomy_assignment": {
-      const { id } = payload as { id: string };
-      url += `/${encodeURIComponent(id)}`;
-      break;
-    }
-    case "get_migration_status":
-      break;
-    case "migrate_legacy_classifications":
-      break;
-    // Health Center commands
-    case "get_health_status":
-    case "run_health_checks":
-    case "get_dismissed_health_issues":
-    case "get_health_config":
-      break;
-    case "dismiss_health_issue": {
-      const { issueId, dataHash } = payload as { issueId: string; dataHash: string };
-      body = JSON.stringify({ issueId, dataHash });
-      break;
-    }
-    case "restore_health_issue": {
-      const { issueId } = payload as { issueId: string };
-      body = JSON.stringify({ issueId });
-      break;
-    }
-    case "execute_health_fix": {
-      const { action } = payload as { action: Record<string, unknown> };
-      body = JSON.stringify(action);
-      break;
-    }
-    case "update_health_config": {
-      const { config } = payload as { config: Record<string, unknown> };
-      body = JSON.stringify(config);
-      break;
-    }
-    // Addons
-    case "install_addon_zip": {
-      const { zipData, enableAfterInstall } = payload as {
-        zipData: Uint8Array | number[];
-        enableAfterInstall?: boolean;
-      };
-      // Send compact base64 payload to avoid gigantic JSON arrays of numbers
-      const zipDataB64 = toBase64(zipData);
-      body = JSON.stringify({ zipDataB64, enableAfterInstall });
-      break;
-    }
-    case "toggle_addon": {
-      const { addonId, enabled } = payload as { addonId: string; enabled: boolean };
-      body = JSON.stringify({ addonId, enabled });
-      break;
-    }
-    case "uninstall_addon": {
-      const { addonId } = payload as { addonId: string };
-      url += `/${encodeURIComponent(addonId)}`;
-      break;
-    }
-    case "load_addon_for_runtime": {
-      const { addonId } = payload as { addonId: string };
-      url += `/${encodeURIComponent(addonId)}`;
-      break;
-    }
-    case "extract_addon_zip": {
-      const { zipData } = payload as { zipData: Uint8Array | number[] };
-      const zipDataB64 = toBase64(zipData);
-      body = JSON.stringify({ zipDataB64 });
-      break;
-    }
-    case "check_addon_update":
-    case "update_addon_from_store_by_id": {
-      const { addonId } = payload as { addonId: string };
-      body = JSON.stringify({ addonId });
-      break;
-    }
-    case "check_all_addon_updates":
-      break;
-    case "download_addon_to_staging": {
-      const { addonId } = payload as { addonId: string };
-      body = JSON.stringify({ addonId });
-      break;
-    }
-    case "install_addon_from_staging": {
-      const { addonId, enableAfterInstall } = payload as {
-        addonId: string;
-        enableAfterInstall?: boolean;
-      };
-      body = JSON.stringify({ addonId, enableAfterInstall });
-      break;
-    }
-    case "clear_addon_staging": {
-      const { addonId } = (payload ?? {}) as { addonId?: string };
-      if (addonId) {
-        const params = new URLSearchParams();
-        params.set("addonId", addonId);
-        url += `?${params.toString()}`;
-      }
-      break;
-    }
-    case "submit_addon_rating": {
-      const { addonId, rating, review } = payload as {
-        addonId: string;
-        rating: number;
-        review?: string;
-      };
-      body = JSON.stringify({ addonId, rating, review });
-      break;
-    }
-    case "get_addon_ratings": {
-      const { addonId } = payload as { addonId: string };
-      const params = new URLSearchParams();
-      params.set("addonId", addonId);
-      url += `?${params.toString()}`;
-      break;
-    }
-    // Device Sync commands - Device management
-    case "register_device": {
-      const { displayName, instanceId } = payload as {
-        displayName: string;
-        instanceId: string;
-      };
-      // Detect platform from browser user agent
-      const userAgent = navigator.userAgent.toLowerCase();
-      let platform = "server"; // default fallback
-      if (userAgent.includes("mac")) platform = "macos";
-      else if (userAgent.includes("win")) platform = "windows";
-      else if (userAgent.includes("linux") && !userAgent.includes("android")) platform = "linux";
-      else if (userAgent.includes("android")) platform = "android";
-      else if (userAgent.includes("iphone") || userAgent.includes("ipad")) platform = "ios";
-
-      body = JSON.stringify({ displayName, platform, instanceId });
-      break;
-    }
-    case "get_device": {
-      const { deviceId } = (payload ?? {}) as { deviceId?: string };
-      if (deviceId) {
-        url += `/${encodeURIComponent(deviceId)}`;
-      } else {
-        url += "/current";
-      }
-      break;
-    }
-    case "update_device": {
-      const { deviceId, displayName } = payload as { deviceId: string; displayName: string };
-      url += `/${encodeURIComponent(deviceId)}`;
-      body = JSON.stringify({ displayName });
-      break;
-    }
-    case "delete_device": {
-      const { deviceId } = payload as { deviceId: string };
-      url += `/${encodeURIComponent(deviceId)}`;
-      break;
-    }
-    case "revoke_device": {
-      const { deviceId } = payload as { deviceId: string };
-      url += `/${encodeURIComponent(deviceId)}/revoke`;
-      break;
-    }
-    // Device Sync commands - Team keys (E2EE)
-    case "commit_initialize_team_keys": {
-      const { keyVersion, deviceKeyEnvelope, signature, challengeResponse, recoveryEnvelope } =
-        payload as {
-          keyVersion: number;
-          deviceKeyEnvelope: string;
-          signature: string;
-          challengeResponse?: string;
-          recoveryEnvelope?: string;
-        };
-      body = JSON.stringify({
-        keyVersion,
-        deviceKeyEnvelope,
-        signature,
-        challengeResponse,
-        recoveryEnvelope,
-      });
-      break;
-    }
-    case "commit_rotate_team_keys": {
-      const { newKeyVersion, envelopes, signature, challengeResponse } = payload as {
-        newKeyVersion: number;
-        envelopes: { deviceId: string; deviceKeyEnvelope: string }[];
-        signature: string;
-        challengeResponse?: string;
-      };
-      body = JSON.stringify({ newKeyVersion, envelopes, signature, challengeResponse });
-      break;
-    }
-    case "reset_team_sync": {
-      const { reason } = (payload ?? {}) as { reason?: string };
-      body = reason ? JSON.stringify({ reason }) : JSON.stringify({});
-      break;
-    }
-    // Device Sync commands - Pairing (Issuer - Trusted Device)
-    case "create_pairing": {
-      const { codeHash, ephemeralPublicKey } = payload as {
-        codeHash: string;
-        ephemeralPublicKey: string;
-      };
-      body = JSON.stringify({ codeHash, ephemeralPublicKey });
-      break;
-    }
-    case "get_pairing": {
-      const { pairingId } = payload as { pairingId: string };
-      url += `/${encodeURIComponent(pairingId)}`;
-      break;
-    }
-    case "approve_pairing": {
-      const { pairingId } = payload as { pairingId: string };
-      url += `/${encodeURIComponent(pairingId)}/approve`;
-      break;
-    }
-    case "complete_pairing": {
-      const { pairingId, encryptedKeyBundle, sasProof, signature } = payload as {
-        pairingId: string;
-        encryptedKeyBundle: string;
-        sasProof: string | Record<string, unknown>;
-        signature: string;
-      };
-      url += `/${encodeURIComponent(pairingId)}/complete`;
-      body = JSON.stringify({ encryptedKeyBundle, sasProof, signature });
-      break;
-    }
-    case "cancel_pairing": {
-      const { pairingId } = payload as { pairingId: string };
-      url += `/${encodeURIComponent(pairingId)}/cancel`;
-      break;
-    }
-    // Claimer-side pairing commands
-    case "claim_pairing": {
-      const { code, ephemeralPublicKey } = payload as {
-        code: string;
-        ephemeralPublicKey: string;
-      };
-      body = JSON.stringify({ code, ephemeralPublicKey });
-      break;
-    }
-    case "get_pairing_messages": {
-      const { pairingId } = payload as { pairingId: string };
-      url += `/${encodeURIComponent(pairingId)}/messages`;
-      break;
-    }
-    case "confirm_pairing": {
-      const { pairingId, proof, minSnapshotCreatedAt } = payload as {
-        pairingId: string;
-        proof?: string;
-        minSnapshotCreatedAt?: string;
-      };
-      url += `/${encodeURIComponent(pairingId)}/confirm`;
-      body = JSON.stringify({ proof, minSnapshotCreatedAt });
-      break;
-    }
-    case "complete_pairing_with_transfer": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "confirm_pairing_with_bootstrap": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "begin_pairing_confirm":
-    case "get_pairing_flow_state":
-    case "approve_pairing_overwrite":
-    case "cancel_pairing_flow": {
-      body = JSON.stringify(payload);
-      break;
-    }
-    case "device_sync_reconcile_ready_state": {
-      body = JSON.stringify(payload ?? {});
-      break;
-    }
-    // Wealthfolio Connect commands
-    case "store_sync_session": {
-      const { refreshToken } = payload as {
-        refreshToken: string;
-      };
-      body = JSON.stringify({ refreshToken });
-      break;
-    }
-    case "list_devices":
-    case "initialize_team_keys":
-    case "rotate_team_keys":
-    case "clear_sync_session":
-    case "get_sync_session_status":
-    case "restore_sync_session":
-    case "list_broker_connections":
-    case "list_broker_accounts":
-    case "sync_broker_data":
-    case "broker_ingest_run":
-    case "sync_broker_connections":
-    case "sync_broker_accounts":
-    case "sync_broker_activities":
-    case "get_subscription_plans":
-    case "get_subscription_plans_public":
-    case "get_user_info":
-    case "get_synced_accounts":
-    case "get_platforms":
-    case "get_broker_sync_states":
-    case "get_broker_ingest_states":
-    // Device Sync / Enrollment (falls through)
-    // eslint-disable-next-line no-fallthrough
-    case "get_device_sync_state":
-    case "enable_device_sync":
-    case "clear_device_sync_data":
-    case "reinitialize_device_sync":
-      break;
-    case "get_import_runs":
-    case "get_data_import_runs": {
-      const { runType, limit, offset } = (payload ?? {}) as {
-        runType?: string;
-        limit?: number;
-        offset?: number;
-      };
-      const params = new URLSearchParams();
-      if (runType) params.set("runType", runType);
-      if (limit !== undefined) params.set("limit", String(limit));
-      if (offset !== undefined) params.set("offset", String(offset));
-      const qs = params.toString();
-      if (qs) url += `?${qs}`;
-      break;
-    }
-    case "get_broker_sync_profile": {
-      const { accountId, sourceSystem } = payload as { accountId: string; sourceSystem: string };
-      const params = new URLSearchParams();
-      params.set("accountId", accountId);
-      params.set("sourceSystem", sourceSystem);
-      url += `?${params.toString()}`;
-      break;
-    }
-    case "save_broker_sync_profile_rules": {
-      const { request } = payload as { request: Record<string, unknown> };
-      body = JSON.stringify(request);
-      break;
-    }
-    // Net Worth commands
-    case "get_net_worth": {
-      const { date } = (payload ?? {}) as { date?: string };
-      if (date) {
-        const params = new URLSearchParams();
-        params.set("date", date);
-        url += `?${params.toString()}`;
-      }
-      break;
-    }
-    case "get_net_worth_history": {
-      const { startDate, endDate } = payload as { startDate: string; endDate: string };
-      const params = new URLSearchParams();
-      params.set("startDate", startDate);
-      params.set("endDate", endDate);
-      url += `?${params.toString()}`;
-      break;
-    }
-    // Alternative Assets commands
-    case "create_alternative_asset": {
-      const { request } = payload as { request: Record<string, unknown> };
-      body = JSON.stringify(request);
-      break;
-    }
-    case "update_alternative_asset_valuation": {
-      const { assetId, request } = payload as { assetId: string; request: Record<string, unknown> };
-      url += `/${encodeURIComponent(assetId)}/valuation`;
-      body = JSON.stringify(request);
-      break;
-    }
-    case "delete_alternative_asset": {
-      const { assetId } = payload as { assetId: string };
-      url += `/${encodeURIComponent(assetId)}`;
-      break;
-    }
-    case "link_liability": {
-      const { liabilityId, request } = payload as {
-        liabilityId: string;
-        request: Record<string, unknown>;
-      };
-      url += `/${encodeURIComponent(liabilityId)}/link`;
-      body = JSON.stringify(request);
-      break;
-    }
-    case "unlink_liability": {
-      const { liabilityId } = payload as { liabilityId: string };
-      url += `/${encodeURIComponent(liabilityId)}/unlink`;
-      break;
-    }
-    case "update_alternative_asset_metadata": {
-      const { assetId, metadata, name, notes } = payload as {
-        assetId: string;
-        metadata: Record<string, string>;
-        name?: string;
-        notes?: string | null;
-      };
-      url += `/${encodeURIComponent(assetId)}/metadata`;
-      body = JSON.stringify({ metadata, name, notes });
-      break;
-    }
-    case "get_alternative_holdings":
-      break;
-    // AI Providers
-    case "get_ai_providers":
-      break;
-    case "update_ai_provider_settings": {
-      const { request } = payload as { request: Record<string, unknown> };
-      body = JSON.stringify(request);
-      break;
-    }
-    case "set_default_ai_provider": {
-      const { request } = payload as { request: Record<string, unknown> };
-      body = JSON.stringify(request);
-      break;
-    }
-    case "list_ai_models": {
-      const { providerId } = payload as { providerId: string };
-      url += `/${encodeURIComponent(providerId)}/models`;
-      break;
-    }
-    // AI Threads
-    case "list_ai_threads": {
-      const { cursor, limit, search } = (payload ?? {}) as {
-        cursor?: string;
-        limit?: number;
-        search?: string;
-      };
-      const params = new URLSearchParams();
-      if (cursor) params.set("cursor", cursor);
-      if (limit !== undefined) params.set("limit", String(limit));
-      if (search) params.set("search", search);
-      const qs = params.toString();
-      if (qs) url += `?${qs}`;
-      break;
-    }
-    case "get_ai_thread": {
-      const { threadId } = payload as { threadId: string };
-      url += `/${encodeURIComponent(threadId)}`;
-      break;
-    }
-    case "get_ai_thread_messages": {
-      const { threadId } = payload as { threadId: string };
-      url += `/${encodeURIComponent(threadId)}/messages`;
-      break;
-    }
-    case "update_tool_result": {
-      const { request } = payload as {
-        request: { threadId: string; toolCallId: string; resultPatch: unknown };
-      };
-      body = JSON.stringify({
-        threadId: request.threadId,
-        toolCallId: request.toolCallId,
-        resultPatch: request.resultPatch,
-      });
-      break;
-    }
-    case "update_ai_thread": {
-      const { request } = payload as {
-        request: { id: string; title?: string; isPinned?: boolean };
-      };
-      url += `/${encodeURIComponent(request.id)}`;
-      body = JSON.stringify({ title: request.title, isPinned: request.isPinned });
-      break;
-    }
-    case "delete_ai_thread": {
-      const { threadId } = payload as { threadId: string };
-      url += `/${encodeURIComponent(threadId)}`;
-      break;
-    }
-    case "add_ai_thread_tag": {
-      const { threadId, tag } = payload as { threadId: string; tag: string };
-      url += `/${encodeURIComponent(threadId)}/tags`;
-      body = JSON.stringify({ tag });
-      break;
-    }
-    case "remove_ai_thread_tag": {
-      const { threadId, tag } = payload as { threadId: string; tag: string };
-      url += `/${encodeURIComponent(threadId)}/tags/${encodeURIComponent(tag)}`;
-      break;
-    }
-    case "get_ai_thread_tags": {
-      const { threadId } = payload as { threadId: string };
-      url += `/${encodeURIComponent(threadId)}/tags`;
-      break;
-    }
-  }
+  const result = handleCommand(command, url, payload);
+  url = result.url;
+  body = result.body;
 
   const headers: HeadersInit = {};
   if (body !== undefined) {
@@ -1392,3 +419,426 @@ export const invoke = async <T>(command: string, payload?: Record<string, unknow
   }
   return JSON.parse(text) as T;
 };
+
+/**
+ * Dispatch command to the appropriate domain module handler.
+ * Returns modified url and body for the HTTP request.
+ */
+function handleCommand(command: string, url: string, payload?: Record<string, unknown>): HandleResult {
+  const p = payload as Record<string, unknown> | undefined;
+
+  switch (command) {
+    // ── Accounts ────────────────────────────────────────────
+    case "get_accounts":
+      return accountHandlers.handleGetAccounts(url, p);
+    case "create_account":
+      return accountHandlers.handleCreateAccount(url, p!);
+    case "update_account":
+      return accountHandlers.handleUpdateAccount(url, p!);
+    case "delete_account":
+      return accountHandlers.handleDeleteAccount(url, p!);
+
+    // ── Activities ──────────────────────────────────────────
+    case "search_activities":
+      return activityHandlers.handleSearchActivities(url, p!);
+    case "create_activity":
+      return activityHandlers.handleCreateActivity(url, p!);
+    case "update_activity":
+      return activityHandlers.handleUpdateActivity(url, p!);
+    case "save_activities":
+      return activityHandlers.handleSaveActivities(url, p!);
+    case "delete_activity":
+      return activityHandlers.handleDeleteActivity(url, p!);
+    case "check_activities_import":
+      return activityHandlers.handleCheckActivitiesImport(url, p!);
+    case "preview_import_assets":
+      return activityHandlers.handlePreviewImportAssets(url, p!);
+    case "import_activities":
+      return activityHandlers.handleImportActivities(url, p!);
+    case "get_account_import_mapping":
+      return activityHandlers.handleGetAccountImportMapping(url, p!);
+    case "save_account_import_mapping":
+      return activityHandlers.handleSaveAccountImportMapping(url, p!);
+    case "get_import_template":
+      return activityHandlers.handleGetImportTemplate(url, p!);
+    case "delete_import_template":
+      return activityHandlers.handleDeleteImportTemplate(url, p!);
+    case "save_import_template":
+      return activityHandlers.handleSaveImportTemplate(url, p!);
+    case "link_account_template":
+      return activityHandlers.handleLinkAccountTemplate(url, p!);
+
+    // ── Holdings / Snapshots ────────────────────────────────
+    case "get_holdings":
+      return holdingHandlers.handleGetHoldings(url, p!);
+    case "get_holding":
+      return holdingHandlers.handleGetHolding(url, p!);
+    case "get_asset_holdings":
+      return holdingHandlers.handleGetAssetHoldings(url, p!);
+    case "get_snapshots":
+      return holdingHandlers.handleGetSnapshots(url, p!);
+    case "get_snapshot_by_date":
+      return holdingHandlers.handleGetSnapshotByDate(url, p!);
+    case "delete_snapshot":
+      return holdingHandlers.handleDeleteSnapshot(url, p!);
+    case "save_manual_holdings":
+      return holdingHandlers.handleSaveManualHoldings(url, p!);
+    case "import_holdings_csv":
+      return holdingHandlers.handleImportHoldingsCsv(url, p!);
+    case "check_holdings_import":
+      return holdingHandlers.handleCheckHoldingsImport(url, p!);
+
+    // ── Portfolio / Performance / Valuations / Net Worth ────
+    case "get_historical_valuations":
+      return portfolioHandlers.handleGetHistoricalValuations(url, p!);
+    case "get_latest_valuations":
+      return portfolioHandlers.handleGetLatestValuations(url, p!);
+    case "get_portfolio_allocations":
+      return portfolioHandlers.handleGetPortfolioAllocations(url, p!);
+    case "calculate_accounts_simple_performance":
+      return portfolioHandlers.handleCalculateAccountsSimplePerformance(url, p);
+    case "calculate_performance_history":
+      return portfolioHandlers.handleCalculatePerformanceHistory(url, p!);
+    case "calculate_performance_summary":
+      return portfolioHandlers.handleCalculatePerformanceSummary(url, p!);
+    case "get_income_summary":
+      return portfolioHandlers.handleGetIncomeSummary(url, p!);
+    case "get_net_worth":
+      return portfolioHandlers.handleGetNetWorth(url, p!);
+    case "get_net_worth_history":
+      return portfolioHandlers.handleGetNetWorthHistory(url, p!);
+
+    // ── Goals ───────────────────────────────────────────────
+    case "create_goal":
+      return goalHandlers.handleCreateGoal(url, p!);
+    case "update_goal":
+      return goalHandlers.handleUpdateGoal(url, p!);
+    case "delete_goal":
+      return goalHandlers.handleDeleteGoal(url, p!);
+    case "update_goal_allocations":
+      return goalHandlers.handleUpdateGoalAllocations(url, p!);
+
+    // ── Exchange Rates ──────────────────────────────────────
+    case "update_exchange_rate":
+      return exchangeRateHandlers.handleUpdateExchangeRate(url, p!);
+    case "add_exchange_rate":
+      return exchangeRateHandlers.handleAddExchangeRate(url, p!);
+    case "delete_exchange_rate":
+      return exchangeRateHandlers.handleDeleteExchangeRate(url, p!);
+
+    // ── AI ──────────────────────────────────────────────────
+    case "get_ai_providers":
+      return { url, body: undefined };
+    case "update_ai_provider_settings":
+      return aiHandlers.handleUpdateAiProviderSettings(url, p!);
+    case "set_default_ai_provider":
+      return aiHandlers.handleSetDefaultAiProvider(url, p!);
+    case "list_ai_models":
+      return aiHandlers.handleListAiModels(url, p!);
+    case "list_ai_threads":
+      return aiHandlers.handleListAiThreads(url, p);
+    case "get_ai_thread":
+      return aiHandlers.handleGetAiThread(url, p!);
+    case "get_ai_thread_messages":
+      return aiHandlers.handleGetAiThreadMessages(url, p!);
+    case "update_tool_result":
+      return aiHandlers.handleUpdateToolResult(url, p!);
+    case "update_ai_thread":
+      return aiHandlers.handleUpdateAiThread(url, p!);
+    case "delete_ai_thread":
+      return aiHandlers.handleDeleteAiThread(url, p!);
+    case "add_ai_thread_tag":
+      return aiHandlers.handleAddAiThreadTag(url, p!);
+    case "remove_ai_thread_tag":
+      return aiHandlers.handleRemoveAiThreadTag(url, p!);
+    case "get_ai_thread_tags":
+      return aiHandlers.handleGetAiThreadTags(url, p!);
+
+    // ── Connect / Broker Sync ───────────────────────────────
+    case "store_sync_session":
+      return connectHandlers.handleStoreSyncSession(url, p!);
+    case "get_import_runs":
+    case "get_data_import_runs":
+      return connectHandlers.handleGetImportRuns(url, p);
+    case "get_broker_sync_profile":
+      return connectHandlers.handleGetBrokerSyncProfile(url, p!);
+    case "save_broker_sync_profile_rules":
+      return connectHandlers.handleSaveBrokerSyncProfileRules(url, p!);
+    case "device_sync_reconcile_ready_state":
+      return connectHandlers.handleDeviceSyncReconcileReadyState(url, p!);
+    // Connect commands with no payload transformation
+    case "clear_sync_session":
+    case "get_sync_session_status":
+    case "restore_sync_session":
+    case "list_broker_connections":
+    case "list_broker_accounts":
+    case "sync_broker_data":
+    case "broker_ingest_run":
+    case "sync_broker_connections":
+    case "sync_broker_accounts":
+    case "sync_broker_activities":
+    case "get_subscription_plans":
+    case "get_subscription_plans_public":
+    case "get_user_info":
+    case "get_synced_accounts":
+    case "get_platforms":
+    case "get_broker_sync_states":
+    case "get_broker_ingest_states":
+    // Device Sync / Enrollment (no payload transformation)
+    case "get_device_sync_state":
+    case "enable_device_sync":
+    case "clear_device_sync_data":
+    case "reinitialize_device_sync":
+    case "device_sync_engine_status":
+    case "device_sync_pairing_source_status":
+    case "device_sync_bootstrap_overwrite_check":
+    case "device_sync_bootstrap_snapshot_if_needed":
+    case "device_sync_trigger_cycle":
+    case "device_sync_start_background_engine":
+    case "device_sync_stop_background_engine":
+    case "device_sync_generate_snapshot_now":
+    case "device_sync_cancel_snapshot_upload":
+      return { url, body: undefined };
+
+    // ── Market Data ─────────────────────────────────────────
+    case "search_symbol":
+      return marketDataHandlers.handleSearchSymbol(url, p!);
+    case "resolve_symbol_quote":
+      return marketDataHandlers.handleResolveSymbolQuote(url, p!);
+    case "get_quote_history":
+      return marketDataHandlers.handleGetQuoteHistory(url, p!);
+    case "get_latest_quotes":
+      return marketDataHandlers.handleGetLatestQuotes(url, p!);
+    case "update_quote":
+      return marketDataHandlers.handleUpdateQuote(url, p!);
+    case "delete_quote":
+      return marketDataHandlers.handleDeleteQuote(url, p!);
+    case "check_quotes_import":
+      return marketDataHandlers.handleCheckQuotesImport(url, p!);
+    case "import_quotes_csv":
+      return marketDataHandlers.handleImportQuotesCsv(url, p!);
+    case "sync_market_data":
+      return marketDataHandlers.handleSyncMarketData(url, p!);
+    case "update_market_data_provider_settings":
+      return marketDataHandlers.handleUpdateMarketDataProviderSettings(url, p!);
+    case "get_exchanges":
+    case "synch_quotes":
+      return { url, body: undefined };
+    // Custom providers
+    case "create_custom_provider":
+      return marketDataHandlers.handleCreateCustomProvider(url, p!);
+    case "update_custom_provider":
+      return marketDataHandlers.handleUpdateCustomProvider(url, p!);
+    case "delete_custom_provider":
+      return marketDataHandlers.handleDeleteCustomProvider(url, p!);
+    case "test_custom_provider_source":
+      return marketDataHandlers.handleTestCustomProviderSource(url, p!);
+
+    // ── Taxonomies ──────────────────────────────────────────
+    case "get_taxonomies":
+    case "get_migration_status":
+    case "migrate_legacy_classifications":
+      return { url, body: undefined };
+    case "get_taxonomy":
+      return taxonomyHandlers.handleGetTaxonomy(url, p!);
+    case "create_taxonomy":
+      return taxonomyHandlers.handleCreateTaxonomy(url, p!);
+    case "update_taxonomy":
+      return taxonomyHandlers.handleUpdateTaxonomy(url, p!);
+    case "delete_taxonomy":
+      return taxonomyHandlers.handleDeleteTaxonomy(url, p!);
+    case "create_category":
+      return taxonomyHandlers.handleCreateCategory(url, p!);
+    case "update_category":
+      return taxonomyHandlers.handleUpdateCategory(url, p!);
+    case "delete_category":
+      return taxonomyHandlers.handleDeleteCategory(url, p!);
+    case "move_category":
+      return taxonomyHandlers.handleMoveCategory(url, p!);
+    case "import_taxonomy_json":
+      return taxonomyHandlers.handleImportTaxonomyJson(url, p!);
+    case "export_taxonomy_json":
+      return taxonomyHandlers.handleExportTaxonomyJson(url, p!);
+    case "get_asset_taxonomy_assignments":
+      return taxonomyHandlers.handleGetAssetTaxonomyAssignments(url, p!);
+    case "assign_asset_to_category":
+      return taxonomyHandlers.handleAssignAssetToCategory(url, p!);
+    case "remove_asset_taxonomy_assignment":
+      return taxonomyHandlers.handleRemoveAssetTaxonomyAssignment(url, p!);
+
+    // ── Health Center ───────────────────────────────────────
+    case "get_health_status":
+    case "run_health_checks":
+    case "get_dismissed_health_issues":
+    case "get_health_config":
+      return { url, body: undefined };
+    case "dismiss_health_issue":
+      return healthHandlers.handleDismissHealthIssue(url, p!);
+    case "restore_health_issue":
+      return healthHandlers.handleRestoreHealthIssue(url, p!);
+    case "execute_health_fix":
+      return healthHandlers.handleExecuteHealthFix(url, p!);
+    case "update_health_config":
+      return healthHandlers.handleUpdateHealthConfig(url, p!);
+
+    // ── Addons ──────────────────────────────────────────────
+    case "install_addon_zip":
+      return addonHandlers.handleInstallAddonZip(url, p!);
+    case "toggle_addon":
+      return addonHandlers.handleToggleAddon(url, p!);
+    case "uninstall_addon":
+      return addonHandlers.handleUninstallAddon(url, p!);
+    case "load_addon_for_runtime":
+      return addonHandlers.handleLoadAddonForRuntime(url, p!);
+    case "extract_addon_zip":
+      return addonHandlers.handleExtractAddonZip(url, p!);
+    case "check_addon_update":
+      return addonHandlers.handleCheckAddonUpdate(url, p!);
+    case "update_addon_from_store_by_id":
+      return addonHandlers.handleUpdateAddonFromStoreById(url, p!);
+    case "download_addon_to_staging":
+      return addonHandlers.handleDownloadAddonToStaging(url, p!);
+    case "install_addon_from_staging":
+      return addonHandlers.handleInstallAddonFromStaging(url, p!);
+    case "clear_addon_staging":
+      return addonHandlers.handleClearAddonStaging(url, p);
+    case "submit_addon_rating":
+      return addonHandlers.handleSubmitAddonRating(url, p!);
+    case "get_addon_ratings":
+      return addonHandlers.handleGetAddonRatings(url, p!);
+    case "check_all_addon_updates":
+      return { url, body: undefined };
+
+    // ── Device Sync ─────────────────────────────────────────
+    case "register_device":
+      return deviceSyncHandlers.handleRegisterDevice(url, p!);
+    case "get_device":
+      return deviceSyncHandlers.handleGetDevice(url, p);
+    case "update_device":
+      return deviceSyncHandlers.handleUpdateDevice(url, p!);
+    case "delete_device":
+      return deviceSyncHandlers.handleDeleteDevice(url, p!);
+    case "revoke_device":
+      return deviceSyncHandlers.handleRevokeDevice(url, p!);
+    case "commit_initialize_team_keys":
+      return deviceSyncHandlers.handleCommitInitializeTeamKeys(url, p!);
+    case "commit_rotate_team_keys":
+      return deviceSyncHandlers.handleCommitRotateTeamKeys(url, p!);
+    case "reset_team_sync":
+      return deviceSyncHandlers.handleResetTeamSync(url, p!);
+    case "create_pairing":
+      return deviceSyncHandlers.handleCreatePairing(url, p!);
+    case "get_pairing":
+      return deviceSyncHandlers.handleGetPairing(url, p!);
+    case "approve_pairing":
+      return deviceSyncHandlers.handleApprovePairing(url, p!);
+    case "complete_pairing":
+      return deviceSyncHandlers.handleCompletePairing(url, p!);
+    case "cancel_pairing":
+      return deviceSyncHandlers.handleCancelPairing(url, p!);
+    case "claim_pairing":
+      return deviceSyncHandlers.handleClaimPairing(url, p!);
+    case "get_pairing_messages":
+      return deviceSyncHandlers.handleGetPairingMessages(url, p!);
+    case "confirm_pairing":
+      return deviceSyncHandlers.handleConfirmPairing(url, p!);
+    case "complete_pairing_with_transfer":
+      return deviceSyncHandlers.handleCompletePairingWithTransfer(url, p!);
+    case "confirm_pairing_with_bootstrap":
+      return deviceSyncHandlers.handleConfirmPairingWithBootstrap(url, p!);
+    case "begin_pairing_confirm":
+      return deviceSyncHandlers.handleBeginPairingConfirm(url, p!);
+    case "get_pairing_flow_state":
+      return deviceSyncHandlers.handleGetPairingFlowState(url, p!);
+    case "approve_pairing_overwrite":
+      return deviceSyncHandlers.handleApprovePairingOverwrite(url, p!);
+    case "cancel_pairing_flow":
+      return deviceSyncHandlers.handleCancelPairingFlow(url, p!);
+    case "list_devices":
+    case "initialize_team_keys":
+    case "rotate_team_keys":
+      return { url, body: undefined };
+
+    // ── Settings ────────────────────────────────────────────
+    case "update_settings":
+      return settingsHandlers.handleUpdateSettings(url, p!);
+    case "check_update":
+      return settingsHandlers.handleCheckUpdate(url, p);
+
+    // ── Secrets ─────────────────────────────────────────────
+    case "set_secret":
+      return secretHandlers.handleSetSecret(url, p!);
+    case "get_secret":
+      return secretHandlers.handleGetSecret(url, p!);
+    case "delete_secret":
+      return secretHandlers.handleDeleteSecret(url, p!);
+
+    // ── Assets ──────────────────────────────────────────────
+    case "create_asset":
+      return assetHandlers.handleCreateAsset(url, p!);
+    case "delete_asset":
+      return assetHandlers.handleDeleteAsset(url, p!);
+    case "get_asset_profile":
+      return assetHandlers.handleGetAssetProfile(url, p!);
+    case "update_asset_profile":
+      return assetHandlers.handleUpdateAssetProfile(url, p!);
+    case "update_quote_mode":
+      return assetHandlers.handleUpdateQuoteMode(url, p!);
+    // Contribution limits
+    case "create_contribution_limit":
+      return assetHandlers.handleCreateContributionLimit(url, p!);
+    case "update_contribution_limit":
+      return assetHandlers.handleUpdateContributionLimit(url, p!);
+    case "delete_contribution_limit":
+      return assetHandlers.handleDeleteContributionLimit(url, p!);
+    case "calculate_deposits_for_contribution_limit":
+      return assetHandlers.handleCalculateDepositsForContributionLimit(url, p!);
+
+    // ── Utilities ───────────────────────────────────────────
+    case "backup_database_to_path":
+      return utilityHandlers.handleBackupDatabaseToPath(url, p!);
+    case "restore_database":
+      return utilityHandlers.handleRestoreDatabase(url, p!);
+
+    // ── Alternative Assets ──────────────────────────────────
+    case "create_alternative_asset":
+      return alternativeAssetHandlers.handleCreateAlternativeAsset(url, p!);
+    case "update_alternative_asset_valuation":
+      return alternativeAssetHandlers.handleUpdateAlternativeAssetValuation(url, p!);
+    case "delete_alternative_asset":
+      return alternativeAssetHandlers.handleDeleteAlternativeAsset(url, p!);
+    case "link_liability":
+      return alternativeAssetHandlers.handleLinkLiability(url, p!);
+    case "unlink_liability":
+      return alternativeAssetHandlers.handleUnlinkLiability(url, p!);
+    case "update_alternative_asset_metadata":
+      return alternativeAssetHandlers.handleUpdateAlternativeAssetMetadata(url, p!);
+    case "get_alternative_holdings":
+      return { url, body: undefined };
+
+    // ── Settings / App info (no payload transformation) ─────
+    case "get_settings":
+    case "is_auto_update_check_enabled":
+    case "get_app_info":
+    case "backup_database":
+    case "update_portfolio":
+    case "recalculate_portfolio":
+    case "get_goals":
+    case "load_goals_allocations":
+    case "get_latest_exchange_rates":
+    case "get_market_data_providers":
+    case "get_market_data_providers_settings":
+    case "get_custom_providers":
+    case "get_contribution_limits":
+    case "get_assets":
+    case "list_import_templates":
+    case "list_installed_addons":
+    case "get_enabled_addons_on_startup":
+    case "fetch_addon_store_listings":
+      return { url, body: undefined };
+
+    default:
+      // Unknown command — should not reach here if COMMANDS map is exhaustive
+      return { url, body: undefined };
+  }
+}

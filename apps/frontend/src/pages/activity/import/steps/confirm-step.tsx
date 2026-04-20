@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons, type Icon } from "@wealthfolio/ui/components/ui/icons";
-import { ProgressIndicator } from "@wealthfolio/ui/components/ui/progress-indicator";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons, type Icon } from "@whaleit/ui/components/ui/icons";
+import { ProgressIndicator } from "@whaleit/ui/components/ui/progress-indicator";
 import {
   useImportContext,
   nextStep,

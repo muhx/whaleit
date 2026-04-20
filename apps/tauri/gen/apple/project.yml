@@ -1,6 +1,6 @@
 name: wealthfolio-app
 options:
-  bundleIdPrefix: com.teymz.wealthfolio
+  bundleIdPrefix: com.whaleit
   deploymentTarget:
     iOS: 14.0
 fileGroups: [../../src]
@@ -10,8 +10,8 @@ configs:
 settingGroups:
   app:
     base:
-      PRODUCT_NAME: Wealthfolio
-      PRODUCT_BUNDLE_IDENTIFIER: com.teymz.wealthfolio
+      PRODUCT_NAME: WhaleIt
+      PRODUCT_BUNDLE_IDENTIFIER: com.whaleit.app
 targetTemplates:
   app:
     type: application

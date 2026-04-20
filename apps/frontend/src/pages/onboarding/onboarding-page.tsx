@@ -2,8 +2,8 @@ import { usePlatform } from "@/hooks/use-platform";
 import { useSettings } from "@/hooks/use-settings";
 import { WEALTHFOLIO_CONNECT_PORTAL_URL } from "@/lib/constants";
 import { useSettingsContext } from "@/lib/settings-provider";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
@@ -57,10 +57,15 @@ const OnboardingPage = () => {
         <div className="flex flex-col items-center">
           {/* Logo */}
           <img
-            alt="Wealthfolio"
+            alt="WhaleIt"
             className="mb-3 h-16 w-16 sm:h-20 sm:w-20"
-            src="/logo-vantage.png"
+            src="/logo.png"
           />
+
+          {/* Tagline */}
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+            Your friendly finance companion
+          </p>
 
           {/* Progress indicators */}
           <div className="flex gap-2">

@@ -2,8 +2,8 @@
 // Shows a loading state during pairing operations
 // ===============================================
 
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons, Skeleton } from "@wealthfolio/ui";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons, Skeleton } from "@whaleit/ui";
 
 interface WaitingStateProps {
   title: string;

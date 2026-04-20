@@ -12,7 +12,7 @@ import {
 import { parseOccSymbol } from "@/lib/occ-symbol";
 import type { Account, ActivityDetails } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Badge, Checkbox, type SymbolSearchResult } from "@wealthfolio/ui";
+import { Badge, Checkbox, type SymbolSearchResult } from "@whaleit/ui";
 import { useCallback, useMemo } from "react";
 import { ActivityOperations } from "../activity-operations";
 import { ActivityTypeBadge } from "../activity-type-badge";

@@ -12,7 +12,7 @@ import type {
   UpdateCustomProvider,
   TestSourceRequest,
 } from "@/lib/types/custom-provider";
-import { toast } from "@wealthfolio/ui/components/ui/use-toast";
+import { toast } from "@whaleit/ui/components/ui/use-toast";
 
 export function useCustomProviders() {
   return useQuery({

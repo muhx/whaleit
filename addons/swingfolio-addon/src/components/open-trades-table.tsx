@@ -11,7 +11,7 @@ import {
   Icons,
   EmptyPlaceholder,
   Separator,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { TickerAvatar } from "./ticker-avatar";
 import { parseOccSymbol, formatOptionDescription, cn } from "../lib/utils";
 import type { OpenPosition } from "../types";

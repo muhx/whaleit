@@ -7,8 +7,8 @@ import {
   CardTitle,
   Skeleton,
   formatAmount,
-} from "@wealthfolio/ui";
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "@wealthfolio/ui/chart";
+} from "@whaleit/ui";
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "@whaleit/ui/chart";
 import { useMemo } from "react";
 import type { FireSettings } from "../types";
 import { checkAllocationDrift } from "../lib/fire-math";

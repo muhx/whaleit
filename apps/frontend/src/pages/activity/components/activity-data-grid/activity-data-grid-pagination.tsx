@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { KeyboardEvent, useState } from "react";
 
 interface ActivityDataGridPaginationProps {

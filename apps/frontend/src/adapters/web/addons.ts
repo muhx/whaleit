@@ -2,7 +2,7 @@
 
 import { invoke } from "./core";
 import type { AddonManifest, ExtractedAddon, InstalledAddon } from "../types";
-import type { AddonUpdateCheckResult } from "@wealthfolio/addon-sdk";
+import type { AddonUpdateCheckResult } from "@whaleit/addon-sdk";
 import type { AddonStoreListing } from "@/lib/types";
 
 // ============================================================================

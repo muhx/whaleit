@@ -11,20 +11,20 @@ import {
   getInitialIntervalData,
   usePersistentState,
   type TimePeriod,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@wealthfolio/ui/components/ui/collapsible";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { Skeleton } from "@wealthfolio/ui/components/ui/skeleton";
+} from "@whaleit/ui/components/ui/collapsible";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { Skeleton } from "@whaleit/ui/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@wealthfolio/ui/components/ui/tooltip";
+} from "@whaleit/ui/components/ui/tooltip";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { NetWorthChart } from "./net-worth-chart";

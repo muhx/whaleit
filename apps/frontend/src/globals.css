@@ -88,22 +88,22 @@
   --color-neutral-*: initial;
   --color-stone-*: initial;
 
-  /* Specify new default colors. */
-  --color-black: #100f0f;
-  --color-paper: #fffcf0;
-  --color-base-50: #f2f0e5;
-  --color-base-100: #e6e4d9;
-  --color-base-150: #dad8ce;
-  --color-base-200: #cecdc3;
-  --color-base-300: #b7b5ac;
-  --color-base-400: #9f9d96;
-  --color-base-500: #878580;
-  --color-base-600: #6f6e69;
-  --color-base-700: #575653;
-  --color-base-800: #403e3c;
-  --color-base-850: #343331;
-  --color-base-900: #282726;
-  --color-base-950: #1c1b1a;
+  /* WhaleIt ocean-inspired color palette */
+  --color-black: #162228;
+  --color-paper: #f6faf8;
+  --color-base-50: #eef5f3;
+  --color-base-100: #d5e8e3;
+  --color-base-150: #bddbd3;
+  --color-base-200: #a5cec3;
+  --color-base-300: #7db5a7;
+  --color-base-400: #559c8c;
+  --color-base-500: #3d8778;
+  --color-base-600: #316e62;
+  --color-base-700: #285a50;
+  --color-base-800: #1f463e;
+  --color-base-850: #193a34;
+  --color-base-900: #142e28;
+  --color-base-950: #0e211d;
   --color-red-50: #ffe1d5;
   --color-red-100: #ffcabb;
   --color-red-150: #fdb2a2;
@@ -385,15 +385,15 @@
   /* Font size - desktop default */
   --font-size-base: 0.875rem; /* text-sm */
 
-  /* Flexoki Light Theme (HSL numeric components) */
-  --flexoki-bg: 48 100% 97%;
-  --flexoki-bg-2: 51 59% 95%;
-  --flexoki-ui: 51 21% 88%;
-  --flexoki-ui-2: 50 14% 83%;
-  --flexoki-ui-3: 55 10% 79%;
-  --flexoki-tx: 0 3% 6%;
-  --flexoki-tx-2: 50 3% 42%;
-  --flexoki-tx-3: 49 7% 70%;
+  /* WhaleIt Light Theme (HSL numeric components) */
+  --flexoki-bg: 165 20% 97%;
+  --flexoki-bg-2: 168 16% 94%;
+  --flexoki-ui: 168 12% 87%;
+  --flexoki-ui-2: 168 10% 82%;
+  --flexoki-ui-3: 170 8% 78%;
+  --flexoki-tx: 200 29% 12%;
+  --flexoki-tx-2: 168 10% 40%;
+  --flexoki-tx-3: 168 10% 62%;
   --flexoki-re: 3 62% 42%;
   --flexoki-gr: 73 84% 27%;
   --flexoki-ye: 45 99% 34%;
@@ -424,16 +424,16 @@
   --input-bg: hsl(var(--flexoki-bg));
   --ring: hsl(var(--flexoki-ui-3));
 
-  /* Charts (full hsl colors) */
-  --chart-1: hsl(40 3% 20%);
-  --chart-2: hsl(45 2% 33%);
-  --chart-3: hsl(50 3% 42%);
-  --chart-4: hsl(43 3% 52%);
-  --chart-5: hsl(47 4% 61%);
-  --chart-6: hsl(49 7% 70%);
-  --chart-7: hsl(55 10% 79%);
-  --chart-8: hsl(50 14% 83%);
-  --chart-9: hsl(51 21% 88%);
+  /* Charts (full hsl colors) - WhaleIt ocean tones */
+  --chart-1: hsl(195 25% 20%);
+  --chart-2: hsl(190 20% 33%);
+  --chart-3: hsl(185 18% 42%);
+  --chart-4: hsl(180 15% 52%);
+  --chart-5: hsl(175 18% 61%);
+  --chart-6: hsl(170 15% 70%);
+  --chart-7: hsl(168 12% 79%);
+  --chart-8: hsl(168 10% 83%);
+  --chart-9: hsl(168 8% 88%);
 
   /* Sidebar (full hsl colors) */
   --sidebar: hsl(var(--flexoki-bg));
@@ -475,29 +475,29 @@
 }
 
 .dark {
-  /* Flexoki Dark Theme (HSL numeric components) */
-  --flexoki-bg: 0 3% 6%;
-  --flexoki-bg-2: 30 4% 11%;
-  --flexoki-ui: 30 3% 15%;
-  --flexoki-ui-2: 40 3% 20%;
-  --flexoki-ui-3: 30 3% 24%;
-  --flexoki-tx: 55 10% 79%;
-  --flexoki-tx-2: 43 3% 52%;
-  --flexoki-tx-3: 45 2% 33%;
+  /* WhaleIt Dark Theme (HSL numeric components) */
+  --flexoki-bg: 200 29% 8%;
+  --flexoki-bg-2: 195 20% 12%;
+  --flexoki-ui: 190 12% 16%;
+  --flexoki-ui-2: 188 10% 20%;
+  --flexoki-ui-3: 185 8% 24%;
+  --flexoki-tx: 165 12% 78%;
+  --flexoki-tx-2: 170 8% 55%;
+  --flexoki-tx-3: 172 6% 38%;
   --flexoki-re: 5 61% 54%;
   --flexoki-gr: 72 46% 41%;
   --flexoki-ye: 45 82% 45%;
 
-  /* Dark chart palette (full hsl colors) */
-  --chart-1: hsl(25 92% 72%);
-  --chart-2: hsl(24 81% 61%);
-  --chart-3: hsl(23 70% 51%);
-  --chart-4: hsl(23 73% 46%);
-  --chart-5: hsl(22 80% 41%);
-  --chart-6: hsl(22 82% 34%);
-  --chart-7: hsl(22 79% 25%);
-  --chart-8: hsl(22 75% 20%);
-  --chart-9: hsl(22 70% 15%);
+  /* Dark chart palette - WhaleIt ocean tones */
+  --chart-1: hsl(170 30% 72%);
+  --chart-2: hsl(172 25% 61%);
+  --chart-3: hsl(175 20% 51%);
+  --chart-4: hsl(178 22% 46%);
+  --chart-5: hsl(180 25% 41%);
+  --chart-6: hsl(182 28% 34%);
+  --chart-7: hsl(185 25% 25%);
+  --chart-8: hsl(188 20% 20%);
+  --chart-9: hsl(190 18% 15%);
 
   /* Sonner toast overrides for dark mode - solid backgrounds for better readability */
   --toast-bg: hsl(var(--flexoki-bg-2));

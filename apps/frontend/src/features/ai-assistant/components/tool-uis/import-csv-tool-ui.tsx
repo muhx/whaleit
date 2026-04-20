@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
-} from "@wealthfolio/ui";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+} from "@whaleit/ui";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 
 import { Link } from "react-router-dom";
 import { useSettingsContext } from "@/lib/settings-provider";

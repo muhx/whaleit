@@ -1,6 +1,6 @@
 import { useIsMobileViewport } from "@/hooks";
 import { useSettingsContext } from "@/lib/settings-provider";
-import { Icons } from "@wealthfolio/ui";
+import { Icons } from "@whaleit/ui";
 import { createPortal } from "react-dom";
 
 import { Toaster as Sonner, type ToasterProps } from "sonner";

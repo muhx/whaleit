@@ -1,6 +1,6 @@
-import { ScrollArea } from "@wealthfolio/ui/components/ui/scroll-area";
-import { Textarea } from "@wealthfolio/ui/components/ui/textarea";
-import { AnimatedToggleGroup } from "@wealthfolio/ui/components/ui/animated-toggle-group";
+import { ScrollArea } from "@whaleit/ui/components/ui/scroll-area";
+import { Textarea } from "@whaleit/ui/components/ui/textarea";
+import { AnimatedToggleGroup } from "@whaleit/ui/components/ui/animated-toggle-group";
 import { ACTIVITY_SUBTYPES, QuoteMode, type ActivityType } from "@/lib/constants";
 import { useSettingsContext } from "@/lib/settings-provider";
 import {
@@ -11,9 +11,9 @@ import {
   type AssetType,
   type AccountSelectOption,
 } from "../forms/fields";
-import { Checkbox } from "@wealthfolio/ui/components/ui/checkbox";
-import { Label } from "@wealthfolio/ui/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@wealthfolio/ui/components/ui/radio-group";
+import { Checkbox } from "@whaleit/ui/components/ui/checkbox";
+import { Label } from "@whaleit/ui/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@whaleit/ui/components/ui/radio-group";
 import {
   Button,
   DatePickerInput,
@@ -30,7 +30,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { useEffect, useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { restrictionAllowsType } from "@/lib/activity-restrictions";

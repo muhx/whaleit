@@ -5,7 +5,7 @@ ARG RUST_IMAGE=rust:1.91-alpine
 # Use --platform=$BUILDPLATFORM to run on the native runner (fast)
 FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend
 
-# Wealthfolio Connect configuration (baked into JS bundle at build time)
+# WhaleIt Connect configuration (baked into JS bundle at build time)
 # Pass via --build-arg to enable; omit to build without Connect.
 ARG CONNECT_AUTH_URL=
 ARG CONNECT_AUTH_PUBLISHABLE_KEY=
@@ -29,7 +29,7 @@ FROM --platform=$BUILDPLATFORM ${RUST_IMAGE} AS backend
 COPY --from=xx / /
 ARG TARGETPLATFORM
 
-# Wealthfolio Connect configuration (baked into server binary at build time)
+# WhaleIt Connect configuration (baked into server binary at build time)
 ARG CONNECT_AUTH_URL=
 ARG CONNECT_AUTH_PUBLISHABLE_KEY=
 ENV CONNECT_AUTH_URL=${CONNECT_AUTH_URL}
@@ -68,18 +68,18 @@ ENV OPENSSL_STATIC=1
 # Build using xx-cargo which handles target flags
 RUN xx-cargo build --release --manifest-path apps/server/Cargo.toml && \
     # Move the binary to a predictable location because the target dir changes with --target
-    cp target/$(xx-cargo --print-target-triple)/release/wealthfolio-server /wealthfolio-server
+    cp target/$(xx-cargo --print-target-triple)/release/wealthfolio-server /whaleit-server
 
 # Final stage
 FROM alpine:3.19
 WORKDIR /app
 # Copy from backend (which is now build platform, but binary is target platform)
-COPY --from=backend /wealthfolio-server /usr/local/bin/wealthfolio-server
+COPY --from=backend /whaleit-server /usr/local/bin/whaleit-server
 COPY --from=frontend /web-dist ./dist
 ENV WF_DB_PATH=/data/wealthfolio.db
-# Wealthfolio Connect API URL (can be overridden at runtime via -e or docker-compose)
+# WhaleIt Connect API URL (can be overridden at runtime via -e or docker-compose)
 ARG CONNECT_API_URL=
 ENV CONNECT_API_URL=${CONNECT_API_URL}
 VOLUME ["/data"]
 EXPOSE 8080
-CMD ["/usr/local/bin/wealthfolio-server"]
+CMD ["/usr/local/bin/whaleit-server"]

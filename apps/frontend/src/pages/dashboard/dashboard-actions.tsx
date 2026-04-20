@@ -2,16 +2,16 @@ import { ActionPalette, type ActionPaletteGroup } from "@/components/action-pale
 import { syncService } from "@/features/devices-sync";
 import { useSyncStatus } from "@/features/devices-sync/hooks";
 import { SyncStates } from "@/features/devices-sync/types";
-import { useSyncBrokerData } from "@/features/wealthfolio-connect/hooks";
-import { hasBrokerSync } from "@/features/wealthfolio-connect";
-import { useWealthfolioConnect } from "@/features/wealthfolio-connect/providers/wealthfolio-connect-provider";
+import { useSyncBrokerData } from "@/features/connect/hooks";
+import { hasBrokerSync } from "@/features/connect";
+import { useWhaleItConnect } from "@/features/connect/providers/connect-provider";
 import {
   useRecalculatePortfolioMutation,
   useUpdatePortfolioMutation,
 } from "@/hooks/use-calculate-portfolio";
 import { useRunHealthChecks } from "@/hooks/use-health";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -29,8 +29,8 @@ export function DashboardActions({ onAddAsset, onAddLiability }: DashboardAction
   const recalculatePortfolioMutation = useRecalculatePortfolioMutation();
   const runHealthChecksMutation = useRunHealthChecks({ navigate });
 
-  // Wealthfolio Connect sync
-  const { isEnabled, isConnected, userInfo } = useWealthfolioConnect();
+  // WhaleIt Connect sync
+  const { isEnabled, isConnected, userInfo } = useWhaleItConnect();
   const { mutate: syncBrokerData } = useSyncBrokerData();
   const showSyncAction = isEnabled && isConnected && hasBrokerSync(userInfo);
 

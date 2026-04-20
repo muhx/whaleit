@@ -6,7 +6,7 @@ import { QueryKeys } from "@/lib/query-keys";
 import { Account, ActivityDetails } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
-import { Button, Icons, Page, PageContent, PageHeader } from "@wealthfolio/ui";
+import { Button, Icons, Page, PageContent, PageHeader } from "@whaleit/ui";
 import { debounce } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ import { BulkHoldingsModal } from "./components/forms/bulk-holdings-modal";
 import { MobileActivityForm } from "./components/mobile-forms/mobile-activity-form";
 import { useActivityMutations } from "./hooks/use-activity-mutations";
 import { useActivitySearch, type ActivityStatusFilter } from "./hooks/use-activity-search";
-import { SyncButton } from "@/features/wealthfolio-connect/components/sync-button";
+import { SyncButton } from "@/features/connect/components/sync-button";
 import { AlternativeAssetQuickAddModal } from "@/pages/asset/alternative-assets";
 import { ActionPalette, type ActionPaletteGroup } from "@/components/action-palette";
 

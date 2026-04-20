@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -65,7 +65,7 @@ export default function GuidePage({ country }: { country?: string }) {
             }
           >
             Enable "Has accumulation fund" on the stream. Enter the current fund balance, monthly
-            contribution, and the fund's expected annual return. Link it to the matching Wealthfolio
+            contribution, and the fund's expected annual return. Link it to the matching WhaleIt
             account to pull the live balance with one click. The planner accumulates the fund until
             FIRE, then lets it grow contribution-free until payout age.
           </Step>
@@ -181,13 +181,13 @@ export default function GuidePage({ country }: { country?: string }) {
         <Section title="Italian FIRE setup (fondo pensione, TFR, INPS)">
           <div className="space-y-4">
             <Term t="Investment portfolio (Golden Butterfly, All-Weather…)">
-              This is your main portfolio — the value Wealthfolio tracks. Set your expected return
+              This is your main portfolio — the value WhaleIt tracks. Set your expected return
               and monthly contribution here. It is the primary accumulation engine of your FIRE
               plan.
             </Term>
             <Term t="Fondo pensione integrativo (supplementary pension fund)">
               Add it as an income stream and enable "Has accumulation fund". Enter the current fund
-              balance (or link the Wealthfolio account and click Sync), the monthly TFR
+              balance (or link the WhaleIt account and click Sync), the monthly TFR
               contribution, and the fund's net annual return (check your fund's factsheet — 3–5%
               after fees is common). Set the payout start age to when you plan to draw it (typically
               65–67). The planner accumulates contributions until FIRE, then lets the fund grow

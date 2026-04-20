@@ -1,5 +1,5 @@
 import { TickerAvatar } from "@/components/ticker-avatar";
-import { Card } from "@wealthfolio/ui/components/ui/card";
+import { Card } from "@whaleit/ui/components/ui/card";
 import {
   calculateActivityValue,
   formatSplitRatio,
@@ -15,7 +15,7 @@ import { parseOccSymbol } from "@/lib/occ-symbol";
 import { useSettingsContext } from "@/lib/settings-provider";
 import { ActivityDetails } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
-import { formatAmount, Separator } from "@wealthfolio/ui";
+import { formatAmount, Separator } from "@whaleit/ui";
 import { Link } from "react-router-dom";
 import { ActivityOperations } from "../activity-operations";
 import { ActivityTypeBadge } from "../activity-type-badge";

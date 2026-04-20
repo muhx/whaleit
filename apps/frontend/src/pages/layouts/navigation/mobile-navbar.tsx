@@ -1,6 +1,6 @@
 import { LiquidGlass } from "@/components/liquid-glass";
-import { SyncStatusIcon } from "@/features/wealthfolio-connect/components/sync-status-icon";
-import { useAggregatedSyncStatus } from "@/features/wealthfolio-connect/hooks";
+import { SyncStatusIcon } from "@/features/connect/components/sync-status-icon";
+import { useAggregatedSyncStatus } from "@/features/connect/hooks";
 import { useHapticFeedback } from "@/hooks/use-haptic-feedback";
 import { cn } from "@/lib/utils";
 import {
@@ -12,7 +12,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui";
+} from "@whaleit/ui";
 import { motion } from "motion/react";
 import React, { useCallback, useId, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";

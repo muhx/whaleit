@@ -6,10 +6,25 @@ import type z from "zod";
 import { invoke, logger, isDesktop } from "./platform";
 
 type NewAccount = z.infer<typeof newAccountSchema>;
+type SerializedAccount = Omit<Account, "createdAt" | "updatedAt"> & {
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
+function normalizeAccountDates(account: SerializedAccount): Account {
+  return {
+    ...account,
+    createdAt: account.createdAt instanceof Date ? account.createdAt : new Date(account.createdAt),
+    updatedAt: account.updatedAt instanceof Date ? account.updatedAt : new Date(account.updatedAt),
+  };
+}
 
 export const getAccounts = async (includeArchived?: boolean): Promise<Account[]> => {
   try {
-    return await invoke<Account[]>("get_accounts", { includeArchived: includeArchived ?? false });
+    const accounts = await invoke<SerializedAccount[]>("get_accounts", {
+      includeArchived: includeArchived ?? false,
+    });
+    return accounts.map(normalizeAccountDates);
   } catch (error) {
     logger.error("Error fetching accounts.");
     throw error;
@@ -18,7 +33,8 @@ export const getAccounts = async (includeArchived?: boolean): Promise<Account[]>
 
 export const createAccount = async (account: NewAccount): Promise<Account> => {
   try {
-    return await invoke<Account>("create_account", { account });
+    const created = await invoke<SerializedAccount>("create_account", { account });
+    return normalizeAccountDates(created);
   } catch (error) {
     logger.error("Error creating account.");
     throw error;
@@ -34,7 +50,8 @@ export const updateAccount = async (account: NewAccount): Promise<Account> => {
           return rest;
         })()
       : account;
-    return await invoke<Account>("update_account", { accountUpdate: payload });
+    const updated = await invoke<SerializedAccount>("update_account", { accountUpdate: payload });
+    return normalizeAccountDates(updated);
   } catch (error) {
     logger.error("Error updating account.");
     throw error;

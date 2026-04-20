@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@wealthfolio/ui/components/ui/dialog";
+} from "@whaleit/ui/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -16,11 +16,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@wealthfolio/ui/components/ui/form";
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Textarea } from "@wealthfolio/ui/components/ui/textarea";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
-import { MoneyInput, DatePickerInput } from "@wealthfolio/ui";
+} from "@whaleit/ui/components/ui/form";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Textarea } from "@whaleit/ui/components/ui/textarea";
+import { Icons } from "@whaleit/ui/components/ui/icons";
+import { MoneyInput, DatePickerInput } from "@whaleit/ui";
 
 import {
   updateValuationSchema,

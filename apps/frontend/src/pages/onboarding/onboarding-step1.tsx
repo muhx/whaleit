@@ -1,5 +1,5 @@
-import { Card } from "@wealthfolio/ui/components/ui/card";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Card } from "@whaleit/ui/components/ui/card";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import React from "react";
 
 export const OnboardingStep1: React.FC = () => {
@@ -111,7 +111,7 @@ export const OnboardingStep1: React.FC = () => {
         <p className="text-muted-foreground text-xs">
           You can use different modes for different accounts.{" "}
           <a
-            href="https://wealthfolio.app/docs/concepts/activity-types"
+            href="https://whaleit.app/docs/concepts/activity-types"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground underline transition-colors"

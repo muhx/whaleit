@@ -37,7 +37,7 @@ vi.mock("@tanstack/react-query", () => ({
   useQueries: vi.fn(),
 }));
 
-vi.mock("@wealthfolio/ui", () => ({
+vi.mock("@whaleit/ui", () => ({
   PrivacyAmount: ({ value, currency }: { value: number; currency: string }) => (
     <span>{`value:${currency}:${value}`}</span>
   ),
@@ -47,7 +47,7 @@ vi.mock("@wealthfolio/ui", () => ({
   GainPercent: ({ value }: { value: number }) => <span>{`gain-percent:${value}`}</span>,
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/button", () => ({
+vi.mock("@whaleit/ui/components/ui/button", () => ({
   Button: ({
     children,
     ...props
@@ -56,7 +56,7 @@ vi.mock("@wealthfolio/ui/components/ui/button", () => ({
   ),
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/icons", () => ({
+vi.mock("@whaleit/ui/components/ui/icons", () => ({
   Icons: {
     ChevronDown: () => <span>chevron-down</span>,
     ChevronRight: () => <span>chevron-right</span>,
@@ -66,15 +66,15 @@ vi.mock("@wealthfolio/ui/components/ui/icons", () => ({
   },
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/separator", () => ({
+vi.mock("@whaleit/ui/components/ui/separator", () => ({
   Separator: () => <span>|</span>,
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/skeleton", () => ({
+vi.mock("@whaleit/ui/components/ui/skeleton", () => ({
   Skeleton: () => <div>loading</div>,
 }));
 
-vi.mock("@wealthfolio/ui/components/ui/tooltip", () => ({
+vi.mock("@whaleit/ui/components/ui/tooltip", () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   TooltipContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,

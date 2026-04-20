@@ -1,5 +1,5 @@
-import { Button } from "@wealthfolio/ui/components/ui/button";
-import { Icons } from "@wealthfolio/ui/components/ui/icons";
+import { Button } from "@whaleit/ui/components/ui/button";
+import { Icons } from "@whaleit/ui/components/ui/icons";
 import {
   Sheet,
   SheetClose,
@@ -7,12 +7,12 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@wealthfolio/ui/components/ui/sheet";
+} from "@whaleit/ui/components/ui/sheet";
 import { createPortfolioAccount, PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
 import type { Account } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useSettingsContext } from "@/lib/settings-provider";
-import { ScrollArea } from "@wealthfolio/ui";
+import { ScrollArea } from "@whaleit/ui";
 import { useAccounts } from "@/hooks/use-accounts";
 
 interface IncomeMobileFilterSheetProps {

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { parseOccSymbol } from "@/lib/occ-symbol";
-import { Avatar, AvatarFallback, AvatarImage } from "@wealthfolio/ui";
+import { Avatar, AvatarFallback, AvatarImage } from "@whaleit/ui";
 
 interface TickerAvatarProps {
   symbol: string;
