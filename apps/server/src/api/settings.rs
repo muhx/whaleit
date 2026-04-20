@@ -214,7 +214,7 @@ async fn check_update(
     let target = normalize_target(None);
     let arch = normalize_arch(None);
     let request_url = format!(
-        "https://wealthfolio.app/releases/{}/{}/{}",
+        "https://whaleit.app/releases/{}/{}/{}",
         target, arch, current_version_str
     );
 

@@ -1,4 +1,4 @@
-# Wealthfolio - Production Docker Compose
+# WhaleIt - Production Docker Compose
 #
 # Usage: docker compose up -d
 # Dev overlay: docker compose -f compose.yml -f compose.dev.yml up
@@ -7,14 +7,14 @@
 # Uses expose (not ports) — the proxy handles external traffic.
 
 services:
-  wealthfolio:
-    image: afadil/wealthfolio:latest
-    container_name: wealthfolio
+  whaleit:
+    image: afadil/whaleit:latest
+    container_name: whaleit
     restart: unless-stopped
     expose:
       - "8088"
     volumes:
-      - wealthfolio-data:/data
+      - whaleit-data:/data
     environment:
       WF_LISTEN_ADDR: "0.0.0.0:8088"
       WF_DB_PATH: "/data/wealthfolio.db"
@@ -39,7 +39,7 @@ services:
       # Set to "false" to skip the auth requirement (e.g. reverse proxy handles auth)
       # WF_AUTH_REQUIRED: "true"
 
-      # Required when auth is enabled — set to your app's origin, e.g. https://wealthfolio.example.com
+      # Required when auth is enabled — set to your app's origin, e.g. https://whaleit.example.com
       WF_CORS_ALLOW_ORIGINS: "${WF_CORS_ALLOW_ORIGINS}"
       WF_REQUEST_TIMEOUT_MS: "${WF_REQUEST_TIMEOUT_MS:-30000}"
     healthcheck:
@@ -62,5 +62,5 @@ services:
       - /tmp:size=64M
 
 volumes:
-  wealthfolio-data:
+  whaleit-data:
     driver: local

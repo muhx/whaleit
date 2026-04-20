@@ -1,21 +1,21 @@
 <div align="center">
-  <a href="https://github.com/afadil/wealthfolio">
+  <a href="https://github.com/muhx/whaleit">
     <img src="apps/frontend/public/logo.svg" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Wealthfolio</h3>
+  <h3 align="center">WhaleIt</h3>
 
   <p align="center">
-    A Beautiful and Boring Desktop Investment Tracker
+    Your Friendly Finance Companion
     <br />
     <br />
-    <a href="https://wealthfolio.app">Website</a>
+    <a href="https://whaleit.app">Website</a>
     ·
     <a href="https://discord.gg/WDMCY6aPWK">Discord</a>
     ·
     <a href="https://x.com/intent/follow?screen_name=WealthfolioApp">Twitter</a>
     ·
-    <a href="https://github.com/afadil/wealthfolio/releases">Releases</a>
+    <a href="https://github.com/muhx/whaleit/releases">Releases</a>
   </p>
 </div>
 <div align="center">
@@ -32,19 +32,18 @@
     style="width: 250px; height: 55px;" width="250" height="55"
   />
 </a>
-  <a href="https://www.producthunt.com/posts/wealthfolio?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_souce=badge-wealthfolio" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=461640&amp;theme=light" alt="Wealthfolio - A boring, Local first, desktop Investment Tracking app | Product Hunt" class="h-[55px] w-[250px]" width="250" height="55"></a>
+  <a href="https://www.producthunt.com/posts/wealthfolio?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_souce=badge-wealthfolio" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=461640&amp;theme=light" alt="WhaleIt - Your Friendly Finance Companion | Product Hunt" class="h-[55px] w-[250px]" width="250" height="55"></a>
 
   <a href="https://trendshift.io/repositories/11701" target="_blank">
-  <img src="https://trendshift.io/api/badge/repositories/11701" alt="afadil%2Fwealthfolio | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <img src="https://trendshift.io/api/badge/repositories/11701" alt="muhx%2Fwhaleit | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 </div>
 
 ## Introduction
 
-**Wealthfolio App** is a Beautiful and Boring Investment Tracker, with Local
-Data Storage. No Subscriptions, No Cloud.
+**WhaleIt** is Your Friendly Finance Companion — track your entire financial life with local data storage. No Subscriptions, No Cloud.
 
-Visit the app website at [Wealthfolio App](https://wealthfolio.app/).
+Visit the app website at [WhaleIt](https://whaleit.app/).
 
 ![Screenshot](apps/frontend/public/screenshot.webp)
 
@@ -65,7 +64,7 @@ Visit the app website at [Wealthfolio App](https://wealthfolio.app/).
 
 ### 🧩 Addon System
 
-Wealthfolio features a powerful addon system that allows developers to extend
+WhaleIt features a powerful addon system that allows developers to extend
 functionality:
 
 - **🔌 Easy Development** - TypeScript SDK with full type safety and hot reload
@@ -135,8 +134,8 @@ Ensure you have the following installed on your machine:
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/afadil/wealthfolio.git
-   cd wealthfolio
+   git clone https://github.com/muhx/whaleit.git
+   cd whaleit
    ```
 
 2. **Install dependencies using pnpm**:
@@ -233,7 +232,7 @@ All configuration is done via environment variables in `.env.web`.
   - If a directory is provided, `app.db` will be used inside it
 - `WF_CORS_ALLOW_ORIGINS` - Comma-separated list of allowed CORS origins
   (default: `*`). **Required when auth is enabled** — wildcard `*` is rejected.
-  - Example: `https://wealthfolio.example.com`
+  - Example: `https://whaleit.example.com`
 - `WF_REQUEST_TIMEOUT_MS` - Request timeout in milliseconds (default: `30000`)
 - `WF_STATIC_DIR` - Directory for serving static frontend assets (default:
   `dist`)
@@ -339,18 +338,18 @@ You can either pull the official Docker image or build it yourself locally.
 The latest server build is published to Docker Hub.
 
 ```bash
-docker pull afadil/wealthfolio:latest
+docker pull afadil/whaleit:latest
 ```
 
-After pulling, use `afadil/wealthfolio:latest` in the run commands below. If you
-build the image locally, swap the image name back to `wealthfolio`.
+After pulling, use `afadil/whaleit:latest` in the run commands below. If you
+build the image locally, swap the image name back to `whaleit`.
 
 ### Building the Image
 
 Build the Docker image directly from source (no pre-build required):
 
 ```bash
-docker build -t wealthfolio .
+docker build -t whaleit .
 ```
 
 The build process:
@@ -362,7 +361,7 @@ The build process:
 The final image includes:
 
 - Compiled frontend assets in `/app/dist`
-- `wealthfolio-server` binary at `/usr/local/bin/wealthfolio-server`
+- `whaleit-server` binary at `/usr/local/bin/whaleit-server`
 - Alpine Linux base (small footprint)
 
 ### Configuration
@@ -380,7 +379,7 @@ cat > .env.docker << 'EOF'
 WF_LISTEN_ADDR=0.0.0.0:8088
 WF_DB_PATH=/data/wealthfolio.db
 WF_SECRET_KEY=<generate-with-openssl-rand>
-WF_CORS_ALLOW_ORIGINS=https://wealthfolio.example.com
+WF_CORS_ALLOW_ORIGINS=https://whaleit.example.com
 WF_REQUEST_TIMEOUT_MS=30000
 WF_STATIC_DIR=dist
 EOF
@@ -398,56 +397,56 @@ See examples below for inline configuration.
 
 ### Running the Container
 
-All examples below use the published image (`afadil/wealthfolio:latest`). If you
-built locally, substitute your local tag (e.g., `wealthfolio`).
+All examples below use the published image (`afadil/whaleit:latest`). If you
+built locally, substitute your local tag (e.g., `whaleit`).
 
 **Using environment file** (recommended):
 
 ```bash
 docker run --rm -d \
-  --name wealthfolio \
+  --name whaleit \
   --env-file .env.docker \
   -p 8088:8088 \
-  -v "$(pwd)/wealthfolio-data:/data" \
-  afadil/wealthfolio:latest
+  -v "$(pwd)/whaleit-data:/data" \
+  afadil/whaleit:latest
 ```
 
 **Basic usage** (inline environment variables):
 
 ```bash
 docker run --rm -d \
-  --name wealthfolio \
+  --name whaleit \
   -e WF_LISTEN_ADDR=0.0.0.0:8088 \
   -e WF_DB_PATH=/data/wealthfolio.db \
   -p 8088:8088 \
-  -v "$(pwd)/wealthfolio-data:/data" \
-  afadil/wealthfolio:latest
+  -v "$(pwd)/whaleit-data:/data" \
+  afadil/whaleit:latest
 ```
 
 **Development mode** (with CORS for local Vite dev server):
 
 ```bash
 docker run --rm -it \
-  --name wealthfolio \
+  --name whaleit \
   -e WF_LISTEN_ADDR=0.0.0.0:8088 \
   -e WF_DB_PATH=/data/wealthfolio.db \
   -e WF_CORS_ALLOW_ORIGINS=http://localhost:1420 \
   -p 8088:8088 \
-  -v "$(pwd)/wealthfolio-data:/data" \
-  afadil/wealthfolio:latest
+  -v "$(pwd)/whaleit-data:/data" \
+  afadil/whaleit:latest
 ```
 
 **Production with encryption** (recommended):
 
 ```bash
 docker run --rm -d \
-  --name wealthfolio \
+  --name whaleit \
   -e WF_LISTEN_ADDR=0.0.0.0:8088 \
   -e WF_DB_PATH=/data/wealthfolio.db \
   -e WF_SECRET_KEY=$(openssl rand -base64 32) \
   -p 8088:8088 \
-  -v "$(pwd)/wealthfolio-data:/data" \
-  afadil/wealthfolio:latest
+  -v "$(pwd)/whaleit-data:/data" \
+  afadil/whaleit:latest
 ```
 
 ### Environment Variables
@@ -504,13 +503,13 @@ steps and provides an isolated environment with all necessary dependencies.
 
 1. **Clone the repository** (if you haven't already):
    ```bash
-   git clone https://github.com/afadil/wealthfolio.git
-   cd wealthfolio
+   git clone https://github.com/muhx/whaleit.git
+   cd whaleit
    ```
 2. **Open in VS Code**:
    - Open VS Code
    - Go to File > Open Folder
-   - Select the wealthfolio directory
+   - Select the whaleit directory
 
 3. **Launch DevContainer**:
    - Press `F1` or `Ctrl+Shift+P`
@@ -527,7 +526,7 @@ steps and provides an isolated environment with all necessary dependencies.
 
 ## Addon Development
 
-Wealthfolio supports a powerful addon ecosystem that allows developers to extend
+WhaleIt supports a powerful addon ecosystem that allows developers to extend
 functionality with custom features.
 
 ### Quick Start with Addons
@@ -546,7 +545,7 @@ functionality with custom features.
    npm run dev:server
    ```
 
-3. **Start Wealthfolio in addon development mode** (in another terminal):
+3. **Start WhaleIt in addon development mode** (in another terminal):
    ```bash
    VITE_ENABLE_ADDON_DEV_MODE=true pnpm tauri dev
    ```
@@ -618,7 +617,7 @@ Check out the [addons/](addons/) directory for sample addons including:
 ## Folder Structure
 
 ```
-wealthfolio/
+whaleit/
 ├── apps/                        # Application packages
 │   ├── frontend/                # React frontend application
 │   │   ├── src/                 # Source code
@@ -712,11 +711,11 @@ Brand assets in `assets/brand/` are trademarks; see
 
 ---
 
-Wealthfolio and the Wealthfolio logo are trademarks of Teymz Inc. The code is
+WhaleIt and the WhaleIt logo are trademarks of Teymz Inc. The code is
 licensed under AGPL-3.0; trademarks are not granted under that license.
 
 ## 🌟 Star History
 
-## [![Star History Chart](https://api.star-history.com/svg?repos=afadil/wealthfolio&type=Timeline)](https://star-history.com/#afadil/wealthfolio&Date)
+## [![Star History Chart](https://api.star-history.com/svg?repos=muhx/whaleit&type=Timeline)](https://star-history.com/#muhx/whaleit&Date)
 
-Enjoy managing your wealth with **Wealthfolio**! 🚀
+Enjoy managing your wealth with **WhaleIt**! 🚀
