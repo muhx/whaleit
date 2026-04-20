@@ -62,6 +62,11 @@ const OnboardingPage = () => {
             src="/logo-vantage.png"
           />
 
+          {/* Tagline */}
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+            Your friendly finance companion
+          </p>
+
           {/* Progress indicators */}
           <div className="flex gap-2">
             {Array.from({ length: maxSteps }).map((_, index) => (
