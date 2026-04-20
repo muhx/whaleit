@@ -43,7 +43,7 @@ Plans:
 - [x] 01-02-PLAN.md — Backend & config rebrand (Tauri, Rust strings, docs, Docker)
 - [x] 01-03-PLAN.md — Frontend rebrand (package scope, directory rename, onboarding)
 - [x] 01-04-PLAN.md — Codebase health (web adapter split + types.ts split)
-- [ ] 01-05-PLAN.md — Gap closure: browser title, PWA manifest, onboarding tagline
+- [x] 01-05-PLAN.md — Gap closure: browser title, PWA manifest, onboarding tagline
 
 ### Phase 2: Dual Database Engine
 **Goal**: Both SQLite and PostgreSQL work as storage backends through shared repository traits
