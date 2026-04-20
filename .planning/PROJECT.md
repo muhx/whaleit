@@ -33,6 +33,9 @@ Users can effortlessly track and understand their complete financial picture —
 - ✓ Domain event system for side effects — existing (`crates/core/src/events/`)
 - ✓ Addon system for extensibility — existing (`packages/addon-sdk/`)
 - ✓ Dashboard with charts (Recharts) — existing (`apps/frontend/src/pages/`)
+- ✓ Complete WhaleIt rebrand — Phase 01 (app name, logo, icons, colors, all user-facing references)
+- ✓ Brand identity: whale icon, ocean teal palette, approachable design — Phase 01
+- ✓ Tagline: "Your friendly finance companion" — Phase 01
 
 ### Active
 
@@ -56,9 +59,6 @@ Users can effortlessly track and understand their complete financial picture —
 - [ ] Multi-channel recommendation delivery: notifications + dashboard widget + dedicated insights page
 - [ ] Unified data model: bank accounts + investments + budgets all connected
 - [ ] Freelancer support: business expense tracking, invoice management, tax categories
-- [ ] Complete WhaleIt rebrand: app name, logo, icons, colors, website copy, all references
-- [ ] Brand identity: friendly companion whale, soft illustration style, approachable and elegant
-- [ ] Tagline direction: "Your friendly finance companion"
 
 ### Out of Scope
 
@@ -100,11 +100,17 @@ Users can effortlessly track and understand their complete financial picture —
 | Repository trait pattern for DB abstraction | Existing pattern extends naturally to PostgreSQL | — Pending |
 | Context-aware AI chat sidebar | Users stay in flow while AI assists based on current screen | — Pending |
 | MCP server endpoint | Enables external AI tools to interact with user's financial data | — Pending |
-| Soft illustration brand style | Friendly, approachable — not corporate, not cartoonish | — Pending |
+| Soft illustration brand style | Friendly, approachable — not corporate, not cartoonish | Placeholder whale icon in place, professional illustration deferred |
 | Manual + file import for transactions | No bank API dependency, privacy-preserving, works globally | — Pending |
 | Gmail OAuth for subscription invoices | Automates subscription discovery from email receipts | — Pending |
 | OCR receipt scanning with AI | Reduces manual entry friction for daily transactions | — Pending |
 | Unified data model across finance features | Single view of net worth: investments + bank accounts + credit cards | — Pending |
+| D-01: @whaleit/* npm scope | All internal packages renamed from @wealthfolio/* | Phase 01 — scope adopted, 1074 imports updated |
+| D-02: Preserve internal crate names | wealthfolio-* crate names unchanged (Cargo registry, existing deps) | Phase 01 — internal names kept, user-facing strings renamed |
+| D-03: Preserve infrastructure URLs | wealthfolio.app, connect.wealthfolio.app kept (live services) | Phase 01 — URLs deferred to backend/infra phase |
+| D-04: Ocean teal color palette | #3d8778 primary, replacing warm paper tones | Phase 01 — globals.css @theme tokens updated |
+| D-05: Modular web adapter | Monolithic 1394-line core.ts split into 18 domain modules | Phase 01 — clean dispatcher pattern established |
+| D-06: Domain type files | 1929-line types.ts split into 22 domain files with barrel re-export | Phase 01 — backward-compatible imports preserved |
 
 ## Evolution
 
@@ -124,4 +130,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 after initialization*
+*Last updated: 2026-04-21 after Phase 01*
