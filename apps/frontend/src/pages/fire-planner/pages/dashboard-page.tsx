@@ -561,7 +561,7 @@ export default function DashboardPage({ settings, portfolioData, isLoading }: Pr
       {totalValue === 0 && (
         <Card>
           <CardContent className="text-muted-foreground py-8 text-center text-sm">
-            No portfolio data found. Add accounts and holdings in Wealthfolio to see your FIRE
+            No portfolio data found. Add accounts and holdings in WhaleIt to see your FIRE
             projection.
           </CardContent>
         </Card>

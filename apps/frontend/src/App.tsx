@@ -1,6 +1,6 @@
 import { isWeb } from "@/adapters";
 import { AuthGate, AuthProvider } from "@/context/auth-context";
-import { WealthfolioConnectProvider } from "@/features/wealthfolio-connect";
+import { WhaleItConnectProvider } from "@/features/connect";
 import { SettingsProvider } from "@/lib/settings-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@whaleit/ui";
@@ -39,13 +39,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WealthfolioConnectProvider>
+        <WhaleItConnectProvider>
           <PrivacyProvider>
             <SettingsProvider>
               <TooltipProvider>{routedContent}</TooltipProvider>
             </SettingsProvider>
           </PrivacyProvider>
-        </WealthfolioConnectProvider>
+        </WhaleItConnectProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

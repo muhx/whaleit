@@ -17,7 +17,7 @@ import type {
   ImportRun,
   PlansResponse,
   UserInfo,
-} from "@/features/wealthfolio-connect/types";
+} from "@/features/connect/types";
 import type { Account, Platform } from "@/lib/types";
 import type {
   BackendEnableSyncResult,
@@ -317,7 +317,7 @@ export const confirmPairingWithBootstrap = async (
 };
 
 // ============================================================================
-// Wealthfolio Connect Auth Commands
+// WhaleIt Connect Auth Commands
 // ============================================================================
 
 export const restoreSyncSession = async (): Promise<{

@@ -1,6 +1,6 @@
 import { LiquidGlass } from "@/components/liquid-glass";
-import { SyncStatusIcon } from "@/features/wealthfolio-connect/components/sync-status-icon";
-import { useAggregatedSyncStatus } from "@/features/wealthfolio-connect/hooks";
+import { SyncStatusIcon } from "@/features/connect/components/sync-status-icon";
+import { useAggregatedSyncStatus } from "@/features/connect/hooks";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, Icons } from "@whaleit/ui";
 import { motion } from "motion/react";

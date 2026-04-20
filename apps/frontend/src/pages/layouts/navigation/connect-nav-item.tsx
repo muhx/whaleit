@@ -1,5 +1,5 @@
-import { SyncStatusIcon } from "@/features/wealthfolio-connect/components/sync-status-icon";
-import { useAggregatedSyncStatus } from "@/features/wealthfolio-connect/hooks";
+import { SyncStatusIcon } from "@/features/connect/components/sync-status-icon";
+import { useAggregatedSyncStatus } from "@/features/connect/hooks";
 import { Button } from "@whaleit/ui/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@whaleit/ui/components/ui/tooltip";
 import { cn } from "@whaleit/ui/lib/utils";

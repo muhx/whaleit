@@ -1,6 +1,6 @@
 import { LiquidGlass } from "@/components/liquid-glass";
-import { SyncStatusIcon } from "@/features/wealthfolio-connect/components/sync-status-icon";
-import { useAggregatedSyncStatus } from "@/features/wealthfolio-connect/hooks";
+import { SyncStatusIcon } from "@/features/connect/components/sync-status-icon";
+import { useAggregatedSyncStatus } from "@/features/connect/hooks";
 import { useHapticFeedback } from "@/hooks/use-haptic-feedback";
 import { cn } from "@/lib/utils";
 import {

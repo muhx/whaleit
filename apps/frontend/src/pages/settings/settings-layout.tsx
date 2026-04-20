@@ -78,7 +78,7 @@ const settingsSections = [
     title: "Connections",
     items: [
       {
-        title: "Wealthfolio Connect",
+        title: "WhaleIt Connect",
         href: "connect",
         subtitle: "Broker and device linking",
         icon: <Icons.CloudSync2 className="size-6 text-blue-400" />,
@@ -103,7 +103,7 @@ const settingsSections = [
       {
         title: "Add-ons",
         href: "addons",
-        subtitle: "Extend Wealthfolio with features",
+        subtitle: "Extend WhaleIt with features",
         icon: <Icons.Package className="size-5" />,
       },
     ],

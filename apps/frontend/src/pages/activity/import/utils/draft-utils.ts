@@ -111,7 +111,7 @@ export function parseDateValue(value: string | undefined, dateFormat: string): s
 }
 
 /**
- * Map a CSV activity type value to a Wealthfolio activity type.
+ * Map a CSV activity type value to a WhaleIt activity type.
  * Returns only explicit user/template mappings.
  */
 export function mapActivityType(

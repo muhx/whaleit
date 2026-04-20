@@ -111,7 +111,7 @@ export const OnboardingStep1: React.FC = () => {
         <p className="text-muted-foreground text-xs">
           You can use different modes for different accounts.{" "}
           <a
-            href="https://wealthfolio.app/docs/concepts/activity-types"
+            href="https://whaleit.app/docs/concepts/activity-types"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground underline transition-colors"

@@ -3,14 +3,14 @@
 // Replaces: state detection useEffect, refreshState(), ENGINE_STATUS action.
 // ==========================================================================
 
-import { useWealthfolioConnect } from "@/features/wealthfolio-connect";
+import { useWhaleItConnect } from "@/features/connect";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { syncService } from "../services/sync-service";
 import { SyncError, SyncStates } from "../types";
 
 export function useSyncStatus() {
-  const { isConnected, isEnabled, userInfo } = useWealthfolioConnect();
+  const { isConnected, isEnabled, userInfo } = useWhaleItConnect();
 
   const hasSubscription =
     userInfo?.team?.subscription_status === "active" ||

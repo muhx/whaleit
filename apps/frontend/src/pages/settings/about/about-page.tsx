@@ -68,9 +68,9 @@ export default function AboutSettingsPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
-          <img src="/logo.svg" alt="Wealthfolio logo" className="h-12 w-12 rounded-md shadow" />
+          <img src="/logo.svg" alt="WhaleIt logo" className="h-12 w-12 rounded-md shadow" />
           <div className="flex flex-col">
-            <CardTitle className="text-xl">Wealthfolio</CardTitle>
+            <CardTitle className="text-xl">WhaleIt</CardTitle>
             <CardDescription>Version {version || "N/A"}</CardDescription>
           </div>
         </CardHeader>
@@ -114,7 +114,7 @@ export default function AboutSettingsPage() {
                 size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <ExternalLink href="https://github.com/afadil/wealthfolio">
+                <ExternalLink href="https://github.com/muhx/whaleit">
                   <Icons.ExternalLink className="h-4 w-4" />
                   GitHub
                 </ExternalLink>
@@ -194,7 +194,7 @@ export default function AboutSettingsPage() {
                 size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <ExternalLink href="https://github.com/afadil/wealthfolio/issues">
+                <ExternalLink href="https://github.com/muhx/whaleit/issues">
                   <Icons.AlertCircle className="h-4 w-4" />
                   Report Issue
                 </ExternalLink>

@@ -23,7 +23,7 @@ import { BulkHoldingsModal } from "./components/forms/bulk-holdings-modal";
 import { MobileActivityForm } from "./components/mobile-forms/mobile-activity-form";
 import { useActivityMutations } from "./hooks/use-activity-mutations";
 import { useActivitySearch, type ActivityStatusFilter } from "./hooks/use-activity-search";
-import { SyncButton } from "@/features/wealthfolio-connect/components/sync-button";
+import { SyncButton } from "@/features/connect/components/sync-button";
 import { AlternativeAssetQuickAddModal } from "@/pages/asset/alternative-assets";
 import { ActionPalette, type ActionPaletteGroup } from "@/components/action-palette";
 

@@ -1,18 +1,18 @@
-import { ConnectedView, LoginForm, useWealthfolioConnect } from "@/features/wealthfolio-connect";
+import { ConnectedView, LoginForm, useWhaleItConnect } from "@/features/connect";
 import { Card, CardDescription, CardHeader, CardTitle } from "@whaleit/ui";
 import { Icons } from "@whaleit/ui/components/ui/icons";
 import { Separator } from "@whaleit/ui/components/ui/separator";
 import { SettingsHeader } from "../settings-header";
 
 export default function ConnectSettingsPage() {
-  const { isEnabled, isConnected, isInitializing } = useWealthfolioConnect();
+  const { isEnabled, isConnected, isInitializing } = useWhaleItConnect();
 
   // Show "not configured" state when Connect feature is disabled
   if (!isEnabled) {
     return (
       <div className="space-y-6">
         <SettingsHeader
-          heading="Wealthfolio Connect"
+          heading="WhaleIt Connect"
           text="Connect your broker accounts through our cloud service."
         />
         <Separator />
@@ -22,7 +22,7 @@ export default function ConnectSettingsPage() {
               <Icons.CloudOff className="text-muted-foreground h-6 w-6" />
             </div>
             <CardTitle>Not Configured</CardTitle>
-            <CardDescription>Wealthfolio Connect is not configured for this build.</CardDescription>
+            <CardDescription>WhaleIt Connect is not configured for this build.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -33,7 +33,7 @@ export default function ConnectSettingsPage() {
     return (
       <div className="space-y-6">
         <SettingsHeader
-          heading="Wealthfolio Connect"
+          heading="WhaleIt Connect"
           text="Connect your broker accounts through our cloud service."
         />
         <Separator />
@@ -47,7 +47,7 @@ export default function ConnectSettingsPage() {
   return (
     <div className="space-y-6">
       <SettingsHeader
-        heading="Wealthfolio Connect"
+        heading="WhaleIt Connect"
         text="Connect your broker accounts and devices through our cloud service."
       />
       <Separator />

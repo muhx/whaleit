@@ -67,7 +67,7 @@ export function AppSidebar({ navigation }: AppSidebarProps) {
                       },
                     )}
                   >
-                    Wealthfolio
+                    WhaleIt
                   </span>
                 </div>
 

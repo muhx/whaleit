@@ -215,7 +215,7 @@ export const COMMANDS: CommandMap = {
   get_pairing_flow_state: { method: "POST", path: "/sync/pairing/flow/state" },
   approve_pairing_overwrite: { method: "POST", path: "/sync/pairing/flow/approve-overwrite" },
   cancel_pairing_flow: { method: "POST", path: "/sync/pairing/flow/cancel" },
-  // Wealthfolio Connect (Broker Sync)
+  // WhaleIt Connect (Broker Sync)
   store_sync_session: { method: "POST", path: "/connect/session" },
   clear_sync_session: { method: "DELETE", path: "/connect/session" },
   get_sync_session_status: { method: "GET", path: "/connect/session/status" },
