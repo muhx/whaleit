@@ -2,7 +2,7 @@
 
 use diesel::prelude::*;
 
-#[derive(Queryable, Identifiable, Selectable, PartialEq, Debug, Clone)]
+#[derive(Queryable, Identifiable, Selectable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::market_data_custom_providers)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct CustomProviderDB {

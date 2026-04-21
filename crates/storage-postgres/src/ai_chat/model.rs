@@ -1,8 +1,11 @@
 //! Database models for AI chat.
+//!
+//! Defines DB models for threads, messages, and tags using PG-native types.
 
+use chrono::Utc;
 use diesel::prelude::*;
 
-#[derive(Queryable, Identifiable, Selectable, PartialEq, Debug, Clone)]
+#[derive(Debug, Clone, Queryable, Identifiable, Selectable, Insertable, AsChangeset, PartialEq)]
 #[diesel(table_name = crate::schema::ai_threads)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct AiThreadDB {
@@ -14,7 +17,7 @@ pub struct AiThreadDB {
     pub is_pinned: bool,
 }
 
-#[derive(Queryable, Identifiable, Selectable, PartialEq, Debug, Clone)]
+#[derive(Debug, Clone, Queryable, Identifiable, Selectable, Insertable, AsChangeset, PartialEq)]
 #[diesel(table_name = crate::schema::ai_messages)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct AiMessageDB {
@@ -25,7 +28,7 @@ pub struct AiMessageDB {
     pub created_at: chrono::NaiveDateTime,
 }
 
-#[derive(Queryable, Identifiable, Selectable, PartialEq, Debug, Clone)]
+#[derive(Debug, Clone, Queryable, Identifiable, Selectable, Insertable, AsChangeset, PartialEq)]
 #[diesel(table_name = crate::schema::ai_thread_tags)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct AiThreadTagDB {
@@ -33,4 +36,29 @@ pub struct AiThreadTagDB {
     pub thread_id: String,
     pub tag: String,
     pub created_at: chrono::NaiveDateTime,
+}
+
+impl AiThreadDB {
+    pub fn new(id: String, title: Option<String>) -> Self {
+        let now = chrono::Utc::now().naive_utc();
+        Self {
+            id,
+            title,
+            created_at: now.clone(),
+            updated_at: now,
+            config_snapshot: None,
+            is_pinned: false,
+        }
+    }
+}
+
+impl AiThreadTagDB {
+    pub fn new(id: String, thread_id: String, tag: String) -> Self {
+        Self {
+            id,
+            thread_id,
+            tag,
+            created_at: chrono::Utc::now().naive_utc(),
+        }
+    }
 }
