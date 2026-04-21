@@ -2,7 +2,7 @@
 
 ## What This Is
 
-WhaleIt (rebranded from Wealthfolio) is a local-first personal finance management application that helps individuals and freelancers track their entire financial life — investments, bank accounts, credit cards, subscriptions, budgets, and daily transactions — all in one place. It runs as a desktop app (Tauri/Rust) and a self-hosted web app (Axum), with an AI-powered assistant that makes financial record-keeping effortless. Your friendly finance companion.
+WhaleIt (rebranded from Whaleit) is a local-first personal finance management application that helps individuals and freelancers track their entire financial life — investments, bank accounts, credit cards, subscriptions, budgets, and daily transactions — all in one place. It runs as a desktop app (Tauri/Rust) and a self-hosted web app (Axum), with an AI-powered assistant that makes financial record-keeping effortless. Your friendly finance companion.
 
 ## Core Value
 
@@ -12,7 +12,7 @@ Users can effortlessly track and understand their complete financial picture —
 
 ### Validated
 
-<!-- Existing capabilities from Wealthfolio codebase -->
+<!-- Existing capabilities from Whaleit codebase -->
 
 - ✓ Investment portfolio tracking with multi-account support — existing (`crates/core/src/accounts/`, `crates/core/src/portfolio/`)
 - ✓ Activity/transaction history for investments — existing (`crates/core/src/activities/`)
@@ -23,7 +23,7 @@ Users can effortlessly track and understand their complete financial picture —
 - ✓ FIRE planner (desktop) — existing (`apps/frontend/src/features/fire-planner/`)
 - ✓ Contribution limits tracking — existing (`crates/core/src/limits/`)
 - ✓ Asset classification and taxonomies — existing (`crates/core/src/taxonomies/`)
-- ✓ Broker sync via Wealthfolio Connect — existing (`crates/connect/`)
+- ✓ Broker sync via Whaleit Connect — existing (`crates/connect/`)
 - ✓ E2EE device synchronization — existing (`crates/device-sync/`)
 - ✓ AI chat integration with LLM providers — existing (`crates/ai/`)
 - ✓ Dual-runtime: desktop (Tauri) + web (Axum) — existing (`apps/tauri/`, `apps/server/`)
@@ -72,15 +72,15 @@ Users can effortlessly track and understand their complete financial picture —
 
 ## Context
 
-**Current state:** Wealthfolio is a mature, well-architected portfolio tracker with dual-runtime (Tauri desktop + Axum web), local-first SQLite storage, and an existing AI integration layer (`crates/ai/`). The codebase uses a clean adapter pattern that abstracts transport (IPC vs HTTP), repository traits that abstract data access, and a domain event system for side effects.
+**Current state:** Whaleit is a mature, well-architected portfolio tracker with dual-runtime (Tauri desktop + Axum web), local-first SQLite storage, and an existing AI integration layer (`crates/ai/`). The codebase uses a clean adapter pattern that abstracts transport (IPC vs HTTP), repository traits that abstract data access, and a domain event system for side effects.
 
-**Why this expansion:** Wealthfolio currently handles investment portfolios well but lacks everyday financial management — bank accounts, credit cards, daily spending, budgets, and subscriptions. Users need a unified view of their entire financial life, not just investments. The existing AI infrastructure (`crates/ai/` with `rig-core` LLM orchestration, 15 tool implementations, streaming hooks) provides a strong foundation for the AI-powered features.
+**Why this expansion:** Whaleit currently handles investment portfolios well but lacks everyday financial management — bank accounts, credit cards, daily spending, budgets, and subscriptions. Users need a unified view of their entire financial life, not just investments. The existing AI infrastructure (`crates/ai/` with `rig-core` LLM orchestration, 15 tool implementations, streaming hooks) provides a strong foundation for the AI-powered features.
 
 **Architecture fit:** The dual-engine database requirement (SQLite for desktop, PostgreSQL for web) aligns with the existing repository trait pattern — `crates/core/` defines traits, `crates/storage-sqlite/` implements them. A new `crates/storage-postgres/` crate would implement the same traits with Diesel's PostgreSQL backend. The adapter pattern on the frontend means new features work identically in both modes.
 
 **Existing AI foundation:** `crates/ai/` already has provider management, chat with streaming, tool calls (15 implementations for accounts, activities, holdings, etc.), and prompt templates. This needs expansion for: conversational transaction entry, OCR receipt processing, financial recommendations engine, and MCP server endpoint.
 
-**Brand:** The rebrand from Wealthfolio to WhaleIt reflects the expanded scope — from investment-only to full personal finance companion. The friendly whale represents steady, wise financial guidance.
+**Brand:** The rebrand from Whaleit to WhaleIt reflects the expanded scope — from investment-only to full personal finance companion. The friendly whale represents steady, wise financial guidance.
 
 ## Constraints
 

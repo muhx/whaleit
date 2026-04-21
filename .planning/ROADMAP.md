@@ -2,7 +2,7 @@
 
 ## Overview
 
-WhaleIt evolves Wealthfolio from an investment-only tracker into a full personal finance companion. The journey starts with a clean rebrand and codebase health, establishes PostgreSQL alongside SQLite, then builds out the core finance domains (accounts → transactions → budgets → reports → subscriptions). AI features layer on top — conversational entry, context-aware chat, OCR receipts, and periodic recommendations. Integration features (Gmail, MCP server) and freelancer mode complete the picture. Every phase delivers a coherent, verifiable capability that users can interact with.
+WhaleIt evolves Whaleit from an investment-only tracker into a full personal finance companion. The journey starts with a clean rebrand and codebase health, establishes PostgreSQL alongside SQLite, then builds out the core finance domains (accounts → transactions → budgets → reports → subscriptions). AI features layer on top — conversational entry, context-aware chat, OCR receipts, and periodic recommendations. Integration features (Gmail, MCP server) and freelancer mode complete the picture. Every phase delivers a coherent, verifiable capability that users can interact with.
 
 ## Phases
 
@@ -32,11 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Nothing (first phase)
 **Requirements**: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05, BRAND-06
 **Success Criteria** (what must be TRUE):
-  1. All user-facing text, titles, window labels, and UI copy display "WhaleIt" instead of "Wealthfolio"
+  1. All user-facing text, titles, window labels, and UI copy display "WhaleIt" instead of "Whaleit"
   2. App launches with new WhaleIt icon featuring friendly whale and updated color palette
   3. New users see WhaleIt-branded onboarding/welcome screens with "Your friendly finance companion" messaging
   4. GitHub repository metadata, README, and documentation reflect WhaleIt branding
-  5. Internal crate names remain unchanged (wealthfolio-*) — no code-internal renames
+  5. Internal crate names remain unchanged (whaleit-*) — no code-internal renames
 **Plans**: TBD
 
 ### Phase 2: Dual Database Engine

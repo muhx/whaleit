@@ -212,13 +212,13 @@ Plus 13 joinable relationships and foreign key references.
 
 ### AppState (Axum — Web)
 - File: `apps/server/src/main_lib.rs` (~490 lines of wiring)
-- Currently: imports all from `wealthfolio_storage_sqlite::*`
-- Needs: conditional compilation to import from `wealthfolio_storage_postgres::*` when `postgres` feature enabled
+- Currently: imports all from `whaleit_storage_sqlite::*`
+- Needs: conditional compilation to import from `whaleit_storage_postgres::*` when `postgres` feature enabled
 - `Config::from_env()` needs `DATABASE_URL` support alongside `WF_DB_PATH`
 
 ### Cargo Workspace
 - File: `Cargo.toml` (root)
-- Needs: `wealthfolio-storage-postgres = { path = "crates/storage-postgres" }`
+- Needs: `whaleit-storage-postgres = { path = "crates/storage-postgres" }`
 - Needs: `diesel-async`, `deadpool` workspace deps
 - Needs: `postgres` feature flag for apps/server
 
@@ -259,7 +259,7 @@ mod parity_tests {
 
 Verify PG migrations produce identical schema structure:
 - Same table names
-- Same column names  
+- Same column names
 - Same constraints (unique, foreign keys, not-null)
 - Compatible data types (TEXT↔UUID, INTEGER↔BOOL, etc.)
 

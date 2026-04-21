@@ -1,6 +1,6 @@
-# Wealthfolio Addons Documentation Index
+# Whaleit Addons Documentation Index
 
-> This page lists all documentation files in this directory for Wealthfolio
+> This page lists all documentation files in this directory for Whaleit
 > addon development. Use the links below to navigate to the relevant guide or
 > reference.
 

@@ -41,7 +41,7 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
 - Contains: pages (`pages/`), feature modules (`features/`), reusable components
   (`components/`), hooks (`hooks/`), contexts (`context/`), platform adapters
   (`adapters/`), addon runtime (`addons/`).
-- Depends on: `@wealthfolio/ui`, `@wealthfolio/addon-sdk`, Tauri JS APIs
+- Depends on: `@whaleit/ui`, `@whaleit/addon-sdk`, Tauri JS APIs
   (desktop build) or `fetch`/SSE (web build).
 - Used by: end user; is the only UI surface.
 
@@ -72,7 +72,7 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
 - Purpose: desktop/mobile process hosting the Rust services, exposing them as
   IPC commands to the embedded webview.
 - Location: `apps/tauri/src/`
-- Entry: `apps/tauri/src/main.rs` calls `wealthfolio_app_lib::run()`
+- Entry: `apps/tauri/src/main.rs` calls `whaleit_app_lib::run()`
   (`apps/tauri/src/lib.rs:197-633`).
 - Key pieces:
   - `context/` — builds `ServiceContext` (`context/registry.rs`,
@@ -89,16 +89,16 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
     (`portfolio:update-start`, `market:sync-start`, `broker:sync-*`,
     `asset:enrichment-*`, `app:ready`, `deep-link-received`) and listeners that
     spawn background jobs via `tauri::async_runtime::spawn`.
-  - `services/connect_service.rs` — HTTP-based bridge to Wealthfolio Connect
+  - `services/connect_service.rs` — HTTP-based bridge to Whaleit Connect
     cloud used by broker + device sync commands.
   - `scheduler.rs` — startup sync + 4h broker sync scheduler; market-data sync
     scheduler delegated to
-    `wealthfolio_core::quotes::scheduler::run_periodic_sync`.
+    `whaleit_core::quotes::scheduler::run_periodic_sync`.
   - `secret_store.rs` — OS keyring-backed `SecretStore` implementation shared
     across services.
-- Depends on: `wealthfolio-core`, `wealthfolio-market-data`,
-  `wealthfolio-connect`, `wealthfolio-storage-sqlite`,
-  `wealthfolio-device-sync`, `wealthfolio-ai`.
+- Depends on: `whaleit-core`, `whaleit-market-data`,
+  `whaleit-connect`, `whaleit-storage-sqlite`,
+  `whaleit-device-sync`, `whaleit-ai`.
 - Used by: the frontend (through the Tauri adapter).
 
 **Axum HTTP Server (web mode):**
@@ -133,7 +133,7 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
   - `scheduler.rs` — background broker sync scheduler (conditional on
     `connect-sync` feature).
   - `ai_environment.rs` — Server implementation of the `AiEnvironment` trait
-    from `wealthfolio-ai`.
+    from `whaleit-ai`.
 - Depends on: identical set of crates as Tauri plus `axum`, `tower`,
   `tower-http`, `tower_governor`, `utoipa`.
 - Used by: frontend built with `BUILD_TARGET=web`; supports single-user (auth
@@ -153,7 +153,7 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
   entities), `*_service.rs` (use cases), `*_traits.rs` (service + repository
   traits), `*_constants.rs`, and `mod.rs` that re-exports the public surface.
   Example: `crates/core/src/accounts/mod.rs:1-13`.
-- Depends on: `wealthfolio-market-data` (for quote providers), workspace
+- Depends on: `whaleit-market-data` (for quote providers), workspace
   primitives (`rust_decimal`, `chrono`, `uuid`, `reqwest`, ...). Does NOT depend
   on Diesel directly beyond the workspace dep surfaced for migration embedding.
 - Used by: Tauri, Axum, and indirectly the storage crate (repository traits live
@@ -188,11 +188,11 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
   and MIC/exchange mapping), `errors`.
 - Architecture diagram: `crates/market-data/src/lib.rs:15-40` — Domain →
   Resolver → Provider → Quote.
-- Used by: `wealthfolio-core::quotes::QuoteService`.
+- Used by: `whaleit-core::quotes::QuoteService`.
 
 **Connect (`crates/connect`):**
 
-- Purpose: HTTP client and broker-sync orchestration against the Wealthfolio
+- Purpose: HTTP client and broker-sync orchestration against the Whaleit
   Connect cloud service.
 - Location: `crates/connect/src/`
 - Modules: `client.rs` (REST client), `token_lifecycle.rs` (access/refresh token
@@ -300,7 +300,7 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
    `apps/frontend/src/adapters/web/ai-streaming.ts`).
 2. Tauri: opens a `Channel<AiStreamEvent>` and invokes `stream_ai_chat`
    (`apps/tauri/src/commands/ai_chat.rs`), which calls
-   `ChatService::send_message` from `wealthfolio-ai`.
+   `ChatService::send_message` from `whaleit-ai`.
 3. Web: POSTs to `/api/v1/ai/chat/stream`; handler streams NDJSON/SSE frames
    from `ChatService`.
 4. `ChatService` drives a tool-calling loop: provider stream → tool calls →
@@ -313,11 +313,11 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
 **State Management:**
 
 - Server-state: TanStack Query (`QueryClient` in `apps/frontend/src/App.tsx`).
-  Window-global via `window.__wealthfolio_query_client__` for addon access.
+  Window-global via `window.__whaleit_query_client__` for addon access.
 - Transient UI state: React `useState`/`useReducer`, `zustand` (listed in
   `apps/frontend/package.json`).
 - Cross-cutting providers (in `apps/frontend/src/App.tsx`): `AuthProvider`,
-  `WealthfolioConnectProvider`, `PrivacyProvider`, `SettingsProvider`,
+  `WhaleitConnectProvider`, `PrivacyProvider`, `SettingsProvider`,
   `TooltipProvider`. `PortfolioSyncProvider` and navigation providers are inside
   `AppLayout`.
 
@@ -382,7 +382,7 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
 - Tauri uses OS keyring (`apps/tauri/src/secret_store.rs`).
 - Axum uses file-based encrypted store with ChaCha20-Poly1305 key derived from
   env (`apps/server/src/secrets/`).
-- Both implement the same `wealthfolio_core::secrets::SecretStore` trait.
+- Both implement the same `whaleit_core::secrets::SecretStore` trait.
 
 ## Entry Points
 
@@ -406,7 +406,7 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
 
 **Tauri desktop/mobile (`apps/tauri/src/main.rs`):**
 
-- `main()` → `wealthfolio_app_lib::run()` (`apps/tauri/src/lib.rs:197-633`).
+- `main()` → `whaleit_app_lib::run()` (`apps/tauri/src/lib.rs:197-633`).
   Sets up plugins (log, shell, dialog, fs, deep-link, single-instance, updater,
   window-state, haptics, barcode-scanner, web-auth, mobile-share), calls
   platform-specific `setup`, registers ~170 `#[tauri::command]` handlers in a
@@ -418,11 +418,11 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
 - `#[tokio::main] async fn main()` → reads `Config::from_env()`, builds
   `AppState` via `main_lib::build_state`, warms up device-sync token
   (feature-gated), spawns the broker-sync scheduler, spawns
-  `wealthfolio_core::quotes::scheduler::run_periodic_sync`, serves static
+  `whaleit_core::quotes::scheduler::run_periodic_sync`, serves static
   frontend with fallback to `index.html`, and listens on `config.listen_addr`
   (default `0.0.0.0:8080`).
 
-**Database init:** `wealthfolio_storage_sqlite::db::init(&app_data_dir)` →
+**Database init:** `whaleit_storage_sqlite::db::init(&app_data_dir)` →
 ensures directory, sets pragmas, returns resolved DB path;
 `db::run_migrations(&db_path)` runs embedded migrations from
 `crates/storage-sqlite/migrations/`.
@@ -431,7 +431,7 @@ ensures directory, sets pragmas, returns resolved DB path;
 
 **Strategy:**
 
-- Core crate defines `wealthfolio_core::errors::Error` + `Result` alias
+- Core crate defines `whaleit_core::errors::Error` + `Result` alias
   (`crates/core/src/errors.rs`) covering `DatabaseError`, validation, not-found,
   etc.
 - Storage crate converts Diesel/r2d2 errors through `StorageError` + `IntoCore`
@@ -515,14 +515,14 @@ ensures directory, sets pragmas, returns resolved DB path;
 - Broker sync: 4h interval (`apps/tauri/src/scheduler.rs`,
   `apps/server/src/scheduler.rs`).
 - Market data sync: 6h interval with 2min initial delay, run by
-  `wealthfolio_core::quotes::scheduler::run_periodic_sync` from both hosts.
+  `whaleit_core::quotes::scheduler::run_periodic_sync` from both hosts.
 - Device sync engine: background loop in `crates/device-sync/src/engine/`
   started conditionally at boot.
 - Domain event queue worker: debounced 1s batches per host.
 
 **Secrets:**
 
-- Trait `wealthfolio_core::secrets::SecretStore`. Tauri impl = OS keyring via
+- Trait `whaleit_core::secrets::SecretStore`. Tauri impl = OS keyring via
   `keyring` crate. Axum impl = encrypted JSON file at `WF_SECRET_FILE` (default
   `<data_dir>/secrets.json`) using `SECRETS_ENCRYPTION_KEY`.
 

@@ -8680,6 +8680,7 @@ dependencies = [
  "whaleit-core",
  "whaleit-device-sync",
  "whaleit-market-data",
+ "whaleit-storage-postgres",
  "whaleit-storage-sqlite",
 ]
 

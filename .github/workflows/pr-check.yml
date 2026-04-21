@@ -91,7 +91,7 @@ jobs:
           CONNECT_API_URL: http://test.local
 
       - name: Check release build (src-server)
-        run: cargo check -p wealthfolio-server --release
+        run: cargo check -p whaleit-server --release
 
   build-status:
     name: Build Status

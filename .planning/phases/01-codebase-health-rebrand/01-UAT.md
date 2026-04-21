@@ -13,7 +13,7 @@ updated: 2026-04-21T05:31:00Z
 ## Tests
 
 ### 1. Browser Tab Title & Splash Screen
-expected: Open the app in a browser (pnpm run dev:web). The browser tab shows "WhaleIt". The initial loading/splash screen shows the new whale logo (not the old gold Wealthfolio logo).
+expected: Open the app in a browser (pnpm run dev:web). The browser tab shows "WhaleIt". The initial loading/splash screen shows the new whale logo (not the old gold Whaleit logo).
 result: pass
 
 ### 2. Color Palette
@@ -21,23 +21,23 @@ expected: The app displays a new ocean-inspired teal color palette. The backgrou
 result: pass
 
 ### 3. Onboarding Flow & Branding
-expected: Clear localStorage/first-run state to trigger onboarding. The welcome screen shows the whale logo (not old Wealthfolio logo), with the tagline "Your friendly finance companion" below it. Step transitions work smoothly with the new color palette.
+expected: Clear localStorage/first-run state to trigger onboarding. The welcome screen shows the whale logo (not old Whaleit logo), with the tagline "Your friendly finance companion" below it. Step transitions work smoothly with the new color palette.
 result: pass
 
 ### 4. About Page
-expected: Open Settings > About. The page shows WhaleIt branding. Website link points to whaleit.app. Docs link points to whaleit.app/docs. Support email shows support@whaleit.app. Privacy Policy and Terms links use whaleit.app URLs. No "Wealthfolio" text visible.
+expected: Open Settings > About. The page shows WhaleIt branding. Website link points to whaleit.app. Docs link points to whaleit.app/docs. Support email shows support@whaleit.app. Privacy Policy and Terms links use whaleit.app URLs. No "Whaleit" text visible.
 result: pass
 
 ### 5. AI Assistant Identity
-expected: Open the AI chat assistant. Send any message. The assistant introduces itself as "WhaleIt Assistant" (not "Wealthfolio Assistant").
+expected: Open the AI chat assistant. Send any message. The assistant introduces itself as "WhaleIt Assistant" (not "Whaleit Assistant").
 result: pass
 
 ### 6. Activity Page Help Links
-expected: Open the Activity page. Click the "Learn more" help link. It navigates to whaleit.app/docs/concepts/activity-types (not wealthfolio.app).
+expected: Open the Activity page. Click the "Learn more" help link. It navigates to whaleit.app/docs/concepts/activity-types (not whaleit.app).
 result: pass
 
 ### 7. Desktop App Identity
-expected: Run pnpm tauri dev. The window title shows "WhaleIt". The app menu shows a "WhaleIt" submenu (not "Wealthfolio") with "About WhaleIt" item. The dock/taskbar shows the whale icon.
+expected: Run pnpm tauri dev. The window title shows "WhaleIt". The app menu shows a "WhaleIt" submenu (not "Whaleit") with "About WhaleIt" item. The dock/taskbar shows the whale icon.
 result: pass
 
 ### 8. Build & Tests Pass
@@ -54,4 +54,3 @@ skipped: 0
 blocked: 0
 
 ## Gaps
-

@@ -74,7 +74,7 @@ Two warnings found: a Docker image reference that mixes old org with new name (p
 ### WR-01: Docker image reference uses old org name with new app name
 
 **File:** `compose.yml:11`
-**Issue:** The image reference `afadil/whaleit:latest` combines the old Docker Hub organization (`afadil`) with the new app name (`whaleit`). The README now points to GitHub org `muhx/whaleit`. If this image is pushed to Docker Hub under `afadil/whaleit`, it will work — but the org reference is inconsistent with all other `muhx/whaleit` URLs in the codebase. If someone expects the image at `muhx/whaleit:latest`, the compose file will fail to pull.
+**Issue:** The image reference `muhx/whaleit:latest` combines the old Docker Hub organization (`afadil`) with the new app name (`whaleit`). The README now points to GitHub org `muhx/whaleit`. If this image is pushed to Docker Hub under `muhx/whaleit`, it will work — but the org reference is inconsistent with all other `muhx/whaleit` URLs in the codebase. If someone expects the image at `muhx/whaleit:latest`, the compose file will fail to pull.
 **Fix:**
 ```yaml
 # Either update to match the new GitHub org:
@@ -85,11 +85,11 @@ image: muhx/whaleit:latest
 ### WR-02: support@whaleit.app email in error dialog may be non-functional
 
 **File:** `apps/tauri/src/menu.rs:63`
-**Issue:** The "Report Issue" dialog tells users to email `support@whaleit.app`. Unlike the deferred `support@wealthfolio.app` references in the Connect feature (which point to an existing domain), `whaleit.app` is the new domain and may not have email configured yet. Users clicking "Report Issue" will see a non-functional email address.
+**Issue:** The "Report Issue" dialog tells users to email `support@whaleit.app`. Unlike the deferred `support@whaleit.app` references in the Connect feature (which point to an existing domain), `whaleit.app` is the new domain and may not have email configured yet. Users clicking "Report Issue" will see a non-functional email address.
 **Fix:**
 ```rust
 // If whaleit.app email isn't set up yet, keep the old functional address:
-.message("If you encounter any issues, please email us at support@wealthfolio.app")
+.message("If you encounter any issues, please email us at support@whaleit.app")
 // Or add a comment documenting the migration dependency:
 // TODO: Update to support@whaleit.app once email is configured on whaleit.app domain
 ```
@@ -106,11 +106,11 @@ image: muhx/whaleit:latest
 
 **File:** Multiple files across `apps/frontend/src/features/connect/` and `apps/frontend/src/features/devices-sync/`
 **Issue:** Several infrastructure-bound references remain unchanged per documented decisions (D-03, D-06):
-- `wealthfolio.app` URLs (connect, auth, docs) — 15+ occurrences
-- `support@wealthfolio.app` email — 5 occurrences
-- `__wealthfolio_query_client__` and `__wealthfolio_navigate__` globals — addon SDK contract
-- `localStorage` key `wealthfolio-theme`
-- `wealthfolio://` deep link protocol
+- `whaleit.app` URLs (connect, auth, docs) — 15+ occurrences
+- `support@whaleit.app` email — 5 occurrences
+- `__whaleit_query_client__` and `__whaleit_navigate__` globals — addon SDK contract
+- `localStorage` key `whaleit-theme`
+- `whaleit://` deep link protocol
 These are documented as deferred in the phase summaries. No action needed now, but they should be tracked for the infrastructure migration phase.
 
 ### IN-03: Content Security Policy disabled in Tauri config (pre-existing)

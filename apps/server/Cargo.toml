@@ -9,6 +9,7 @@ whaleit-market-data = { workspace = true }
 whaleit-core = { workspace = true }
 whaleit-connect = { workspace = true }
 whaleit-storage-sqlite = { workspace = true }
+whaleit-storage-postgres = { workspace = true, optional = true }
 whaleit-device-sync = { workspace = true }
 whaleit-ai = { workspace = true }
 
@@ -57,6 +58,7 @@ hyper = { version = "0.14", features = ["full"] }
 default = ["connect-sync", "device-sync"]
 connect-sync = []
 device-sync = []
+postgres = ["whaleit-storage-postgres"]
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }

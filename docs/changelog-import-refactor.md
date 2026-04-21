@@ -10,19 +10,19 @@ changed, ~9,200 insertions, ~2,600 deletions
 The CSV import experience has been redesigned to be more reliable, faster, and
 easier to use. Here's what changed:
 
-**Smarter asset matching.** Before importing, Wealthfolio now shows you exactly
+**Smarter asset matching.** Before importing, Whaleit now shows you exactly
 how each ticker in your CSV will be matched to an asset in your portfolio. If
 something looks off — a symbol that could belong to multiple exchanges, or a
 delisted stock — you can fix it right there with a search, instead of finding
 out after the import that something went wrong.
 
-**Saved templates.** If you import from the same broker regularly, Wealthfolio
+**Saved templates.** If you import from the same broker regularly, Whaleit
 remembers your column mapping. Pick your broker from the list, and the columns
 map themselves. You can also save your own custom templates and link them to
 specific accounts so the right one loads automatically.
 
 **ISIN support.** CSVs from brokers like Trading 212 include ISIN codes (the
-international security identifier). Wealthfolio now reads these and uses them to
+international security identifier). Whaleit now reads these and uses them to
 match assets precisely — no more guessing which exchange a ticker belongs to.
 
 **Better handling of special transactions.** Dividend reinvestments (DRIP),
@@ -40,7 +40,7 @@ non-standard encodings (like Windows-1252) are detected and handled
 automatically. No more garbled characters in transaction descriptions.
 
 **Duplicate protection.** If you accidentally import the same CSV twice,
-Wealthfolio detects the overlap and skips transactions that already exist.
+Whaleit detects the overlap and skips transactions that already exist.
 You'll see exactly how many were skipped and why.
 
 ---

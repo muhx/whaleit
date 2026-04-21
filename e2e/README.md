@@ -1,6 +1,6 @@
 # E2E Tests
 
-Wealthfolio E2E tests use [Playwright](https://playwright.dev/) and run against
+Whaleit E2E tests use [Playwright](https://playwright.dev/) and run against
 the **web app** (not the Tauri desktop app). There are **no mocks** — both
 frontend and backend must be running against a fresh database.
 
@@ -63,7 +63,7 @@ then move on to Step 3 in a separate terminal.
 **Option B — redirect output to a log file and use the wait script:**
 
 ```bash
-pnpm run dev:web > /tmp/wealthfolio-dev2.log 2>&1 &
+pnpm run dev:web > /tmp/whaleit-dev2.log 2>&1 &
 ./scripts/wait-for-both-servers-to-be-ready.sh
 ```
 

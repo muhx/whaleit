@@ -29,7 +29,7 @@ and this project adheres to
 - Migrated to Tailwind CSS v4 and updated shadcn components
 - Updated addons layout and fixed issues in mobile
 - Updated ESLint and Prettier configuration
-- Upgraded addon for Wealthfolio 2.0.0 compatibility
+- Upgraded addon for Whaleit 2.0.0 compatibility
 
 ## [1.0.0] - 2025-08-20
 
@@ -42,7 +42,7 @@ and this project adheres to
 - Support for multiple investment goals with individual progress tracking
 - Clean and intuitive user interface for goal management
 - Sidebar navigation integration for easy access
-- Compatible with Wealthfolio addon SDK v1.0.0
+- Compatible with Whaleit addon SDK v1.0.0
 
 ### Features
 

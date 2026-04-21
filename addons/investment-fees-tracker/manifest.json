@@ -3,7 +3,7 @@
   "name": "Investment Fees Tracker",
   "version": "3.0.0",
   "description": "Track and analyze investment fees across your portfolio with detailed analytics and insights",
-  "author": "Wealthfolio",
+  "author": "Whaleit",
   "main": "dist/addon.js",
   "sdkVersion": "3.0.0",
   "enabled": true,

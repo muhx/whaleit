@@ -329,9 +329,9 @@ mod tests {
         date_str: &str,
     ) -> Activity {
         let activity_date_naive = NaiveDate::from_str(date_str)
-            .unwrap()
+            .await.unwrap()
             .and_hms_opt(0, 0, 0)
-            .unwrap();
+            .await.unwrap();
         let activity_date_utc: DateTime<Utc> = Utc.from_utc_datetime(&activity_date_naive);
 
         // Create metadata with flow.is_external = true
@@ -383,9 +383,9 @@ mod tests {
         date_str: &str, // "YYYY-MM-DD"
     ) -> Activity {
         let activity_date_naive = NaiveDate::from_str(date_str)
-            .unwrap()
+            .await.unwrap()
             .and_hms_opt(0, 0, 0)
-            .unwrap();
+            .await.unwrap();
         let activity_date_utc: DateTime<Utc> = Utc.from_utc_datetime(&activity_date_naive);
 
         Activity {
@@ -428,9 +428,9 @@ mod tests {
         date_str: &str, // "YYYY-MM-DD"
     ) -> Activity {
         let activity_date_naive = NaiveDate::from_str(date_str)
-            .unwrap()
+            .await.unwrap()
             .and_hms_opt(0, 0, 0)
-            .unwrap();
+            .await.unwrap();
         let activity_date_utc: DateTime<Utc> = Utc.from_utc_datetime(&activity_date_naive);
         Activity {
             id: id.to_string(),
@@ -468,7 +468,7 @@ mod tests {
         currency: &str,
         date_str: &str, // "YYYY-MM-DD"
     ) -> AccountStateSnapshot {
-        let snapshot_date = NaiveDate::from_str(date_str).unwrap();
+        let snapshot_date = NaiveDate::from_str(date_str).await.await.unwrap();
         AccountStateSnapshot {
             id: format!("{}_{}", account_id, snapshot_date.format("%Y-%m-%d")),
             account_id: account_id.to_string(),
@@ -488,8 +488,8 @@ mod tests {
 
     // --- Shared FX Rates ---
     fn usd_cad_rate(date_str: &str) -> Decimal {
-        let date = NaiveDate::from_str(date_str).unwrap();
-        if date <= NaiveDate::from_ymd_opt(2023, 1, 5).unwrap() {
+        let date = NaiveDate::from_str(date_str).await.unwrap();
+        if date <= NaiveDate::from_ymd_opt(2023, 1, 5).await.unwrap() {
             dec!(1.25) // 1 USD = 1.25 CAD
         } else {
             dec!(1.30) // 1 USD = 1.30 CAD
@@ -497,7 +497,7 @@ mod tests {
     }
 
     fn add_usd_cad_rates(fx_service: &mut MockFxService, date_str: &str) {
-        let date = NaiveDate::from_str(date_str).unwrap();
+        let date = NaiveDate::from_str(date_str).await.unwrap();
         let rate = usd_cad_rate(date_str);
         fx_service.add_bidirectional_rate("USD", "CAD", date, rate);
     }
@@ -533,14 +533,14 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         // Add CAD to USD conversion rate
-        let target_date = NaiveDate::from_str("2023-01-01").unwrap();
+        let target_date = NaiveDate::from_str("2023-01-01").await.unwrap();
         mock_fx_service.add_bidirectional_rate("CAD", "USD", target_date, dec!(0.75)); // 1 CAD = 0.75 USD
 
         let calculator = create_calculator(Arc::new(mock_fx_service), base_currency);
 
         let activity_currency = "CAD";
         let target_date_str = "2023-01-01";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let previous_snapshot = create_initial_snapshot("acc_1", account_currency, "2022-12-31");
 
@@ -559,12 +559,12 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check position - amounts should be converted from CAD to USD
         assert_eq!(next_state.positions.len(), 1);
-        let position = next_state.positions.get("AAPL").unwrap();
+        let position = next_state.positions.get("AAPL").await.unwrap();
         assert_eq!(position.quantity, dec!(10));
         // Original: CAD $150 per share + CAD $0.50 fee per share = CAD $150.50 per share
         // Converted to USD: CAD $150.50 * 0.75 = USD $112.875 per share
@@ -605,15 +605,15 @@ mod tests {
             "2025-01-01",
         );
         // 2025-01-01T07:30:00Z == 2024-12-31T23:30:00-08:00
-        buy_activity.activity_date = Utc.with_ymd_and_hms(2025, 1, 1, 7, 30, 0).unwrap();
+        buy_activity.activity_date = Utc.with_ymd_and_hms(2025, 1, 1, 7, 30, 0).await.unwrap();
 
         let result = calculator
             .calculate_next_holdings(
                 &previous_snapshot,
                 &[buy_activity],
-                NaiveDate::from_ymd_opt(2024, 12, 31).unwrap(),
+                NaiveDate::from_ymd_opt(2024, 12, 31).await.unwrap(),
             )
-            .unwrap();
+            .await.unwrap();
 
         assert!(result.warnings.is_empty());
         assert_eq!(result.snapshot.positions.len(), 1);
@@ -641,15 +641,15 @@ mod tests {
             "2025-01-01",
         );
         // 2025-01-01T07:30:00Z maps to 2024-12-31 in America/Los_Angeles.
-        buy_activity.activity_date = Utc.with_ymd_and_hms(2025, 1, 1, 7, 30, 0).unwrap();
+        buy_activity.activity_date = Utc.with_ymd_and_hms(2025, 1, 1, 7, 30, 0).await.unwrap();
 
         let result = calculator
             .calculate_next_holdings(
                 &previous_snapshot,
                 &[buy_activity],
-                NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+                NaiveDate::from_ymd_opt(2025, 1, 1).await.unwrap(),
             )
-            .unwrap();
+            .await.unwrap();
 
         assert_eq!(result.warnings.len(), 1);
         assert!(result.snapshot.positions.is_empty());
@@ -664,7 +664,7 @@ mod tests {
 
         let activity_currency = "CAD";
         let target_date_str = "2023-01-02";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         // Initial state: 10 AAPL @ 150, 0 cash (after a buy)
         let mut previous_snapshot =
@@ -679,18 +679,18 @@ mod tests {
             currency: activity_currency.to_string(),
             inception_date: Utc.from_utc_datetime(
                 &NaiveDate::from_str("2023-01-01")
-                    .unwrap()
+                    .await.unwrap()
                     .and_hms_opt(0, 0, 0)
-                    .unwrap(),
+                    .await.unwrap(),
             ),
             lots: VecDeque::from(vec![Lot {
                 id: "act_buy_1".to_string(), // Link to the buy activity
                 position_id: "AAPL_acc_1".to_string(),
                 acquisition_date: Utc.from_utc_datetime(
                     &NaiveDate::from_str("2023-01-01")
-                        .unwrap()
+                        .await.unwrap()
                         .and_hms_opt(0, 0, 0)
-                        .unwrap(),
+                        .await.unwrap(),
                 ),
                 quantity: dec!(10),
                 cost_basis: dec!(1500),
@@ -726,12 +726,12 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check position
         assert_eq!(next_state.positions.len(), 1);
-        let position = next_state.positions.get("AAPL").unwrap();
+        let position = next_state.positions.get("AAPL").await.unwrap();
         assert_eq!(position.quantity, dec!(5)); // 10 - 5 = 5 remaining
         assert_eq!(position.average_cost, dec!(150)); // Average cost remains
         assert_eq!(position.total_cost_basis, dec!(750)); // 5 shares * 150 cost basis CAD
@@ -760,7 +760,7 @@ mod tests {
     fn test_buy_activity_with_fx_conversion() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-03";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let activity_currency = "USD"; // Buy USD asset in CAD account
 
@@ -789,12 +789,12 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check position (cost basis should be in asset's currency - USD)
         assert_eq!(next_state.positions.len(), 1);
-        let position = next_state.positions.get("MSFT").unwrap();
+        let position = next_state.positions.get("MSFT").await.unwrap();
         assert_eq!(position.quantity, dec!(10));
         assert_eq!(position.average_cost, dec!(101)); // Expected: 100 + (10/10)
         assert_eq!(position.total_cost_basis, dec!(1010)); // Expected: (10 * 100) + 10
@@ -830,7 +830,7 @@ mod tests {
     fn test_deposit_activity_with_fx_conversion() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-04";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let activity_currency = "USD"; // Depositing USD into a CAD account
 
@@ -862,8 +862,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check cash balance (booked in ACTIVITY currency - USD, per design spec)
         // Deposit amount in USD: 100 USD
@@ -905,7 +905,7 @@ mod tests {
     fn test_withdrawal_with_negative_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-03-10";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CNY";
 
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -932,8 +932,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash should DECREASE by 10118 (not increase!)
         // Previous: 20135.50, After withdrawal: 20135.50 - 10118 = 10017.50
@@ -956,7 +956,7 @@ mod tests {
     fn test_withdrawal_activity_with_fx_conversion() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-05";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let activity_currency = "USD"; // Withdrawing USD from a CAD account
 
@@ -988,8 +988,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check cash balance (booked in ACTIVITY currency - USD, per design spec)
         // Withdrawal amount in USD: 50 USD
@@ -1031,7 +1031,7 @@ mod tests {
     fn test_deposit_with_positive_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-02-13";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CNY";
 
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -1058,8 +1058,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash should INCREASE by 10000
         assert_eq!(
@@ -1080,7 +1080,7 @@ mod tests {
     fn test_fee_with_negative_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-03-07";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CNY";
 
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -1107,8 +1107,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash should DECREASE by 5.21 (fee)
         assert_eq!(
@@ -1129,7 +1129,7 @@ mod tests {
     fn test_transfer_out_with_negative_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-03-10";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CNY";
 
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -1156,8 +1156,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash should DECREASE by 5000 (not increase!)
         assert_eq!(
@@ -1178,7 +1178,7 @@ mod tests {
     fn test_income_activities_updates_cash_not_net_contribution() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-06";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let activity_currency_div = "CAD";
         let activity_currency_int = "USD"; // Interest in USD
@@ -1220,8 +1220,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check cash balances (booked in respective ACTIVITY currencies, per design spec)
         // Initial cash: 1000 CAD
@@ -1233,7 +1233,7 @@ mod tests {
         let expected_cash_cad = previous_snapshot
             .cash_balances
             .get(account_currency)
-            .unwrap()
+            .await.unwrap()
             + net_dividend_cad;
         assert_eq!(
             next_state.cash_balances.get(account_currency),
@@ -1268,7 +1268,7 @@ mod tests {
         let calculator = create_calculator(mock_fx_service, base_currency);
 
         let target_date_str = "2023-01-07";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let previous_snapshot = create_initial_snapshot("acc_1", account_currency, "2023-01-06");
 
         // Mirrors staking BUY-leg behavior when broker sends quantity but FMV is zero.
@@ -1285,10 +1285,10 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &[zero_price_buy], target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
-        let position = next_state.positions.get("AAPL").unwrap();
+        let position = next_state.positions.get("AAPL").await.unwrap();
         assert_eq!(position.quantity, dec!(0.000000329));
         assert_eq!(position.average_cost, dec!(0));
         assert_eq!(position.total_cost_basis, dec!(0));
@@ -1307,7 +1307,7 @@ mod tests {
     fn test_charge_activities_fee_and_tax() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-07";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let fee_activity_currency = "CAD";
         let tax_activity_currency = "USD"; // Tax in USD
@@ -1352,8 +1352,8 @@ mod tests {
         let activities_today = vec![fee_activity.clone(), tax_activity_usd.clone()];
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Check cash balances (booked in respective ACTIVITY currencies, per design spec)
         // Initial cash: 1000 CAD
@@ -1364,7 +1364,7 @@ mod tests {
         let expected_cash_cad = previous_snapshot
             .cash_balances
             .get(account_currency)
-            .unwrap()
+            .await.unwrap()
             - fee_cad;
         assert_eq!(
             next_state.cash_balances.get(account_currency),
@@ -1391,9 +1391,9 @@ mod tests {
     fn test_add_and_remove_holding_activities() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_add_str = "2023-01-08";
-        let target_date_add = NaiveDate::from_str(target_date_add_str).unwrap();
+        let target_date_add = NaiveDate::from_str(target_date_add_str).await.unwrap();
         let target_date_remove_str = "2023-01-09";
-        let target_date_remove = NaiveDate::from_str(target_date_remove_str).unwrap();
+        let target_date_remove = NaiveDate::from_str(target_date_remove_str).await.unwrap();
 
         let account_currency = "CAD";
         let asset_currency = "USD"; // Asset is priced in USD
@@ -1436,14 +1436,14 @@ mod tests {
             target_date_add,
         );
         assert!(
-            result_add.is_ok(),
+            result_add.await.is_ok(),
             "External TransferIn calculation failed: {:?}",
-            result_add.err()
+            result_add.await.err()
         );
-        let state_after_add = result_add.unwrap().snapshot;
+        let state_after_add = result_add.await.unwrap().snapshot;
 
         // Check position after TransferIn (cost basis in USD)
-        let position_tsla = state_after_add.positions.get("TSLA").unwrap();
+        let position_tsla = state_after_add.positions.get("TSLA").await.unwrap();
         assert_eq!(position_tsla.quantity, dec!(10));
         assert_eq!(position_tsla.average_cost, dec!(200.5)); // Cost is (200*10 + 5) / 10
         assert_eq!(position_tsla.total_cost_basis, dec!(2005)); // (10 * 200) + 5 USD
@@ -1503,14 +1503,14 @@ mod tests {
             target_date_remove,
         );
         assert!(
-            result_remove.is_ok(),
+            result_remove.await.is_ok(),
             "External TransferOut calculation failed: {:?}",
-            result_remove.err()
+            result_remove.await.err()
         );
-        let state_after_remove = result_remove.unwrap().snapshot;
+        let state_after_remove = result_remove.await.unwrap().snapshot;
 
         // Check position after External TransferOut (cost basis in USD)
-        let position_tsla_after_remove = state_after_remove.positions.get("TSLA").unwrap();
+        let position_tsla_after_remove = state_after_remove.positions.get("TSLA").await.unwrap();
         assert_eq!(position_tsla_after_remove.quantity, dec!(6)); // 10 - 4 = 6 shares left
         assert_eq!(position_tsla_after_remove.average_cost, dec!(200.5)); // Average cost remains
         assert_eq!(position_tsla_after_remove.total_cost_basis, dec!(1203)); // 6 * 200.5 USD
@@ -1565,9 +1565,9 @@ mod tests {
         let mut mock_fx_service = MockFxService::new();
         let target_date_asset_transfer_str = "2023-01-10";
         let target_date_asset_transfer =
-            NaiveDate::from_str(target_date_asset_transfer_str).unwrap();
+            NaiveDate::from_str(target_date_asset_transfer_str).await.unwrap();
         let target_date_cash_transfer_str = "2023-01-11";
-        let target_date_cash_transfer = NaiveDate::from_str(target_date_cash_transfer_str).unwrap();
+        let target_date_cash_transfer = NaiveDate::from_str(target_date_cash_transfer_str).await.unwrap();
 
         let account_currency = "CAD";
         let asset_currency = "USD"; // Asset priced in USD
@@ -1610,14 +1610,14 @@ mod tests {
             target_date_asset_transfer,
         );
         assert!(
-            result_asset_tx_in.is_ok(),
+            result_asset_tx_in.await.is_ok(),
             "Asset TransferIn failed: {:?}",
-            result_asset_tx_in.err()
+            result_asset_tx_in.await.err()
         );
-        let state_after_asset_tx_in = result_asset_tx_in.unwrap().snapshot;
+        let state_after_asset_tx_in = result_asset_tx_in.await.unwrap().snapshot;
 
         // Position checks (USD)
-        let position_testusd = state_after_asset_tx_in.positions.get("TESTUSD").unwrap();
+        let position_testusd = state_after_asset_tx_in.positions.get("TESTUSD").await.unwrap();
         assert_eq!(position_testusd.quantity, dec!(50));
         assert_eq!(position_testusd.average_cost, dec!(120.2)); // (120 * 50 + 10) / 50 USD
         assert_eq!(position_testusd.total_cost_basis, dec!(6010)); // (50 * 120) + 10 USD
@@ -1674,14 +1674,14 @@ mod tests {
             target_date_asset_transfer,
         );
         assert!(
-            result_asset_tx_out.is_ok(),
+            result_asset_tx_out.await.is_ok(),
             "Asset TransferOut failed: {:?}",
-            result_asset_tx_out.err()
+            result_asset_tx_out.await.err()
         );
-        let state_after_asset_tx_out = result_asset_tx_out.unwrap().snapshot;
+        let state_after_asset_tx_out = result_asset_tx_out.await.unwrap().snapshot;
 
         // Position checks (USD)
-        let position_testusd_after_out = state_after_asset_tx_out.positions.get("TESTUSD").unwrap();
+        let position_testusd_after_out = state_after_asset_tx_out.positions.get("TESTUSD").await.unwrap();
         assert_eq!(position_testusd_after_out.quantity, dec!(30)); // 50 - 20
         assert_eq!(position_testusd_after_out.average_cost, dec!(120.2)); // Remains same
         assert_eq!(position_testusd_after_out.total_cost_basis, dec!(3606)); // 30 * 120.2 USD
@@ -1744,11 +1744,11 @@ mod tests {
             target_date_cash_transfer,
         );
         assert!(
-            result_cash_tx_in.is_ok(),
+            result_cash_tx_in.await.is_ok(),
             "Cash TransferIn failed: {:?}",
-            result_cash_tx_in.err()
+            result_cash_tx_in.await.err()
         );
-        let state_after_cash_tx_in = result_cash_tx_in.unwrap().snapshot;
+        let state_after_cash_tx_in = result_cash_tx_in.await.unwrap().snapshot;
 
         // Cash checks (booked in ACTIVITY currency - USD, per design spec)
         // Previous USD balance: -15 USD (from asset transfer fees)
@@ -1806,11 +1806,11 @@ mod tests {
             target_date_cash_transfer,
         );
         assert!(
-            result_cash_tx_out.is_ok(),
+            result_cash_tx_out.await.is_ok(),
             "Cash TransferOut failed: {:?}",
-            result_cash_tx_out.err()
+            result_cash_tx_out.await.err()
         );
-        let state_after_cash_tx_out = result_cash_tx_out.unwrap().snapshot;
+        let state_after_cash_tx_out = result_cash_tx_out.await.unwrap().snapshot;
 
         // Cash checks (booked in ACTIVITY currency - USD, per design spec)
         // Previous USD balance: 977 USD
@@ -1857,7 +1857,7 @@ mod tests {
     fn test_cash_transfer_affects_net_contribution() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-10";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         add_usd_cad_rates(&mut mock_fx_service, target_date_str);
         let usd_cad = usd_cad_rate(target_date_str); // 1.30
@@ -1881,11 +1881,11 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date);
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "TransferIn should succeed: {:?}",
-            result.err()
+            result.await.err()
         );
-        let state = result.unwrap().snapshot;
+        let state = result.await.unwrap().snapshot;
 
         // Account-boundary cashflow: transfers affect net_contribution.
         assert_eq!(state.net_contribution, dec!(1000) * usd_cad);
@@ -1896,7 +1896,7 @@ mod tests {
     fn test_multiple_activities_on_same_day_with_fx() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-12";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let asset_currency = "USD"; // Asset priced in USD
 
@@ -1942,15 +1942,15 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // --- Check Position (MSFT in USD) ---
         // Bought 20 @ 300 USD (cost basis 300*20+10 = 6010 USD, avg 300.5 USD)
         // Sold 5
         // Remaining 15 shares.
         assert_eq!(next_state.positions.len(), 1);
-        let position_msft = next_state.positions.get("MSFT").unwrap();
+        let position_msft = next_state.positions.get("MSFT").await.unwrap();
         assert_eq!(position_msft.quantity, dec!(15));
         assert_eq!(position_msft.average_cost, dec!(300.5)); // 300.5 USD
         assert_eq!(position_msft.total_cost_basis, dec!(4507.5)); // 15 shares * 300.5 USD
@@ -2004,7 +2004,7 @@ mod tests {
         mock_fx_service.set_fail_on_purpose(false); // Ensure it only fails due to missing rate
 
         let target_date_str = "2023-01-13";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
         let account_currency = "CAD";
         let activity_currency = "EUR"; // Activity in EUR, account in CAD
 
@@ -2035,16 +2035,16 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Calculation should still succeed with FX fallback: {:?}",
-            result.err()
+            result.await.err()
         );
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
 
         // --- Check Position (ADS.DE in EUR) ---
         // Position cost basis is always in asset's currency (EUR)
         assert_eq!(next_state.positions.len(), 1);
-        let position_ads = next_state.positions.get("ADS.DE").unwrap();
+        let position_ads = next_state.positions.get("ADS.DE").await.unwrap();
         assert_eq!(position_ads.quantity, dec!(10));
         assert_eq!(position_ads.average_cost, dec!(201.5)); // Expected: 200 + (15/10) EUR
         assert_eq!(position_ads.total_cost_basis, dec!(2015)); // Expected: (10 * 200) + 15 EUR
@@ -2087,7 +2087,7 @@ mod tests {
     fn test_cash_balances_reflects_activity_currencies() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-15";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let account_currency = "CAD";
         let usd_currency = "USD";
@@ -2161,8 +2161,8 @@ mod tests {
 
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // --- Assert Cash Balances ---
         // Cash is booked in ACTIVITY currency per design spec (multi-currency cash tracking)
@@ -2213,7 +2213,7 @@ mod tests {
 
         // --- Assert Positions ---
         assert_eq!(next_state.positions.len(), 1, "Should have one position");
-        let position_xyz = next_state.positions.get("XYZ").unwrap();
+        let position_xyz = next_state.positions.get("XYZ").await.unwrap();
         assert_eq!(position_xyz.quantity, dec!(10));
         assert_eq!(position_xyz.average_cost, dec!(5.1)); // (5*10 + 1) / 10
         assert_eq!(position_xyz.total_cost_basis, dec!(51)); // In USD
@@ -2272,13 +2272,13 @@ mod tests {
         mock_fx_service.add_bidirectional_rate(
             "USD",
             "EUR",
-            NaiveDate::from_str(date1_str).unwrap(),
+            NaiveDate::from_str(date1_str).await.unwrap(),
             rate_usd_eur_date1,
         );
         mock_fx_service.add_bidirectional_rate(
             "USD",
             "EUR",
-            NaiveDate::from_str(date2_str).unwrap(),
+            NaiveDate::from_str(date2_str).await.unwrap(),
             rate_usd_eur_date2,
         );
 
@@ -2304,7 +2304,7 @@ mod tests {
         );
 
         let activities_day1 = vec![buy_eur_activity.clone()];
-        let target_date1 = NaiveDate::from_str(date1_str).unwrap();
+        let target_date1 = NaiveDate::from_str(date1_str).await.unwrap();
 
         let result1 = calculator.calculate_next_holdings(
             &snapshot_after_first,
@@ -2312,15 +2312,15 @@ mod tests {
             target_date1,
         );
         assert!(
-            result1.is_ok(),
+            result1.await.is_ok(),
             "First calculation failed: {:?}",
-            result1.err()
+            result1.await.err()
         );
-        let snapshot_after_first = result1.unwrap().snapshot;
+        let snapshot_after_first = result1.await.unwrap().snapshot;
 
         // Verify first buy created position in USD (AMZN's listing currency)
         assert_eq!(snapshot_after_first.positions.len(), 1);
-        let position_after_first = snapshot_after_first.positions.get("AMZN").unwrap();
+        let position_after_first = snapshot_after_first.positions.get("AMZN").await.unwrap();
         assert_eq!(
             position_after_first.currency, "USD",
             "Position should be in USD (AMZN's listing currency)"
@@ -2369,7 +2369,7 @@ mod tests {
         );
 
         let activities_day2 = vec![buy_usd_activity.clone()];
-        let target_date2 = NaiveDate::from_str(date2_str).unwrap();
+        let target_date2 = NaiveDate::from_str(date2_str).await.unwrap();
 
         let result2 = calculator.calculate_next_holdings(
             &snapshot_after_first,
@@ -2377,11 +2377,11 @@ mod tests {
             target_date2,
         );
         assert!(
-            result2.is_ok(),
+            result2.await.is_ok(),
             "Second calculation failed: {:?}",
-            result2.err()
+            result2.await.err()
         );
-        let final_snapshot = result2.unwrap().snapshot;
+        let final_snapshot = result2.await.unwrap().snapshot;
 
         // Verify the USD activity was added to the same USD position
         assert_eq!(
@@ -2389,7 +2389,7 @@ mod tests {
             1,
             "Should still have only 1 position for AMZN"
         );
-        let final_position = final_snapshot.positions.get("AMZN").unwrap();
+        let final_position = final_snapshot.positions.get("AMZN").await.unwrap();
 
         // Position should remain in USD (AMZN's listing currency)
         assert_eq!(
@@ -2491,13 +2491,13 @@ mod tests {
         mock_fx_service.add_bidirectional_rate(
             "USD",
             "EUR",
-            NaiveDate::from_str(date1_str).unwrap(),
+            NaiveDate::from_str(date1_str).await.unwrap(),
             rate_usd_eur_date1,
         );
         mock_fx_service.add_bidirectional_rate(
             "USD",
             "EUR",
-            NaiveDate::from_str(date2_str).unwrap(),
+            NaiveDate::from_str(date2_str).await.unwrap(),
             rate_usd_eur_date2,
         );
 
@@ -2523,7 +2523,7 @@ mod tests {
         );
 
         let activities_day1 = vec![buy_usd_activity.clone()];
-        let target_date1 = NaiveDate::from_str(date1_str).unwrap();
+        let target_date1 = NaiveDate::from_str(date1_str).await.unwrap();
 
         let result1 = calculator.calculate_next_holdings(
             &snapshot_after_first,
@@ -2531,15 +2531,15 @@ mod tests {
             target_date1,
         );
         assert!(
-            result1.is_ok(),
+            result1.await.is_ok(),
             "First calculation failed: {:?}",
-            result1.err()
+            result1.await.err()
         );
-        let snapshot_after_first = result1.unwrap().snapshot;
+        let snapshot_after_first = result1.await.unwrap().snapshot;
 
         // Verify first buy created position in USD (first currency used)
         assert_eq!(snapshot_after_first.positions.len(), 1);
-        let position_after_first = snapshot_after_first.positions.get("AMZN").unwrap();
+        let position_after_first = snapshot_after_first.positions.get("AMZN").await.unwrap();
         assert_eq!(
             position_after_first.currency, "USD",
             "Position should be in USD (first currency)"
@@ -2573,7 +2573,7 @@ mod tests {
         );
 
         let activities_day2 = vec![buy_eur_activity.clone()];
-        let target_date2 = NaiveDate::from_str(date2_str).unwrap();
+        let target_date2 = NaiveDate::from_str(date2_str).await.unwrap();
 
         let result2 = calculator.calculate_next_holdings(
             &snapshot_after_first,
@@ -2581,14 +2581,14 @@ mod tests {
             target_date2,
         );
         assert!(
-            result2.is_ok(),
+            result2.await.is_ok(),
             "Second calculation failed: {:?}",
-            result2.err()
+            result2.await.err()
         );
-        let final_snapshot = result2.unwrap().snapshot;
+        let final_snapshot = result2.await.unwrap().snapshot;
 
         // Verify the EUR activity was converted to USD and added to the same position
-        let final_position = final_snapshot.positions.get("AMZN").unwrap();
+        let final_position = final_snapshot.positions.get("AMZN").await.unwrap();
 
         // Position should remain in USD (original currency)
         assert_eq!(
@@ -2647,7 +2647,7 @@ mod tests {
         mock_fx_service.add_bidirectional_rate(
             "USD",
             "EUR",
-            NaiveDate::from_str(activity_date_str).unwrap(),
+            NaiveDate::from_str(activity_date_str).await.unwrap(),
             rate_usd_eur,
         );
 
@@ -2677,16 +2677,16 @@ mod tests {
         );
 
         let activities = vec![buy_aapl_eur_activity.clone()];
-        let target_date = NaiveDate::from_str(activity_date_str).unwrap();
+        let target_date = NaiveDate::from_str(activity_date_str).await.unwrap();
 
         let result =
             calculator.calculate_next_holdings(&initial_snapshot, &activities, target_date);
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let final_snapshot = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let final_snapshot = result.await.unwrap().snapshot;
 
         // Verify position was created
         assert_eq!(final_snapshot.positions.len(), 1);
-        let aapl_position = final_snapshot.positions.get("AAPL").unwrap();
+        let aapl_position = final_snapshot.positions.get("AAPL").await.unwrap();
 
         // CRITICAL: Position should be in USD (stock's listing currency), NOT EUR (activity currency)
         // Currently this will fail because the system uses activity currency instead of stock listing currency
@@ -2747,9 +2747,9 @@ mod tests {
         fx_rate: Option<Decimal>,
     ) -> Activity {
         let activity_date_naive = NaiveDate::from_str(date_str)
-            .unwrap()
+            .await.unwrap()
             .and_hms_opt(0, 0, 0)
-            .unwrap();
+            .await.unwrap();
         let activity_date_utc: DateTime<Utc> = Utc.from_utc_datetime(&activity_date_naive);
 
         Activity {
@@ -2794,9 +2794,9 @@ mod tests {
         fx_rate: Option<Decimal>,
     ) -> Activity {
         let activity_date_naive = NaiveDate::from_str(date_str)
-            .unwrap()
+            .await.unwrap()
             .and_hms_opt(0, 0, 0)
-            .unwrap();
+            .await.unwrap();
         let activity_date_utc: DateTime<Utc> = Utc.from_utc_datetime(&activity_date_naive);
         Activity {
             id: id.to_string(),
@@ -2841,7 +2841,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-01";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         // FxService has rate 1.30 USD->CAD, but activity specifies 1.35
         let service_rate = dec!(1.30);
@@ -2871,11 +2871,11 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Position should be in USD (MSFT's listing currency)
-        let position = next_state.positions.get("MSFT").unwrap();
+        let position = next_state.positions.get("MSFT").await.unwrap();
         assert_eq!(position.quantity, dec!(10));
         assert_eq!(position.currency, "USD");
 
@@ -2913,7 +2913,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-02";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         mock_fx_service.add_bidirectional_rate("USD", "CAD", target_date, service_rate);
@@ -2940,8 +2940,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash is booked in ACTIVITY currency (USD) per design spec
         let expected_cost_usd = dec!(10) * dec!(100) + dec!(5);
@@ -2971,7 +2971,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-03";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         mock_fx_service.add_bidirectional_rate("USD", "CAD", target_date, service_rate);
@@ -2998,8 +2998,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash is booked in ACTIVITY currency (USD) per design spec
         let expected_cost_usd = dec!(10) * dec!(100) + dec!(5);
@@ -3028,7 +3028,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-04";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         let activity_fx_rate = dec!(1.40);
@@ -3060,8 +3060,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash is booked in ACTIVITY currency (USD) per design spec
         // Deposit: $500 USD -> USD balance = 500 USD
@@ -3105,7 +3105,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-05";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         let activity_fx_rate = dec!(1.38);
@@ -3131,18 +3131,18 @@ mod tests {
             currency: activity_currency.to_string(),
             inception_date: Utc.from_utc_datetime(
                 &NaiveDate::from_str("2023-01-01")
-                    .unwrap()
+                    .await.unwrap()
                     .and_hms_opt(0, 0, 0)
-                    .unwrap(),
+                    .await.unwrap(),
             ),
             lots: VecDeque::from(vec![Lot {
                 id: "lot_1".to_string(),
                 position_id: "MSFT_acc_sell_fx_rate".to_string(),
                 acquisition_date: Utc.from_utc_datetime(
                     &NaiveDate::from_str("2023-01-01")
-                        .unwrap()
+                        .await.unwrap()
                         .and_hms_opt(0, 0, 0)
-                        .unwrap(),
+                        .await.unwrap(),
                 ),
                 quantity: dec!(20),
                 cost_basis: dec!(2000),
@@ -3176,8 +3176,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // With fx_rate provided, sell proceeds are booked in ACCOUNT currency (CAD)
         // Proceeds in USD: (10 * 120) - 5 = 1195 USD
@@ -3213,7 +3213,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-06";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let calculator = create_calculator(Arc::new(mock_fx_service), base_currency);
 
@@ -3237,8 +3237,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash should be deducted at 1:1 (no conversion)
         let expected_cost = dec!(10) * dec!(100) + dec!(5); // 1005 USD
@@ -3260,7 +3260,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-07";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         let activity_fx_rate = dec!(1.42);
@@ -3292,8 +3292,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash is booked in ACTIVITY currency (USD) per design spec
         // Withdrawal: -$200 USD -> USD balance = -200 USD
@@ -3329,7 +3329,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-08";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         let activity_fx_rate = dec!(1.33);
@@ -3359,8 +3359,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash is booked in ACTIVITY currency (USD) per design spec
         // Dividend: $50 USD -> USD balance = 50 USD
@@ -3397,7 +3397,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-02-09";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let service_rate = dec!(1.30);
         let activity_fx_rate = dec!(1.36);
@@ -3431,8 +3431,8 @@ mod tests {
         let result =
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
-        assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
-        let next_state = result.unwrap().snapshot;
+        assert!(result.await.is_ok(), "Calculation failed: {:?}", result.await.err());
+        let next_state = result.await.unwrap().snapshot;
 
         // Cash is booked in ACTIVITY currency (USD) per design spec
         // Fee: -$10 USD -> USD balance = -10 USD
@@ -3484,7 +3484,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-01";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         // fx_rate: 1 CAD = 0.75 USD (user provides this)
         let activity_fx_rate = dec!(0.75);
@@ -3513,12 +3513,12 @@ mod tests {
 
         // This MUST succeed - the fx_rate should be used, not the FxService
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Calculation should succeed using activity's fx_rate. Error: {:?}",
-            result.err()
+            result.await.err()
         );
 
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
 
         // Position should exist and be in USD (AAPL's listing currency)
         let position = next_state
@@ -3549,7 +3549,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-02";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let activity_fx_rate = dec!(0.74); // 1 CAD = 0.74 USD
 
@@ -3576,12 +3576,12 @@ mod tests {
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Buy should succeed using activity's fx_rate. Error: {:?}",
-            result.err()
+            result.await.err()
         );
 
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
 
         let position = next_state
             .positions
@@ -3615,7 +3615,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-03";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let activity_fx_rate = dec!(0.73);
 
@@ -3666,12 +3666,12 @@ mod tests {
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Sell should succeed using activity's fx_rate. Error: {:?}",
-            result.err()
+            result.await.err()
         );
 
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
 
         let position = next_state
             .positions
@@ -3691,7 +3691,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-04";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let calculator = create_calculator(Arc::new(mock_fx_service), base_currency);
 
@@ -3719,7 +3719,7 @@ mod tests {
         // Actually looking at the code, it logs errors but continues - let's verify the error is logged
         // For now, just verify calculation completes (errors are handled gracefully)
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Calculation should complete (errors are logged, not thrown)"
         );
     }
@@ -3734,7 +3734,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-05";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let activity_fx_rate = dec!(0.72);
 
@@ -3784,12 +3784,12 @@ mod tests {
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "TransferOut should succeed. Error: {:?}",
-            result.err()
+            result.await.err()
         );
 
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
         let position = next_state
             .positions
             .get("AAPL")
@@ -3813,7 +3813,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-10";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         // fx_rate: 1 USD = 1.40 CAD
         let activity_fx_rate = dec!(1.40);
@@ -3829,9 +3829,9 @@ mod tests {
         // External TransferIn: 1 share of AAPL @ $100 USD, fx_rate = 1.40 (USD -> CAD)
         // Using create_external_transfer_activity_with_fx_rate which includes external metadata
         let activity_date_naive = NaiveDate::from_str(target_date_str)
-            .unwrap()
+            .await.unwrap()
             .and_hms_opt(0, 0, 0)
-            .unwrap();
+            .await.unwrap();
         let activity_date_utc: DateTime<Utc> = Utc.from_utc_datetime(&activity_date_naive);
 
         // Create metadata with flow.is_external = true
@@ -3875,12 +3875,12 @@ mod tests {
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Calculation should succeed. Error: {:?}",
-            result.err()
+            result.await.err()
         );
 
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
 
         // Position should exist and be in USD (AAPL's listing currency)
         let position = next_state
@@ -3916,7 +3916,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
 
         let target_date_str = "2023-03-11";
-        let target_date = NaiveDate::from_str(target_date_str).unwrap();
+        let target_date = NaiveDate::from_str(target_date_str).await.unwrap();
 
         let activity_fx_rate = dec!(1.35); // 1 USD = 1.35 CAD
 
@@ -3943,12 +3943,12 @@ mod tests {
             calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
 
         assert!(
-            result.is_ok(),
+            result.await.is_ok(),
             "Buy should succeed. Error: {:?}",
-            result.err()
+            result.await.err()
         );
 
-        let next_state = result.unwrap().snapshot;
+        let next_state = result.await.unwrap().snapshot;
 
         let position = next_state
             .positions
@@ -3992,8 +3992,8 @@ mod tests {
 
         let deposit_date_str = "2024-01-10";
         let buy_date_str = "2024-01-15";
-        let deposit_date = NaiveDate::from_str(deposit_date_str).unwrap();
-        let buy_date = NaiveDate::from_str(buy_date_str).unwrap();
+        let deposit_date = NaiveDate::from_str(deposit_date_str).await.unwrap();
+        let buy_date = NaiveDate::from_str(buy_date_str).await.unwrap();
 
         // FxService market rate differs from activity fx_rate — shouldn't matter
         mock_fx_service.add_bidirectional_rate("USD", "EUR", buy_date, dec!(0.92));
@@ -4013,7 +4013,7 @@ mod tests {
         );
         let after_deposit = calculator
             .calculate_next_holdings(&prev, &[deposit], deposit_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Buy 4 AAPL @ $145 + $7.03 fee in USD, fx_rate = 0.93 (USD→EUR)
@@ -4032,7 +4032,7 @@ mod tests {
 
         let after_buy = calculator
             .calculate_next_holdings(&after_deposit, &[buy], buy_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Total cost in USD: 4 * 145 + 7.03 = 587.03
@@ -4068,7 +4068,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new("EUR".to_string()));
 
         let sell_date_str = "2024-03-10";
-        let sell_date = NaiveDate::from_str(sell_date_str).unwrap();
+        let sell_date = NaiveDate::from_str(sell_date_str).await.unwrap();
 
         mock_fx_service.add_bidirectional_rate("USD", "EUR", sell_date, dec!(0.92));
 
@@ -4123,7 +4123,7 @@ mod tests {
 
         let after_sell = calculator
             .calculate_next_holdings(&prev, &[sell], sell_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Proceeds in USD: 5 * 160 - 5 = 795
@@ -4157,9 +4157,9 @@ mod tests {
         let deposit_date_str = "2024-06-01";
         let buy_date_str = "2024-06-05";
         let sell_date_str = "2024-06-10";
-        let deposit_date = NaiveDate::from_str(deposit_date_str).unwrap();
-        let buy_date = NaiveDate::from_str(buy_date_str).unwrap();
-        let sell_date = NaiveDate::from_str(sell_date_str).unwrap();
+        let deposit_date = NaiveDate::from_str(deposit_date_str).await.unwrap();
+        let buy_date = NaiveDate::from_str(buy_date_str).await.unwrap();
+        let sell_date = NaiveDate::from_str(sell_date_str).await.unwrap();
 
         // Market rates (shouldn't be used for cash when fx_rate is provided)
         mock_fx_service.add_bidirectional_rate("USD", "EUR", buy_date, dec!(0.91));
@@ -4180,7 +4180,7 @@ mod tests {
         );
         let after_deposit = calculator
             .calculate_next_holdings(&prev, &[deposit], deposit_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Step 2: Buy 10 AAPL @ $100 + $5 fee, fx_rate = 0.93
@@ -4198,7 +4198,7 @@ mod tests {
         );
         let after_buy = calculator
             .calculate_next_holdings(&after_deposit, &[buy], buy_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Step 3: Sell all 10 AAPL @ $100 + $5 fee, fx_rate = 0.95
@@ -4216,7 +4216,7 @@ mod tests {
         );
         let after_sell = calculator
             .calculate_next_holdings(&after_buy, &[sell], sell_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Buy cost EUR: 1005 * 0.93 = 934.65
@@ -4243,7 +4243,7 @@ mod tests {
         let base_currency = Arc::new(RwLock::new("EUR".to_string()));
 
         let buy_date_str = "2024-04-15";
-        let buy_date = NaiveDate::from_str(buy_date_str).unwrap();
+        let buy_date = NaiveDate::from_str(buy_date_str).await.unwrap();
 
         mock_fx_service.add_bidirectional_rate("USD", "EUR", buy_date, dec!(0.92));
 
@@ -4269,7 +4269,7 @@ mod tests {
 
         let result = calculator
             .calculate_next_holdings(&prev, &[buy], buy_date)
-            .unwrap();
+            .await.unwrap();
         let state = result.snapshot;
 
         // Without fx_rate: cash booked in USD (existing behavior)
@@ -4328,8 +4328,8 @@ mod tests {
 
         let buy_date_str = "2023-01-01";
         let transfer_date_str = "2023-06-01";
-        let buy_date = NaiveDate::from_str(buy_date_str).unwrap();
-        let transfer_date = NaiveDate::from_str(transfer_date_str).unwrap();
+        let buy_date = NaiveDate::from_str(buy_date_str).await.unwrap();
+        let transfer_date = NaiveDate::from_str(transfer_date_str).await.unwrap();
 
         // --- Account A: Buy then Transfer Out ---
         let prev_a = create_initial_snapshot("acc_a", "USD", "2022-12-31");
@@ -4350,7 +4350,7 @@ mod tests {
         };
         let result_a_buy = calculator
             .calculate_next_holdings(&prev_a, std::slice::from_ref(&buy), buy_date)
-            .unwrap();
+            .await.unwrap();
 
         // Now transfer out
         let transfer_out = create_transfer_activity(
@@ -4367,12 +4367,12 @@ mod tests {
         );
         let result_a_xfer = calculator
             .calculate_next_holdings(&result_a_buy.snapshot, &[transfer_out], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         // Account A should have no AAPL position
         let pos_a = result_a_xfer.snapshot.positions.get("AAPL");
         assert!(
-            pos_a.is_none() || pos_a.unwrap().quantity == dec!(0),
+            pos_a.is_none() || pos_a.await.unwrap().quantity == dec!(0),
             "Account A should have 0 AAPL after transfer out"
         );
 
@@ -4392,7 +4392,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos_b = result_b
             .snapshot
@@ -4453,22 +4453,22 @@ mod tests {
             a
         };
 
-        let buy1_date = NaiveDate::from_str("2023-01-01").unwrap();
-        let buy2_date = NaiveDate::from_str("2023-02-01").unwrap();
-        let transfer_date = NaiveDate::from_str("2023-06-01").unwrap();
+        let buy1_date = NaiveDate::from_str("2023-01-01").await.unwrap();
+        let buy2_date = NaiveDate::from_str("2023-02-01").await.unwrap();
+        let transfer_date = NaiveDate::from_str("2023-06-01").await.unwrap();
 
         // Process buys
         let snap_after_buy1 = calculator
             .calculate_next_holdings(&prev_a, std::slice::from_ref(&buy1), buy1_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
         let snap_after_buy2 = calculator
             .calculate_next_holdings(&snap_after_buy1, std::slice::from_ref(&buy2), buy2_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Verify 2 lots exist
-        let pos = snap_after_buy2.positions.get("AAPL").unwrap();
+        let pos = snap_after_buy2.positions.get("AAPL").await.unwrap();
         assert_eq!(pos.lots.len(), 2);
         assert_eq!(pos.quantity, dec!(15));
 
@@ -4487,11 +4487,11 @@ mod tests {
         );
         let snap_after_xfer_out = calculator
             .calculate_next_holdings(&snap_after_buy2, &[transfer_out], transfer_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Account A should have 3 remaining (from lot2)
-        let pos_a = snap_after_xfer_out.positions.get("AAPL").unwrap();
+        let pos_a = snap_after_xfer_out.positions.get("AAPL").await.unwrap();
         assert_eq!(pos_a.quantity, dec!(3));
 
         // Transfer in on account B
@@ -4510,7 +4510,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos_b = result_b
             .snapshot
@@ -4539,7 +4539,7 @@ mod tests {
         assert_eq!(pos_b.total_cost_basis, dec!(1412));
 
         // Verify source account remaining lot has correct proportional fee
-        let pos_a_remaining = snap_after_xfer_out.positions.get("AAPL").unwrap();
+        let pos_a_remaining = snap_after_xfer_out.positions.get("AAPL").await.unwrap();
         assert_eq!(pos_a_remaining.lots.len(), 1);
         assert_eq!(pos_a_remaining.lots[0].quantity, dec!(3));
         assert_eq!(pos_a_remaining.lots[0].acquisition_fees, dec!(3)); // Remaining: 5 - 2 = 3
@@ -4554,7 +4554,7 @@ mod tests {
         let calculator = create_calculator(Arc::new(mock_fx_service), base_currency);
 
         let prev = create_initial_snapshot("acc_b", "USD", "2023-05-31");
-        let transfer_date = NaiveDate::from_str("2023-06-01").unwrap();
+        let transfer_date = NaiveDate::from_str("2023-06-01").await.unwrap();
 
         // External transfer in: no source_group_id, unit_price = $150
         let transfer_in = create_transfer_activity(
@@ -4572,7 +4572,7 @@ mod tests {
 
         let result = calculator
             .calculate_next_holdings(&prev, &[transfer_in], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos = result
             .snapshot
@@ -4595,7 +4595,7 @@ mod tests {
         let calculator = create_calculator(Arc::new(mock_fx_service), base_currency);
 
         let prev = create_initial_snapshot("acc_a", "USD", "2023-05-31");
-        let transfer_date = NaiveDate::from_str("2023-06-01").unwrap();
+        let transfer_date = NaiveDate::from_str("2023-06-01").await.unwrap();
 
         let transfer_out = create_transfer_activity(
             "xfer_out_empty",
@@ -4612,7 +4612,7 @@ mod tests {
 
         let result = calculator
             .calculate_next_holdings(&prev, &[transfer_out], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         // No position created, just fee deducted
         assert!(!result.snapshot.positions.contains_key("AAPL"));
@@ -4624,8 +4624,8 @@ mod tests {
         // Scenario: Transfer AAPL (listed in USD) from CAD account to EUR account.
         // Lots should transfer with FX conversion applied to cost basis.
         let mut mock_fx_service = MockFxService::new();
-        let transfer_date = NaiveDate::from_str("2023-06-01").unwrap();
-        let buy_date = NaiveDate::from_str("2023-01-01").unwrap();
+        let transfer_date = NaiveDate::from_str("2023-06-01").await.unwrap();
+        let buy_date = NaiveDate::from_str("2023-01-01").await.unwrap();
 
         // AAPL is listed in USD. CAD account buys in CAD.
         // When buying in CAD account, activity currency is CAD, position currency is USD.
@@ -4654,11 +4654,11 @@ mod tests {
         };
         let snap_after_buy = calculator
             .calculate_next_holdings(&prev_a, &[buy], buy_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Position should be in USD (AAPL's listing currency)
-        let pos_a = snap_after_buy.positions.get("AAPL").unwrap();
+        let pos_a = snap_after_buy.positions.get("AAPL").await.unwrap();
         assert_eq!(pos_a.currency, "USD");
         // 100 CAD * 0.75 = 75 USD per share
         assert_eq!(pos_a.average_cost, dec!(75));
@@ -4678,7 +4678,7 @@ mod tests {
         );
         let _snap_after_xfer = calculator
             .calculate_next_holdings(&snap_after_buy, &[transfer_out], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         // Transfer in to EUR account — lots carry over in USD (position currency)
         // Since AAPL is listed in USD and EUR account also prices in USD for position,
@@ -4698,7 +4698,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos_b = result_b
             .snapshot
@@ -4720,8 +4720,8 @@ mod tests {
         let base_currency = Arc::new(RwLock::new("USD".to_string()));
         let calculator = create_calculator(Arc::new(mock_fx_service), base_currency);
 
-        let buy_date = NaiveDate::from_str("2023-01-01").unwrap();
-        let transfer_date = NaiveDate::from_str("2023-06-01").unwrap();
+        let buy_date = NaiveDate::from_str("2023-01-01").await.unwrap();
+        let transfer_date = NaiveDate::from_str("2023-06-01").await.unwrap();
 
         // Buy 20 AAPL in acc_a
         let prev_a = create_initial_snapshot("acc_a", "USD", "2022-12-31");
@@ -4741,7 +4741,7 @@ mod tests {
         };
         let snap = calculator
             .calculate_next_holdings(&prev_a, &[buy], buy_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // Transfer out 8 shares (grp_a)
@@ -4772,11 +4772,11 @@ mod tests {
         );
         let snap = calculator
             .calculate_next_holdings(&snap, &[xfer_out_1, xfer_out_2], transfer_date)
-            .unwrap()
+            .await.unwrap()
             .snapshot;
 
         // acc_a should have 7 remaining
-        let pos_a = snap.positions.get("AAPL").unwrap();
+        let pos_a = snap.positions.get("AAPL").await.unwrap();
         assert_eq!(pos_a.quantity, dec!(7));
 
         // Transfer in 8 to acc_b (grp_a)
@@ -4795,8 +4795,8 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[xfer_in_1], transfer_date)
-            .unwrap();
-        let pos_b = result_b.snapshot.positions.get("AAPL").unwrap();
+            .await.unwrap();
+        let pos_b = result_b.snapshot.positions.get("AAPL").await.unwrap();
         assert_eq!(pos_b.quantity, dec!(8));
         assert_eq!(pos_b.total_cost_basis, dec!(800)); // 8 * $100
 
@@ -4816,8 +4816,8 @@ mod tests {
         );
         let result_c = calculator
             .calculate_next_holdings(&prev_c, &[xfer_in_2], transfer_date)
-            .unwrap();
-        let pos_c = result_c.snapshot.positions.get("AAPL").unwrap();
+            .await.unwrap();
+        let pos_c = result_c.snapshot.positions.get("AAPL").await.unwrap();
         assert_eq!(pos_c.quantity, dec!(5));
         assert_eq!(pos_c.total_cost_basis, dec!(500)); // 5 * $100
     }
@@ -4852,10 +4852,10 @@ mod tests {
             "2024-01-02",
         );
 
-        let target_date = NaiveDate::from_str("2024-01-02").unwrap();
+        let target_date = NaiveDate::from_str("2024-01-02").await.unwrap();
         let result = calculator
             .calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos = result
             .snapshot
@@ -4900,10 +4900,10 @@ mod tests {
             "2024-01-02",
         );
 
-        let target_date = NaiveDate::from_str("2024-01-02").unwrap();
+        let target_date = NaiveDate::from_str("2024-01-02").await.unwrap();
         let result = calculator
             .calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos = result
             .snapshot
@@ -4948,10 +4948,10 @@ mod tests {
             "2025-01-02",
         );
 
-        let buy_date = NaiveDate::from_str("2025-01-02").unwrap();
+        let buy_date = NaiveDate::from_str("2025-01-02").await.unwrap();
         let result = calculator
             .calculate_next_holdings(&previous_snapshot, &[buy], buy_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos = result
             .snapshot
@@ -4977,10 +4977,10 @@ mod tests {
             "2025-02-01",
         );
 
-        let sell_date = NaiveDate::from_str("2025-02-01").unwrap();
+        let sell_date = NaiveDate::from_str("2025-02-01").await.unwrap();
         let result2 = calculator
             .calculate_next_holdings(&result.snapshot, &[sell_3], sell_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos2 = result2
             .snapshot
@@ -5007,10 +5007,10 @@ mod tests {
             "2025-03-01",
         );
 
-        let sell_date2 = NaiveDate::from_str("2025-03-01").unwrap();
+        let sell_date2 = NaiveDate::from_str("2025-03-01").await.unwrap();
         let result3 = calculator
             .calculate_next_holdings(&result2.snapshot, &[sell_2], sell_date2)
-            .unwrap();
+            .await.unwrap();
 
         let pos3 = result3.snapshot.positions.get("AAPL250321C00150000");
         // Position should be fully closed (quantity = 0, which means it may be zeroed out)
@@ -5035,8 +5035,8 @@ mod tests {
 
         let buy_date_str = "2025-01-02";
         let transfer_date_str = "2025-06-01";
-        let buy_date = NaiveDate::from_str(buy_date_str).unwrap();
-        let transfer_date = NaiveDate::from_str(transfer_date_str).unwrap();
+        let buy_date = NaiveDate::from_str(buy_date_str).await.unwrap();
+        let transfer_date = NaiveDate::from_str(transfer_date_str).await.unwrap();
 
         // --- Account A: BUY 3 contracts @ $2.00, no fee ---
         let prev_a = create_initial_snapshot("acc_a", "USD", "2024-12-31");
@@ -5058,7 +5058,7 @@ mod tests {
 
         let result_a_buy = calculator
             .calculate_next_holdings(&prev_a, std::slice::from_ref(&buy), buy_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos_a = result_a_buy
             .snapshot
@@ -5087,7 +5087,7 @@ mod tests {
 
         let result_a_xfer = calculator
             .calculate_next_holdings(&result_a_buy.snapshot, &[transfer_out], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         // Account A should have no position (or zero quantity)
         let pos_a_after = result_a_xfer.snapshot.positions.get("AAPL250321C00150000");
@@ -5117,7 +5117,7 @@ mod tests {
 
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
-            .unwrap();
+            .await.unwrap();
 
         let pos_b = result_b
             .snapshot

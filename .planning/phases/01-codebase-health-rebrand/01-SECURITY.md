@@ -33,7 +33,7 @@ created: 2026-04-21
 | T-01-01 | S | Icon assets | accept | Placeholder icons for dev use only — professional design swaps later | closed |
 | T-01-02 | T | globals.css | accept | Color tokens are cosmetic only, no security impact | closed |
 | T-02-01 | S | Bundle identifier | mitigate | Verified com.whaleit.app doesn't conflict, build passes | closed |
-| T-02-02 | I | Deep-link schemes | accept | Scheme change from wealthfolio:// to whaleit:// breaks existing deep links — expected during rebrand | closed |
+| T-02-02 | I | Deep-link schemes | accept | Scheme change from whaleit:// to whaleit:// breaks existing deep links — expected during rebrand | closed |
 | T-02-03 | T | Auth salt strings | mitigate | Explicitly preserved auth.rs salt strings unchanged during execution | closed |
 | T-03-01 | S | Package scope | accept | @whaleit/* scope verified by pnpm install success | closed |
 | T-03-02 | D | Import paths | mitigate | Build + type-check + 505 tests verify all imports resolve | closed |
@@ -48,7 +48,7 @@ created: 2026-04-21
 |---------|------------|-----------|-------------|------|
 | AR-01 | T-01-01 | Placeholder whale icon is geometric SVG — professional illustration to replace later | Phase executor | 2026-04-20 |
 | AR-02 | T-01-02 | Color palette tokens are cosmetic, zero security surface | Phase executor | 2026-04-20 |
-| AR-03 | T-02-02 | Deep-link scheme change breaks existing wealthfolio:// links — expected and documented in rebrand | Phase executor | 2026-04-20 |
+| AR-03 | T-02-02 | Deep-link scheme change breaks existing whaleit:// links — expected and documented in rebrand | Phase executor | 2026-04-20 |
 | AR-04 | T-03-01 | @whaleit/* npm scope unlikely to conflict with real packages | Phase executor | 2026-04-20 |
 
 ---

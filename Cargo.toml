@@ -73,3 +73,4 @@ whaleit-storage-sqlite = { path = "crates/storage-sqlite" }
 whaleit-device-sync = { path = "crates/device-sync" }
 whaleit-ai = { path = "crates/ai" }
 whaleit-storage-common = { path = "crates/storage-common" }
+whaleit-storage-postgres = { path = "crates/storage-postgres" }

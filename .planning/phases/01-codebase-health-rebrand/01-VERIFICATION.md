@@ -29,11 +29,11 @@ re_verification:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | All user-facing text, titles, window labels, and UI copy display "WhaleIt" instead of "Wealthfolio" | ✓ VERIFIED | `index.html` title: "WhaleIt", `manifest.json` name/short_name: "WhaleIt", 0 "Wealthfolio" in frontend TS/TSX, 0 in tauri config/menu, 0 in server user-facing strings. Only 1 README occurrence is Twitter handle @WealthfolioApp (external service, not under our control). |
+| 1 | All user-facing text, titles, window labels, and UI copy display "WhaleIt" instead of "Whaleit" | ✓ VERIFIED | `index.html` title: "WhaleIt", `manifest.json` name/short_name: "WhaleIt", 0 "Whaleit" in frontend TS/TSX, 0 in tauri config/menu, 0 in server user-facing strings. Only 1 README occurrence is Twitter handle @WhaleitApp (external service, not under our control). |
 | 2 | App launches with new WhaleIt icon featuring friendly whale and updated color palette | ✓ VERIFIED | Ocean teal palette (#3d8778 primary), --color-paper: #f6faf8, --color-black: #162228. All icon formats valid: icon.icns (176KB), icon.ico (6 sizes), icon.png (1024x1024), 6 PNG sizes, logo.svg with whale SVG. |
 | 3 | New users see WhaleIt-branded onboarding/welcome screens with "Your friendly finance companion" messaging | ✓ VERIFIED | `onboarding-page.tsx` line 66-68: tagline "Your friendly finance companion" in `<p>` below logo. Logo alt="WhaleIt". All 5 onboarding files rebranded. |
-| 4 | GitHub repository metadata, README, and documentation reflect WhaleIt branding | ✓ VERIFIED | README title "WhaleIt", 9 WhaleIt references, GitHub URLs updated to muhx/whaleit, website whaleit.app, tagline "Your Friendly Finance Companion". Only @WealthfolioApp Twitter handle remains (external service). |
-| 5 | Internal crate names remain unchanged (wealthfolio-*) — no code-internal renames | ✓ VERIFIED | All 6 crate names in Cargo.toml unchanged: wealthfolio-core, wealthfolio-storage-sqlite, wealthfolio-market-data, wealthfolio-connect, wealthfolio-device-sync, wealthfolio-ai. |
+| 4 | GitHub repository metadata, README, and documentation reflect WhaleIt branding | ✓ VERIFIED | README title "WhaleIt", 9 WhaleIt references, GitHub URLs updated to muhx/whaleit, website whaleit.app, tagline "Your Friendly Finance Companion". Only @WhaleitApp Twitter handle remains (external service). |
+| 5 | Internal crate names remain unchanged (whaleit-*) — no code-internal renames | ✓ VERIFIED | All 6 crate names in Cargo.toml unchanged: whaleit-core, whaleit-storage-sqlite, whaleit-market-data, whaleit-connect, whaleit-device-sync, whaleit-ai. |
 
 **From PLAN frontmatter must-haves (unique truths):**
 
@@ -42,14 +42,14 @@ re_verification:
 | 6 | The app displays a new color palette reflecting WhaleIt's friendly companion branding (01-01) | ✓ VERIFIED | Ocean teal base scale in globals.css @theme block. Old warm paper tones (#f2f0e5 etc.) replaced. |
 | 7 | The app icon shows a whale in soft illustration style across all platforms (01-01) | ✓ VERIFIED | icon.icns (macOS), icon.ico (Windows), 6 PNG sizes, logo.svg — all valid image files. |
 | 8 | The splash/loading screen shows the WhaleIt logo and tagline (01-01) | ✓ VERIFIED | splashscreen.png (1024x1024) exists and is valid PNG. |
-| 9 | Desktop app window title and menu show 'WhaleIt' not 'Wealthfolio' (01-02) | ✓ VERIFIED | tauri.conf.json productName/mainBinaryName: "WhaleIt". menu.rs: "WhaleIt" submenu, "About WhaleIt" dialog, "latest version of WhaleIt" update msg. |
-| 10 | Tauri bundle identifier is com.whaleit.app not com.teymz.wealthfolio (01-02) | ✓ VERIFIED | tauri.conf.json identifier: "com.whaleit.app". Deep-link schemes: ["whaleit"]. |
+| 9 | Desktop app window title and menu show 'WhaleIt' not 'Whaleit' (01-02) | ✓ VERIFIED | tauri.conf.json productName/mainBinaryName: "WhaleIt". menu.rs: "WhaleIt" submenu, "About WhaleIt" dialog, "latest version of WhaleIt" update msg. |
+| 10 | Tauri bundle identifier is com.whaleit.app not com.teymz.whaleit (01-02) | ✓ VERIFIED | tauri.conf.json identifier: "com.whaleit.app". Deep-link schemes: ["whaleit"]. |
 | 11 | AI system prompt introduces itself as WhaleIt AI (01-02) | ✓ VERIFIED | system_prompt.txt line 1: "You are WhaleIt AI, a helpful assistant..." |
-| 12 | Internal Rust crate names remain wealthfolio-* unchanged (01-02) | ✓ VERIFIED | All 6 wealthfolio-* crate refs in Cargo.toml unchanged. |
-| 13 | All frontend imports use @whaleit/* scope instead of @wealthfolio/* (01-03) | ✓ VERIFIED | 0 @wealthfolio/ imports in frontend src. 3 packages renamed: @whaleit/ui, @whaleit/addon-sdk, @whaleit/addon-dev-tools. vite.config.ts aliases updated. |
-| 14 | The wealthfolio-connect feature directory is renamed to connect (01-03) | ✓ VERIFIED | features/connect/ exists (29 files), features/wealthfolio-connect/ gone. routes.tsx and App.tsx use new paths. |
-| 15 | Onboarding screens show WhaleIt branding and tagline (01-03, 01-05) | ✓ VERIFIED | Logo alt="WhaleIt", tagline "Your friendly finance companion" in header (visible across all steps). 0 "Wealthfolio" in onboarding TSX files. |
-| 16 | No user-facing 'Wealthfolio' text remains in any frontend file (01-03, 01-05) | ✓ VERIFIED | 0 "Wealthfolio" in apps/frontend/src/**/*.ts/tsx, 0 in index.html, 0 in manifest.json. |
+| 12 | Internal Rust crate names remain whaleit-* unchanged (01-02) | ✓ VERIFIED | All 6 whaleit-* crate refs in Cargo.toml unchanged. |
+| 13 | All frontend imports use @whaleit/* scope instead of @whaleit/* (01-03) | ✓ VERIFIED | 0 @whaleit/ imports in frontend src. 3 packages renamed: @whaleit/ui, @whaleit/addon-sdk, @whaleit/addon-dev-tools. vite.config.ts aliases updated. |
+| 14 | The whaleit-connect feature directory is renamed to connect (01-03) | ✓ VERIFIED | features/connect/ exists (29 files), features/whaleit-connect/ gone. routes.tsx and App.tsx use new paths. |
+| 15 | Onboarding screens show WhaleIt branding and tagline (01-03, 01-05) | ✓ VERIFIED | Logo alt="WhaleIt", tagline "Your friendly finance companion" in header (visible across all steps). 0 "Whaleit" in onboarding TSX files. |
+| 16 | No user-facing 'Whaleit' text remains in any frontend file (01-03, 01-05) | ✓ VERIFIED | 0 "Whaleit" in apps/frontend/src/**/*.ts/tsx, 0 in index.html, 0 in manifest.json. |
 | 17 | Web adapter switch delegates to domain-specific module files (01-04) | ✓ VERIFIED | 18 module files in adapters/web/modules/. core.ts imports all modules, handleCommand() delegates. core.ts: 844 lines (was 1,394). |
 | 18 | Types are organized into domain-specific files with barrel re-export (01-04) | ✓ VERIFIED | 22 domain type files in lib/types/. types.ts: 58 lines (barrel), 20 `export * from` lines. |
 | 19 | ActivityLegacy deprecated type is removed (01-04) | ✓ VERIFIED | 0 occurrences of ActivityLegacy in types.ts and lib/types/ directory. |
@@ -108,23 +108,23 @@ re_verification:
 | Frontend build | `pnpm build` | Built in 12.69s | ✓ PASS |
 | Rust compilation | `cargo check` | Finished successfully | ✓ PASS |
 | Frontend tests | `pnpm test` | 505/505 tests pass (42 test files) | ✓ PASS |
-| No @wealthfolio imports remain | `grep -r @wealthfolio/ apps/frontend/src/` | 0 results | ✓ PASS |
-| Internal crates unchanged | `grep 'name = "wealthfolio' Cargo.toml` | 6 matches (all original) | ✓ PASS |
+| No @wealthfolio imports remain | `grep -r @whaleit/ apps/frontend/src/` | 0 results | ✓ PASS |
+| Internal crates unchanged | `grep 'name = "whaleit' Cargo.toml` | 6 matches (all original) | ✓ PASS |
 | ActivityLegacy removed | `grep -r ActivityLegacy apps/frontend/src/lib/types/` | 0 results | ✓ PASS |
 | Web adapter modules count | `ls adapters/web/modules/ \| wc -l` | 18 files | ✓ PASS |
 | Domain type files count | `ls lib/types/ \| wc -l` | 22 files | ✓ PASS |
-| No Wealthfolio in user-facing frontend | `grep -rn Wealthfolio apps/frontend/src/ index.html manifest.json` | 0 results | ✓ PASS |
+| No Whaleit in user-facing frontend | `grep -rn Whaleit apps/frontend/src/ index.html manifest.json` | 0 results | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | ----------- | ---------- | ----------- | ------ | -------- |
-| BRAND-01 | 01-02, 01-03, 01-04, 01-05 | All user-facing references renamed to WhaleIt | ✓ SATISFIED | index.html title, manifest.json, tauri config, menu.rs, system prompt, onboarding, README, Docker/compose, all frontend TS/TSX — 0 user-facing "Wealthfolio" remaining |
+| BRAND-01 | 01-02, 01-03, 01-04, 01-05 | All user-facing references renamed to WhaleIt | ✓ SATISFIED | index.html title, manifest.json, tauri config, menu.rs, system prompt, onboarding, README, Docker/compose, all frontend TS/TSX — 0 user-facing "Whaleit" remaining |
 | BRAND-02 | 01-01 | New app icon featuring friendly whale | ✓ SATISFIED | All icon formats valid: .icns (macOS), .ico (Windows), .png (all sizes), .svg (web) |
 | BRAND-03 | 01-01 | Updated color palette and visual identity | ✓ SATISFIED | Ocean teal palette in globals.css, --color-paper: #f6faf8, --color-black: #162228 |
 | BRAND-04 | 01-03, 01-05 | Updated onboarding/welcome screens with WhaleIt branding | ✓ SATISFIED | Logo alt="WhaleIt", tagline "Your friendly finance companion", all 5 onboarding files rebranded |
-| BRAND-05 | 01-02 | GitHub metadata, README, docs updated | ✓ SATISFIED | README title "WhaleIt", GitHub URLs muhx/whaleit, website whaleit.app. Only @WealthfolioApp Twitter handle remains (external). |
-| BRAND-06 | 01-02 | Internal crate names remain wealthfolio-* | ✓ SATISFIED | All 6 internal crate references unchanged in Cargo.toml |
+| BRAND-05 | 01-02 | GitHub metadata, README, docs updated | ✓ SATISFIED | README title "WhaleIt", GitHub URLs muhx/whaleit, website whaleit.app. Only @WhaleitApp Twitter handle remains (external). |
+| BRAND-06 | 01-02 | Internal crate names remain whaleit-* | ✓ SATISFIED | All 6 internal crate references unchanged in Cargo.toml |
 
 **Note:** The user's prompt mentioned ARCH-01 and ARCH-02 requirement IDs, but these do not exist in REQUIREMENTS.md. The ROADMAP maps Phase 1 to BRAND-01 through BRAND-06 only. The architectural refactoring (web adapter split, types.ts split) is covered under BRAND-01 scope but has no separate ARCH-* requirement IDs in the traceability system.
 
@@ -132,22 +132,22 @@ re_verification:
 
 | File | Line | Pattern | Severity | Impact |
 | ---- | ---- | ------- | -------- | ------ |
-| `apps/frontend/index.html` | 48 | `localStorage.getItem("wealthfolio-theme")` — old key name | ℹ️ Info | Intentionally preserved per SUMMARY decision: changing would reset user preferences |
+| `apps/frontend/index.html` | 48 | `localStorage.getItem("whaleit-theme")` — old key name | ℹ️ Info | Intentionally preserved per SUMMARY decision: changing would reset user preferences |
 
 No blocker or warning anti-patterns found. All TODO/FIXME/placeholder scans returned clean.
 
 ### Intentionally Preserved References
 
-These "wealthfolio" references are documented as intentionally preserved across all plan summaries:
+These "whaleit" references are documented as intentionally preserved across all plan summaries:
 
-- `connect.wealthfolio.app`, `auth.wealthfolio.app` — live service endpoints requiring infrastructure changes
-- `wealthfolio://` deep link protocol — requires OS-level registration
-- `support@wealthfolio.app` — requires actual email account to exist
-- `localStorage wealthfolio-theme` — changing would reset user preferences
+- `connect.whaleit.app`, `auth.whaleit.app` — live service endpoints requiring infrastructure changes
+- `whaleit://` deep link protocol — requires OS-level registration
+- `support@whaleit.app` — requires actual email account to exist
+- `localStorage whaleit-theme` — changing would reset user preferences
 - `WEALTHFOLIO_CONNECT_PORTAL_URL` — internal constant pointing to live service
-- `__wealthfolio_query_client__`, `__wealthfolio_navigate__` — internal addon SDK contract
-- `@WealthfolioApp` Twitter handle — external service URL, not under our control
-- `wealthfolio.db` database filename in Docker — backward compatibility with existing deployments
+- `__whaleit_query_client__`, `__whaleit_navigate__` — internal addon SDK contract
+- `@WhaleitApp` Twitter handle — external service URL, not under our control
+- `whaleit.db` database filename in Docker — backward compatibility with existing deployments
 - Auth salt strings in `auth.rs` — changing invalidates existing tokens/secrets
 
 ### Human Verification Required

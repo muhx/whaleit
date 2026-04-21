@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Rename all user-facing "Wealthfolio" references to "WhaleIt" identity across app UI, configuration, documentation, and package namespaces. Clean up two critical codebase bottlenecks — the monolithic web adapter switch statement and the God types file — to prepare for feature expansion in Phases 2-12. Deliver new WhaleIt visual identity (icon, color palette, brand presence in UI). Keep internal crate names unchanged.
+Rename all user-facing "Whaleit" references to "WhaleIt" identity across app UI, configuration, documentation, and package namespaces. Clean up two critical codebase bottlenecks — the monolithic web adapter switch statement and the God types file — to prepare for feature expansion in Phases 2-12. Deliver new WhaleIt visual identity (icon, color palette, brand presence in UI). Keep internal crate names unchanged.
 
 </domain>
 
@@ -14,13 +14,13 @@ Rename all user-facing "Wealthfolio" references to "WhaleIt" identity across app
 ## Implementation Decisions
 
 ### Rebrand Boundary
-- **D-01:** Rename npm package scope from `@wealthfolio/*` to `@whaleit/*` — covers `@whaleit/ui`, `@whaleit/addon-sdk`, `@whaleit/addon-dev-tools`. All imports across 431 TS/TSX files update accordingly.
-- **D-02:** Rename `features/wealthfolio-connect/` directory to `features/connect/` and update route paths from `/wealthfolio-connect` to `/connect`.
-- **D-03:** Rename all user-visible Rust strings referencing "Wealthfolio" — window titles in `menu.rs`, AI system prompt in `crates/ai/src/system_prompt.txt`, about page strings, etc. Internal-only strings (crate descriptions, log messages, error types) stay as-is.
-- **D-04:** Update Tauri bundle identifier from `com.teymz.wealthfolio` to `com.whaleit.app` (or similar `com.whaleit.*`). Update in `apps/tauri/tauri.conf.json` and `apps/tauri/gen/apple/project.yml`.
+- **D-01:** Rename npm package scope from `@whaleit/*` to `@whaleit/*` — covers `@whaleit/ui`, `@whaleit/addon-sdk`, `@whaleit/addon-dev-tools`. All imports across 431 TS/TSX files update accordingly.
+- **D-02:** Rename `features/whaleit-connect/` directory to `features/connect/` and update route paths from `/whaleit-connect` to `/connect`.
+- **D-03:** Rename all user-visible Rust strings referencing "Whaleit" — window titles in `menu.rs`, AI system prompt in `crates/ai/src/system_prompt.txt`, about page strings, etc. Internal-only strings (crate descriptions, log messages, error types) stay as-is.
+- **D-04:** Update Tauri bundle identifier from `com.teymz.whaleit` to `com.whaleit.app` (or similar `com.whaleit.*`). Update in `apps/tauri/tauri.conf.json` and `apps/tauri/gen/apple/project.yml`.
 - **D-05:** Full documentation rebrand — README.md, Dockerfile labels, compose.yml service names, GitHub repo metadata, all docs in `docs/` directory.
-- **D-06:** Internal crate names (`wealthfolio-core`, `wealthfolio-storage-sqlite`, etc.) remain unchanged per BRAND-06. Cargo.toml `name` fields stay as-is.
-- **D-07:** Internal Rust crate references in Cargo.toml `package = "wealthfolio-*"` stay unchanged. Only user-facing display strings change.
+- **D-06:** Internal crate names (`whaleit-core`, `whaleit-storage-sqlite`, etc.) remain unchanged per BRAND-06. Cargo.toml `name` fields stay as-is.
+- **D-07:** Internal Rust crate references in Cargo.toml `package = "whaleit-*"` stay unchanged. Only user-facing display strings change.
 
 ### Visual Identity
 - **D-08:** Whale icon style: soft illustration — warm, approachable, friendly companion feel. Think Notion meets Duolingo illustrations, not cartoonish or overly geometric.
@@ -69,9 +69,9 @@ Rename all user-facing "Wealthfolio" references to "WhaleIt" identity across app
 - `apps/frontend/src/lib/types.ts` — 1,929 lines, all TypeScript interfaces
 - `apps/frontend/src/globals.css` — Tailwind v4 theme tokens, current color palette
 - `apps/tauri/tauri.conf.json` — Bundle identifier, product name, window title
-- `apps/tauri/src/menu.rs` — Desktop menu items with "Wealthfolio" strings
+- `apps/tauri/src/menu.rs` — Desktop menu items with "Whaleit" strings
 - `apps/frontend/src/pages/onboarding/` — 5 onboarding files to rebrand
-- `apps/frontend/src/features/wealthfolio-connect/` — Feature directory to rename
+- `apps/frontend/src/features/whaleit-connect/` — Feature directory to rename
 
 </canonical_refs>
 
@@ -85,16 +85,16 @@ Rename all user-facing "Wealthfolio" references to "WhaleIt" identity across app
 - `packages/ui/`: Shared component library — will need package rename but components themselves unchanged
 
 ### Established Patterns
-- Vite alias resolution: `@wealthfolio/ui` → `../../packages/ui/src` in `apps/frontend/vite.config.ts` — rename scope means updating alias config
+- Vite alias resolution: `@whaleit/ui` → `../../packages/ui/src` in `apps/frontend/vite.config.ts` — rename scope means updating alias config
 - Tauri config: `productName`, `mainBinaryName`, `identifier` all in `apps/tauri/tauri.conf.json` — single file for all bundle identity
 - Adapter index: `apps/frontend/src/adapters/index.ts` re-exports from tauri/web — no changes needed for rebrand
 - Barrel exports: Project uses `index.ts` barrel files extensively — types.ts split should follow this pattern
 
 ### Integration Points
-- `pnpm-workspace.yaml`: Defines workspace packages — `@wealthfolio/*` references need update
-- `apps/frontend/package.json`: Dependencies on `@wealthfolio/ui`, `@wealthfolio/addon-sdk` — rename scope
-- `packages/*/package.json`: Package name declarations — rename from `@wealthfolio/*` to `@whaleit/*`
-- `Cargo.toml` workspace: Internal crate references — NO changes (stays `wealthfolio-*`)
+- `pnpm-workspace.yaml`: Defines workspace packages — `@whaleit/*` references need update
+- `apps/frontend/package.json`: Dependencies on `@whaleit/ui`, `@whaleit/addon-sdk` — rename scope
+- `packages/*/package.json`: Package name declarations — rename from `@whaleit/*` to `@whaleit/*`
+- `Cargo.toml` workspace: Internal crate references — NO changes (stays `whaleit-*`)
 - `apps/tauri/gen/apple/project.yml`: iOS/macOS bundle configuration — identifier update
 
 </code_context>

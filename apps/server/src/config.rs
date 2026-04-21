@@ -5,6 +5,10 @@ use crate::auth::{decode_secret_key, derive_keys, AuthConfig, CookieSecurePolicy
 pub struct Config {
     pub listen_addr: SocketAddr,
     pub db_path: String,
+    /// PostgreSQL connection URL (used when `postgres` feature is enabled).
+    pub database_url: Option<String>,
+    /// PostgreSQL connection pool size (default: 8).
+    pub pg_pool_size: usize,
     pub cors_allow: Vec<String>,
     pub request_timeout: Duration,
     pub static_dir: String,
@@ -24,6 +28,11 @@ impl Config {
             .parse()
             .expect("Invalid WF_LISTEN_ADDR");
         let db_path = std::env::var("WF_DB_PATH").unwrap_or_else(|_| "./db/app.db".into());
+        let database_url = std::env::var("DATABASE_URL").ok().filter(|s| !s.is_empty());
+        let pg_pool_size: usize = std::env::var("WF_PG_POOL_SIZE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(8);
         let cors_allow: Vec<String> = std::env::var("WF_CORS_ALLOW_ORIGINS")
             .ok()
             .filter(|s| !s.is_empty())
@@ -116,6 +125,8 @@ impl Config {
         Self {
             listen_addr,
             db_path,
+            database_url,
+            pg_pool_size,
             cors_allow,
             request_timeout: Duration::from_millis(timeout_ms),
             static_dir,

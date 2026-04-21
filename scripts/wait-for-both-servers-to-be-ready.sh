@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default values
-LOG_FILE="/tmp/wealthfolio-dev2.log"
+LOG_FILE="/tmp/whaleit-dev2.log"
 MAX_ATTEMPTS=60
 INTERVAL=2
 TAIL_LINES=25
@@ -14,7 +14,7 @@ show_help() {
     echo "Wait for both servers to be ready by checking the log file."
     echo ""
     echo "Options:"
-    echo "  -l, --log-file LOG_FILE    Path to the log file (default: /tmp/wealthfolio-dev2.log)"
+    echo "  -l, --log-file LOG_FILE    Path to the log file (default: /tmp/whaleit-dev2.log)"
     echo "  -m, --max-attempts NUM     Maximum number of attempts (default: 60)"
     echo "  -i, --interval SEC         Interval between checks in seconds (default: 2)"
     echo "  -t, --tail-lines NUM       Number of lines to show at the end (default: 25)"

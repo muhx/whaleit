@@ -213,7 +213,7 @@ Features to defer until product-market fit is established.
 | **Budget model** | Flex + category-based | Envelope (give every dollar a job) | Category-based with rollovers | Category-based + planned payments | Category-based + 50/30/20 rule. Simpler than YNAB, more flexible than Monarch. |
 | **Bank connection** | Plaid + MX (13K+ institutions) | Plaid direct import | Plaid | 15K+ bank connections (own AISP) | Manual + CSV/OFX import. No bank API for v1 (local-first advantage). |
 | **AI features** | Basic auto-categorization | None | AI auto-categorization, "learns patterns" | Auto-categorization, bank sync | AI conversational entry, context-aware chat, OCR, recommendations. Deepest AI integration in the space. |
-| **Investment tracking** | Basic (holdings, performance, allocation) | None | Basic (stocks, crypto, ETFs) | None | Full portfolio tracking (existing Wealthfolio strength). Best-in-class investment tracking combined with daily finance. |
+| **Investment tracking** | Basic (holdings, performance, allocation) | None | Basic (stocks, crypto, ETFs) | None | Full portfolio tracking (existing Whaleit strength). Best-in-class investment tracking combined with daily finance. |
 | **Subscription detection** | Auto-detect from transactions | None (manual budget categories) | "Spot subscriptions" auto-detect | Recurring payment tracking | Auto-detect from transactions + Gmail invoice scanning (deeper discovery). |
 | **Multi-currency** | Limited | No | No | Yes (50 languages, multi-currency) | Full multi-currency (existing FX infrastructure). Strong advantage for international users. |
 | **Freelancer features** | None | None | None | Separate "Board" product | Integrated freelancer mode. Personal + business in one app. Unique positioning. |
@@ -226,7 +226,7 @@ Features to defer until product-market fit is established.
 **Where WhaleIt wins:**
 1. **AI depth** — No competitor has conversational transaction entry, context-aware chat, OCR scanning, AND AI recommendations. This is the widest AI feature set in PFM.
 2. **Privacy** — Only local-first, self-hostable PFM with this feature set. Monarch/YNAB/Copilot all require cloud accounts.
-3. **Investment + daily finance** — Monarch has basic investment tracking. YNAB has none. WhaleIt inherits Wealthfolio's full portfolio management.
+3. **Investment + daily finance** — Monarch has basic investment tracking. YNAB has none. WhaleIt inherits Whaleit's full portfolio management.
 4. **Freelancer integration** — BudgetBakers requires a separate app ("Board"). WhaleIt integrates personal + business in one place.
 5. **Free forever** — No subscription. User pays only for AI API usage (optional, their own key).
 

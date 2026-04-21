@@ -1,6 +1,6 @@
 # Swingfolio - Advanced Swing Trading Tracker
 
-A comprehensive Wealthfolio addon for tracking and analyzing swing trading
+A comprehensive Whaleit addon for tracking and analyzing swing trading
 performance with detailed analytics, calendar views, and performance metrics.
 
 ## Features
@@ -43,8 +43,8 @@ performance with detailed analytics, calendar views, and performance metrics.
 
 ## Installation
 
-1. Download the addon package from the Wealthfolio addon marketplace
-2. Install through the Wealthfolio addon manager
+1. Download the addon package from the Whaleit addon marketplace
+2. Install through the Whaleit addon manager
 3. Enable the addon in your settings
 4. Navigate to "Swingfolio" in the sidebar to get started
 
@@ -97,9 +97,9 @@ performance with detailed analytics, calendar views, and performance metrics.
 
 ## Data Privacy & Security
 
-- All preferences and selections are stored securely using Wealthfolio's
+- All preferences and selections are stored securely using Whaleit's
   encrypted storage
-- No data is transmitted outside of your Wealthfolio instance
+- No data is transmitted outside of your Whaleit instance
 - Full privacy protection for sensitive financial information
 
 ## Permissions Required
@@ -138,9 +138,9 @@ performance with detailed analytics, calendar views, and performance metrics.
 
 For support, feature requests, or bug reports:
 
-- Visit the Wealthfolio community forums
+- Visit the Whaleit community forums
 - Submit issues through the addon feedback system
-- Check the Wealthfolio documentation for addon troubleshooting
+- Check the Whaleit documentation for addon troubleshooting
 
 ## Version History
 

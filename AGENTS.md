@@ -49,7 +49,7 @@ common task playbooks.
 - **Frontend**: React + Vite + Tailwind v4 + shadcn (`apps/frontend/`)
 - **Desktop**: Tauri/Rust with SQLite (`apps/tauri/`, `crates/`)
 - **Web mode**: Axum HTTP server (`apps/server/`)
-- **Packages**: `@wealthfolio/ui`, addon-sdk, addon-dev-tools (`packages/`)
+- **Packages**: `@whaleit/ui`, addon-sdk, addon-dev-tools (`packages/`)
 
 ## Code Layout
 
@@ -108,7 +108,7 @@ crates/
 
 ### UI patterns
 
-- Components: `@wealthfolio/ui` and `packages/ui/src/components/`
+- Components: `@whaleit/ui` and `packages/ui/src/components/`
 - Forms: `react-hook-form` + `zod` schemas from
   `apps/frontend/src/lib/schemas.ts`
 - Theme: tokens in `apps/frontend/src/globals.css`
@@ -176,7 +176,7 @@ When in doubt, follow the nearest existing pattern.
 
 **WhaleIt**
 
-WhaleIt (rebranded from Wealthfolio) is a local-first personal finance management application that helps individuals and freelancers track their entire financial life — investments, bank accounts, credit cards, subscriptions, budgets, and daily transactions — all in one place. It runs as a desktop app (Tauri/Rust) and a self-hosted web app (Axum), with an AI-powered assistant that makes financial record-keeping effortless. Your friendly finance companion.
+WhaleIt (rebranded from Whaleit) is a local-first personal finance management application that helps individuals and freelancers track their entire financial life — investments, bank accounts, credit cards, subscriptions, budgets, and daily transactions — all in one place. It runs as a desktop app (Tauri/Rust) and a self-hosted web app (Axum), with an AI-powered assistant that makes financial record-keeping effortless. Your friendly finance companion.
 
 **Core Value:** Users can effortlessly track and understand their complete financial picture — investments, spending, budgets, and subscriptions — with AI doing the heavy lifting to categorize, suggest, and advise.
 
@@ -211,7 +211,7 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - React 19.2 - UI framework
 - Vite 7.3 - Build tool and dev server
 - Tailwind CSS 4.1 - Utility-first CSS framework
-- shadcn/ui (via `@wealthfolio/ui`) - Component library built on Radix UI
+- shadcn/ui (via `@whaleit/ui`) - Component library built on Radix UI
 - Zustand 5.0 - Client state stores
 - TanStack React Query 5.90 - Server state, caching, async queries
 - TanStack React Table 8.21 - Table component logic
@@ -226,12 +226,12 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - Recharts 3.7 - Charts and graphs
 - `@number-flow/react` 0.5 - Animated number display
 ### Backend (Rust)
-- `crates/core` (`wealthfolio-core`) - Business logic, domain models, services
-- `crates/storage-sqlite` (`wealthfolio-storage-sqlite`) - Diesel ORM, repositories, migrations
-- `crates/market-data` (`wealthfolio-market-data`) - Market data provider abstractions
-- `crates/connect` (`wealthfolio-connect`) - Wealthfolio Connect cloud sync
-- `crates/ai` (`wealthfolio-ai`) - AI assistant with LLM orchestration
-- `crates/device-sync` (`wealthfolio-device-sync`) - E2EE device synchronization
+- `crates/core` (`whaleit-core`) - Business logic, domain models, services
+- `crates/storage-sqlite` (`whaleit-storage-sqlite`) - Diesel ORM, repositories, migrations
+- `crates/market-data` (`whaleit-market-data`) - Market data provider abstractions
+- `crates/connect` (`whaleit-connect`) - Whaleit Connect cloud sync
+- `crates/ai` (`whaleit-ai`) - AI assistant with LLM orchestration
+- `crates/device-sync` (`whaleit-device-sync`) - E2EE device synchronization
 - Tauri 2.10 - Desktop framework (`apps/tauri/`)
 - `keyring` 2.0 - OS keyring for secret storage
 - Axum 0.8 - HTTP framework (`apps/server/`)
@@ -363,8 +363,8 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - `@/*` → `./src/*`
 - `@/adapters` → resolves to `./src/adapters/tauri` or `./src/adapters/web` based on `BUILD_TARGET`
 - `#platform` → `./src/adapters/tauri/core` or `./src/adapters/web/core`
-- `@wealthfolio/ui` → `../../packages/ui/src`
-- `@wealthfolio/addon-sdk` → `../../packages/addon-sdk/src`
+- `@whaleit/ui` → `../../packages/ui/src`
+- `@whaleit/addon-sdk` → `../../packages/addon-sdk/src`
 ### Component Patterns
 - **Functional components only** — no class components
 - Named function declarations: `export function ComponentName(props: Props)`
@@ -404,7 +404,7 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - Page components in `src/pages/<domain>/` directories
 - Shared components in `src/components/`
 - Feature modules in `src/features/<feature-name>/` with self-contained components, hooks, services
-- UI primitives from `@wealthfolio/ui` package (shadcn-based)
+- UI primitives from `@whaleit/ui` package (shadcn-based)
 ## Rust Conventions
 ### Naming
 - `snake_case` for files, functions, variables, modules
@@ -501,7 +501,7 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - Adapter pattern: single frontend codebase targets Tauri IPC or HTTP via pluggable adapters
 - Domain event system: services emit events after mutations; runtime bridges translate events into side effects (portfolio recalculation, broker sync, etc.)
 - Feature-gated compilation: `connect-sync` and `device-sync` features enable optional cloud broker sync and E2EE device sync
-- Addon system: third-party extensions loaded at runtime via the `@wealthfolio/addon-sdk`
+- Addon system: third-party extensions loaded at runtime via the `@whaleit/addon-sdk`
 ## Architecture Diagram
 ```
 ```
@@ -510,7 +510,7 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - **Purpose:** Single-page React application providing the entire UI
 - **Location:** `apps/frontend/src/`
 - **Contains:** Pages, feature modules, shared components, hooks, adapters, addon runtime
-- **Depends on:** React, TanStack Query (server state), react-router-dom, shadcn/ui (`@wealthfolio/ui`)
+- **Depends on:** React, TanStack Query (server state), react-router-dom, shadcn/ui (`@whaleit/ui`)
 - **Used by:** Rendered by Tauri WebView (desktop) or served by Axum (web)
 - **State management:** TanStack Query for all server state; React context for local UI state (`portfolio-sync-context.tsx`, `privacy-context.tsx`, `auth-context.tsx`)
 ### Desktop Shell (`apps/tauri/`)
@@ -550,9 +550,9 @@ WhaleIt (rebranded from Wealthfolio) is a local-first personal finance managemen
 - **Contains:** `providers.rs`, `provider_service.rs`, `chat.rs`, `stream_hook.rs`, `tools/` (15 tool implementations — accounts, activities, holdings, etc.), `eval/`, `prompt_template_service.rs`
 - **Used by:** Both runtimes for AI assistant features
 ### Packages (`packages/`)
-- **`packages/ui/`** (`@wealthfolio/ui`) — Shared shadcn/ui component library built with tsup
-- **`packages/addon-sdk/`** (`@wealthfolio/addon-sdk`) — Types and API for addon developers
-- **`packages/addon-dev-tools/`** (`@wealthfolio/addon-dev-tools`) — CLI and dev server for addon development
+- **`packages/ui/`** (`@whaleit/ui`) — Shared shadcn/ui component library built with tsup
+- **`packages/addon-sdk/`** (`@whaleit/addon-sdk`) — Types and API for addon developers
+- **`packages/addon-dev-tools/`** (`@whaleit/addon-dev-tools`) — CLI and dev server for addon development
 ## Data Flow
 ### User Action → Data Persistence (Desktop)
 ### User Action → Data Persistence (Web)

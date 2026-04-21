@@ -1,12 +1,12 @@
 # Technology Stack
 
-**Project:** WhaleIt (Wealthfolio expansion — personal finance features)
+**Project:** WhaleIt (Whaleit expansion — personal finance features)
 **Researched:** 2026-04-20
 **Focus:** NEW dependencies only — assumes existing stack (Diesel/SQLite, React/TanStack, Tauri/Axum, rig-core AI)
 
 ## Overview
 
-This stack adds PostgreSQL dual-engine support, OCR receipt scanning, Gmail OAuth integration, MCP server endpoints, and financial recommendation infrastructure to the existing Wealthfolio codebase. Every recommendation extends existing patterns rather than introducing new paradigms.
+This stack adds PostgreSQL dual-engine support, OCR receipt scanning, Gmail OAuth integration, MCP server endpoints, and financial recommendation infrastructure to the existing Whaleit codebase. Every recommendation extends existing patterns rather than introducing new paradigms.
 
 ---
 
@@ -276,7 +276,7 @@ crates/
 │   ├── Cargo.toml        # diesel (postgres feature), diesel-async, deadpool
 │   └── migrations/       # PostgreSQL-specific SQL migrations
 ├── mcp/                  # NEW — MCP server endpoint
-│   └── Cargo.toml        # rmcp, wealthfolio-core
+│   └── Cargo.toml        # rmcp, whaleit-core
 └── connect/src/gmail/    # NEW module — Gmail OAuth + scanning (extends existing crate)
 ```
 

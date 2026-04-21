@@ -1,6 +1,6 @@
-# Migration Guide: Wealthfolio Addons v2 to v3
+# Migration Guide: Whaleit Addons v2 to v3
 
-This guide covers all changes needed to migrate your Wealthfolio addon from v2
+This guide covers all changes needed to migrate your Whaleit addon from v2
 to v3.
 
 ## Overview
@@ -41,7 +41,7 @@ Also update your addon version:
 
 ## 2. Update package.json
 
-Update the `@wealthfolio/addon-sdk` dependency and devDependencies:
+Update the `@whaleit/addon-sdk` dependency and devDependencies:
 
 ### 2.1 Peer Dependencies
 
@@ -110,7 +110,7 @@ Key changes:
 
 ## 3. Tailwind CSS v4 Changes
 
-Wealthfolio v3 uses Tailwind CSS v4. While the addon system uses the host app's
+Whaleit v3 uses Tailwind CSS v4. While the addon system uses the host app's
 Tailwind configuration, there are some important considerations:
 
 ### 3.1 CSS Import Syntax
@@ -158,9 +158,9 @@ In v4, custom utilities are defined using `@utility`:
 }
 ```
 
-### 3.5 Using @wealthfolio/ui
+### 3.5 Using @whaleit/ui
 
-Addons should use the `@wealthfolio/ui` package which provides pre-built
+Addons should use the `@whaleit/ui` package which provides pre-built
 components styled with the host app's theme. The UI package exports components
 that automatically inherit the host app's:
 
@@ -171,7 +171,7 @@ that automatically inherit the host app's:
 
 ```typescript
 // Your addon can use UI components directly
-import { Button, Card, Page } from "@wealthfolio/ui";
+import { Button, Card, Page } from "@whaleit/ui";
 ```
 
 ### 3.6 Using Tailwind Classes
@@ -483,7 +483,7 @@ Here's a complete example of migrating an addon from v2 to v3:
 
 ```typescript
 // src/addon.tsx
-import { type AddonContext } from "@wealthfolio/addon-sdk";
+import { type AddonContext } from "@whaleit/addon-sdk";
 
 export default function enable(ctx: AddonContext) {
   ctx.api.logger.info("My addon enabled!");
@@ -518,7 +518,7 @@ export default function enable(ctx: AddonContext) {
 
 ```typescript
 // src/addon.tsx
-import { type AddonContext } from "@wealthfolio/addon-sdk";
+import { type AddonContext } from "@whaleit/addon-sdk";
 
 export default function enable(ctx: AddonContext) {
   ctx.api.logger.info("My addon enabled!");
@@ -554,7 +554,7 @@ export default function enable(ctx: AddonContext) {
 ## 9. Testing Your Migration
 
 1. **Build the addon**: Ensure the TypeScript compiles without errors
-2. **Test in development mode**: Run with wealthfolio with
+2. **Test in development mode**: Run with w with
    `VITE_ENABLE_ADDON_DEV_MODE=true pnpm tauri dev`
 3. cd to the addon dir and run your addons with `pnpm dev:server`
 4. **Verify routes**: Check that navigation works with the new `/addons/` prefix

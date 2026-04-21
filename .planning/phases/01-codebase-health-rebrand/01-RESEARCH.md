@@ -8,57 +8,57 @@ What do I need to know to PLAN the codebase health and rebrand phase well?
 
 ## Summary
 
-Phase 1 involves four distinct workstreams: (1) comprehensive rebrand of all user-facing "Wealthfolio" references to "WhaleIt", (2) visual identity creation with new color palette and icon, (3) modular split of the monolithic web adapter (1,394 lines, 184-case switch), and (4) domain-based split of the God types file (1,929 lines). Internal Rust crate names (`wealthfolio-*`) remain unchanged. The work is largely mechanical with high volume (1,583+ frontend references) but zero architectural risk since all changes are cosmetic or refactoring-only.
+Phase 1 involves four distinct workstreams: (1) comprehensive rebrand of all user-facing "Whaleit" references to "WhaleIt", (2) visual identity creation with new color palette and icon, (3) modular split of the monolithic web adapter (1,394 lines, 184-case switch), and (4) domain-based split of the God types file (1,929 lines). Internal Rust crate names (`whaleit-*`) remain unchanged. The work is largely mechanical with high volume (1,583+ frontend references) but zero architectural risk since all changes are cosmetic or refactoring-only.
 
 ---
 
 ## 1. Rebrand Scope Analysis
 
 ### Frontend (TypeScript/TSX)
-- **371 files** contain "Wealthfolio/wealthfolio" references in `apps/frontend/src/`
+- **371 files** contain "Whaleit/whaleit" references in `apps/frontend/src/`
 - **1,583 total line matches** across frontend, tauri, and server
-- Heaviest concentration: `features/wealthfolio-connect/` directory (29 files, ~180 refs)
-- Import references to `@wealthfolio/ui` and `@wealthfolio/addon-sdk` in ~30 files
+- Heaviest concentration: `features/whaleit-connect/` directory (29 files, ~180 refs)
+- Import references to `@whaleit/ui` and `@whaleit/addon-sdk` in ~30 files
 
 ### Package Scope Rename
-Three packages need `@wealthfolio/*` → `@whaleit/*` rename:
+Three packages need `@whaleit/*` → `@whaleit/*` rename:
 | Package | Current Name | New Name |
 |---------|-------------|----------|
-| UI lib | `@wealthfolio/ui` | `@whaleit/ui` |
-| Addon SDK | `@wealthfolio/addon-sdk` | `@whaleit/addon-sdk` |
-| Addon Dev Tools | `@wealthfolio/addon-dev-tools` | `@whaleit/addon-dev-tools` |
+| UI lib | `@whaleit/ui` | `@whaleit/ui` |
+| Addon SDK | `@whaleit/addon-sdk` | `@whaleit/addon-sdk` |
+| Addon Dev Tools | `@whaleit/addon-dev-tools` | `@whaleit/addon-dev-tools` |
 
-**Import impact:** All `import { ... } from "@wealthfolio/ui"` across ~30 files change to `@whaleit/ui`.
+**Import impact:** All `import { ... } from "@whaleit/ui"` across ~30 files change to `@whaleit/ui`.
 
-**Vite alias:** `apps/frontend/vite.config.ts` line 42 maps `@wealthfolio/ui` → must update to `@whaleit/ui`.
+**Vite alias:** `apps/frontend/vite.config.ts` line 42 maps `@whaleit/ui` → must update to `@whaleit/ui`.
 
 ### Tauri Configuration
 - `apps/tauri/tauri.conf.json`: `productName`, `mainBinaryName`, `identifier`, window `title`, deep-link schemes
 - `apps/tauri/gen/apple/project.yml`: `bundleIdPrefix`, `PRODUCT_NAME`, `PRODUCT_BUNDLE_IDENTIFIER`, entitlement paths
-- `apps/tauri/src/menu.rs`: Menu label "Wealthfolio" and "About Wealthfolio"
+- `apps/tauri/src/menu.rs`: Menu label "Whaleit" and "About Whaleit"
 - `apps/tauri/src/lib.rs`: Error message string
 
 ### Server/Backend (User-Facing Strings Only)
-- `apps/server/src/main_lib.rs`: "Wealthfolio Server" display name
-- `apps/server/src/auth.rs`: Internal JWT/secret salt strings ("wealthfolio-jwt", "wealthfolio-secrets") — **these should NOT change** (cryptographic salt change would invalidate existing tokens/secrets)
+- `apps/server/src/main_lib.rs`: "Whaleit Server" display name
+- `apps/server/src/auth.rs`: Internal JWT/secret salt strings ("whaleit-jwt", "whaleit-secrets") — **these should NOT change** (cryptographic salt change would invalidate existing tokens/secrets)
 - `apps/server/src/api/connect.rs`: Comments only
-- `apps/server/src/api.rs`: OpenAPI tag name "wealthfolio" — should change to "whaleit"
-- `apps/server/src/api/settings.rs`: Backup filename prefix "wealthfolio_backup_"
+- `apps/server/src/api.rs`: OpenAPI tag name "whaleit" — should change to "whaleit"
+- `apps/server/src/api/settings.rs`: Backup filename prefix "whaleit_backup_"
 
 ### Documentation & Config
 - `README.md`: 54 references
 - `Dockerfile`: Binary names, DB path, comments
 - `compose.yml` / `compose.dev.yml`: Service names, container names, image names, volume names
-- `apps/frontend/src/features/wealthfolio-connect/`: 29-file directory rename to `features/connect/`
-- `apps/frontend/src/pages/settings/wealthfolio-connect/`: Settings page directory rename
+- `apps/frontend/src/features/whaleit-connect/`: 29-file directory rename to `features/connect/`
+- `apps/frontend/src/pages/settings/whaleit-connect/`: Settings page directory rename
 
 ### Internal Rust Crates (NO CHANGE per D-06/D-07)
-- 577 `use wealthfolio_*` and crate-internal references stay unchanged
-- Cargo.toml `name` fields stay `wealthfolio-core`, `wealthfolio-storage-sqlite`, etc.
+- 577 `use whaleit_*` and crate-internal references stay unchanged
+- Cargo.toml `name` fields stay `whaleit-core`, `whaleit-storage-sqlite`, etc.
 - `apps/tauri/src/context/providers.rs`, `registry.rs`, `listeners.rs` — all internal
 
 ### AI System Prompt
-- `crates/ai/src/system_prompt.txt`: "You are Wealthfolio AI" → "You are WhaleIt AI"
+- `crates/ai/src/system_prompt.txt`: "You are Whaleit AI" → "You are WhaleIt AI"
 
 ---
 
@@ -93,7 +93,7 @@ Three packages need `@wealthfolio/*` → `@whaleit/*` rename:
 - **File:** `apps/frontend/src/adapters/web/core.ts` — 1,394 lines
 - **184 switch cases** mapping command names to HTTP API calls
 - Structure: COMMANDS map (constants) + `invoke()` function with giant switch
-- Only 2 "Wealthfolio" references (in COMMANDS map paths)
+- Only 2 "Whaleit" references (in COMMANDS map paths)
 
 ### Natural Grouping (from `adapters/shared/`)
 The existing shared adapter already organizes commands into 16 modules:
@@ -208,17 +208,17 @@ Rebrand-only — swap branding text, update colors/logo references. Keep existin
 ## 6. Feature Directory Rename
 
 ### Current
-- `apps/frontend/src/features/wealthfolio-connect/` → rename to `features/connect/`
-- `apps/frontend/src/pages/settings/wealthfolio-connect/` → rename to `pages/settings/connect/`
+- `apps/frontend/src/features/whaleit-connect/` → rename to `features/connect/`
+- `apps/frontend/src/pages/settings/whaleit-connect/` → rename to `pages/settings/connect/`
 - Route paths already use `/connect` (line 95, 125 in routes.tsx) — no route change needed
-- Import paths: 4 files import from `@/features/wealthfolio-connect/...`
+- Import paths: 4 files import from `@/features/whaleit-connect/...`
 
 ---
 
 ## 7. Risk Assessment
 
 ### Low Risk
-- **Package scope rename** (`@wealthfolio/*` → `@whaleit/*`): Mechanical find-and-replace in package.json files and import statements
+- **Package scope rename** (`@whaleit/*` → `@whaleit/*`): Mechanical find-and-replace in package.json files and import statements
 - **Feature directory rename**: 4 import path updates
 - **Types.ts barrel split**: Zero breaking changes if barrel re-exports correctly
 - **Onboarding rebrand**: Text/color swaps only
@@ -254,7 +254,7 @@ Rebrand-only — swap branding text, update colors/logo references. Keep existin
 - **I:** Test files importing from old paths, mock data using old type names
 
 ### Dimension 4: Visual Consistency
-- **V:** No "Wealthfolio" text visible in running app (desktop + web)
+- **V:** No "Whaleit" text visible in running app (desktop + web)
 - **I:** Missed user-facing strings, cached builds
 
 ### Dimension 5: Icon/Asset Presence

@@ -68,7 +68,7 @@ ENV OPENSSL_STATIC=1
 # Build using xx-cargo which handles target flags
 RUN xx-cargo build --release --manifest-path apps/server/Cargo.toml && \
     # Move the binary to a predictable location because the target dir changes with --target
-    cp target/$(xx-cargo --print-target-triple)/release/wealthfolio-server /whaleit-server
+    cp target/$(xx-cargo --print-target-triple)/release/whaleit-server /whaleit-server
 
 # Final stage
 FROM alpine:3.19
@@ -76,7 +76,7 @@ WORKDIR /app
 # Copy from backend (which is now build platform, but binary is target platform)
 COPY --from=backend /whaleit-server /usr/local/bin/whaleit-server
 COPY --from=frontend /web-dist ./dist
-ENV WF_DB_PATH=/data/wealthfolio.db
+ENV WF_DB_PATH=/data/whaleit.db
 # WhaleIt Connect API URL (can be overridden at runtime via -e or docker-compose)
 ARG CONNECT_API_URL=
 ENV CONNECT_API_URL=${CONNECT_API_URL}

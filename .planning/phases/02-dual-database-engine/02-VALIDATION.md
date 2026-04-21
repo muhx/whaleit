@@ -19,7 +19,7 @@ created: 2026-04-21
 |----------|-------|
 | **Framework** | Rust built-in `#[test]` + `tokio::test` + Vitest (TS) |
 | **Config file** | `Cargo.toml` (Rust), `vitest.config.ts` (TS) |
-| **Quick run command** | `cargo test -p wealthfolio-storage-postgres --lib` |
+| **Quick run command** | `cargo test -p whaleit-storage-postgres --lib` |
 | **Full suite command** | `cargo test --workspace && pnpm test` |
 | **Estimated runtime** | ~120 seconds |
 
@@ -27,7 +27,7 @@ created: 2026-04-21
 
 ## Sampling Rate
 
-- **After every task commit:** Run `cargo test -p wealthfolio-storage-postgres --lib`
+- **After every task commit:** Run `cargo test -p whaleit-storage-postgres --lib`
 - **After every plan wave:** Run `cargo test --workspace && cargo check --workspace`
 - **Before `/gsd-verify-work`:** Full suite must be green
 - **Max feedback latency:** 120 seconds
@@ -38,12 +38,12 @@ created: 2026-04-21
 
 | task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 02-01-01 | 01 | 1 | DB-01 | T-02-01 | Connection strings not logged | unit | `cargo test -p wealthfolio-core --lib` | ❌ W0 | ⬜ pending |
-| 02-01-02 | 01 | 1 | DB-04 | — | N/A | unit | `cargo test -p wealthfolio-core --lib` | ❌ W0 | ⬜ pending |
-| 02-02-01 | 02 | 2 | DB-02 | T-02-02 | Parameterized queries prevent SQL injection | unit | `cargo test -p wealthfolio-storage-postgres --lib` | ❌ W0 | ⬜ pending |
-| 02-02-02 | 02 | 2 | DB-03 | — | N/A | unit | `cargo test -p wealthfolio-storage-postgres --lib` | ❌ W0 | ⬜ pending |
-| 02-03-01 | 03 | 3 | DB-01 | T-02-03 | PG credentials not in compose.yml | integration | `cargo test -p wealthfolio-storage-postgres --lib` | ❌ W0 | ⬜ pending |
-| 02-03-02 | 03 | 3 | DB-05 | — | N/A | integration | `cargo test -p wealthfolio-storage-postgres --lib` | ❌ W0 | ⬜ pending |
+| 02-01-01 | 01 | 1 | DB-01 | T-02-01 | Connection strings not logged | unit | `cargo test -p whaleit-core --lib` | ❌ W0 | ⬜ pending |
+| 02-01-02 | 01 | 1 | DB-04 | — | N/A | unit | `cargo test -p whaleit-core --lib` | ❌ W0 | ⬜ pending |
+| 02-02-01 | 02 | 2 | DB-02 | T-02-02 | Parameterized queries prevent SQL injection | unit | `cargo test -p whaleit-storage-postgres --lib` | ❌ W0 | ⬜ pending |
+| 02-02-02 | 02 | 2 | DB-03 | — | N/A | unit | `cargo test -p whaleit-storage-postgres --lib` | ❌ W0 | ⬜ pending |
+| 02-03-01 | 03 | 3 | DB-01 | T-02-03 | PG credentials not in compose.yml | integration | `cargo test -p whaleit-storage-postgres --lib` | ❌ W0 | ⬜ pending |
+| 02-03-02 | 03 | 3 | DB-05 | — | N/A | integration | `cargo test -p whaleit-storage-postgres --lib` | ❌ W0 | ⬜ pending |
 | 02-04-01 | 04 | 4 | DB-01,DB-02 | T-02-01 | Parity tests cover all repos | parity | `cargo test parity_ --workspace` | ❌ W0 | ⬜ pending |
 | 02-04-02 | 04 | 4 | DB-02,DB-03 | — | N/A | parity | `cargo test parity_ --workspace` | ❌ W0 | ⬜ pending |
 

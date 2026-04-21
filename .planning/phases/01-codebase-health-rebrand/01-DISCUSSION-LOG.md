@@ -13,7 +13,7 @@
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Keep @wealthfolio/* (Recommended) | Internal packages, not user-facing. Renaming npm scope means updating every import across 431 files with zero user benefit. | |
+| Keep @whaleit/* (Recommended) | Internal packages, not user-facing. Renaming npm scope means updating every import across 431 files with zero user benefit. | |
 | Rename to @whaleit/* | Clean brand consistency. Every import changes. High churn, high risk. | ✓ |
 
 **User's choice:** Rename to @whaleit/*
@@ -21,7 +21,7 @@
 | Option | Description | Selected |
 |--------|-------------|----------|
 | Rename to connect/ | Rename dir and update route paths. Clean, consistent. | ✓ |
-| Keep wealthfolio-connect/ | Internal path, not user-visible. Less risky. | |
+| Keep whaleit-connect/ | Internal path, not user-visible. Less risky. | |
 
 **User's choice:** Rename to connect/
 
@@ -35,7 +35,7 @@
 | Option | Description | Selected |
 |--------|-------------|----------|
 | Update to com.whaleit.* (Recommended) | Change bundle ID for macOS/Windows. Clean brand. | ✓ |
-| Keep com.teymz.wealthfolio | Avoids disrupting auto-update paths, keychain entries, code signing. | |
+| Keep com.teymz.whaleit | Avoids disrupting auto-update paths, keychain entries, code signing. | |
 
 **User's choice:** Update to com.whaleit.*
 

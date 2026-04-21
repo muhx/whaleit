@@ -80,20 +80,20 @@ Budgeting phase and unified data model phase. The principle applies everywhere b
 ### Pitfall 4: Rebranding a Live Open-Source Project Breaks Everything
 
 **What goes wrong:**
-There are **2,612+ references** to "Wealthfolio" or "wealthfolio" across the codebase — in Cargo crate names (`wealthfolio-core`, `wealthfolio-storage-sqlite`, etc.), package names, file paths (`apps/frontend/src/features/wealthfolio-connect/`), Xcode project files, trademarks, documentation, GitHub URLs, and user-facing strings. An incomplete rename breaks builds, breaks existing users' data paths, breaks deep links, breaks SEO, and creates confusing mixed-brand artifacts.
+There are **2,612+ references** to "Whaleit" or "whaleit" across the codebase — in Cargo crate names (`whaleit-core`, `whaleit-storage-sqlite`, etc.), package names, file paths (`apps/frontend/src/features/whaleit-connect/`), Xcode project files, trademarks, documentation, GitHub URLs, and user-facing strings. An incomplete rename breaks builds, breaks existing users' data paths, breaks deep links, breaks SEO, and creates confusing mixed-brand artifacts.
 
 **Why it happens:**
 Developers do a global find-and-replace without understanding all the places the name is embedded. Cargo crate names are referenced in `Cargo.toml` workspace dependencies. Tauri's bundle identifier is embedded in platform-specific build files. App store listings and update mechanisms use the old name. Users' existing data directories may use the old name in paths.
 
 **How to avoid:**
-- Do NOT rename Cargo crate names — they're internal identifiers. Keep `wealthfolio-*` internally and only change user-facing names. Renaming crates is a massive, risk-laden refactor with zero user benefit.
+- Do NOT rename Cargo crate names — they're internal identifiers. Keep `whaleit-*` internally and only change user-facing names. Renaming crates is a massive, risk-laden refactor with zero user benefit.
 - Create a comprehensive rename checklist: Tauri bundle config (`tauri.conf.json`), app metadata, user-facing strings, documentation, logos/icons, app store listings.
 - Preserve backwards compatibility for data directories — check both old and new paths.
 - Do the rename early in the milestone when fewer new features are being built on top.
 - The brand rename is a **separate atomic commit/phase** — not interleaved with feature work.
 
 **Warning signs:**
-- Mixed "Wealthfolio" and "WhaleIt" strings visible to users.
+- Mixed "Whaleit" and "WhaleIt" strings visible to users.
 - App doesn't find existing data after update because directory name changed.
 - Build fails because a Cargo crate rename was incomplete.
 - App store reviewers reject because metadata inconsistency.
@@ -274,7 +274,7 @@ Common user experience mistakes in personal finance apps.
 | OCR auto-fill saves without review | Wrong data enters the financial record | Always show review step with original image alongside extracted fields |
 | Gmail sync runs silently without feedback | Users don't know if subscriptions were found or missed | Show "3 new subscriptions detected" notification, let users review and confirm |
 | AI recommendations that users can't dismiss | Annoying notifications about the same insight repeatedly | Mark insights as "dismissed" or "acted on" and don't repeat them |
-| Mixed branding (Wealthfolio + WhaleIt) visible to users | Confusion about which app they're using, distrust | 100% rebrand before any public release; zero tolerance for mixed names in UI |
+| Mixed branding (Whaleit + WhaleIt) visible to users | Confusion about which app they're using, distrust | 100% rebrand before any public release; zero tolerance for mixed names in UI |
 
 ## "Looks Done But Isn't" Checklist
 

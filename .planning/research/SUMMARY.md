@@ -1,17 +1,17 @@
 # Project Research Summary
 
-**Project:** WhaleIt (Wealthfolio expansion — personal finance features)
+**Project:** WhaleIt (Whaleit expansion — personal finance features)
 **Domain:** Personal Finance Management (PFM) — local-first, AI-native
 **Researched:** 2026-04-20
 **Confidence:** HIGH
 
 ## Executive Summary
 
-WhaleIt expands an existing local-first investment portfolio tracker (Wealthfolio) into a full personal finance management application. The product combines bank account tracking, budgeting, subscription management, and AI-powered features — positioned as the only privacy-first, self-hostable PFM with deep AI integration. Competitors like Monarch ($99/yr), YNAB ($109/yr), and Copilot ($95/yr) are all cloud-only SaaS; WhaleIt is free, runs locally on desktop (Tauri/SQLite) or self-hosted (Axum/PostgreSQL), and brings AI-native UX that no competitor matches.
+WhaleIt expands an existing local-first investment portfolio tracker (Whaleit) into a full personal finance management application. The product combines bank account tracking, budgeting, subscription management, and AI-powered features — positioned as the only privacy-first, self-hostable PFM with deep AI integration. Competitors like Monarch ($99/yr), YNAB ($109/yr), and Copilot ($95/yr) are all cloud-only SaaS; WhaleIt is free, runs locally on desktop (Tauri/SQLite) or self-hosted (Axum/PostgreSQL), and brings AI-native UX that no competitor matches.
 
 The recommended approach is to extend the existing Rust crate architecture with six new domain modules (bank accounts, credit cards, transactions, budgets, subscriptions, recommendations) behind the proven repository trait pattern, add a PostgreSQL storage engine for web mode, and layer AI features (conversational entry, OCR receipt scanning, context-aware chat, periodic recommendations) on top of the existing `crates/ai/` infrastructure. Every new component follows established patterns — no paradigm shifts, no new frameworks. The architecture research identified a clear 9-phase build order driven by hard dependencies.
 
-The dominant risks are: (1) Diesel dual-backend schema drift between SQLite and PostgreSQL — mitigated by a shared migration authoring workflow and CI parity checks; (2) financial precision loss across backends — mitigated by keeping all calculations in Rust (`rust_decimal`), never SQL; (3) rebranding complexity with 2,612+ "Wealthfolio" references — mitigated by keeping internal crate names unchanged and treating rebrand as a dedicated atomic phase; (4) MCP security exposure of financial data — mitigated by mandatory auth and read-only defaults. The research is high-confidence across all areas, backed by official library documentation (Context7), crates.io version verification, and direct codebase analysis.
+The dominant risks are: (1) Diesel dual-backend schema drift between SQLite and PostgreSQL — mitigated by a shared migration authoring workflow and CI parity checks; (2) financial precision loss across backends — mitigated by keeping all calculations in Rust (`rust_decimal`), never SQL; (3) rebranding complexity with 2,612+ "Whaleit" references — mitigated by keeping internal crate names unchanged and treating rebrand as a dedicated atomic phase; (4) MCP security exposure of financial data — mitigated by mandatory auth and read-only defaults. The research is high-confidence across all areas, backed by official library documentation (Context7), crates.io version verification, and direct codebase analysis.
 
 ## Key Findings
 
@@ -56,7 +56,7 @@ The stack extends the existing workspace with zero paradigm changes. Every new d
 
 ### Architecture Approach
 
-The architecture follows the existing Wealthfolio pattern: `crates/core/` defines domain models and async service traits; storage crates implement them for SQLite (desktop) and PostgreSQL (web); transport layers (Tauri IPC, Axum HTTP, MCP) delegate to the same trait implementations. Six new domain modules join the existing investment-focused ones. A new `crates/storage-postgres/` crate provides PostgreSQL implementations using diesel-async + deadpool (no write actor needed — PG handles concurrent writes). The AI expansion adds tools to the existing `crates/ai/` tool set rather than creating a separate recommendation engine.
+The architecture follows the existing Whaleit pattern: `crates/core/` defines domain models and async service traits; storage crates implement them for SQLite (desktop) and PostgreSQL (web); transport layers (Tauri IPC, Axum HTTP, MCP) delegate to the same trait implementations. Six new domain modules join the existing investment-focused ones. A new `crates/storage-postgres/` crate provides PostgreSQL implementations using diesel-async + deadpool (no write actor needed — PG handles concurrent writes). The AI expansion adds tools to the existing `crates/ai/` tool set rather than creating a separate recommendation engine.
 
 **Major components:**
 1. **`crates/core/{bank_accounts, credit_cards, transactions, budgets, subscriptions, recommendations}/`** — New domain modules with models, service traits, and validation. Mirror existing `accounts/` and `activities/` patterns.
@@ -69,7 +69,7 @@ The architecture follows the existing Wealthfolio pattern: `crates/core/` define
 
 1. **Diesel dual-backend schema drift** — SQLite and PostgreSQL schemas diverge silently because `diesel print-schema` runs independently. Prevent with a shared migration authoring format and CI parity check between both `schema.rs` files.
 2. **Financial amount precision loss** — SQLite stores `Decimal` as text; PostgreSQL uses `NUMERIC`. Budget calculations and FX conversions accumulate rounding errors. Prevent by doing ALL financial math in Rust (`rust_decimal`), never in SQL aggregation.
-3. **Rebranding breaks everything** — 2,612+ "Wealthfolio" references across Cargo configs, build files, data paths, and UI strings. Prevent by keeping internal crate names as `wealthfolio-*`, changing only user-facing strings, and treating rebrand as a dedicated atomic phase.
+3. **Rebranding breaks everything** — 2,612+ "Whaleit" references across Cargo configs, build files, data paths, and UI strings. Prevent by keeping internal crate names as `whaleit-*`, changing only user-facing strings, and treating rebrand as a dedicated atomic phase.
 4. **MCP security exposure** — Financial data accessible to external AI tools without auth. Prevent with mandatory per-session tokens, read-only defaults, and rate limiting.
 5. **WriteHandle pattern incompatible with PostgreSQL** — The SQLite write actor (sync closure over MPSC channel) doesn't translate to async PG connections. Repository traits must be async-native from the start, abstracting the write pattern behind a trait.
 6. **AI financial advice creates legal liability** — LLM-generated "insights" can cross into regulated financial advice. Prevent with explicit disclaimers on every insight and prompts designed for informational presentation, not prescriptions.

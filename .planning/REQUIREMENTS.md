@@ -109,12 +109,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Brand
 
-- [ ] **BRAND-01**: All user-facing references to "Wealthfolio" renamed to "WhaleIt" (app title, window title, package display name, docs, UI copy)
+- [ ] **BRAND-01**: All user-facing references to "Whaleit" renamed to "WhaleIt" (app title, window title, package display name, docs, UI copy)
 - [ ] **BRAND-02**: New app icon featuring friendly whale in soft illustration style
 - [ ] **BRAND-03**: Updated color palette and visual identity reflecting approachable, companion-style branding
 - [ ] **BRAND-04**: Updated onboarding/welcome screens with WhaleIt branding and tagline direction
 - [ ] **BRAND-05**: GitHub repository metadata, README, and documentation updated to WhaleIt branding
-- [ ] **BRAND-06**: Internal crate names remain as `wealthfolio-*` (no rename — internal only, high risk for zero user benefit)
+- [ ] **BRAND-06**: Internal crate names remain as `whaleit-*` (no rename — internal only, high risk for zero user benefit)
 
 ## v2 Requirements
 
