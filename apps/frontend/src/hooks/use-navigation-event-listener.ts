@@ -1,6 +1,6 @@
+import { listenNavigateToRoute } from "@/adapters";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { listenNavigateToRoute } from "@/adapters";
 
 const useNavigationEventListener = () => {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ const useNavigationEventListener = () => {
     };
 
     // Make navigate function available globally for addons
-    window.__wealthfolio_navigate__ = navigate;
+    window.__whaleit_navigate__ = navigate;
 
     const setupNavigationListener = async () => {
       const handleNavigateToRoute = (event: { payload: { route: string } }) => {
@@ -33,7 +33,7 @@ const useNavigationEventListener = () => {
 
     return () => {
       // Clean up global reference
-      delete window.__wealthfolio_navigate__;
+      delete window.__whaleit_navigate__;
       cleanup();
     };
   }, [navigate]);

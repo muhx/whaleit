@@ -4,10 +4,10 @@ use crate::context::ServiceContext;
 use crate::events::{emit_portfolio_trigger_recalculate, PortfolioRequestPayload};
 use log::debug;
 use tauri::{AppHandle, State};
-use wealthfolio_core::fx::{ExchangeRate, NewExchangeRate};
-use wealthfolio_core::health::HealthServiceTrait;
-use wealthfolio_core::quotes::MarketSyncMode;
-use wealthfolio_core::settings::{Settings, SettingsUpdate};
+use whaleit_core::fx::{ExchangeRate, NewExchangeRate};
+use whaleit_core::health::HealthServiceTrait;
+use whaleit_core::quotes::MarketSyncMode;
+use whaleit_core::settings::{Settings, SettingsUpdate};
 
 fn recalculate_mode_for_settings_change(
     base_currency_changed: bool,
@@ -16,7 +16,7 @@ fn recalculate_mode_for_settings_change(
     if base_currency_changed {
         Some(MarketSyncMode::BackfillHistory {
             asset_ids: None,
-            days: wealthfolio_core::quotes::DEFAULT_HISTORY_DAYS,
+            days: whaleit_core::quotes::DEFAULT_HISTORY_DAYS,
         })
     } else if timezone_changed {
         Some(MarketSyncMode::None)
@@ -31,7 +31,7 @@ pub async fn get_settings(state: State<'_, Arc<ServiceContext>>) -> Result<Setti
     state
         .settings_service()
         .get_settings()
-        .map_err(|e| format!("Failed to load settings: {}", e))
+        .await.map_err(|e| format!("Failed to load settings: {}", e))
 }
 
 #[tauri::command]
@@ -42,7 +42,7 @@ pub async fn is_auto_update_check_enabled(
     state
         .settings_service()
         .is_auto_update_check_enabled()
-        .map_err(|e| format!("Failed to check auto-update setting: {}", e))
+        .await.map_err(|e| format!("Failed to check auto-update setting: {}", e))
 }
 
 #[tauri::command]
@@ -63,7 +63,7 @@ pub async fn update_settings(
         .map_err(|e| format!("Failed to update settings: {}", e))?;
     let updated_settings = service
         .get_settings()
-        .map_err(|e| format!("Failed to load updated settings after change: {}", e))?;
+        .await.map_err(|e| format!("Failed to load updated settings after change: {}", e))?;
 
     let base_currency_changed = updated_settings.base_currency != previous_base_currency;
     let timezone_changed = updated_settings.timezone != previous_timezone;
@@ -162,7 +162,7 @@ pub async fn get_latest_exchange_rates(
     state
         .fx_service()
         .get_latest_exchange_rates()
-        .map_err(|e| format!("Failed to load exchange rates: {}", e))
+        .await.map_err(|e| format!("Failed to load exchange rates: {}", e))
 }
 
 #[tauri::command]
@@ -238,7 +238,7 @@ mod tests {
             recalculate_mode_for_settings_change(true, false),
             Some(MarketSyncMode::BackfillHistory {
                 asset_ids: None,
-                days: wealthfolio_core::quotes::DEFAULT_HISTORY_DAYS,
+                days: whaleit_core::quotes::DEFAULT_HISTORY_DAYS,
             })
         );
     }
@@ -249,7 +249,7 @@ mod tests {
             recalculate_mode_for_settings_change(true, true),
             Some(MarketSyncMode::BackfillHistory {
                 asset_ids: None,
-                days: wealthfolio_core::quotes::DEFAULT_HISTORY_DAYS,
+                days: whaleit_core::quotes::DEFAULT_HISTORY_DAYS,
             })
         );
     }

@@ -18,7 +18,7 @@ use tower_http::services::{ServeDir, ServeFile};
 #[cfg(feature = "device-sync")]
 use tracing::{info, warn};
 #[cfg(feature = "device-sync")]
-use wealthfolio_device_sync::SyncState;
+use whaleit_device_sync::SyncState;
 
 #[cfg(feature = "device-sync")]
 fn is_expected_startup_token_warmup_error(err: &crate::error::ApiError) -> bool {
@@ -111,7 +111,7 @@ async fn main() -> anyhow::Result<()> {
     // Start periodic market data sync (6h interval, 2min initial delay)
     let quote_svc = state.quote_service.clone();
     tokio::spawn(async move {
-        wealthfolio_core::quotes::scheduler::run_periodic_sync(
+        whaleit_core::quotes::scheduler::run_periodic_sync(
             quote_svc,
             std::time::Duration::from_secs(120),
             std::time::Duration::from_secs(6 * 3600),

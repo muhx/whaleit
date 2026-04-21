@@ -143,8 +143,7 @@ impl<E: AiEnvironment + 'static> Tool for GetHoldingsTool<E> {
         let accounts = self
             .env
             .account_service()
-            .list_accounts(None, None, None)
-            .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
+            .list_accounts(None, None, None).await .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
         let account_names: HashMap<String, String> =
             accounts.into_iter().map(|a| (a.id, a.name)).collect();
 
@@ -153,7 +152,7 @@ impl<E: AiEnvironment + 'static> Tool for GetHoldingsTool<E> {
         // Convert to DTOs, filtering out cash positions, and apply limit
         let holdings_dto: Vec<HoldingDto> = holdings
             .into_iter()
-            .filter(|h| h.holding_type != wealthfolio_core::holdings::HoldingType::Cash)
+            .filter(|h| h.holding_type != whaleit_core::holdings::HoldingType::Cash)
             .take(MAX_HOLDINGS)
             .map(|h| {
                 // Extract symbol and name from instrument
@@ -165,9 +164,9 @@ impl<E: AiEnvironment + 'static> Tool for GetHoldingsTool<E> {
 
                 // Convert HoldingType enum to string
                 let holding_type = match h.holding_type {
-                    wealthfolio_core::holdings::HoldingType::Cash => "Cash",
-                    wealthfolio_core::holdings::HoldingType::Security => "Security",
-                    wealthfolio_core::holdings::HoldingType::AlternativeAsset => "AlternativeAsset",
+                    whaleit_core::holdings::HoldingType::Cash => "Cash",
+                    whaleit_core::holdings::HoldingType::Security => "Security",
+                    whaleit_core::holdings::HoldingType::AlternativeAsset => "AlternativeAsset",
                 };
 
                 let account = account_names

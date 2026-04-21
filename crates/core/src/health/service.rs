@@ -308,7 +308,8 @@ impl HealthService {
         let legacy_migration_info = super::gather_legacy_migration_status(
             asset_service.as_ref(),
             taxonomy_service.as_ref(),
-        );
+        )
+        .await;
 
         // Gather quote sync errors
         let holding_mv_map: HashMap<String, f64> = all_holdings
@@ -320,7 +321,8 @@ impl HealthService {
             asset_service.as_ref(),
             &holding_mv_map,
             &latest_quote_times,
-        );
+        )
+        .await;
 
         // Gather FX pairs from holdings where local_currency != base_currency
         let fx_pairs: Vec<FxPairInfo> = if fx_pair_mv.is_empty() {
@@ -329,6 +331,7 @@ impl HealthService {
             // Build instrument_key → asset_id map for FX assets only
             let fx_asset_map: HashMap<String, String> = asset_service
                 .get_assets()
+                .await
                 .unwrap_or_default()
                 .into_iter()
                 .filter_map(|a| {
@@ -338,31 +341,34 @@ impl HealthService {
                 })
                 .collect();
 
-            fx_pair_mv
-                .iter()
-                .map(|((from_ccy, to_ccy), affected_mv)| {
-                    // Check both directions since FX asset could be stored either way
-                    let key_direct = format!("FX:{}/{}", from_ccy, to_ccy);
-                    let key_inverse = format!("FX:{}/{}", to_ccy, from_ccy);
-                    let latest_quote_time = fx_asset_map
-                        .get(&key_direct)
-                        .or_else(|| fx_asset_map.get(&key_inverse))
-                        .and_then(|asset_id| {
-                            quote_service
-                                .get_latest_quotes(std::slice::from_ref(asset_id))
-                                .ok()
-                                .and_then(|q| q.into_values().next().map(|quote| quote.timestamp))
-                        });
-
-                    FxPairInfo {
-                        pair_id: format!("{}:{}", from_ccy, to_ccy),
-                        from_currency: from_ccy.clone(),
-                        to_currency: to_ccy.clone(),
-                        affected_mv: *affected_mv,
-                        latest_quote_time,
+            let mut fx_pairs = Vec::new();
+            for ((from_ccy, to_ccy), affected_mv) in fx_pair_mv.iter() {
+                // Check both directions since FX asset could be stored either way
+                let key_direct = format!("FX:{}/{}", from_ccy, to_ccy);
+                let key_inverse = format!("FX:{}/{}", to_ccy, from_ccy);
+                let asset_id_opt = fx_asset_map
+                    .get(&key_direct)
+                    .or_else(|| fx_asset_map.get(&key_inverse));
+                let latest_quote_time = match asset_id_opt {
+                    Some(asset_id) => {
+                        quote_service
+                            .get_latest_quotes(std::slice::from_ref(asset_id))
+                            .await
+                            .ok()
+                            .and_then(|q| q.into_values().next().map(|quote| quote.timestamp))
                     }
-                })
-                .collect()
+                    None => None,
+                };
+
+                fx_pairs.push(FxPairInfo {
+                    pair_id: format!("{}:{}", from_ccy, to_ccy),
+                    from_currency: from_ccy.clone(),
+                    to_currency: to_ccy.clone(),
+                    affected_mv: *affected_mv,
+                    latest_quote_time,
+                });
+            }
+            fx_pairs
         };
         let unclassified_assets: Vec<UnclassifiedAssetInfo> = Vec::new();
 
@@ -379,6 +385,7 @@ impl HealthService {
             .collect();
         let negative_balance_accounts = valuation_service
             .get_accounts_with_negative_balance(&account_ids)
+            .await
             .unwrap_or_else(|e| {
                 warn!("Failed to check for negative account balances: {}", e);
                 Vec::new()
@@ -413,6 +420,7 @@ impl HealthService {
         if !cash_account_ids.is_empty() {
             let negative_cash_accounts = valuation_service
                 .get_accounts_with_negative_balance(&cash_account_ids)
+                .await
                 .unwrap_or_else(|e| {
                     warn!("Failed to check for negative cash balances: {}", e);
                     Vec::new()

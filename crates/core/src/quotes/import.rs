@@ -453,7 +453,7 @@ impl QuoteImportService {
         let mut validations = Vec::with_capacity(imports.len());
 
         for import in imports {
-            let validation = self.validate_single(&import)?;
+            let validation = self.validate_single(&import).await?;
             validations.push(validation);
         }
 
@@ -517,7 +517,8 @@ impl QuoteImportService {
         // Check for existing quote (duplicate detection)
         let existing = self
             .quote_store
-            .latest(&asset_id, Some(&QuoteSource::Manual))?;
+            .latest(&asset_id, Some(&QuoteSource::Manual))
+            .await?;
         if let Some(existing_quote) = existing {
             let existing_day = Day::new(existing_quote.timestamp.date_naive());
             if existing_day == day {

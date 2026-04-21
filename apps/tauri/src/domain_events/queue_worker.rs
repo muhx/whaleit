@@ -10,11 +10,11 @@ use std::time::Duration;
 use log::{debug, error, info, warn};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
-use wealthfolio_core::constants::PORTFOLIO_TOTAL_ACCOUNT_ID;
-use wealthfolio_core::events::DomainEvent;
-use wealthfolio_core::health::HealthServiceTrait;
-use wealthfolio_core::portfolio::snapshot::SnapshotRecalcMode;
-use wealthfolio_core::portfolio::valuation::ValuationRecalcMode;
+use whaleit_core::constants::PORTFOLIO_TOTAL_ACCOUNT_ID;
+use whaleit_core::events::DomainEvent;
+use whaleit_core::health::HealthServiceTrait;
+use whaleit_core::portfolio::snapshot::SnapshotRecalcMode;
+use whaleit_core::portfolio::valuation::ValuationRecalcMode;
 
 #[cfg(feature = "connect-sync")]
 use super::planner::plan_broker_sync;
@@ -269,7 +269,7 @@ async fn run_portfolio_job(
             Some(sync_mode) => market_data_service.sync(sync_mode, asset_ids).await,
             None => {
                 warn!("MarketSyncMode requires sync but returned None for SyncMode");
-                Ok(wealthfolio_core::quotes::SyncResult::default())
+                Ok(whaleit_core::quotes::SyncResult::default())
             }
         };
 
@@ -289,7 +289,7 @@ async fn run_portfolio_job(
 
                 // Initialize the FxService after successful sync
                 let fx_service = context.fx_service();
-                if let Err(e) = fx_service.initialize() {
+                if let Err(e) = fx_service.initialize().await {
                     error!(
                         "Failed to initialize FxService after market data sync: {}",
                         e
@@ -344,7 +344,7 @@ async fn run_portfolio_calculation(
     }
 
     // For TOTAL portfolio calculation, use non-archived accounts (ignores is_active)
-    let accounts_for_total = match context.account_service().get_non_archived_accounts() {
+    let accounts_for_total = match context.account_service().get_non_archived_accounts().await {
         Ok(accounts) => accounts,
         Err(err) => {
             let err_msg = format!("Failed to list non-archived accounts: {}", err);
@@ -395,7 +395,7 @@ async fn run_portfolio_calculation(
 
     // Update position status from TOTAL snapshot
     if let Ok(Some(total_snapshot)) =
-        snapshot_service.get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID)
+        snapshot_service.get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID).await
     {
         let current_holdings: std::collections::HashMap<String, rust_decimal::Decimal> =
             total_snapshot

@@ -88,7 +88,7 @@ impl<E: AiEnvironment> TitleGenerator<E> {
     ) -> Result<String, AiError> {
         let provider_service = ProviderService::new(self.env.clone());
         let api_key = provider_service.get_api_key(provider_id)?;
-        let provider_url = provider_service.get_provider_url(provider_id);
+        let provider_url = provider_service.get_provider_url(provider_id).await;
 
         debug!(
             "Generating title with provider {} model {}",

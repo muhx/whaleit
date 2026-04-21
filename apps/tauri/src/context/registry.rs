@@ -1,14 +1,14 @@
 use std::sync::{Arc, RwLock};
-use wealthfolio_ai::{AiProviderServiceTrait, ChatService};
-use wealthfolio_connect::BrokerSyncServiceTrait;
-use wealthfolio_core::{
+use whaleit_ai::{AiProviderServiceTrait, ChatService};
+use whaleit_connect::BrokerSyncServiceTrait;
+use whaleit_core::{
     self, accounts, activities,
     assets::{self, AlternativeAssetServiceTrait},
     events::DomainEventSink,
     fx, goals, health, limits, portfolio, quotes, settings, taxonomies,
 };
-use wealthfolio_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
-use wealthfolio_storage_sqlite::{
+use whaleit_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
+use whaleit_storage_sqlite::{
     portfolio::snapshot::SnapshotRepository, sync::AppSyncRepository,
 };
 
@@ -55,7 +55,7 @@ pub struct ServiceContext {
     pub device_enroll_service: Arc<DeviceEnrollService>,
     pub device_sync_runtime: Arc<DeviceSyncRuntimeState>,
     pub health_service: Arc<health::HealthService>,
-    pub custom_provider_service: Arc<wealthfolio_core::custom_provider::CustomProviderService>,
+    pub custom_provider_service: Arc<whaleit_core::custom_provider::CustomProviderService>,
 }
 
 impl ServiceContext {

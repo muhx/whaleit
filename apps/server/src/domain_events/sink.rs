@@ -6,8 +6,8 @@
 use std::sync::{Arc, RwLock};
 
 use tokio::sync::mpsc;
-use wealthfolio_connect::{BrokerSyncServiceTrait, TokenLifecycleState};
-use wealthfolio_core::{
+use whaleit_connect::{BrokerSyncServiceTrait, TokenLifecycleState};
+use whaleit_core::{
     assets::AssetServiceTrait,
     events::{DomainEvent, DomainEventSink},
     secrets::SecretStore,
@@ -59,16 +59,16 @@ impl WebDomainEventSink {
         asset_service: Arc<dyn AssetServiceTrait + Send + Sync>,
         connect_sync_service: Arc<dyn BrokerSyncServiceTrait + Send + Sync>,
         event_bus: EventBus,
-        health_service: Arc<dyn wealthfolio_core::health::HealthServiceTrait + Send + Sync>,
+        health_service: Arc<dyn whaleit_core::health::HealthServiceTrait + Send + Sync>,
         snapshot_service: Arc<
-            dyn wealthfolio_core::portfolio::snapshot::SnapshotServiceTrait + Send + Sync,
+            dyn whaleit_core::portfolio::snapshot::SnapshotServiceTrait + Send + Sync,
         >,
-        quote_service: Arc<dyn wealthfolio_core::quotes::QuoteServiceTrait + Send + Sync>,
+        quote_service: Arc<dyn whaleit_core::quotes::QuoteServiceTrait + Send + Sync>,
         valuation_service: Arc<
-            dyn wealthfolio_core::portfolio::valuation::ValuationServiceTrait + Send + Sync,
+            dyn whaleit_core::portfolio::valuation::ValuationServiceTrait + Send + Sync,
         >,
-        account_service: Arc<wealthfolio_core::accounts::AccountService>,
-        fx_service: Arc<dyn wealthfolio_core::fx::FxServiceTrait + Send + Sync>,
+        account_service: Arc<whaleit_core::accounts::AccountService>,
+        fx_service: Arc<dyn whaleit_core::fx::FxServiceTrait + Send + Sync>,
         timezone: Arc<RwLock<String>>,
         secret_store: Arc<dyn SecretStore>,
         token_lifecycle: Arc<TokenLifecycleState>,

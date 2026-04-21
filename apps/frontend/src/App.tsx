@@ -26,7 +26,7 @@ function App() {
   const isWebEnv = isWeb;
 
   // Make QueryClient available globally for addons
-  window.__wealthfolio_query_client__ = queryClient;
+  window.__whaleit_query_client__ = queryClient;
 
   const routedContent = isWebEnv ? (
     <AuthGate fallback={<LoginPage />}>

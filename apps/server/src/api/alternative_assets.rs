@@ -23,7 +23,7 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use wealthfolio_core::{
+use whaleit_core::{
     assets::{
         AssetKind, CreateAlternativeAssetRequest as CoreCreateRequest,
         LinkLiabilityRequest as CoreLinkRequest,

@@ -135,7 +135,7 @@ impl AlternativeAssetRepositoryTrait for AlternativeAssetRepository {
     ///
     /// This queries assets where the metadata contains linked_asset_id = asset_id.
     /// Returns a list of liability asset IDs.
-    fn find_liabilities_linked_to(&self, linked_asset_id: &str) -> Result<Vec<String>> {
+    async fn find_liabilities_linked_to(&self, linked_asset_id: &str) -> Result<Vec<String>> {
         let mut conn = get_connection(&self.pool)?;
 
         // Build a pattern to match the linked_asset_id in the metadata JSON

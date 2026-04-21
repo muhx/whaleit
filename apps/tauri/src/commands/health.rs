@@ -4,8 +4,8 @@ use crate::context::ServiceContext;
 use crate::events::{MarketSyncResult, MARKET_SYNC_COMPLETE, MARKET_SYNC_ERROR, MARKET_SYNC_START};
 use log::{debug, error, info, warn};
 use tauri::{AppHandle, Emitter, State};
-use wealthfolio_core::health::{FixAction, HealthConfig, HealthServiceTrait, HealthStatus};
-use wealthfolio_core::quotes::SyncMode;
+use whaleit_core::health::{FixAction, HealthConfig, HealthServiceTrait, HealthStatus};
+use whaleit_core::quotes::SyncMode;
 
 /// Get current health status (cached or fresh check).
 #[tauri::command]

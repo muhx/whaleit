@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use tauri::Emitter;
-use wealthfolio_core::quotes::MarketSyncMode;
+use whaleit_core::quotes::MarketSyncMode;
 
 pub const PORTFOLIO_TOTAL_ACCOUNT_ID: &str = "TOTAL";
 
@@ -161,4 +161,4 @@ pub const ASSET_ENRICHMENT_PROGRESS: &str = "asset:enrichment-progress";
 
 // Note: Broker sync events (start/complete/error) are emitted by the orchestrator
 // via TauriProgressReporter in commands/brokers_sync.rs, not by helper functions here.
-// The payload format is SyncResult from wealthfolio_connect.
+// The payload format is SyncResult from whaleit_connect.

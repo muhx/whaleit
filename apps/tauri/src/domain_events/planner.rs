@@ -6,9 +6,9 @@
 use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
-use wealthfolio_core::accounts::TrackingMode;
-use wealthfolio_core::events::DomainEvent;
-use wealthfolio_core::utils::time_utils::activity_date_in_user_timezone;
+use whaleit_core::accounts::TrackingMode;
+use whaleit_core::events::DomainEvent;
+use whaleit_core::utils::time_utils::activity_date_in_user_timezone;
 
 use crate::events::PortfolioRequestPayload;
 
@@ -117,9 +117,9 @@ pub fn plan_portfolio_job(
 
     // Use incremental sync with the collected asset IDs
     let sync_mode = if asset_ids.is_empty() {
-        wealthfolio_core::quotes::MarketSyncMode::Incremental { asset_ids: None }
+        whaleit_core::quotes::MarketSyncMode::Incremental { asset_ids: None }
     } else {
-        wealthfolio_core::quotes::MarketSyncMode::Incremental {
+        whaleit_core::quotes::MarketSyncMode::Incremental {
             asset_ids: Some(asset_ids.into_iter().collect()),
         }
     };
@@ -195,7 +195,7 @@ pub fn plan_asset_enrichment(events: &[DomainEvent]) -> Vec<String> {
 mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
-    use wealthfolio_core::events::CurrencyChange;
+    use whaleit_core::events::CurrencyChange;
 
     #[test]
     fn test_plan_portfolio_job_empty_events() {
@@ -254,7 +254,7 @@ mod tests {
 
         let payload = result.unwrap();
         // FX assets are synced via AssetsCreated events, not constructed from currencies
-        if let wealthfolio_core::quotes::MarketSyncMode::Incremental { asset_ids } =
+        if let whaleit_core::quotes::MarketSyncMode::Incremental { asset_ids } =
             payload.market_sync_mode
         {
             assert!(asset_ids.is_none());
@@ -278,7 +278,7 @@ mod tests {
         ];
 
         let result = plan_portfolio_job(&events, "UTC").unwrap();
-        if let wealthfolio_core::quotes::MarketSyncMode::Incremental { asset_ids } =
+        if let whaleit_core::quotes::MarketSyncMode::Incremental { asset_ids } =
             result.market_sync_mode
         {
             let ids = asset_ids.unwrap();
@@ -308,7 +308,7 @@ mod tests {
         let result = plan_portfolio_job(&events, "UTC").unwrap();
         assert!(result.account_ids.is_none());
 
-        if let wealthfolio_core::quotes::MarketSyncMode::Incremental { asset_ids } =
+        if let whaleit_core::quotes::MarketSyncMode::Incremental { asset_ids } =
             result.market_sync_mode
         {
             assert_eq!(asset_ids, Some(vec!["asset-1".to_string()]));
@@ -409,7 +409,7 @@ mod tests {
         let result = plan_portfolio_job(&events, "UTC").unwrap();
 
         // Should use incremental sync mode
-        if let wealthfolio_core::quotes::MarketSyncMode::Incremental { asset_ids } =
+        if let whaleit_core::quotes::MarketSyncMode::Incremental { asset_ids } =
             result.market_sync_mode
         {
             assert!(asset_ids.is_none());

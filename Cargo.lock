@@ -8348,6 +8348,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "whaleit-storage-common"
+version = "3.2.1"
+dependencies = [
+ "chrono",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "uuid",
+ "whaleit-core",
+]
+
+[[package]]
 name = "whaleit-storage-sqlite"
 version = "3.2.1"
 dependencies = [

@@ -8,7 +8,7 @@ use super::addon_traits::AddonServiceTrait;
 use super::models::*;
 
 // Constants
-pub const ADDON_STORE_API_BASE_URL: &str = "https://wealthfolio.app/api/addons";
+pub const ADDON_STORE_API_BASE_URL: &str = "https://whaleit.app/api/addons";
 
 /// Helper function to create a request with common headers
 fn create_request_with_headers(
@@ -22,9 +22,9 @@ fn create_request_with_headers(
     // Always add User-Agent, with version if available
     let app_version = option_env!("CARGO_PKG_VERSION");
     let user_agent = if let Some(version) = app_version {
-        format!("Wealthfolio/{}", version)
+        format!("Whaleit/{}", version)
     } else {
-        "Wealthfolio".to_string()
+        "Whaleit".to_string()
     };
     request = request.header("User-Agent", user_agent);
 
@@ -689,7 +689,7 @@ pub fn parse_manifest_json_metadata(manifest_content: &str) -> Result<AddonManif
     let homepage = raw_manifest["homepage"].as_str().map(|s| s.to_string());
     let repository = raw_manifest["repository"].as_str().map(|s| s.to_string());
     let license = raw_manifest["license"].as_str().map(|s| s.to_string());
-    let min_whaleit_version = raw_manifest["minWealthfolioVersion"]
+    let min_whaleit_version = raw_manifest["minWhaleitVersion"]
         .as_str()
         .map(|s| s.to_string());
     let keywords = raw_manifest["keywords"].as_array().map(|arr| {
@@ -868,9 +868,9 @@ pub async fn download_addon_package(download_url: &str) -> Result<Vec<u8>, Strin
     // Always add User-Agent, with version if available
     let app_version = option_env!("CARGO_PKG_VERSION");
     let user_agent = if let Some(version) = app_version {
-        format!("Wealthfolio/{}", version)
+        format!("Whaleit/{}", version)
     } else {
-        "Wealthfolio".to_string()
+        "Whaleit".to_string()
     };
     request = request.header("User-Agent", user_agent);
 

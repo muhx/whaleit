@@ -257,7 +257,7 @@ impl QuoteStore for MarketDataRepository {
     // Single Asset Queries (Strong Types)
     // =========================================================================
 
-    fn latest(&self, asset_id: &AssetId, source: Option<&QuoteSource>) -> Result<Option<Quote>> {
+    async fn latest(&self, asset_id: &AssetId, source: Option<&QuoteSource>) -> Result<Option<Quote>> {
         let mut conn = get_connection(&self.pool)?;
 
         let mut query = quotes_dsl::quotes
@@ -277,7 +277,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(result.map(Quote::from))
     }
 
-    fn range(
+    async fn range(
         &self,
         asset_id: &AssetId,
         start: Day,
@@ -309,7 +309,7 @@ impl QuoteStore for MarketDataRepository {
     // Batch Queries (Strong Types)
     // =========================================================================
 
-    fn latest_batch(
+    async fn latest_batch(
         &self,
         asset_ids: &[AssetId],
         source: Option<&QuoteSource>,
@@ -375,7 +375,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(result)
     }
 
-    fn latest_with_previous(
+    async fn latest_with_previous(
         &self,
         asset_ids: &[AssetId],
     ) -> Result<HashMap<AssetId, LatestQuotePair>> {
@@ -469,7 +469,7 @@ impl QuoteStore for MarketDataRepository {
     // Legacy Methods (String-based, for backward compatibility)
     // =========================================================================
 
-    fn get_latest_quote(&self, symbol: &str) -> Result<Quote> {
+    async fn get_latest_quote(&self, symbol: &str) -> Result<Quote> {
         let mut conn = get_connection(&self.pool)?;
 
         let query_result = quotes_dsl::quotes
@@ -493,7 +493,7 @@ impl QuoteStore for MarketDataRepository {
         }
     }
 
-    fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>> {
+    async fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>> {
         if symbols.is_empty() {
             return Ok(HashMap::new());
         }
@@ -535,7 +535,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(result)
     }
 
-    fn get_latest_quotes_pair(
+    async fn get_latest_quotes_pair(
         &self,
         symbols: &[String],
     ) -> Result<HashMap<String, LatestQuotePair>> {
@@ -624,7 +624,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(result_map)
     }
 
-    fn get_latest_quote_before(&self, symbol: &str, before: NaiveDate) -> Result<Option<Quote>> {
+    async fn get_latest_quote_before(&self, symbol: &str, before: NaiveDate) -> Result<Option<Quote>> {
         let mut conn = get_connection(&self.pool)?;
         let before_str = before.format("%Y-%m-%d").to_string();
 
@@ -643,7 +643,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(result.map(Quote::from))
     }
 
-    fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>> {
+    async fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>> {
         let mut conn = get_connection(&self.pool)?;
 
         // Order by day descending (newest first) - most callers need latest quote first
@@ -657,7 +657,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(results.into_iter().map(Quote::from).collect())
     }
 
-    fn get_all_historical_quotes(&self) -> Result<Vec<Quote>> {
+    async fn get_all_historical_quotes(&self) -> Result<Vec<Quote>> {
         let mut conn = get_connection(&self.pool)?;
 
         let results = quotes_dsl::quotes
@@ -668,7 +668,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(results.into_iter().map(Quote::from).collect())
     }
 
-    fn get_quotes_in_range(
+    async fn get_quotes_in_range(
         &self,
         symbol: &str,
         start: NaiveDate,
@@ -690,7 +690,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(results.into_iter().map(Quote::from).collect())
     }
 
-    fn find_duplicate_quotes(&self, symbol: &str, date: NaiveDate) -> Result<Vec<Quote>> {
+    async fn find_duplicate_quotes(&self, symbol: &str, date: NaiveDate) -> Result<Vec<Quote>> {
         let mut conn = get_connection(&self.pool)?;
 
         let date_str = date.format("%Y-%m-%d").to_string();
@@ -704,7 +704,7 @@ impl QuoteStore for MarketDataRepository {
         Ok(results.into_iter().map(Quote::from).collect())
     }
 
-    fn get_quote_bounds_for_assets(
+    async fn get_quote_bounds_for_assets(
         &self,
         asset_ids: &[String],
         source: &str,
@@ -769,8 +769,9 @@ impl QuoteStore for MarketDataRepository {
 // ProviderSettingsStore Implementation
 // =============================================================================
 
+#[async_trait::async_trait]
 impl ProviderSettingsStore for MarketDataRepository {
-    fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>> {
+    async fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>> {
         let mut conn = get_connection(&self.pool)?;
         let db_results = market_data_providers_dsl::market_data_providers
             .order(market_data_providers_dsl::priority.desc())
@@ -784,7 +785,7 @@ impl ProviderSettingsStore for MarketDataRepository {
             .collect())
     }
 
-    fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
+    async fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
         let mut conn = get_connection(&self.pool)?;
         let db_result = market_data_providers_dsl::market_data_providers
             .find(id)
@@ -795,7 +796,7 @@ impl ProviderSettingsStore for MarketDataRepository {
         Ok(MarketDataProviderSetting::from(db_result))
     }
 
-    fn update_provider(
+    async fn update_provider(
         &self,
         id: &str,
         changes: UpdateMarketDataProviderSetting,

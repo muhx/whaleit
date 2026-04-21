@@ -5,7 +5,7 @@ use log::{debug, error};
 use serde::Serialize;
 use std::sync::Arc;
 use tauri::State;
-use wealthfolio_core::secrets::SecretStore;
+use whaleit_core::secrets::SecretStore;
 
 // Storage keys (without prefix - the SecretStore adds "wealthfolio_" prefix)
 const SYNC_ACCESS_TOKEN_KEY: &str = "sync_access_token";

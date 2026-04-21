@@ -36,7 +36,7 @@ use crate::quotes::model::SymbolSearchResult;
 use crate::quotes::Quote;
 use crate::secrets::SecretStore;
 
-use wealthfolio_market_data::{
+use whaleit_market_data::{
     mic_to_currency, mic_to_exchange_name, yahoo_exchange_to_mic, yahoo_suffix_to_mic,
     AlphaVantageProvider, AssetProfile as MarketAssetProfile, BoerseFrankfurtProvider,
     BondQuoteMetadata, FinnhubProvider, MarketDataAppProvider, MetalPriceApiProvider,
@@ -51,7 +51,7 @@ pub enum MarketDataClientError {
     /// A market data operation failed.
     /// Preserves the full error semantics from the market-data crate.
     #[error("{0}")]
-    MarketData(#[from] wealthfolio_market_data::errors::MarketDataError),
+    MarketData(#[from] whaleit_market_data::errors::MarketDataError),
 
     #[error("Invalid data: {0}")]
     InvalidData(String),
@@ -121,11 +121,11 @@ impl MarketDataClient {
     pub async fn new_with_extra(
         secret_store: Arc<dyn SecretStore>,
         enabled_providers: Vec<ProviderConfig>,
-        extra_providers: Vec<Arc<dyn wealthfolio_market_data::MarketDataProvider>>,
+        extra_providers: Vec<Arc<dyn whaleit_market_data::MarketDataProvider>>,
     ) -> Result<Self> {
         use std::collections::HashMap;
 
-        let mut providers: Vec<Arc<dyn wealthfolio_market_data::MarketDataProvider>> = Vec::new();
+        let mut providers: Vec<Arc<dyn whaleit_market_data::MarketDataProvider>> = Vec::new();
         let mut init_errors: Vec<String> = Vec::new();
         let mut custom_priorities: HashMap<String, i32> = HashMap::new();
 
@@ -182,7 +182,7 @@ impl MarketDataClient {
     async fn create_provider(
         provider_id: &str,
         secret_store: &Arc<dyn SecretStore>,
-    ) -> Result<Option<Arc<dyn wealthfolio_market_data::MarketDataProvider>>> {
+    ) -> Result<Option<Arc<dyn whaleit_market_data::MarketDataProvider>>> {
         match provider_id {
             DATA_SOURCE_YAHOO => {
                 // Yahoo doesn't need an API key
@@ -350,7 +350,7 @@ impl MarketDataClient {
         // Build provider overrides from asset.provider_config JSON
         let overrides = asset
             .provider_overrides()
-            .and_then(|json| wealthfolio_market_data::ProviderOverrides::from_json(json).ok());
+            .and_then(|json| whaleit_market_data::ProviderOverrides::from_json(json).ok());
 
         // Currency hint: prefer asset.quote_ccy, fall back to MIC-derived currency
         let currency_hint: Option<Cow<'static, str>> = if !asset.quote_ccy.is_empty() {
@@ -910,7 +910,7 @@ mod tests {
         assert!(instrument.is_some());
 
         match instrument.unwrap() {
-            wealthfolio_market_data::InstrumentId::Equity { ticker, mic } => {
+            whaleit_market_data::InstrumentId::Equity { ticker, mic } => {
                 assert_eq!(ticker.as_ref(), "AAPL");
                 assert_eq!(mic.as_deref(), Some("XNAS"));
             }
@@ -928,7 +928,7 @@ mod tests {
         assert!(instrument.is_some());
 
         match instrument.unwrap() {
-            wealthfolio_market_data::InstrumentId::Crypto { base, quote } => {
+            whaleit_market_data::InstrumentId::Crypto { base, quote } => {
                 assert_eq!(base.as_ref(), "BTC");
                 assert_eq!(quote.as_ref(), "USD");
             }
@@ -946,7 +946,7 @@ mod tests {
         assert!(instrument.is_some());
 
         match instrument.unwrap() {
-            wealthfolio_market_data::InstrumentId::Fx { base, quote } => {
+            whaleit_market_data::InstrumentId::Fx { base, quote } => {
                 assert_eq!(base.as_ref(), "EUR");
                 assert_eq!(quote.as_ref(), "USD");
             }

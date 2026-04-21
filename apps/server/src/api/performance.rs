@@ -6,7 +6,7 @@ use axum::{
     routing::post,
     Json, Router,
 };
-use wealthfolio_core::{
+use whaleit_core::{
     accounts::{AccountServiceTrait, TrackingMode},
     portfolio::{
         income::IncomeSummary,

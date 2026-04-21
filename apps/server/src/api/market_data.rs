@@ -11,11 +11,11 @@ use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
-use wealthfolio_core::portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode};
-use wealthfolio_core::quotes::{
+use whaleit_core::portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode};
+use whaleit_core::quotes::{
     LatestQuoteSnapshot, MarketSyncMode, ProviderInfo, Quote, QuoteImport, SymbolSearchResult,
 };
-use wealthfolio_market_data::ExchangeInfo;
+use whaleit_market_data::ExchangeInfo;
 
 async fn get_market_data_providers(
     State(state): State<Arc<AppState>>,
@@ -250,11 +250,11 @@ struct ResolveSymbolQuoteQuery {
 async fn resolve_symbol_quote(
     State(state): State<Arc<AppState>>,
     Query(q): Query<ResolveSymbolQuoteQuery>,
-) -> ApiResult<Json<wealthfolio_core::quotes::ResolvedQuote>> {
+) -> ApiResult<Json<whaleit_core::quotes::ResolvedQuote>> {
     let inst_type = q
         .instrument_type
         .as_deref()
-        .and_then(wealthfolio_core::assets::InstrumentType::from_db_str);
+        .and_then(whaleit_core::assets::InstrumentType::from_db_str);
     let res = state
         .quote_service
         .resolve_symbol_quote(
@@ -269,7 +269,7 @@ async fn resolve_symbol_quote(
 }
 
 async fn get_exchanges() -> Json<Vec<ExchangeInfo>> {
-    Json(wealthfolio_market_data::get_exchange_list())
+    Json(whaleit_market_data::get_exchange_list())
 }
 
 pub fn router() -> Router<Arc<AppState>> {

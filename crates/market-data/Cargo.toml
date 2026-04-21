@@ -1,5 +1,5 @@
 [package]
-name = "wealthfolio-market-data"
+name = "whaleit-market-data"
 version.workspace = true
 edition = "2021"
 

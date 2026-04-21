@@ -299,7 +299,8 @@ impl AssetServiceTrait for AssetService {
     /// Retrieves an asset by its ID with enriched fields
     async fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset> {
         self.asset_repository
-            .get_by_id(asset_id).await
+            .get_by_id(asset_id)
+            .await
             .map(|a| a.enrich())
     }
 
@@ -943,20 +944,19 @@ impl AssetServiceTrait for AssetService {
         let unique_ids_len = unique_ids.len();
 
         // Filter to only assets that need enrichment
-        let ids_to_enrich: Vec<String> = unique_ids
-            .into_iter()
-            .filter(|asset_id| {
-                let needs = match self.quote_service.get_sync_state(asset_id) {
-                    Ok(Some(state)) => state.needs_profile_enrichment(),
-                    Ok(None) => true,
-                    Err(_) => true,
-                };
-                if !needs {
-                    debug!("Skipping enrichment for {} - already enriched", asset_id);
-                }
-                needs
-            })
-            .collect();
+        let mut ids_to_enrich = Vec::new();
+        for asset_id in unique_ids {
+            let needs = match self.quote_service.get_sync_state(&asset_id).await {
+                Ok(Some(state)) => state.needs_profile_enrichment(),
+                Ok(None) => true,
+                Err(_) => true,
+            };
+            if !needs {
+                debug!("Skipping enrichment for {} - already enriched", asset_id);
+            } else {
+                ids_to_enrich.push(asset_id);
+            }
+        }
 
         let skipped_count = unique_ids_len - ids_to_enrich.len();
 
@@ -1113,7 +1113,9 @@ impl AssetServiceTrait for AssetService {
         for mut spec in unique_specs {
             if spec.id.is_none() {
                 if let Some(key) = spec.instrument_key() {
-                    if let Ok(Some(existing)) = self.asset_repository.find_by_instrument_key(&key).await {
+                    if let Ok(Some(existing)) =
+                        self.asset_repository.find_by_instrument_key(&key).await
+                    {
                         preexisting_keys.insert(key);
                         spec.id = Some(existing.id);
                     }
@@ -1128,7 +1130,8 @@ impl AssetServiceTrait for AssetService {
         // 1. Pre-read existing assets by requested IDs.
         let existing_ids: HashSet<String> = if !ids.is_empty() {
             self.asset_repository
-                .list_by_asset_ids(&ids).await?
+                .list_by_asset_ids(&ids)
+                .await?
                 .into_iter()
                 .map(|a| a.id)
                 .collect()
@@ -1270,7 +1273,8 @@ impl AssetServiceTrait for AssetService {
         // 3. Fetch all requested assets (by ID + by instrument_key for specs without IDs)
         let mut assets_map: HashMap<String, Asset> = if !ids.is_empty() {
             self.asset_repository
-                .list_by_asset_ids(&ids).await?
+                .list_by_asset_ids(&ids)
+                .await?
                 .into_iter()
                 .map(|a| (a.id.clone(), a))
                 .collect()
@@ -1282,7 +1286,9 @@ impl AssetServiceTrait for AssetService {
         for spec in &resolved_specs {
             if spec.id.is_none() {
                 if let Some(key) = spec.instrument_key() {
-                    if let Ok(Some(asset)) = self.asset_repository.find_by_instrument_key(&key).await {
+                    if let Ok(Some(asset)) =
+                        self.asset_repository.find_by_instrument_key(&key).await
+                    {
                         assets_map.insert(asset.id.clone(), asset);
                     }
                 }

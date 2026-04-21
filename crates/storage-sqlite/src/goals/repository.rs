@@ -53,7 +53,7 @@ impl GoalRepository {
 
 #[async_trait]
 impl GoalRepositoryTrait for GoalRepository {
-    fn load_goals(&self) -> Result<Vec<Goal>> {
+    async fn load_goals(&self) -> Result<Vec<Goal>> {
         self.load_goals_impl()
     }
 
@@ -121,7 +121,7 @@ impl GoalRepositoryTrait for GoalRepository {
             .await
     }
 
-    fn load_allocations_for_non_achieved_goals(&self) -> Result<Vec<GoalsAllocation>> {
+    async fn load_allocations_for_non_achieved_goals(&self) -> Result<Vec<GoalsAllocation>> {
         self.load_allocations_for_non_achieved_goals_impl()
     }
 

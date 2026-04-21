@@ -6,8 +6,8 @@ use diesel::SqliteConnection;
 use std::any::Any;
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, oneshot};
-use wealthfolio_core::errors::{DatabaseError, Error, Result};
-use wealthfolio_core::sync::SyncOperation;
+use whaleit_core::errors::{DatabaseError, Error, Result};
+use whaleit_core::sync::SyncOperation;
 
 // Type alias for the job to be executed by the writer actor.
 // It takes a mutable reference to a SqliteConnection and returns a Result.

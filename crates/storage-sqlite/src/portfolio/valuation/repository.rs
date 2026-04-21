@@ -57,7 +57,7 @@ impl ValuationRepositoryTrait for ValuationRepository {
             .await
     }
 
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         input_account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -92,7 +92,7 @@ impl ValuationRepositoryTrait for ValuationRepository {
         Ok(history_records)
     }
 
-    fn load_latest_valuation_date(&self, input_account_id: &str) -> Result<Option<NaiveDate>> {
+    async fn load_latest_valuation_date(&self, input_account_id: &str) -> Result<Option<NaiveDate>> {
         use diesel::OptionalExtension; // Ensure OptionalExtension is in scope
         let mut conn = get_connection(&self.pool)?;
 
@@ -145,7 +145,7 @@ impl ValuationRepositoryTrait for ValuationRepository {
             .await
     }
 
-    fn get_latest_valuations(
+    async fn get_latest_valuations(
         &self,
         input_account_ids: &[String],
     ) -> Result<Vec<DailyAccountValuation>> {
@@ -214,7 +214,7 @@ impl ValuationRepositoryTrait for ValuationRepository {
         Ok(ordered_results)
     }
 
-    fn get_accounts_with_negative_balance(
+    async fn get_accounts_with_negative_balance(
         &self,
         input_account_ids: &[String],
     ) -> Result<Vec<NegativeBalanceInfo>> {
@@ -274,7 +274,7 @@ impl ValuationRepositoryTrait for ValuationRepository {
         Ok(result)
     }
 
-    fn get_valuations_on_date(
+    async fn get_valuations_on_date(
         &self,
         input_account_ids: &[String],
         input_date: NaiveDate,

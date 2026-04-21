@@ -351,7 +351,7 @@ pub trait QuoteSyncServiceTrait: Send + Sync {
     async fn refresh_sync_state(&self) -> Result<()>;
 
     /// Get the current sync plan without executing it.
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
 }
 
 // =============================================================================
@@ -418,10 +418,12 @@ where
         let existing_states = self
             .sync_state_store
             .get_by_asset_ids(&asset_ids)
+            .await
             .unwrap_or_default();
         let activity_bounds = self
             .activity_repo
             .get_activity_bounds_for_assets(&asset_ids)
+            .await
             .unwrap_or_default();
 
         // Compute quote bounds per provider
@@ -441,13 +443,16 @@ where
             }
         }
 
-        assets
-            .iter()
-            .filter(|a| self.should_sync_asset(a))
-            .filter_map(|asset| {
-                self.build_asset_sync_plan(asset, now, &activity_bounds, &quote_bounds)
-            })
-            .collect()
+        let mut plans = Vec::new();
+        for asset in assets.iter().filter(|a| self.should_sync_asset(a)) {
+            if let Some(plan) = self
+                .build_asset_sync_plan(asset, now, &activity_bounds, &quote_bounds)
+                .await
+            {
+                plans.push(plan);
+            }
+        }
+        plans
     }
 
     /// Check if an asset should be synced.
@@ -554,7 +559,7 @@ where
     }
 
     /// Build sync plan for a single asset.
-    fn build_asset_sync_plan(
+    async fn build_asset_sync_plan(
         &self,
         asset: &Asset,
         now: DateTime<Utc>,
@@ -567,6 +572,7 @@ where
         let state = self
             .sync_state_store
             .get_by_asset_id(&asset.id)
+            .await
             .ok()
             .flatten();
 
@@ -639,7 +645,7 @@ where
     ///
     /// - **BackfillHistory mode + FX asset**: Use global earliest activity date
     /// - **Incremental mode + FX asset**: Continue from quote_max (no backfill)
-    fn calculate_date_range_for_mode(
+    async fn calculate_date_range_for_mode(
         &self,
         inputs: &SyncPlanningInputs,
         mode: SyncMode,
@@ -678,6 +684,7 @@ where
                     let global_earliest = self
                         .activity_repo
                         .get_first_activity_date_overall()
+                        .await
                         .ok()
                         .map(|dt| dt.date_naive());
 
@@ -986,7 +993,7 @@ where
     /// Returns a boxed future to provide an explicit `Send` boundary for
     /// `async_trait` compatibility when this method's composed stream/future
     /// types are type-erased.
-    async fn execute_sync_plans(
+    fn execute_sync_plans(
         &self,
         plans: Vec<SymbolSyncPlan>,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = SyncResult> + Send + '_>> {
@@ -1070,7 +1077,8 @@ where
     async fn generate_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
         let states = self
             .sync_state_store
-            .get_assets_needing_sync(CLOSED_POSITION_GRACE_PERIOD_DAYS)?;
+            .get_assets_needing_sync(CLOSED_POSITION_GRACE_PERIOD_DAYS)
+            .await?;
 
         let now = Utc::now();
         let asset_ids: Vec<String> = states.iter().map(|state| state.asset_id.clone()).collect();
@@ -1108,7 +1116,8 @@ where
         // Compute activity bounds on-the-fly from activities table
         let activity_bounds = self
             .activity_repo
-            .get_activity_bounds_for_assets(&asset_ids)?;
+            .get_activity_bounds_for_assets(&asset_ids)
+            .await?;
 
         // Compute quote bounds on-the-fly from quotes table, filtered by provider
         // Group states by data_source to batch quote bounds queries
@@ -1123,7 +1132,8 @@ where
                     .collect();
                 let bounds = self
                     .quote_store
-                    .get_quote_bounds_for_assets(&source_assets, &state.data_source)?;
+                    .get_quote_bounds_for_assets(&source_assets, &state.data_source)
+                    .await?;
                 quote_bounds_by_source.insert(state.data_source.clone(), bounds);
             }
         }
@@ -1351,7 +1361,8 @@ where
         let existing_states = self.sync_state_store.get_by_asset_ids(&syncable_ids).await?;
         let activity_bounds = self
             .activity_repo
-            .get_activity_bounds_for_assets(&syncable_ids)?;
+            .get_activity_bounds_for_assets(&syncable_ids)
+            .await?;
 
         // Compute quote bounds per provider
         let mut quote_bounds: HashMap<String, (NaiveDate, NaiveDate)> = HashMap::new();
@@ -1473,7 +1484,7 @@ where
                 effective_today,
                 fetch_end_date,
                 asset,
-            );
+            ).await;
 
             plans.push(SymbolSyncPlan {
                 asset_id: asset.id.clone(),
@@ -1547,6 +1558,7 @@ where
             let quote_bounds = self
                 .quote_store
                 .get_quote_bounds_for_assets(&[symbol.to_string()], &state.data_source)
+                .await
                 .unwrap_or_default();
             let earliest_quote = quote_bounds.get(symbol).map(|(min, _)| *min);
 
@@ -1612,8 +1624,8 @@ where
         self.ensure_sync_states_for_all_assets().await
     }
 
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
-        self.generate_sync_plan()
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+        self.generate_sync_plan().await
     }
 }
 

@@ -1,0 +1,15 @@
+[package]
+name = "whaleit-storage-common"
+version.workspace = true
+edition.workspace = true
+description = "Shared storage DTOs for WhaleIt"
+authors = ["Aziz Fadil"]
+license = "AGPL-3.0"
+
+[dependencies]
+whaleit-core = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+rust_decimal = { workspace = true }

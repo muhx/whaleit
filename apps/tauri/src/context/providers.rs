@@ -6,11 +6,11 @@ use crate::services::ConnectService;
 use log::error;
 use std::sync::{Arc, RwLock};
 use tokio::sync::mpsc;
-use wealthfolio_ai::{AiProviderService, ChatConfig, ChatService};
-use wealthfolio_connect::{
+use whaleit_ai::{AiProviderService, ChatConfig, ChatService};
+use whaleit_connect::{
     BrokerSyncService, CoreImportRunRepositoryAdapter, ImportRunRepositoryTrait,
 };
-use wealthfolio_core::{
+use whaleit_core::{
     accounts::AccountService,
     activities::ActivityService,
     assets::{AlternativeAssetService, AssetClassificationService, AssetService},
@@ -32,8 +32,8 @@ use wealthfolio_core::{
     settings::{SettingsRepositoryTrait, SettingsService, SettingsServiceTrait},
     taxonomies::TaxonomyService,
 };
-use wealthfolio_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
-use wealthfolio_storage_sqlite::{
+use whaleit_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
+use whaleit_storage_sqlite::{
     accounts::AccountRepository,
     activities::ActivityRepository,
     ai_chat::AiChatRepository,
@@ -91,18 +91,18 @@ pub async fn initialize_context(
     // The worker will be started by the caller after the context is managed
     // Must be created before services that emit events
     let (domain_event_sink, event_receiver) = TauriDomainEventSink::new();
-    let domain_event_sink: Arc<dyn wealthfolio_core::events::DomainEventSink> =
+    let domain_event_sink: Arc<dyn whaleit_core::events::DomainEventSink> =
         Arc::new(domain_event_sink);
 
     let fx_service =
         Arc::new(FxService::new(fx_repository.clone()).with_event_sink(domain_event_sink.clone()));
-    fx_service.initialize()?;
+    fx_service.initialize().await?;
 
     let settings_service = Arc::new(SettingsService::new(
         settings_repository.clone(),
         fx_service.clone(),
     ));
-    let settings = settings_service.get_settings()?;
+    let settings = settings_service.get_settings().await?;
     let base_currency_string = settings.base_currency.clone();
     let base_currency = Arc::new(RwLock::new(base_currency_string.clone()));
     let timezone = Arc::new(RwLock::new(settings.timezone.clone()));
@@ -112,7 +112,7 @@ pub async fn initialize_context(
 
     // Custom provider repository
     let custom_provider_repository = Arc::new(
-        wealthfolio_storage_sqlite::custom_provider::CustomProviderSqliteRepository::new(
+        whaleit_storage_sqlite::custom_provider::CustomProviderSqliteRepository::new(
             pool.clone(),
             writer.clone(),
         ),
@@ -138,7 +138,7 @@ pub async fn initialize_context(
 
     // Custom provider service
     let custom_provider_service = Arc::new(
-        wealthfolio_core::custom_provider::CustomProviderService::new(
+        whaleit_core::custom_provider::CustomProviderService::new(
             custom_provider_repository.clone(),
             secret_store.clone(),
         ),

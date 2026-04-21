@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use wealthfolio_core::errors::{Result, ValidationError};
-use wealthfolio_core::secrets::SecretStore;
-use wealthfolio_core::settings::SettingsRepositoryTrait;
+use whaleit_core::errors::{Result, ValidationError};
+use whaleit_core::secrets::SecretStore;
+use whaleit_core::settings::SettingsRepositoryTrait;
 
 use crate::provider_model::{
     default_priority, AiProviderCatalog, AiProviderSettings, AiProvidersResponse, FetchedModel,
@@ -20,7 +20,7 @@ use crate::provider_model::{
 #[async_trait]
 pub trait AiProviderServiceTrait: Send + Sync {
     /// Get all providers merged with user settings.
-    fn get_ai_providers(&self) -> Result<AiProvidersResponse>;
+    async fn get_ai_providers(&self) -> Result<AiProvidersResponse>;
 
     /// Update settings for a specific provider.
     async fn update_provider_settings(&self, request: UpdateProviderSettingsRequest) -> Result<()>;
@@ -31,7 +31,7 @@ pub trait AiProviderServiceTrait: Send + Sync {
     /// Get provider configuration for backend-only use (chat, model listing).
     /// This retrieves the API key from the secret store - never exposed to frontend.
     /// Returns ProviderApiError::MissingApiKey if API key is required but not configured.
-    fn get_provider_config(
+    async fn get_provider_config(
         &self,
         provider_id: &str,
     ) -> std::result::Result<ProviderConfig, ProviderApiError>;
@@ -43,7 +43,7 @@ pub trait AiProviderServiceTrait: Send + Sync {
     /// Resolve the effective tuning for a provider by merging catalog defaults
     /// with any user-supplied overrides. Returns a default-empty `ProviderTuning`
     /// when the provider has no catalog tuning and the user hasn't customized.
-    fn resolve_tuning(&self, provider_id: &str) -> ProviderTuning;
+    async fn resolve_tuning(&self, provider_id: &str) -> ProviderTuning;
 
     /// List available models from a provider.
     /// Fetches models from the provider's API using backend-stored secrets.
@@ -78,8 +78,8 @@ impl AiProviderService {
     }
 
     /// Load user settings from app_settings, falling back to defaults if missing/corrupt.
-    fn load_user_settings(&self) -> AiProviderSettings {
-        match self.settings_repo.get_setting(AI_PROVIDER_SETTINGS_KEY) {
+    async fn load_user_settings(&self) -> AiProviderSettings {
+        match self.settings_repo.get_setting(AI_PROVIDER_SETTINGS_KEY).await {
             Ok(json) => {
                 serde_json::from_str(&json).unwrap_or_else(|_| self.create_default_settings())
             }
@@ -165,8 +165,8 @@ impl AiProviderService {
     }
 
     /// Get the custom URL for a provider from user settings.
-    fn get_custom_url(&self, provider_id: &str) -> Option<String> {
-        let user_settings = self.load_user_settings();
+    async fn get_custom_url(&self, provider_id: &str) -> Option<String> {
+        let user_settings = self.load_user_settings().await;
         user_settings
             .providers
             .get(provider_id)
@@ -201,8 +201,8 @@ impl AiProviderService {
 
 #[async_trait]
 impl AiProviderServiceTrait for AiProviderService {
-    fn get_ai_providers(&self) -> Result<AiProvidersResponse> {
-        let user_settings = self.load_user_settings();
+    async fn get_ai_providers(&self) -> Result<AiProvidersResponse> {
+        let user_settings = self.load_user_settings().await;
 
         let mut providers: Vec<MergedProvider> = self
             .catalog
@@ -354,12 +354,12 @@ impl AiProviderServiceTrait for AiProviderService {
     async fn update_provider_settings(&self, request: UpdateProviderSettingsRequest) -> Result<()> {
         // Verify provider exists in catalog
         if !self.catalog.providers.contains_key(&request.provider_id) {
-            return Err(wealthfolio_core::errors::Error::Validation(
+            return Err(whaleit_core::errors::Error::Validation(
                 ValidationError::InvalidInput(format!("Unknown provider: {}", request.provider_id)),
             ));
         }
 
-        let mut settings = self.load_user_settings();
+        let mut settings = self.load_user_settings().await;
 
         // Get or create provider settings
         let provider_settings = settings
@@ -421,7 +421,7 @@ impl AiProviderServiceTrait for AiProviderService {
             match tuning_update {
                 Some(overrides) => {
                     overrides.validate().map_err(|msg| {
-                        wealthfolio_core::errors::Error::Validation(ValidationError::InvalidInput(
+                        whaleit_core::errors::Error::Validation(ValidationError::InvalidInput(
                             format!("tuning_overrides: {}", msg),
                         ))
                     })?;
@@ -447,20 +447,20 @@ impl AiProviderServiceTrait for AiProviderService {
         // Verify provider exists if setting a default
         if let Some(ref provider_id) = request.provider_id {
             if !self.catalog.providers.contains_key(provider_id) {
-                return Err(wealthfolio_core::errors::Error::Validation(
+                return Err(whaleit_core::errors::Error::Validation(
                     ValidationError::InvalidInput(format!("Unknown provider: {}", provider_id)),
                 ));
             }
         }
 
-        let mut settings = self.load_user_settings();
+        let mut settings = self.load_user_settings().await;
         settings.default_provider = request.provider_id;
         settings.schema_version = AI_PROVIDER_SETTINGS_SCHEMA_VERSION;
 
         self.save_user_settings(&settings).await
     }
 
-    fn get_provider_config(
+    async fn get_provider_config(
         &self,
         provider_id: &str,
     ) -> std::result::Result<ProviderConfig, ProviderApiError> {
@@ -473,7 +473,7 @@ impl AiProviderServiceTrait for AiProviderService {
 
         let requires_api_key = self.provider_requires_api_key(provider_id);
         let api_key = self.get_api_key(provider_id);
-        let base_url = self.get_custom_url(provider_id);
+        let base_url = self.get_custom_url(provider_id).await;
 
         // Check if API key is required but missing
         if requires_api_key && api_key.is_none() {
@@ -499,7 +499,7 @@ impl AiProviderServiceTrait for AiProviderService {
         })
     }
 
-    fn resolve_tuning(&self, provider_id: &str) -> ProviderTuning {
+    async fn resolve_tuning(&self, provider_id: &str) -> ProviderTuning {
         let catalog_tuning = self
             .catalog
             .providers
@@ -508,6 +508,7 @@ impl AiProviderServiceTrait for AiProviderService {
             .unwrap_or_default();
         let user_overrides = self
             .load_user_settings()
+            .await
             .providers
             .get(provider_id)
             .and_then(|s| s.tuning_overrides.clone());
@@ -522,7 +523,7 @@ impl AiProviderServiceTrait for AiProviderService {
         provider_id: &str,
     ) -> std::result::Result<ListModelsResponse, ProviderApiError> {
         // Get provider config (validates provider exists and has API key if needed)
-        let config = self.get_provider_config(provider_id)?;
+        let config = self.get_provider_config(provider_id).await?;
 
         // Build the model list URL based on provider
         let base_url = config.base_url.as_deref().unwrap_or(match provider_id {

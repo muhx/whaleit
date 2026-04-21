@@ -3,7 +3,7 @@
  */
 
 export const COOKIE_NAMES = {
-  PREFERRED_SIGNIN_PROVIDER: "wealthfolio_preferred_signin_provider",
+  PREFERRED_SIGNIN_PROVIDER: "whaleit_preferred_signin_provider",
 } as const;
 
 // Cookie max-age: 1 year in seconds

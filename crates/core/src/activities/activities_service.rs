@@ -1265,21 +1265,20 @@ impl ActivityService {
         } else if is_non_security_instrument {
             quote_ccy_input.clone().unwrap_or(currency.clone())
         } else {
-            let existing_asset_quote_ccy = self
+            let mut existing_asset_quote_ccy = self
                 .existing_asset_quote_ccy_by_id(
                     activity.get_symbol_id().filter(|id| !id.trim().is_empty()),
                 )
-                .or_else(|| {
-                    normalized_symbol_for_lookup
-                        .as_deref()
-                        .and_then(|resolved_symbol| {
-                            self.asset_service.existing_quote_ccy_by_symbol(
-                                resolved_symbol,
-                                exchange_mic.as_deref(),
-                                effective_instrument_type.as_ref(),
-                            ).await
-                        })
-                });
+                .await;
+            if existing_asset_quote_ccy.is_none() {
+                if let Some(resolved_symbol) = normalized_symbol_for_lookup.as_deref() {
+                    existing_asset_quote_ccy = self.asset_service.existing_quote_ccy_by_symbol(
+                        resolved_symbol,
+                        exchange_mic.as_deref(),
+                        effective_instrument_type.as_ref(),
+                    ).await;
+                }
+            }
             let (resolved_quote_ccy, resolution_source) = self
                 .resolve_quote_ccy(
                     quote_lookup_symbol.as_str(),
@@ -1311,7 +1310,8 @@ impl ActivityService {
                 exchange_mic.as_deref(),
                 effective_instrument_type.as_ref(),
                 Some(&asset_currency),
-            );
+            )
+            .await;
 
             if let Some(id) = existing_id {
                 Some(id)
@@ -1528,7 +1528,8 @@ impl ActivityService {
         if let Some(key) = activity.idempotency_key.as_ref() {
             let existing = self
                 .activity_repository
-                .check_existing_duplicates(std::slice::from_ref(key))?;
+                .check_existing_duplicates(std::slice::from_ref(key))
+                .await?;
             if let Some(existing_activity_id) = existing.get(key) {
                 return Err(Self::duplicate_activity_error(Some(existing_activity_id)));
             }
@@ -1658,21 +1659,20 @@ impl ActivityService {
         } else if is_non_security_instrument {
             quote_ccy_input.clone().unwrap_or(currency.clone())
         } else {
-            let existing_asset_quote_ccy = self
+            let mut existing_asset_quote_ccy = self
                 .existing_asset_quote_ccy_by_id(
                     activity.get_symbol_id().filter(|id| !id.trim().is_empty()),
                 )
-                .or_else(|| {
-                    normalized_symbol_for_lookup
-                        .as_deref()
-                        .and_then(|resolved_symbol| {
-                            self.asset_service.existing_quote_ccy_by_symbol(
-                                resolved_symbol,
-                                exchange_mic.as_deref(),
-                                effective_instrument_type.as_ref(),
-                            ).await
-                        })
-                });
+                .await;
+            if existing_asset_quote_ccy.is_none() {
+                if let Some(resolved_symbol) = normalized_symbol_for_lookup.as_deref() {
+                    existing_asset_quote_ccy = self.asset_service.existing_quote_ccy_by_symbol(
+                        resolved_symbol,
+                        exchange_mic.as_deref(),
+                        effective_instrument_type.as_ref(),
+                    ).await;
+                }
+            }
             let (resolved_quote_ccy, resolution_source) = self
                 .resolve_quote_ccy(
                     quote_lookup_symbol.as_str(),
@@ -1700,7 +1700,8 @@ impl ActivityService {
                 exchange_mic.as_deref(),
                 effective_instrument_type.as_ref(),
                 Some(&asset_currency),
-            );
+            )
+            .await;
 
             if let Some(id) = existing_id {
                 Some(id)
@@ -2042,17 +2043,18 @@ impl ActivityService {
                 .or_else(|| quote_ccy_input.clone())
                 .unwrap_or_else(|| currency.clone())
         } else {
-            let existing_asset_quote_ccy = self
+            let mut existing_asset_quote_ccy = self
                 .existing_asset_quote_ccy_by_id(
                     activity.get_symbol_id().filter(|id| !id.trim().is_empty()),
                 )
-                .or_else(|| {
-                    self.asset_service.existing_quote_ccy_by_symbol(
-                        normalized_symbol.as_str(),
-                        exchange_mic.as_deref(),
-                        instrument_type.as_ref(),
-                    ).await
-                });
+                .await;
+            if existing_asset_quote_ccy.is_none() {
+                existing_asset_quote_ccy = self.asset_service.existing_quote_ccy_by_symbol(
+                    normalized_symbol.as_str(),
+                    exchange_mic.as_deref(),
+                    instrument_type.as_ref(),
+                ).await;
+            }
             let allow_provider_lookup = allow_live_resolution
                 && quote_mode != Some(QuoteMode::Manual)
                 && !matches!(
@@ -2096,7 +2098,8 @@ impl ActivityService {
             exchange_mic.as_deref(),
             instrument_type.as_ref(),
             Some(&asset_currency),
-        );
+        )
+        .await;
 
         Ok(Some(AssetSpec {
             id: existing_id,
@@ -2198,7 +2201,7 @@ impl ActivityService {
             if activity.account_id.is_none() {
                 activity.account_id = Some(account_id.clone());
             }
-            self.hydrate_import_activity_from_asset_id(&mut activity);
+            self.hydrate_import_activity_from_asset_id(&mut activity).await;
 
             let symbol = activity.symbol.trim().to_string();
 
@@ -2339,14 +2342,16 @@ impl ActivityService {
             } else {
                 None
             };
-            let existing_id = activity.asset_id.clone().or_else(|| {
-                self.find_existing_asset_id(
+            let mut existing_id = activity.asset_id.clone();
+            if existing_id.is_none() {
+                existing_id = self.find_existing_asset_id(
                     &normalized_symbol,
                     resolved_mic.as_deref(),
                     effective_instrument_type.as_ref(),
                     quote_ccy_input.as_deref(),
                 )
-            });
+                .await;
+            }
 
             // Equity without MIC must either match an existing asset or be manual-quoted.
             // Check AFTER find_existing_asset_id so custom assets (e.g. delisted TWTR)
@@ -2505,6 +2510,7 @@ impl ActivityService {
             HashMap::new()
         } else {
             self.check_existing_duplicates(unique_keys)
+                .await
                 .unwrap_or_default()
         };
 
@@ -3014,13 +3020,11 @@ impl ActivityServiceTrait for ActivityService {
             })
             .collect();
 
-        let previews = candidates
-            .into_iter()
-            .enumerate()
-            .map(|(idx, candidate)| {
+        let mut previews = Vec::new();
+        for (idx, candidate) in candidates.into_iter().enumerate() {
                 let line_number = (idx + 1) as i32;
                 let Some(activity) = validated_by_line.get(&line_number) else {
-                    return ImportAssetPreviewItem {
+                    previews.push(ImportAssetPreviewItem {
                         key: candidate.key,
                         status: ImportAssetPreviewStatus::NeedsFixing,
                         resolution_source: "missing_preview_result".to_string(),
@@ -3031,7 +3035,8 @@ impl ActivityServiceTrait for ActivityService {
                             vec!["Asset preview did not return a result.".to_string()],
                         )])),
                         warnings: None,
-                    };
+                    });
+                    continue;
                 };
 
                 let has_errors = activity
@@ -3041,7 +3046,7 @@ impl ActivityServiceTrait for ActivityService {
                     || !activity.is_valid;
 
                 if has_errors {
-                    return ImportAssetPreviewItem {
+                    previews.push(ImportAssetPreviewItem {
                         key: candidate.key,
                         status: ImportAssetPreviewStatus::NeedsFixing,
                         resolution_source: "validation_error".to_string(),
@@ -3049,17 +3054,19 @@ impl ActivityServiceTrait for ActivityService {
                         draft: None,
                         errors: activity.errors.clone(),
                         warnings: activity.warnings.clone(),
-                    };
+                    });
+                    continue;
                 }
 
                 if let Some(asset_id) = activity.asset_id.clone() {
                     let draft = self
                         .asset_service
                         .get_asset_by_id(&asset_id)
+                        .await
                         .ok()
                         .map(|asset| Self::asset_to_new_asset_draft(&asset));
 
-                    return ImportAssetPreviewItem {
+                    previews.push(ImportAssetPreviewItem {
                         key: candidate.key,
                         status: ImportAssetPreviewStatus::ExistingAsset,
                         resolution_source: "existing_asset".to_string(),
@@ -3067,7 +3074,8 @@ impl ActivityServiceTrait for ActivityService {
                         draft,
                         errors: None,
                         warnings: activity.warnings.clone(),
-                    };
+                    });
+                    continue;
                 }
 
                 // Equity without exchange MIC → needs manual resolution
@@ -3089,7 +3097,7 @@ impl ActivityServiceTrait for ActivityService {
                             &activity.symbol
                         )],
                     );
-                    return ImportAssetPreviewItem {
+                    previews.push(ImportAssetPreviewItem {
                         key: candidate.key,
                         status: ImportAssetPreviewStatus::NeedsFixing,
                         resolution_source: "missing_exchange".to_string(),
@@ -3097,10 +3105,11 @@ impl ActivityServiceTrait for ActivityService {
                         draft: self.build_new_asset_draft_from_import(activity),
                         errors: Some(errors),
                         warnings: activity.warnings.clone(),
-                    };
+                    });
+                    continue;
                 }
 
-                ImportAssetPreviewItem {
+                previews.push(ImportAssetPreviewItem {
                     key: candidate.key,
                     status: ImportAssetPreviewStatus::AutoResolvedNewAsset,
                     resolution_source: "provider_resolution".to_string(),
@@ -3108,9 +3117,8 @@ impl ActivityServiceTrait for ActivityService {
                     draft: self.build_new_asset_draft_from_import(activity),
                     errors: None,
                     warnings: activity.warnings.clone(),
-                }
-            })
-            .collect();
+                });
+        }
 
         Ok(previews)
     }
@@ -3345,7 +3353,8 @@ impl ActivityServiceTrait for ActivityService {
         let existing_duplicates = if first_index_by_key.is_empty() {
             HashMap::new()
         } else {
-            self.check_existing_duplicates(first_index_by_key.keys().cloned().collect())?
+            self.check_existing_duplicates(first_index_by_key.keys().cloned().collect())
+                .await?
         };
 
         let mut duplicate_count = 0u32;
@@ -3586,7 +3595,8 @@ impl ActivityServiceTrait for ActivityService {
         let context_kind = normalize_context_kind_value(&context_kind).to_string();
         let mapping = self
             .activity_repository
-            .get_import_mapping(&account_id, &context_kind)?;
+            .get_import_mapping(&account_id, &context_kind)
+            .await?;
 
         let mut result = match mapping {
             Some(m) => m.to_mapping_data().map_err(|e| {
@@ -3678,7 +3688,8 @@ impl ActivityServiceTrait for ActivityService {
     ) -> Result<BrokerSyncProfileData> {
         let template = self
             .activity_repository
-            .get_broker_sync_profile(&account_id, &source_system)?;
+            .get_broker_sync_profile(&account_id, &source_system)
+            .await?;
         match template {
             Some(t) => t.to_broker_profile_data().map_err(|e| {
                 ActivityError::InvalidData(format!("Failed to parse broker profile data: {}", e))
@@ -3728,7 +3739,8 @@ impl ActivityServiceTrait for ActivityService {
                 self.get_broker_sync_profile(
                     seed_account.to_string(),
                     request.source_system.clone(),
-                )?
+                )
+                .await?
             }
         };
 

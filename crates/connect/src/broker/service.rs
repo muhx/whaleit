@@ -20,24 +20,24 @@ use chrono::{DateTime, Months, NaiveDate, Utc};
 use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
 use std::collections::{HashMap, HashSet};
-use wealthfolio_core::accounts::{Account, AccountServiceTrait, NewAccount, TrackingMode};
-use wealthfolio_core::activities::{
+use whaleit_core::accounts::{Account, AccountServiceTrait, NewAccount, TrackingMode};
+use whaleit_core::activities::{
     compute_idempotency_key, ActivityRepositoryTrait, ActivityServiceTrait, ActivityUpsert,
     NewActivity,
 };
-use wealthfolio_core::assets::{
+use whaleit_core::assets::{
     build_option_metadata, parse_crypto_pair_symbol, parse_symbol_with_exchange_suffix, AssetKind,
     AssetServiceTrait, AssetSpec, InstrumentType,
 };
-use wealthfolio_core::errors::Result;
-use wealthfolio_core::events::{DomainEvent, DomainEventSink, NoOpDomainEventSink};
-use wealthfolio_core::portfolio::snapshot::{
+use whaleit_core::errors::Result;
+use whaleit_core::events::{DomainEvent, DomainEventSink, NoOpDomainEventSink};
+use whaleit_core::portfolio::snapshot::{
     AccountStateSnapshot, Position, SnapshotRepositoryTrait, SnapshotServiceTrait, SnapshotSource,
 };
-use wealthfolio_core::quotes::constants::DATA_SOURCE_BROKER;
-use wealthfolio_core::quotes::model::Quote;
-use wealthfolio_core::quotes::store::QuoteStore;
-use wealthfolio_core::utils::time_utils::valuation_date_today;
+use whaleit_core::quotes::constants::DATA_SOURCE_BROKER;
+use whaleit_core::quotes::model::Quote;
+use whaleit_core::quotes::store::QuoteStore;
+use whaleit_core::utils::time_utils::valuation_date_today;
 
 const DEFAULT_BROKERAGE_PROVIDER: &str = "snaptrade";
 /// Precision used for holdings normalization/diff comparisons.
@@ -185,7 +185,7 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
         let base_currency = self.account_service.get_base_currency();
 
         // Get all existing accounts with provider_account_id to check for updates
-        let existing_accounts = self.account_service.get_all_accounts()?;
+        let existing_accounts = self.account_service.get_all_accounts().await?;
         let provider_account_id_map: std::collections::HashMap<String, Account> = existing_accounts
             .into_iter()
             .filter_map(|a| a.provider_account_id.clone().map(|id| (id, a)))
@@ -274,8 +274,8 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
     }
 
     /// Get all synced accounts (accounts with provider_account_id set)
-    fn get_synced_accounts(&self) -> Result<Vec<Account>> {
-        let all_accounts = self.account_service.get_all_accounts()?;
+    async fn get_synced_accounts(&self) -> Result<Vec<Account>> {
+        let all_accounts = self.account_service.get_all_accounts().await?;
         Ok(all_accounts
             .into_iter()
             .filter(|a| a.provider_account_id.is_some())
@@ -308,7 +308,7 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
             return Ok((0, 0, Vec::new(), 0));
         }
 
-        let account = self.account_service.get_account(&account_id)?;
+        let account = self.account_service.get_account(&account_id).await?;
         let base_currency = self
             .account_service
             .get_base_currency()
@@ -626,7 +626,7 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
         use std::collections::VecDeque;
 
         // Get the account to determine its currency
-        let account = self.account_service.get_account(&account_id)?;
+        let account = self.account_service.get_account(&account_id).await?;
         let account_currency = account.currency.clone();
 
         let today = valuation_date_today();
@@ -783,7 +783,7 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
 
             // Normalize OCC symbol
             let normalized_ticker =
-                wealthfolio_core::utils::occ_symbol::normalize_option_symbol(&ticker)
+                whaleit_core::utils::occ_symbol::normalize_option_symbol(&ticker)
                     .unwrap_or_else(|| ticker.clone());
 
             let currency = opt_pos
@@ -935,7 +935,8 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
         let tomorrow = today + chrono::Days::new(1);
         let latest = self
             .snapshot_repository
-            .get_latest_snapshot_before_date(&account_id, tomorrow)?;
+            .get_latest_snapshot_before_date(&account_id, tomorrow)
+            .await?;
 
         // 4. Build positions_map using resolved asset IDs
         let mut positions_map: HashMap<String, Position> = HashMap::new();
@@ -1197,7 +1198,8 @@ impl BrokerSyncService {
         // Get count of non-calculated snapshots
         let count = self
             .snapshot_repository
-            .get_non_calculated_snapshot_count(account_id)?;
+            .get_non_calculated_snapshot_count(account_id)
+            .await?;
 
         if count >= 2 {
             debug!(
@@ -1218,7 +1220,8 @@ impl BrokerSyncService {
         // count == 1: Create synthetic snapshot 3 months before the earliest
         let earliest = self
             .snapshot_repository
-            .get_earliest_non_calculated_snapshot(account_id)?;
+            .get_earliest_non_calculated_snapshot(account_id)
+            .await?;
 
         let earliest = match earliest {
             Some(s) => s,
@@ -1427,7 +1430,7 @@ mod tests {
 
     use chrono::{NaiveDate, Utc};
     use rust_decimal::Decimal;
-    use wealthfolio_core::portfolio::snapshot::{AccountStateSnapshot, Position, SnapshotSource};
+    use whaleit_core::portfolio::snapshot::{AccountStateSnapshot, Position, SnapshotSource};
 
     use super::BrokerSyncService;
 

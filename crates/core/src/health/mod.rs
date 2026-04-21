@@ -1,6 +1,6 @@
 //! Health Center module.
 //!
-//! This module provides the diagnostic system for Wealthfolio that inspects
+//! This module provides the diagnostic system for Whaleit that inspects
 //! portfolio data integrity, detects stale market data, identifies missing
 //! classifications, and surfaces actionable issues to users.
 //!

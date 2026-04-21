@@ -53,7 +53,7 @@ impl ActivityRepository {
 // Implement the trait for the repository
 #[async_trait]
 impl ActivityRepositoryTrait for ActivityRepository {
-    fn get_activity(&self, activity_id: &str) -> Result<Activity> {
+    async fn get_activity(&self, activity_id: &str) -> Result<Activity> {
         let mut conn = get_connection(&self.pool)?;
         let activity_db = activities::table
             .select(ActivityDB::as_select())
@@ -63,7 +63,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(Activity::from(activity_db))
     }
 
-    fn get_trading_activities(&self) -> Result<Vec<Activity>> {
+    async fn get_trading_activities(&self) -> Result<Vec<Activity>> {
         let mut conn = get_connection(&self.pool)?;
 
         let activities_db = activities::table
@@ -78,7 +78,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(activities_db.into_iter().map(Activity::from).collect())
     }
 
-    fn get_income_activities(&self) -> Result<Vec<Activity>> {
+    async fn get_income_activities(&self) -> Result<Vec<Activity>> {
         let mut conn = get_connection(&self.pool)?;
 
         let activities_db = activities::table
@@ -93,7 +93,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(activities_db.into_iter().map(Activity::from).collect())
     }
 
-    fn get_activities(&self) -> Result<Vec<Activity>> {
+    async fn get_activities(&self) -> Result<Vec<Activity>> {
         let mut conn = get_connection(&self.pool)?;
 
         let activities_db = activities::table
@@ -107,7 +107,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(activities_db.into_iter().map(Activity::from).collect())
     }
 
-    fn search_activities(
+    async fn search_activities(
         &self,
         page: i64,                                   // Page number, 0-based
         page_size: i64,                              // Number of items per page
@@ -537,7 +537,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     }
 
     /// Retrieves activities by account ID
-    fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>> {
+    async fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>> {
         let mut conn = get_connection(&self.pool)?;
 
         let activities_db = activities::table
@@ -555,7 +555,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     /// Retrieves activities by account IDs
     /// Note: Filters by is_archived (not is_active) so hidden accounts still have their
     /// activities included in calculations. Only archived accounts are excluded.
-    fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>> {
+    async fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>> {
         let mut conn = get_connection(&self.pool)?;
 
         let activities_db = activities::table
@@ -571,7 +571,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     }
 
     /// Calculates the average cost for an asset in an account
-    fn calculate_average_cost(&self, account_id: &str, asset_id: &str) -> Result<Decimal> {
+    async fn calculate_average_cost(&self, account_id: &str, asset_id: &str) -> Result<Decimal> {
         let mut conn = get_connection(&self.pool)?;
 
         #[derive(QueryableByName, Debug)]
@@ -612,7 +612,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     }
 
     /// Gets the import mapping for a given account ID and context kind by joining import_account_templates + import_templates
-    fn get_import_mapping(
+    async fn get_import_mapping(
         &self,
         some_account_id: &str,
         some_context_kind: &str,
@@ -812,7 +812,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
             .await
     }
 
-    fn list_import_templates(&self) -> Result<Vec<ImportTemplate>> {
+    async fn list_import_templates(&self) -> Result<Vec<ImportTemplate>> {
         let mut conn = get_connection(&self.pool)?;
 
         let rows = import_templates::table
@@ -824,7 +824,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(rows.into_iter().map(ImportTemplate::from).collect())
     }
 
-    fn get_import_template(&self, template_id: &str) -> Result<Option<ImportTemplate>> {
+    async fn get_import_template(&self, template_id: &str) -> Result<Option<ImportTemplate>> {
         let mut conn = get_connection(&self.pool)?;
 
         let result = import_templates::table
@@ -868,7 +868,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
             .await
     }
 
-    fn get_broker_sync_profile(
+    async fn get_broker_sync_profile(
         &self,
         account_id: &str,
         source_system: &str,
@@ -1032,7 +1032,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
 
     /// Fetches contribution-eligible activities (DEPOSIT, TRANSFER_IN, TRANSFER_OUT, CREDIT)
     /// for the given accounts within the date range.
-    fn get_contribution_activities(
+    async fn get_contribution_activities(
         &self,
         account_ids: &[String],
         start_utc: chrono::DateTime<Utc>,
@@ -1112,7 +1112,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(activities)
     }
 
-    fn get_income_activities_data(&self, account_id: Option<&str>) -> Result<Vec<IncomeData>> {
+    async fn get_income_activities_data(&self, account_id: Option<&str>) -> Result<Vec<IncomeData>> {
         let mut conn = get_connection(&self.pool)?;
 
         // For income reporting, we need to handle different subtypes:
@@ -1217,7 +1217,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
         Ok(results)
     }
 
-    fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>> {
+    async fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>> {
         let mut conn = get_connection(&self.pool)?;
 
         let min_date_str = activities::table
@@ -1235,7 +1235,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     }
 
     /// Gets the first activity date for given account IDs
-    fn get_first_activity_date(
+    async fn get_first_activity_date(
         &self,
         account_ids: Option<&[String]>,
     ) -> Result<Option<DateTime<Utc>>> {
@@ -1268,7 +1268,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     /// Gets the first and last activity dates for each asset in the provided list.
     ///
     /// Uses chunking to avoid SQLite's parameter limit in IN (...) queries.
-    fn get_activity_bounds_for_assets(
+    async fn get_activity_bounds_for_assets(
         &self,
         asset_ids: &[String],
     ) -> Result<HashMap<String, (Option<NaiveDate>, Option<NaiveDate>)>> {
@@ -1321,7 +1321,7 @@ impl ActivityRepositoryTrait for ActivityRepository {
     /// Checks for existing activities with the given idempotency keys.
     ///
     /// Returns a map of {idempotency_key: existing_activity_id} for keys that already exist.
-    fn check_existing_duplicates(
+    async fn check_existing_duplicates(
         &self,
         idempotency_keys: &[String],
     ) -> Result<HashMap<String, String>> {

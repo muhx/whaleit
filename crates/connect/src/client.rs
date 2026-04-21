@@ -1,7 +1,7 @@
-//! HTTP client for Wealthfolio Connect cloud API.
+//! HTTP client for Whaleit Connect cloud API.
 //!
 //! This module provides a shared HTTP client for communicating with the
-//! Wealthfolio Connect cloud service. Both Tauri and server implementations
+//! Whaleit Connect cloud service. Both Tauri and server implementations
 //! should use this client to ensure consistency.
 
 use async_trait::async_trait;
@@ -14,15 +14,15 @@ use crate::broker::{
     BrokerAccount, BrokerBrokerage, BrokerConnection, BrokerConnectionBrokerage,
     BrokerHoldingsResponse, PaginatedUniversalActivity, PlansResponse, UserInfo, UserTeam,
 };
-use wealthfolio_core::errors::{Error, Result};
+use whaleit_core::errors::{Error, Result};
 
 use super::broker::BrokerApiClient;
 
 /// Default timeout for API requests.
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
-/// Default base URL for Wealthfolio Connect cloud service.
-pub const DEFAULT_CLOUD_API_URL: &str = "https://api.wealthfolio.app";
+/// Default base URL for Whaleit Connect cloud service.
+pub const DEFAULT_CLOUD_API_URL: &str = "https://api.whaleit.app";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Response Types (internal, for parsing cloud API responses)
@@ -120,7 +120,7 @@ struct ApiErrorResponse {
 // Connect API Client
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// HTTP client for the Wealthfolio Connect cloud API.
+/// HTTP client for the Whaleit Connect cloud API.
 ///
 /// This client provides methods for:
 /// - Fetching broker connections, accounts, and activities
@@ -130,7 +130,7 @@ struct ApiErrorResponse {
 /// # Example
 ///
 /// ```ignore
-/// let client = ConnectApiClient::new("https://api.wealthfolio.app", "your-token")?;
+/// let client = ConnectApiClient::new("https://api.whaleit.app", "your-token")?;
 /// let connections = client.list_connections().await?;
 /// ```
 #[derive(Debug, Clone)]
@@ -145,7 +145,7 @@ impl ConnectApiClient {
     ///
     /// # Arguments
     ///
-    /// * `base_url` - The base URL of the cloud API (e.g., "https://api.wealthfolio.app")
+    /// * `base_url` - The base URL of the cloud API (e.g., "https://api.whaleit.app")
     /// * `access_token` - A valid JWT access token
     ///
     /// # Errors
@@ -545,12 +545,12 @@ impl BrokerApiClient for ConnectApiClient {
 ///
 /// # Arguments
 ///
-/// * `base_url` - The base URL of the cloud API (e.g., "https://api.wealthfolio.app")
+/// * `base_url` - The base URL of the cloud API (e.g., "https://api.whaleit.app")
 ///
 /// # Example
 ///
 /// ```ignore
-/// let plans = fetch_subscription_plans_public("https://api.wealthfolio.app").await?;
+/// let plans = fetch_subscription_plans_public("https://api.whaleit.app").await?;
 /// ```
 pub async fn fetch_subscription_plans_public(base_url: &str) -> Result<PlansResponse> {
     let client = reqwest::Client::builder()
@@ -592,13 +592,13 @@ mod tests {
 
     #[test]
     fn test_client_creation() {
-        let client = ConnectApiClient::new("https://api.wealthfolio.app", "test-token");
+        let client = ConnectApiClient::new("https://api.whaleit.app", "test-token");
         assert!(client.is_ok());
     }
 
     #[test]
     fn test_client_url_normalization() {
-        let client = ConnectApiClient::new("https://api.wealthfolio.app/", "test-token").unwrap();
-        assert_eq!(client.base_url, "https://api.wealthfolio.app");
+        let client = ConnectApiClient::new("https://api.whaleit.app/", "test-token").unwrap();
+        assert_eq!(client.base_url, "https://api.whaleit.app");
     }
 }

@@ -100,7 +100,7 @@ mod desktop {
         // Start periodic market data sync (6h interval, 2min initial delay)
         let periodic_quote_service = Arc::clone(&context.quote_service);
         tauri::async_runtime::spawn(async move {
-            wealthfolio_core::quotes::scheduler::run_periodic_sync(
+            whaleit_core::quotes::scheduler::run_periodic_sync(
                 periodic_quote_service,
                 std::time::Duration::from_secs(120),
                 std::time::Duration::from_secs(6 * 3600),
@@ -438,11 +438,11 @@ pub fn run() {
             commands::addon::submit_addon_rating,
             // Sync commands
             #[cfg(any(feature = "connect-sync", feature = "device-sync"))]
-            commands::wealthfolio_connect::store_sync_session,
+            commands::whaleit_connect::store_sync_session,
             #[cfg(any(feature = "connect-sync", feature = "device-sync"))]
-            commands::wealthfolio_connect::clear_sync_session,
+            commands::whaleit_connect::clear_sync_session,
             #[cfg(any(feature = "connect-sync", feature = "device-sync"))]
-            commands::wealthfolio_connect::restore_sync_session,
+            commands::whaleit_connect::restore_sync_session,
             #[cfg(feature = "connect-sync")]
             commands::brokers_sync::sync_broker_data,
             #[cfg(feature = "connect-sync")]

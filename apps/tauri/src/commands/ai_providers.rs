@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use tauri::State;
-use wealthfolio_ai::{
+use whaleit_ai::{
     AiProvidersResponse, ListModelsResponse, ProviderApiError, SetDefaultProviderRequest,
     UpdateProviderSettingsRequest,
 };
@@ -14,7 +14,7 @@ use super::error::CommandResult;
 pub async fn get_ai_providers(
     context: State<'_, Arc<ServiceContext>>,
 ) -> CommandResult<AiProvidersResponse> {
-    Ok(context.ai_provider_service().get_ai_providers()?)
+    Ok(context.ai_provider_service().get_ai_providers().await?)
 }
 
 #[tauri::command]

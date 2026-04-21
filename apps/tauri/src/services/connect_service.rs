@@ -5,11 +5,11 @@
 
 use std::sync::Arc;
 
-use wealthfolio_connect::{
+use whaleit_connect::{
     ensure_valid_access_token, ConnectApiClient, TokenLifecycleConfig, TokenLifecycleState,
     DEFAULT_CLOUD_API_URL,
 };
-use wealthfolio_core::secrets::SecretStore;
+use whaleit_core::secrets::SecretStore;
 
 /// Returns true when broker/connect sync was compiled in.
 pub fn is_connect_sync_enabled() -> bool {

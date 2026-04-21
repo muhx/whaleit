@@ -6,7 +6,7 @@
 use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
-use wealthfolio_core::{
+use whaleit_core::{
     accounts::TrackingMode,
     events::DomainEvent,
     portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode},
@@ -253,7 +253,7 @@ mod tests {
     fn test_plan_portfolio_job_accounts_changed_no_fake_fx_ids() {
         let events = vec![DomainEvent::AccountsChanged {
             account_ids: vec!["acc1".to_string()],
-            currency_changes: vec![wealthfolio_core::events::CurrencyChange {
+            currency_changes: vec![whaleit_core::events::CurrencyChange {
                 account_id: "acc1".to_string(),
                 old_currency: None,
                 new_currency: "EUR".to_string(),

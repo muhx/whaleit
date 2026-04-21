@@ -61,7 +61,7 @@ fn has_usable_llm_mappings(args: &ImportCsvArgs) -> bool {
         || has_usable_string_map(&args.account_mappings)
 }
 
-use wealthfolio_core::activities::{
+use whaleit_core::activities::{
     import_type, into_field_mapping_values, ImportMappingData, ParseConfig,
 };
 
@@ -626,6 +626,7 @@ impl<E: AiEnvironment + 'static> Tool for ImportCsvTool<E> {
             .env
             .account_service()
             .get_active_accounts()
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         let available_accounts: Vec<AccountOption> = accounts
@@ -661,6 +662,7 @@ impl<E: AiEnvironment + 'static> Tool for ImportCsvTool<E> {
                     .env
                     .activity_service()
                     .get_import_mapping(account_id.clone(), import_type::ACTIVITY.to_string())
+                    .await
                 {
                     debug!("Loaded saved import mapping for account {}", account_id);
                     used_saved_profile = true;

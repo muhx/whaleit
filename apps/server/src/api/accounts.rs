@@ -12,7 +12,7 @@ use axum::{
     Json, Router,
 };
 use serde::Deserialize;
-use wealthfolio_core::accounts::AccountServiceTrait;
+use whaleit_core::accounts::AccountServiceTrait;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

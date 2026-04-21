@@ -83,6 +83,7 @@ pub async fn get_migration_status(
 
         let assignments = taxonomy_service
             .get_asset_assignments(&asset.id)
+            .await
             .unwrap_or_default();
 
         let has_gics_assignment = gics_taxonomy
@@ -159,6 +160,7 @@ pub async fn migrate_legacy_classifications(
 
         let existing_assignments = taxonomy_service
             .get_asset_assignments(&asset.id)
+            .await
             .unwrap_or_default();
 
         let has_gics = existing_assignments

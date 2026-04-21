@@ -4,7 +4,7 @@ use crate::context::ServiceContext;
 use log::{debug, error};
 use tauri::State;
 
-use wealthfolio_core::accounts::{Account, AccountUpdate, NewAccount};
+use whaleit_core::accounts::{Account, AccountUpdate, NewAccount};
 
 #[tauri::command]
 pub async fn get_accounts(
@@ -17,12 +17,12 @@ pub async fn get_accounts(
         state
             .account_service()
             .get_all_accounts()
-            .map_err(|e| format!("Failed to load accounts: {}", e))
+            .await.map_err(|e| format!("Failed to load accounts: {}", e))
     } else {
         state
             .account_service()
             .get_non_archived_accounts()
-            .map_err(|e| format!("Failed to load accounts: {}", e))
+            .await.map_err(|e| format!("Failed to load accounts: {}", e))
     }
 }
 

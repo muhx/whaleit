@@ -299,17 +299,17 @@ impl AssetRepositoryTrait for AssetRepository {
     }
 
     /// Retrieves an asset by its ID
-    fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
+    async fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
         self.get_by_id_impl(asset_id)
     }
 
     /// Lists all assets in the database
-    fn list(&self) -> Result<Vec<Asset>> {
+    async fn list(&self) -> Result<Vec<Asset>> {
         self.list_impl()
     }
 
     /// Lists assets by their asset IDs
-    fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
+    async fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
         self.list_by_asset_ids_impl(asset_ids)
     }
 
@@ -348,12 +348,12 @@ impl AssetRepositoryTrait for AssetRepository {
             .await
     }
 
-    fn search_by_symbol(&self, query: &str) -> Result<Vec<Asset>> {
+    async fn search_by_symbol(&self, query: &str) -> Result<Vec<Asset>> {
         self.search_by_symbol_impl(query)
     }
 
     /// Find an asset by its instrument_key
-    fn find_by_instrument_key(&self, instrument_key: &str) -> Result<Option<Asset>> {
+    async fn find_by_instrument_key(&self, instrument_key: &str) -> Result<Option<Asset>> {
         let mut conn = get_connection(&self.pool)?;
 
         let result = assets::table

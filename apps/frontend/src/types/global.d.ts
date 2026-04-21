@@ -7,8 +7,8 @@ declare global {
     __TAURI__?: unknown;
 
     // Exposed for addon integration
-    __wealthfolio_query_client__?: QueryClient;
-    __wealthfolio_navigate__?: (route: string) => void;
+    __whaleit_query_client__?: QueryClient;
+    __whaleit_navigate__?: (route: string) => void;
 
     // Dev helpers and framework singletons made available at runtime
     React?: unknown;
@@ -22,5 +22,4 @@ declare global {
   var debugAddons: unknown;
 }
 
-export {};
-
+export { };

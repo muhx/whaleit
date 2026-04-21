@@ -25,7 +25,7 @@ impl SettingsRepository {
 // Implement the trait for SettingsRepository
 #[async_trait]
 impl SettingsRepositoryTrait for SettingsRepository {
-    fn get_settings(&self) -> Result<Settings> {
+    async fn get_settings(&self) -> Result<Settings> {
         let mut conn = get_connection(&self.pool)?;
         let all_settings: Vec<(String, String)> = app_settings
             .select((setting_key, setting_value))
@@ -149,7 +149,7 @@ impl SettingsRepositoryTrait for SettingsRepository {
             .await
     }
 
-    fn get_setting(&self, setting_key_param: &str) -> Result<String> {
+    async fn get_setting(&self, setting_key_param: &str) -> Result<String> {
         let mut conn = get_connection(&self.pool)?;
         let result = app_settings
             .filter(setting_key.eq(setting_key_param))
@@ -198,7 +198,7 @@ impl SettingsRepositoryTrait for SettingsRepository {
             .await
     }
 
-    fn get_distinct_currencies_excluding_base(&self, base_currency: &str) -> Result<Vec<String>> {
+    async fn get_distinct_currencies_excluding_base(&self, base_currency: &str) -> Result<Vec<String>> {
         let mut conn = get_connection(&self.pool)?;
 
         let currency_assets: Vec<String> = assets::table

@@ -8,13 +8,13 @@ use crate::{
 use tracing::error;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, EnvFilter};
-use wealthfolio_ai::{AiProviderService, AiProviderServiceTrait, ChatConfig, ChatService};
-use wealthfolio_connect::{
+use whaleit_ai::{AiProviderService, AiProviderServiceTrait, ChatConfig, ChatService};
+use whaleit_connect::{
     BrokerSyncService, BrokerSyncServiceTrait, CoreImportRunRepositoryAdapter,
     ImportRunRepositoryTrait, TokenLifecycleState,
 };
-use wealthfolio_core::addons::{AddonService, AddonServiceTrait};
-use wealthfolio_core::{
+use whaleit_core::addons::{AddonService, AddonServiceTrait};
+use whaleit_core::{
     accounts::AccountService,
     activities::{ActivityService as CoreActivityService, ActivityServiceTrait},
     assets::{
@@ -42,8 +42,8 @@ use wealthfolio_core::{
     settings::{SettingsRepositoryTrait, SettingsService, SettingsServiceTrait},
     taxonomies::{TaxonomyService, TaxonomyServiceTrait},
 };
-use wealthfolio_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
-use wealthfolio_storage_sqlite::{
+use whaleit_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
+use whaleit_storage_sqlite::{
     accounts::AccountRepository,
     activities::ActivityRepository,
     ai_chat::AiChatRepository,
@@ -77,7 +77,7 @@ pub struct AppState {
     pub snapshot_service: Arc<dyn SnapshotServiceTrait + Send + Sync>,
     pub snapshot_repository: Arc<SnapshotRepository>,
     pub performance_service:
-        Arc<dyn wealthfolio_core::portfolio::performance::PerformanceServiceTrait + Send + Sync>,
+        Arc<dyn whaleit_core::portfolio::performance::PerformanceServiceTrait + Send + Sync>,
     pub income_service: Arc<dyn IncomeServiceTrait + Send + Sync>,
     pub goal_service: Arc<dyn GoalServiceTrait + Send + Sync>,
     pub limits_service: Arc<dyn ContributionLimitServiceTrait + Send + Sync>,
@@ -102,7 +102,7 @@ pub struct AppState {
     pub device_sync_runtime: Arc<DeviceSyncRuntimeState>,
     pub health_service: Arc<dyn HealthServiceTrait + Send + Sync>,
     pub token_lifecycle: Arc<TokenLifecycleState>,
-    pub custom_provider_service: Arc<wealthfolio_core::custom_provider::CustomProviderService>,
+    pub custom_provider_service: Arc<whaleit_core::custom_provider::CustomProviderService>,
 }
 
 pub fn init_tracing() {
@@ -192,7 +192,7 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         quote_sync_state_repository.clone(),
     ));
     let custom_provider_repository = Arc::new(
-        wealthfolio_storage_sqlite::custom_provider::CustomProviderSqliteRepository::new(
+        whaleit_storage_sqlite::custom_provider::CustomProviderSqliteRepository::new(
             pool.clone(),
             writer.clone(),
         ),
@@ -210,7 +210,7 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         .await?,
     );
     let custom_provider_service = Arc::new(
-        wealthfolio_core::custom_provider::CustomProviderService::new(
+        whaleit_core::custom_provider::CustomProviderService::new(
             custom_provider_repository.clone(),
             secret_store.clone(),
         ),
@@ -281,7 +281,7 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     );
 
     let performance_service = Arc::new(
-        wealthfolio_core::portfolio::performance::PerformanceService::new_with_timezone(
+        whaleit_core::portfolio::performance::PerformanceService::new_with_timezone(
             valuation_service.clone(),
             quote_service.clone(),
             timezone.clone(),

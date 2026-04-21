@@ -3,12 +3,12 @@ use std::sync::Arc;
 use crate::context::ServiceContext;
 use log::debug;
 use tauri::State;
-use wealthfolio_core::goals::{Goal, GoalsAllocation, NewGoal};
+use whaleit_core::goals::{Goal, GoalsAllocation, NewGoal};
 
 #[tauri::command]
 pub async fn get_goals(state: State<'_, Arc<ServiceContext>>) -> Result<Vec<Goal>, String> {
     debug!("Fetching active goals...");
-    state.goal_service().get_goals().map_err(|e| e.to_string())
+    state.goal_service().get_goals().await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -71,5 +71,5 @@ pub async fn load_goals_allocations(
     state
         .goal_service()
         .load_goals_allocations()
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }

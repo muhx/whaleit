@@ -1,14 +1,14 @@
-//! Wealthfolio Device Sync - Cloud-based device synchronization for Wealthfolio.
+//! Whaleit Device Sync - Cloud-based device synchronization for Whaleit.
 //!
 //! This crate provides the API client and types for device enrollment, pairing,
-//! and E2EE synchronization via the Wealthfolio Connect cloud service.
+//! and E2EE synchronization via the Whaleit Connect cloud service.
 //!
 //! # Usage
 //!
 //! ```rust,ignore
-//! use wealthfolio_device_sync::{DeviceSyncClient, RegisterDeviceRequest, EnrollDeviceResponse};
+//! use whaleit_device_sync::{DeviceSyncClient, RegisterDeviceRequest, EnrollDeviceResponse};
 //!
-//! let client = DeviceSyncClient::new("https://api.wealthfolio.app");
+//! let client = DeviceSyncClient::new("https://api.whaleit.app");
 //! let result = client.enroll_device(
 //!     "access_token",
 //!     RegisterDeviceRequest {

@@ -257,7 +257,7 @@ pub struct ChatRunConfig {
 impl Default for ChatRunConfig {
     fn default() -> Self {
         Self {
-            template_id: "wealthfolio-assistant-v1".to_string(),
+            template_id: "whaleit-assistant-v1".to_string(),
             template_version: "1.0.0".to_string(),
             locale: None,
             detail_level: DetailLevel::Standard,

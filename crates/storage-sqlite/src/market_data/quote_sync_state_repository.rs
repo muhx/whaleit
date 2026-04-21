@@ -28,7 +28,7 @@ impl QuoteSyncStateRepository {
 
 #[async_trait]
 impl SyncStateStore for QuoteSyncStateRepository {
-    fn get_provider_sync_stats(&self) -> Result<Vec<ProviderSyncStats>> {
+    async fn get_provider_sync_stats(&self) -> Result<Vec<ProviderSyncStats>> {
         use diesel::sql_types::{BigInt, Nullable, Text};
 
         #[derive(QueryableByName)]
@@ -104,7 +104,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
             .collect())
     }
 
-    fn get_all(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_all(&self) -> Result<Vec<QuoteSyncState>> {
         let mut conn = get_connection(&self.pool)?;
 
         let results = qss_dsl::quote_sync_state
@@ -115,7 +115,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
         Ok(results.into_iter().map(QuoteSyncState::from).collect())
     }
 
-    fn get_by_asset_id(&self, asset_id: &str) -> Result<Option<QuoteSyncState>> {
+    async fn get_by_asset_id(&self, asset_id: &str) -> Result<Option<QuoteSyncState>> {
         let mut conn = get_connection(&self.pool)?;
 
         let result = qss_dsl::quote_sync_state
@@ -127,7 +127,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
         Ok(result.map(QuoteSyncState::from))
     }
 
-    fn get_by_asset_ids(&self, asset_ids: &[String]) -> Result<HashMap<String, QuoteSyncState>> {
+    async fn get_by_asset_ids(&self, asset_ids: &[String]) -> Result<HashMap<String, QuoteSyncState>> {
         if asset_ids.is_empty() {
             return Ok(HashMap::new());
         }
@@ -151,7 +151,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
         Ok(result_map)
     }
 
-    fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>> {
         let mut conn = get_connection(&self.pool)?;
 
         // Active = position_closed_date IS NULL
@@ -164,7 +164,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
         Ok(results.into_iter().map(QuoteSyncState::from).collect())
     }
 
-    fn get_assets_needing_sync(&self, grace_period_days: i64) -> Result<Vec<QuoteSyncState>> {
+    async fn get_assets_needing_sync(&self, grace_period_days: i64) -> Result<Vec<QuoteSyncState>> {
         let mut conn = get_connection(&self.pool)?;
         let today = Utc::now().date_naive();
         let grace_cutoff = today - chrono::Duration::days(grace_period_days);
@@ -400,7 +400,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
             .await
     }
 
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
         let mut conn = get_connection(&self.pool)?;
 
         // Get assets where profile_enriched_at is NULL
@@ -413,7 +413,7 @@ impl SyncStateStore for QuoteSyncStateRepository {
         Ok(results.into_iter().map(QuoteSyncState::from).collect())
     }
 
-    fn get_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
         let mut conn = get_connection(&self.pool)?;
 
         // Get sync states where error_count > 0

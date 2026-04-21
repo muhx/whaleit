@@ -7,7 +7,7 @@ use std::sync::Arc;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, State};
-use wealthfolio_ai::{
+use whaleit_ai::{
     AiError, AiStreamEvent, ChatMessage, ChatThread, ListThreadsRequest, SendMessageRequest,
     ThreadPage,
 };

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use log::{error, info};
 use tauri::AppHandle;
 use tokio::sync::mpsc;
-use wealthfolio_core::events::{DomainEvent, DomainEventSink};
+use whaleit_core::events::{DomainEvent, DomainEventSink};
 
 use super::queue_worker::event_queue_worker;
 use crate::context::ServiceContext;

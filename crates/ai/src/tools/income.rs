@@ -106,8 +106,7 @@ impl<E: AiEnvironment + 'static> Tool for GetIncomeTool<E> {
         let summaries = self
             .env
             .income_service()
-            .get_income_summary(None)
-            .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
+            .get_income_summary(None).await .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         // Determine which period to return
         let period = args.period.unwrap_or_else(|| "YTD".to_string());

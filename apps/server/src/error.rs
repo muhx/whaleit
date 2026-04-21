@@ -5,8 +5,8 @@ use axum::{
 };
 use serde::Serialize;
 use thiserror::Error;
-use wealthfolio_ai::ProviderApiError;
-use wealthfolio_core::errors::Error as CoreError;
+use whaleit_ai::ProviderApiError;
+use whaleit_core::errors::Error as CoreError;
 
 #[allow(dead_code)]
 #[derive(Error, Debug)]

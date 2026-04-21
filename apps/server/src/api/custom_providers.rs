@@ -4,7 +4,7 @@ use axum::{
     Json, Router,
 };
 use std::sync::Arc;
-use wealthfolio_core::custom_provider::{
+use whaleit_core::custom_provider::{
     CustomProviderWithSources, NewCustomProvider, TestSourceRequest, TestSourceResult,
     UpdateCustomProvider,
 };

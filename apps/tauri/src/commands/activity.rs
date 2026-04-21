@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::context::ServiceContext;
 use log::debug;
 use tauri::State;
-use wealthfolio_core::activities::{
+use whaleit_core::activities::{
     Activity, ActivityBulkMutationRequest, ActivityBulkMutationResult, ActivityImport,
     ActivitySearchResponse, ActivityUpdate, ImportActivitiesResult, ImportAssetCandidate,
     ImportAssetPreviewItem, ImportMappingData, ImportTemplateData, NewActivity, ParseConfig,
@@ -49,7 +49,7 @@ pub async fn search_activities(
         date_from_parsed,
         date_to_parsed,
         instrument_type_filter,
-    )?)
+    ).await?)
 }
 
 #[tauri::command]
@@ -124,7 +124,8 @@ pub async fn get_account_import_mapping(
     debug!("Getting import mapping for account: {}", account_id);
     Ok(state
         .activity_service()
-        .get_import_mapping(account_id, context_kind)?)
+        .get_import_mapping(account_id, context_kind)
+        .await?)
 }
 
 #[tauri::command]
@@ -159,7 +160,7 @@ pub async fn link_account_template(
 pub async fn list_import_templates(
     state: State<'_, Arc<ServiceContext>>,
 ) -> Result<Vec<ImportTemplateData>, String> {
-    Ok(state.activity_service().list_import_templates()?)
+    Ok(state.activity_service().list_import_templates().await?)
 }
 
 #[tauri::command]
@@ -167,7 +168,7 @@ pub async fn get_import_template(
     id: String,
     state: State<'_, Arc<ServiceContext>>,
 ) -> Result<ImportTemplateData, String> {
-    Ok(state.activity_service().get_import_template(id)?)
+    Ok(state.activity_service().get_import_template(id).await?)
 }
 
 #[tauri::command]
@@ -245,7 +246,7 @@ pub async fn check_existing_duplicates(
     state
         .activity_service()
         .check_existing_duplicates(idempotency_keys)
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]

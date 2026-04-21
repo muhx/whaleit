@@ -82,11 +82,10 @@ impl ContributionLimitService {
             });
         }
 
-        let activities = self.activity_repository.get_contribution_activities(
-            account_ids,
-            start_utc,
-            end_exclusive_utc,
-        ).await?;
+        let activities = self
+            .activity_repository
+            .get_contribution_activities(account_ids, start_utc, end_exclusive_utc)
+            .await?;
         let tz = self.user_timezone();
 
         // Build set of limit account_ids for O(1) lookup
@@ -143,12 +142,10 @@ impl ContributionLimitService {
             let activity_date = activity_date_in_tz(activity.activity_instant, tz);
 
             // Convert using the exchange rate on the activity date
-            let converted_amount = self.fx_service.convert_currency_for_date(
-                amount,
-                &activity.currency,
-                base_currency,
-                activity_date,
-            ).await?;
+            let converted_amount = self
+                .fx_service
+                .convert_currency_for_date(amount, &activity.currency, base_currency, activity_date)
+                .await?;
 
             total += converted_amount;
 
@@ -207,7 +204,10 @@ impl ContributionLimitServiceTrait for ContributionLimitService {
         limit_id: &str,
         base_currency: &str,
     ) -> Result<DepositsCalculation> {
-        let limit = self.limit_repository.get_contribution_limit(limit_id).await?;
+        let limit = self
+            .limit_repository
+            .get_contribution_limit(limit_id)
+            .await?;
 
         let account_ids = match limit.account_ids {
             Some(ids_str) if !ids_str.trim().is_empty() => ids_str
@@ -237,6 +237,7 @@ impl ContributionLimitServiceTrait for ContributionLimitService {
                 end_exclusive,
                 base_currency,
             )
+            .await
         } else {
             let year = limit.contribution_year;
             let tz = self.user_timezone();
@@ -247,6 +248,7 @@ impl ContributionLimitServiceTrait for ContributionLimitService {
                 end_exclusive_utc,
                 base_currency,
             )
+            .await
         }
     }
 }
@@ -355,7 +357,10 @@ mod tests {
         async fn create_activities(&self, _: Vec<NewActivity>) -> Result<usize> {
             unimplemented!()
         }
-        async fn get_first_activity_date(&self, _: Option<&[String]>) -> Result<Option<DateTime<Utc>>> {
+        async fn get_first_activity_date(
+            &self,
+            _: Option<&[String]>,
+        ) -> Result<Option<DateTime<Utc>>> {
             unimplemented!()
         }
         async fn get_import_mapping(
@@ -757,7 +762,7 @@ mod tests {
             amount: Some(dec!(1000)),
             currency: "USD".to_string(),
             metadata: external_metadata(),
-            source_group_id: None, // From outside Wealthfolio
+            source_group_id: None, // From outside Whaleit
         }];
         let service = make_service(activities);
         let (start, end) = dates();

@@ -11,7 +11,7 @@ use crate::{
 use anyhow::anyhow;
 use chrono::NaiveDate;
 use serde_json::json;
-use wealthfolio_core::{
+use whaleit_core::{
     accounts::AccountServiceTrait,
     constants::PORTFOLIO_TOTAL_ACCOUNT_ID,
     portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode},
@@ -143,7 +143,7 @@ pub async fn process_portfolio_job(
             None => {
                 // This shouldn't happen since we checked requires_sync(), but handle gracefully
                 tracing::warn!("MarketSyncMode requires sync but returned None for SyncMode");
-                Ok(wealthfolio_core::quotes::SyncResult::default())
+                Ok(whaleit_core::quotes::SyncResult::default())
             }
         };
 

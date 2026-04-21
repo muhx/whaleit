@@ -13,7 +13,7 @@ use crate::commands::device_sync::{
 use crate::context::ServiceContext;
 
 // Re-export types for use in other modules
-pub use wealthfolio_device_sync::{EnableSyncResult, SyncState, SyncStateResult};
+pub use whaleit_device_sync::{EnableSyncResult, SyncState, SyncStateResult};
 
 /// Get the current device sync state.
 /// Returns the state machine status: FRESH, REGISTERED, READY, STALE, or RECOVERY.

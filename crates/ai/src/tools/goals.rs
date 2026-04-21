@@ -96,6 +96,7 @@ impl<E: AiEnvironment + 'static> Tool for GetGoalsTool<E> {
             .env
             .goal_service()
             .get_goals()
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         // Fetch allocations for progress
@@ -103,6 +104,7 @@ impl<E: AiEnvironment + 'static> Tool for GetGoalsTool<E> {
             .env
             .goal_service()
             .load_goals_allocations()
+            .await
             .unwrap_or_default();
 
         // Fetch latest valuations for progress calculation
@@ -112,6 +114,7 @@ impl<E: AiEnvironment + 'static> Tool for GetGoalsTool<E> {
             .env
             .valuation_service()
             .get_latest_valuations(&account_ids)
+            .await
             .unwrap_or_default();
 
         // Build valuation lookup: account_id -> total_value in base currency (Decimal)

@@ -158,7 +158,7 @@ impl HoldingsValuationServiceTrait for HoldingsValuationService {
                 HoldingType::Cash => {
                     holding.as_of_date = today;
                     let base_currency = holding.base_currency.clone();
-                    self.calculate_cash_valuation(holding, &base_currency)?;
+                    self.calculate_cash_valuation(holding, &base_currency).await?;
                 }
             }
         }

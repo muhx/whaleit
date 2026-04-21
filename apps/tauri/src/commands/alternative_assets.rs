@@ -16,7 +16,7 @@ use tauri::State;
 
 use crate::context::ServiceContext;
 
-use wealthfolio_core::assets::{
+use whaleit_core::assets::{
     AssetKind, CreateAlternativeAssetRequest as CoreCreateRequest,
     LinkLiabilityRequest as CoreLinkRequest, UpdateAssetDetailsRequest as CoreUpdateDetailsRequest,
     UpdateValuationRequest as CoreValuationRequest,
@@ -384,7 +384,7 @@ pub async fn get_alternative_holdings(
     let holdings = state
         .alternative_asset_service()
         .get_alternative_holdings()
-        .map_err(|e| format!("Failed to get holdings: {}", e))?;
+        .await.map_err(|e| format!("Failed to get holdings: {}", e))?;
 
     // Convert core holdings to response format
     let response: Vec<AlternativeHoldingResponse> = holdings
@@ -502,7 +502,7 @@ pub fn get_net_worth_history(
     let history = state
         .net_worth_service()
         .get_net_worth_history(start, end)
-        .map_err(|e| format!("Failed to get net worth history: {}", e))?;
+        .await.map_err(|e| format!("Failed to get net worth history: {}", e))?;
 
     let response: Vec<NetWorthHistoryPoint> = history
         .into_iter()

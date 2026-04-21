@@ -10,11 +10,11 @@ use crate::{
 
 use log::{debug, error};
 use tauri::{AppHandle, State};
-use wealthfolio_core::quotes::{
+use whaleit_core::quotes::{
     service::ProviderInfo, LatestQuoteSnapshot, MarketSyncMode, Quote, QuoteImport,
     SymbolSearchResult,
 };
-use wealthfolio_market_data::ExchangeInfo;
+use whaleit_market_data::ExchangeInfo;
 
 #[tauri::command]
 pub async fn search_symbol(
@@ -117,7 +117,7 @@ pub async fn get_quote_history(
     state
         .quote_service()
         .get_historical_quotes(&symbol)
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -128,7 +128,7 @@ pub async fn get_latest_quotes(
     state
         .quote_service()
         .get_latest_quotes_snapshot(&asset_ids)
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -210,10 +210,10 @@ pub async fn resolve_symbol_quote(
     quote_ccy: Option<String>,
     provider_id: Option<String>,
     state: State<'_, Arc<ServiceContext>>,
-) -> Result<wealthfolio_core::quotes::ResolvedQuote, String> {
+) -> Result<whaleit_core::quotes::ResolvedQuote, String> {
     let inst_type = instrument_type
         .as_deref()
-        .and_then(wealthfolio_core::assets::InstrumentType::from_db_str);
+        .and_then(whaleit_core::assets::InstrumentType::from_db_str);
     state
         .quote_service()
         .resolve_symbol_quote(
@@ -229,7 +229,7 @@ pub async fn resolve_symbol_quote(
 
 #[tauri::command]
 pub fn get_exchanges() -> Vec<ExchangeInfo> {
-    wealthfolio_market_data::get_exchange_list()
+    whaleit_market_data::get_exchange_list()
 }
 
 /// Fetch dividend events for a symbol from Yahoo Finance.
@@ -237,8 +237,8 @@ pub fn get_exchanges() -> Vec<ExchangeInfo> {
 #[tauri::command]
 pub async fn fetch_yahoo_dividends(
     symbol: String,
-) -> Result<Vec<wealthfolio_market_data::YahooDividend>, String> {
-    let provider = wealthfolio_market_data::YahooProvider::new()
+) -> Result<Vec<whaleit_market_data::YahooDividend>, String> {
+    let provider = whaleit_market_data::YahooProvider::new()
         .await
         .map_err(|e| e.to_string())?;
     provider

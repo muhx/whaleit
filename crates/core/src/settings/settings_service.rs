@@ -42,7 +42,7 @@ impl SettingsServiceTrait for SettingsService {
     }
 
     async fn update_settings(&self, new_settings: &SettingsUpdate) -> Result<()> {
-        let current_base_currency = self.get_base_currency()?;
+        let current_base_currency = self.get_base_currency().await?;
         let mut normalized_settings = new_settings.clone();
 
         if let Some(ref new_base_currency_val) = normalized_settings.base_currency {
@@ -73,7 +73,8 @@ impl SettingsServiceTrait for SettingsService {
     async fn update_base_currency(&self, new_base_currency: &str) -> Result<()> {
         let all_currencies = self
             .settings_repository
-            .get_distinct_currencies_excluding_base(new_base_currency)?;
+            .get_distinct_currencies_excluding_base(new_base_currency)
+            .await?;
 
         debug!(
             "Registering currency pairs for currencies: {:?}",
@@ -104,6 +105,7 @@ impl SettingsServiceTrait for SettingsService {
         match self
             .settings_repository
             .get_setting("auto_update_check_enabled")
+            .await
         {
             Ok(value) => Ok(value.parse().unwrap_or(true)),
             Err(Error::Database(DatabaseError::NotFound(_))) => Ok(true),

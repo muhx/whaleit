@@ -5,7 +5,7 @@ use tauri::{AppHandle, State};
 
 // Import addon modules
 use crate::context::ServiceContext;
-use wealthfolio_core::addons::{
+use whaleit_core::addons::{
     self, AddonManifest, AddonUpdateCheckResult, AddonUpdateInfo, ExtractedAddon, InstalledAddon,
 };
 

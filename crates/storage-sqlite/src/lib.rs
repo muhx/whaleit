@@ -1,4 +1,4 @@
-//! SQLite storage implementation for Wealthfolio.
+//! SQLite storage implementation for Whaleit.
 //!
 //! This crate provides all database-related functionality using Diesel ORM with SQLite.
 //! It implements the repository traits defined in `whaleit-core` and contains:

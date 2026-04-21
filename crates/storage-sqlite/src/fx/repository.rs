@@ -489,23 +489,23 @@ impl FxRepository {
 
 #[async_trait]
 impl FxRepositoryTrait for FxRepository {
-    fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+    async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
         self.get_exchange_rates()
     }
 
-    fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+    async fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
         self.get_all_historical_exchange_rates()
     }
 
-    fn get_latest_exchange_rate(&self, from: &str, to: &str) -> Result<Option<ExchangeRate>> {
+    async fn get_latest_exchange_rate(&self, from: &str, to: &str) -> Result<Option<ExchangeRate>> {
         self.get_exchange_rate(from, to)
     }
 
-    fn get_latest_exchange_rate_by_symbol(&self, symbol: &str) -> Result<Option<ExchangeRate>> {
+    async fn get_latest_exchange_rate_by_symbol(&self, symbol: &str) -> Result<Option<ExchangeRate>> {
         self.get_exchange_rate_by_id(symbol)
     }
 
-    fn get_historical_quotes(
+    async fn get_historical_quotes(
         &self,
         symbol: &str,
         start_date: NaiveDateTime,

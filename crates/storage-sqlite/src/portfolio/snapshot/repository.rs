@@ -766,7 +766,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         SnapshotRepository::save_snapshots(self, snapshots).await
     }
 
-    fn get_snapshots_by_account(
+    async fn get_snapshots_by_account(
         &self,
         account_id_param: &str,
         start_date: Option<NaiveDate>,
@@ -775,7 +775,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         self.get_snapshots_by_account(account_id_param, start_date, end_date)
     }
 
-    fn get_latest_snapshot_before_date(
+    async fn get_latest_snapshot_before_date(
         &self,
         account_id_param: &str,
         date: NaiveDate,
@@ -783,7 +783,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         self.get_latest_snapshot_before_date(account_id_param, date)
     }
 
-    fn get_latest_snapshots_before_date(
+    async fn get_latest_snapshots_before_date(
         &self,
         account_ids_param: &[String],
         date: NaiveDate,
@@ -791,7 +791,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         self.get_latest_snapshots_before_date(account_ids_param, date)
     }
 
-    fn get_all_latest_snapshots(
+    async fn get_all_latest_snapshots(
         &self,
         account_ids_param: &[String],
     ) -> Result<HashMap<String, AccountStateSnapshot>> {
@@ -851,7 +851,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
             .await
     }
 
-    fn get_total_portfolio_snapshots(
+    async fn get_total_portfolio_snapshots(
         &self,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
@@ -859,7 +859,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         self.get_total_portfolio_snapshots(start_date, end_date)
     }
 
-    fn get_all_non_archived_account_snapshots(
+    async fn get_all_non_archived_account_snapshots(
         &self,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
@@ -867,7 +867,7 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         self.get_all_non_archived_account_snapshots(start_date, end_date)
     }
 
-    fn get_earliest_snapshot_date(&self, account_id_param: &str) -> Result<Option<NaiveDate>> {
+    async fn get_earliest_snapshot_date(&self, account_id_param: &str) -> Result<Option<NaiveDate>> {
         self.get_earliest_snapshot_date(account_id_param)
     }
 
@@ -888,11 +888,11 @@ impl SnapshotRepositoryTrait for SnapshotRepository {
         self.save_or_update_snapshot_impl(snapshot).await
     }
 
-    fn get_non_calculated_snapshot_count(&self, account_id: &str) -> Result<usize> {
+    async fn get_non_calculated_snapshot_count(&self, account_id: &str) -> Result<usize> {
         self.get_non_calculated_snapshot_count_impl(account_id)
     }
 
-    fn get_earliest_non_calculated_snapshot(
+    async fn get_earliest_non_calculated_snapshot(
         &self,
         account_id: &str,
     ) -> Result<Option<AccountStateSnapshot>> {

@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use wealthfolio_core::health::{FixAction, HealthConfig, HealthStatus};
+use whaleit_core::health::{FixAction, HealthConfig, HealthStatus};
 
 /// Get current health status (cached or fresh check).
 async fn get_health_status(
@@ -123,7 +123,7 @@ async fn execute_health_fix(
 ) -> ApiResult<()> {
     // Handle migrate_legacy_classifications action specially
     if action.id == "migrate_legacy_classifications" {
-        wealthfolio_core::health::migrate_legacy_classifications(
+        whaleit_core::health::migrate_legacy_classifications(
             state.asset_service.as_ref(),
             state.taxonomy_service.as_ref(),
         )
@@ -139,7 +139,7 @@ async fn execute_health_fix(
         state
             .quote_service
             .sync(
-                wealthfolio_core::quotes::SyncMode::Incremental,
+                whaleit_core::quotes::SyncMode::Incremental,
                 Some(asset_ids),
             )
             .await

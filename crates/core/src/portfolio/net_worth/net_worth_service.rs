@@ -266,7 +266,8 @@ impl NetWorthServiceTrait for NetWorthService {
         // Get latest snapshots for all accounts as of the target date
         let snapshots = self
             .snapshot_repository
-            .get_latest_snapshots_before_date(&account_ids, date)?;
+            .get_latest_snapshots_before_date(&account_ids, date)
+            .await?;
 
         // Build a map of account_id -> account for easy lookup
         let account_map: HashMap<String, _> = accounts.iter().map(|a| (a.id.clone(), a)).collect();
@@ -313,7 +314,7 @@ impl NetWorthServiceTrait for NetWorthService {
 
                 // Get the latest quote for this asset as of the date
                 let (price, quote_currency, valuation_date) =
-                    match self.get_latest_quote_as_of(asset_id, date) {
+                    match self.get_latest_quote_as_of(asset_id, date).await {
                         Some((p, c, d)) => (p, c, d),
                         None => {
                             // No quote found, use cost basis as fallback
@@ -347,7 +348,7 @@ impl NetWorthServiceTrait for NetWorthService {
                     normalized_currency,
                     &base_currency,
                     date,
-                ) {
+                ).await {
                     Ok(v) => v,
                     Err(e) => {
                         warn!(
@@ -422,7 +423,7 @@ impl NetWorthServiceTrait for NetWorthService {
 
             // Get the latest quote for this alternative asset
             let (price, quote_currency, valuation_date) =
-                match self.get_latest_quote_as_of(&asset.id, date) {
+                match self.get_latest_quote_as_of(&asset.id, date).await {
                     Some((p, c, d)) => (p, c, d),
                     None => {
                         debug!(
@@ -447,7 +448,7 @@ impl NetWorthServiceTrait for NetWorthService {
                 normalized_currency,
                 &base_currency,
                 date,
-            ) {
+            ).await {
                 Ok(v) => v,
                 Err(e) => {
                     warn!(
@@ -580,7 +581,8 @@ impl NetWorthServiceTrait for NetWorthService {
             &all_alt_symbols,
             start_date,
             end_date,
-        )?;
+        )
+        .await?;
 
         // Organize quotes by date -> asset_id -> value (converted to base currency)
         let mut quotes_by_date: BTreeMap<NaiveDate, HashMap<String, Decimal>> = BTreeMap::new();
@@ -614,6 +616,7 @@ impl NetWorthServiceTrait for NetWorthService {
         for asset in &alternative_assets {
             if let Some((price, quote_currency, _)) =
                 self.get_latest_quote_as_of(&asset.id, start_date)
+                .await
             {
                 let (normalized_price, normalized_currency) =
                     normalize_amount(price, &quote_currency);

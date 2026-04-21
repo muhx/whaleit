@@ -14,7 +14,7 @@ use super::models::{
 use super::progress::{SyncProgressPayload, SyncProgressReporter, SyncStatus};
 use super::traits::{BrokerApiClient, BrokerSyncServiceTrait};
 use crate::broker_ingest::{ImportRunMode, ImportRunStatus, ImportRunSummary};
-use wealthfolio_core::accounts::TrackingMode;
+use whaleit_core::accounts::TrackingMode;
 
 /// Configuration for sync operations.
 #[derive(Debug, Clone)]
@@ -173,6 +173,7 @@ impl<P: SyncProgressReporter> SyncOrchestrator<P> {
         let accounts_needing_setup: Vec<NewAccountInfo> = self
             .sync_service
             .get_synced_accounts()
+            .await
             .map_err(|e| format!("Failed to get synced accounts: {}", e))?
             .into_iter()
             .filter(|acc| {
@@ -245,6 +246,7 @@ impl<P: SyncProgressReporter> SyncOrchestrator<P> {
         let synced_accounts = self
             .sync_service
             .get_synced_accounts()
+            .await
             .map_err(|e| format!("Failed to get synced accounts: {}", e))?;
 
         let mut activities_summary = SyncActivitiesResponse::default();

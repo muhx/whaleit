@@ -3,11 +3,11 @@ use log::{error, info, warn};
 use std::sync::Arc;
 use std::time::Instant;
 use tauri::{async_runtime::spawn, AppHandle, Emitter, Listener, Manager};
-use wealthfolio_core::constants::PORTFOLIO_TOTAL_ACCOUNT_ID;
-use wealthfolio_core::health::HealthServiceTrait;
-use wealthfolio_core::portfolio::snapshot::SnapshotRecalcMode;
-use wealthfolio_core::portfolio::valuation::ValuationRecalcMode;
-use wealthfolio_core::quotes::MarketSyncMode;
+use whaleit_core::constants::PORTFOLIO_TOTAL_ACCOUNT_ID;
+use whaleit_core::health::HealthServiceTrait;
+use whaleit_core::portfolio::snapshot::SnapshotRecalcMode;
+use whaleit_core::portfolio::valuation::ValuationRecalcMode;
+use whaleit_core::quotes::MarketSyncMode;
 
 use crate::context::ServiceContext;
 use crate::events::{
@@ -71,7 +71,7 @@ fn handle_portfolio_request(handle: AppHandle, payload_str: &str, force_recalc: 
                                 warn!(
                                     "MarketSyncMode requires sync but returned None for SyncMode"
                                 );
-                                Ok(wealthfolio_core::quotes::SyncResult::default())
+                                Ok(whaleit_core::quotes::SyncResult::default())
                             }
                         };
 

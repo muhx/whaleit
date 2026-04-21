@@ -23,12 +23,12 @@ use reqwest::StatusCode as HttpStatusCode;
 use semver::Version;
 use serde::Deserialize;
 use tokio::{fs, task};
-use wealthfolio_core::{
+use whaleit_core::{
     portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode},
     quotes::MarketSyncMode,
     settings::{Settings, SettingsServiceTrait, SettingsUpdate},
 };
-use wealthfolio_storage_sqlite::db;
+use whaleit_storage_sqlite::db;
 
 async fn get_settings(State(state): State<Arc<AppState>>) -> ApiResult<Json<Settings>> {
     let s = state.settings_service.get_settings()?;
@@ -60,7 +60,7 @@ async fn update_settings(
                 account_ids: None,
                 market_sync_mode: MarketSyncMode::BackfillHistory {
                     asset_ids: None,
-                    days: wealthfolio_core::quotes::DEFAULT_HISTORY_DAYS,
+                    days: whaleit_core::quotes::DEFAULT_HISTORY_DAYS,
                 },
                 snapshot_mode: SnapshotRecalcMode::Full,
                 valuation_mode: ValuationRecalcMode::Full,

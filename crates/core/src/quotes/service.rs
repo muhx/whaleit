@@ -197,7 +197,7 @@ pub trait QuoteServiceTrait: Send + Sync {
     async fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>>;
 
     /// Get latest quotes with backend-computed staleness metadata.
-    fn get_latest_quotes_snapshot(
+    async fn get_latest_quotes_snapshot(
         &self,
         asset_ids: &[String],
     ) -> Result<HashMap<String, LatestQuoteSnapshot>>;
@@ -237,7 +237,7 @@ pub trait QuoteServiceTrait: Send + Sync {
     /// * `symbols` - Set of symbols to fetch quotes for
     /// * `start` - Start date of the range
     /// * `end` - End date of the range
-    fn get_quotes_in_range_filled(
+    async fn get_quotes_in_range_filled(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
@@ -361,7 +361,7 @@ pub trait QuoteServiceTrait: Send + Sync {
     async fn refresh_sync_state(&self) -> Result<()>;
 
     /// Get the current sync plan.
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
 
     /// Handle new activity created.
     async fn handle_activity_created(&self, symbol: &str, activity_date: NaiveDate) -> Result<()>;
@@ -373,19 +373,19 @@ pub trait QuoteServiceTrait: Send + Sync {
     async fn delete_sync_state(&self, symbol: &str) -> Result<()>;
 
     /// Get symbols needing sync.
-    fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get sync state for a specific symbol.
-    fn get_sync_state(&self, symbol: &str) -> Result<Option<QuoteSyncState>>;
+    async fn get_sync_state(&self, symbol: &str) -> Result<Option<QuoteSyncState>>;
 
     /// Mark asset profile as enriched.
     async fn mark_profile_enriched(&self, symbol: &str) -> Result<()>;
 
     /// Get assets that need profile enrichment.
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get sync states that have errors (error_count > 0).
-    fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Reset sync error counts for the given asset IDs, allowing retry.
     async fn reset_sync_errors(&self, asset_ids: &[String]) -> Result<()>;
@@ -512,7 +512,7 @@ where
         secret_store: Arc<dyn SecretStore>,
         custom_provider_repo: Option<Arc<dyn crate::custom_provider::CustomProviderRepository>>,
     ) -> Result<Self> {
-        let providers = provider_settings_store.get_all_providers()?;
+        let providers = provider_settings_store.get_all_providers().await?;
         let enabled: Vec<ProviderConfig> = providers
             .iter()
             .filter(|p| p.enabled)
@@ -576,7 +576,7 @@ where
 
     /// Refresh the market data client (e.g., after provider settings change).
     async fn refresh_client(&self) -> Result<()> {
-        let providers = self.provider_settings_store.get_all_providers()?;
+        let providers = self.provider_settings_store.get_all_providers().await?;
         let enabled: Vec<ProviderConfig> = providers
             .iter()
             .filter(|p| p.enabled)
@@ -895,7 +895,8 @@ where
         for symbol in symbols {
             let mut quotes = self
                 .quote_store
-                .get_quotes_in_range(symbol, lookback_start, end)?;
+                .get_quotes_in_range(symbol, lookback_start, end)
+                .await?;
             if let Some(asset) = assets_by_id.get(symbol) {
                 for quote in quotes.iter_mut() {
                     reconcile_quote_currency(quote, asset);
@@ -910,7 +911,8 @@ where
             start,
             &assets_by_id,
             &mut all_quotes,
-        )?;
+        )
+        .await?;
 
         // Fill missing quotes
         Ok(fill_missing_quotes(&all_quotes, symbols, start, end))
@@ -922,7 +924,7 @@ where
         start: NaiveDate,
         end: NaiveDate,
     ) -> Result<HashMap<NaiveDate, HashMap<String, Quote>>> {
-        let quotes = self.get_quotes_in_range(asset_ids, start, end)?;
+        let quotes = self.get_quotes_in_range(asset_ids, start, end).await?;
 
         let mut daily: HashMap<NaiveDate, HashMap<String, Quote>> = HashMap::new();
         for quote in quotes {
@@ -1005,8 +1007,11 @@ where
 
         let mut unmatched_provider_results = Vec::with_capacity(provider_results.len());
         for result in provider_results {
-            let existing_asset = instrument_key_from_search_result(&result)
-                .and_then(|key| self.asset_repo.find_by_instrument_key(&key).await.ok().flatten());
+            let key_opt = instrument_key_from_search_result(&result);
+            let existing_asset = match key_opt {
+                Some(key) => self.asset_repo.find_by_instrument_key(&key).await.ok().flatten(),
+                None => None,
+            };
 
             if let Some(asset) = existing_asset.filter(|a| a.kind != AssetKind::Fx) {
                 if existing_asset_ids.insert(asset.id.clone()) {
@@ -1299,12 +1304,8 @@ where
     }
 
     async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
-        // Blocking read since this is sync
-        let rt = tokio::runtime::Handle::current();
-        rt.block_on(async {
-            let sync_service = self.get_sync_service().await?;
-            sync_service.get_sync_plan()
-        })
+        let sync_service = self.get_sync_service().await?;
+        sync_service.get_sync_plan().await
     }
 
     async fn handle_activity_created(&self, symbol: &str, activity_date: NaiveDate) -> Result<()> {
@@ -1324,9 +1325,10 @@ where
         self.sync_state_store.delete(symbol).await
     }
 
-    fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
         self.sync_state_store
             .get_assets_needing_sync(super::constants::CLOSED_POSITION_GRACE_PERIOD_DAYS)
+            .await
     }
 
     async fn get_sync_state(&self, asset_id: &str) -> Result<Option<QuoteSyncState>> {
@@ -1337,9 +1339,10 @@ where
         self.sync_state_store.mark_profile_enriched(symbol).await
     }
 
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
         self.sync_state_store
             .get_assets_needing_profile_enrichment()
+            .await
     }
 
     async fn update_position_status_from_holdings(
@@ -1428,7 +1431,7 @@ where
     async fn get_providers_info(&self) -> Result<Vec<ProviderInfo>> {
         use super::constants::*;
 
-        let settings = self.provider_settings_store.get_all_providers()?;
+        let settings = self.provider_settings_store.get_all_providers().await?;
 
         // Get aggregated sync stats from quote_sync_state table
         let sync_stats = self.sync_state_store.get_provider_sync_stats().await?;
@@ -1436,7 +1439,7 @@ where
             .into_iter()
             .map(|s| (s.provider_id.clone(), s))
             .collect();
-        let sync_states_with_errors = self.get_sync_states_with_errors()?;
+        let sync_states_with_errors = self.get_sync_states_with_errors().await?;
 
         #[derive(Default)]
         struct ProviderErrorStats {
@@ -1548,7 +1551,8 @@ where
                 priority: Some(priority),
                 enabled: Some(enabled),
             },
-        )?;
+        )
+        .await?;
 
         // Refresh client with new settings
         self.refresh_client().await?;
@@ -1779,7 +1783,8 @@ where
             if !overwrite {
                 let existing = self
                     .quote_store
-                    .find_duplicate_quotes(&quote.symbol, quote.parse_date().unwrap_or_default());
+                    .find_duplicate_quotes(&quote.symbol, quote.parse_date().unwrap_or_default())
+                    .await;
                 if existing.map(|v| !v.is_empty()).unwrap_or(false) {
                     quote.validation_status =
                         ImportValidationStatus::Warning("Quote already exists".to_string());

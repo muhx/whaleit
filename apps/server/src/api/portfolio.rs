@@ -14,7 +14,7 @@ use axum::{
 };
 use futures_core::stream::Stream;
 use tokio_stream::wrappers::{errors::BroadcastStreamRecvError, BroadcastStream};
-use wealthfolio_core::quotes::{MarketSyncMode, DEFAULT_HISTORY_DAYS};
+use whaleit_core::quotes::{MarketSyncMode, DEFAULT_HISTORY_DAYS};
 
 async fn update_portfolio(
     State(state): State<Arc<AppState>>,

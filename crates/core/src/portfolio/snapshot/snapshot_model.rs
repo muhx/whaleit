@@ -151,7 +151,7 @@ impl AccountStateSnapshot {
     pub fn stable_id(account_id: &str, snapshot_date: NaiveDate) -> String {
         // Derive a deterministic UUID from account/date so upserts target the same row.
         let name = format!(
-            "wealthfolio:snapshot:{}:{}",
+            "whaleit:snapshot:{}:{}",
             account_id,
             snapshot_date.format("%Y-%m-%d")
         );

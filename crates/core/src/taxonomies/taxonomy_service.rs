@@ -164,7 +164,8 @@ impl TaxonomyServiceTrait for TaxonomyService {
         // Check for assignments
         let assignments = self
             .repository
-            .get_category_assignments(taxonomy_id, category_id)?;
+            .get_category_assignments(taxonomy_id, category_id)
+            .await?;
         if !assignments.is_empty() {
             return Err(ValidationError::InvalidInput(format!(
                 "Cannot delete category with {} asset assignments",
@@ -187,7 +188,8 @@ impl TaxonomyServiceTrait for TaxonomyService {
     ) -> Result<Category> {
         let category = self
             .repository
-            .get_category(taxonomy_id, category_id)?
+            .get_category(taxonomy_id, category_id)
+            .await?
             .ok_or_else(|| DatabaseError::NotFound("Category not found".to_string()))?;
 
         let updated = Category {
@@ -236,7 +238,8 @@ impl TaxonomyServiceTrait for TaxonomyService {
     async fn export_taxonomy_json(&self, id: &str) -> Result<String> {
         let taxonomy_with_cats = self
             .repository
-            .get_taxonomy_with_categories(id)?
+            .get_taxonomy_with_categories(id)
+            .await?
             .ok_or_else(|| DatabaseError::NotFound("Taxonomy not found".to_string()))?;
 
         let json = TaxonomyJson {

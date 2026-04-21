@@ -3,11 +3,11 @@ use std::sync::Arc;
 use crate::context::ServiceContext;
 use log::debug;
 use tauri::State;
-use wealthfolio_core::portfolio::fire::{
+use whaleit_core::portfolio::fire::{
     project_fire_date, run_monte_carlo, run_scenario_analysis, run_sensitivity_analysis,
     run_sequence_of_returns_risk, run_strategy_comparison,
 };
-use wealthfolio_core::portfolio::fire::{
+use whaleit_core::portfolio::fire::{
     FireProjection, FireSettings, MonteCarloResult, ScenarioResult, SensitivityResult,
     SorrScenario, StrategyComparisonResult,
 };
@@ -38,7 +38,7 @@ pub async fn get_fire_settings(
     match state
         .settings_service()
         .get_setting_value(FIRE_SETTINGS_KEY)
-        .map_err(|e| format!("Failed to load FIRE settings: {}", e))?
+        .await.map_err(|e| format!("Failed to load FIRE settings: {}", e))?
     {
         Some(json) => serde_json::from_str::<FireSettings>(&json)
             .map(Some)

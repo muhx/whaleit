@@ -107,7 +107,7 @@ impl AccountRepositoryTrait for AccountRepository {
     }
 
     /// Retrieves an account by its ID
-    fn get_by_id(&self, account_id: &str) -> Result<Account> {
+    async fn get_by_id(&self, account_id: &str) -> Result<Account> {
         let mut conn = get_connection(&self.pool)?;
 
         let account = accounts
@@ -120,7 +120,7 @@ impl AccountRepositoryTrait for AccountRepository {
     }
 
     /// Lists accounts in the database, optionally filtering by active status, archived status, and account IDs
-    fn list(
+    async fn list(
         &self,
         is_active_filter: Option<bool>,
         is_archived_filter: Option<bool>,

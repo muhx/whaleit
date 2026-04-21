@@ -39,14 +39,14 @@ pub struct QuoteSyncErrorInfo {
 /// * `asset_service` - The asset service for looking up asset symbols
 /// * `holding_market_values` - Map of asset_id -> market_value from current holdings
 /// * `latest_quote_times` - Map of asset_id -> last quote timestamp (to detect never-synced assets)
-pub fn gather_quote_sync_errors(
+pub async fn gather_quote_sync_errors(
     quote_service: &dyn QuoteServiceTrait,
     asset_service: &dyn AssetServiceTrait,
     holding_market_values: &HashMap<String, f64>,
     latest_quote_times: &HashMap<String, chrono::DateTime<chrono::Utc>>,
 ) -> Vec<QuoteSyncErrorInfo> {
     // Get sync states with errors
-    let sync_states_with_errors = match quote_service.get_sync_states_with_errors() {
+    let sync_states_with_errors = match quote_service.get_sync_states_with_errors().await {
         Ok(states) => states,
         Err(_) => return Vec::new(),
     };

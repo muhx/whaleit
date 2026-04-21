@@ -4,6 +4,7 @@ use crate::{
     activities::{ActivityError, ActivityRepositoryTrait, IncomeData},
     Error, Result,
 };
+use async_trait::async_trait;
 use chrono::{Datelike, NaiveDate};
 
 use super::IncomeSummary;
@@ -13,8 +14,9 @@ use num_traits::Zero;
 use rust_decimal::Decimal;
 use std::sync::{Arc, RwLock};
 // Define the trait for the income service
+#[async_trait]
 pub trait IncomeServiceTrait: Send + Sync {
-    fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>>;
+    async fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>>;
 }
 
 pub struct IncomeService {
@@ -67,6 +69,7 @@ impl IncomeService {
 }
 
 // Implement the trait for IncomeService
+#[async_trait]
 impl IncomeServiceTrait for IncomeService {
     async fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>> {
         debug!("Getting income summary...");
@@ -74,6 +77,7 @@ impl IncomeServiceTrait for IncomeService {
         let activities = match self
             .activity_repository
             .get_income_activities_data(account_id)
+            .await
         {
             Ok(activity) => activity,
             Err(e) => {
@@ -106,7 +110,7 @@ impl IncomeServiceTrait for IncomeService {
                 }
             }
         } else {
-            match self.activity_repository.get_first_activity_date_overall() {
+            match self.activity_repository.get_first_activity_date_overall().await {
                 Ok(date) => date,
                 Err(e) => {
                     error!("Error getting first transaction date: {:?}", e);

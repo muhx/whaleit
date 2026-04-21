@@ -5,86 +5,72 @@ import { createSDKHostAPIBridge } from "./type-bridge";
 
 // Import all command functions
 import {
-  logger,
-  checkActivitiesImport,
-  getAccountImportMapping,
-  importActivities,
-  saveAccountImportMapping,
-  createActivity,
-  getActivities,
-  saveActivities,
-  searchActivities,
-  updateActivity,
-  createAccount,
-  getAccounts,
-  updateAccount,
-} from "@/adapters";
-import {
-  addExchangeRate,
-  getExchangeRates,
-  updateExchangeRate,
-  calculateDepositsForLimit,
-  createContributionLimit,
-  getContributionLimit,
-  updateContributionLimit,
-} from "@/adapters";
-import { openCsvFileDialog, openFileSaveDialog } from "@/adapters";
-import {
-  createGoal,
-  getGoals,
-  getGoalsAllocation,
-  updateGoal,
-  updateGoalsAllocations,
-} from "@/adapters";
-import {
-  listenFileDrop as listenImportFileDrop,
-  listenFileDropCancelled as listenImportFileDropCancelled,
-  listenFileDropHover as listenImportFileDropHover,
-} from "@/adapters";
-import {
-  fetchYahooDividends,
-  getAssetProfile,
-  getMarketDataProviders,
-  getQuoteHistory,
-  searchTicker,
-  syncHistoryQuotes,
-  syncMarketData,
-  updateQuoteMode,
-  updateAssetProfile,
-  updateQuote,
-} from "@/adapters";
-import {
-  calculateAccountsSimplePerformance,
-  calculatePerformanceHistory,
-  calculatePerformanceSummary,
-  getHistoricalValuations,
-  getHolding,
-  getHoldings,
-  getIncomeSummary,
-  getLatestValuations,
-  recalculatePortfolio,
-  updatePortfolio,
-  getSnapshots,
-  getSnapshotByDate,
-  saveManualHoldings,
-  checkHoldingsImport,
-  importHoldingsCsv,
-  deleteSnapshot,
-} from "@/adapters";
-import {
-  listenMarketSyncComplete,
-  listenMarketSyncStart,
-  listenPortfolioUpdateComplete,
-  listenPortfolioUpdateError,
-  listenPortfolioUpdateStart,
-} from "@/adapters";
-import {
-  deleteSecret,
-  getSecret,
-  setSecret,
-  backupDatabase,
-  getSettings,
-  updateSettings,
+    addExchangeRate,
+    backupDatabase,
+    calculateAccountsSimplePerformance,
+    calculateDepositsForLimit,
+    calculatePerformanceHistory,
+    calculatePerformanceSummary,
+    checkActivitiesImport,
+    checkHoldingsImport,
+    createAccount,
+    createActivity,
+    createContributionLimit,
+    createGoal,
+    deleteSecret,
+    deleteSnapshot,
+    fetchYahooDividends,
+    getAccountImportMapping,
+    getAccounts,
+    getActivities,
+    getAssetProfile,
+    getContributionLimit,
+    getExchangeRates,
+    getGoals,
+    getGoalsAllocation,
+    getHistoricalValuations,
+    getHolding,
+    getHoldings,
+    getIncomeSummary,
+    getLatestValuations,
+    getMarketDataProviders,
+    getQuoteHistory,
+    getSecret,
+    getSettings,
+    getSnapshotByDate,
+    getSnapshots,
+    importActivities,
+    importHoldingsCsv,
+    listenFileDrop as listenImportFileDrop,
+    listenFileDropCancelled as listenImportFileDropCancelled,
+    listenFileDropHover as listenImportFileDropHover,
+    listenMarketSyncComplete,
+    listenMarketSyncStart,
+    listenPortfolioUpdateComplete,
+    listenPortfolioUpdateError,
+    listenPortfolioUpdateStart,
+    logger,
+    openCsvFileDialog, openFileSaveDialog,
+    recalculatePortfolio,
+    saveAccountImportMapping,
+    saveActivities,
+    saveManualHoldings,
+    searchActivities,
+    searchTicker,
+    setSecret,
+    syncHistoryQuotes,
+    syncMarketData,
+    updateAccount,
+    updateActivity,
+    updateAssetProfile,
+    updateContributionLimit,
+    updateExchangeRate,
+    updateGoal,
+    updateGoalsAllocations,
+    updatePortfolio,
+    updateQuote,
+    updateQuoteMode,
+    updateSettings,
 } from "@/adapters";
 
 // Store for dynamically added navigation items
@@ -325,8 +311,8 @@ export function createAddonContext(addonId: string): AddonContext {
           navigateToRoute: async (route: string) => {
             // Use the browser's navigation API through React Router
             const navigate = (
-              window as unknown as { __wealthfolio_navigate__?: (r: string) => void }
-            ).__wealthfolio_navigate__;
+              window as unknown as { __whaleit_navigate__?: (r: string) => void }
+            ).__whaleit_navigate__;
             if (navigate) {
               navigate(route);
             } else {
@@ -341,16 +327,16 @@ export function createAddonContext(addonId: string): AddonContext {
               invalidateQueries: (opts: { queryKey: string[] }) => unknown;
               refetchQueries: (opts: { queryKey: string[] }) => unknown;
             }
-            return (window as unknown as { __wealthfolio_query_client__?: QueryClientLike })
-              .__wealthfolio_query_client__;
+            return (window as unknown as { __whaleit_query_client__?: QueryClientLike })
+              .__whaleit_query_client__;
           },
           invalidateQueries: (queryKey: string | string[]) => {
             interface QueryClientLike {
               invalidateQueries: (opts: { queryKey: string[]; exact?: boolean }) => unknown;
             }
             const queryClient = (
-              window as unknown as { __wealthfolio_query_client__?: QueryClientLike }
-            ).__wealthfolio_query_client__;
+              window as unknown as { __whaleit_query_client__?: QueryClientLike }
+            ).__whaleit_query_client__;
             if (queryClient) {
               queryClient.invalidateQueries({
                 queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
@@ -363,8 +349,8 @@ export function createAddonContext(addonId: string): AddonContext {
               refetchQueries: (opts: { queryKey: string[]; exact?: boolean }) => unknown;
             }
             const queryClient = (
-              window as unknown as { __wealthfolio_query_client__?: QueryClientLike }
-            ).__wealthfolio_query_client__;
+              window as unknown as { __whaleit_query_client__?: QueryClientLike }
+            ).__whaleit_query_client__;
             if (queryClient) {
               queryClient.refetchQueries({
                 queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],

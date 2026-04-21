@@ -13,7 +13,7 @@ use log::{debug, info, warn};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, State};
-use wealthfolio_core::{
+use whaleit_core::{
     accounts::TrackingMode,
     allocation::{AllocationHoldings, PortfolioAllocations},
     holdings::Holding,
@@ -114,7 +114,7 @@ pub async fn get_asset_holdings(
     let accounts = state
         .account_service()
         .get_active_accounts()
-        .map_err(|e| format!("Failed to get accounts: {}", e))?;
+        .await.map_err(|e| format!("Failed to get accounts: {}", e))?;
 
     let mut result = Vec::new();
     for account in accounts {
@@ -188,7 +188,7 @@ pub async fn get_historical_valuations(
     state
         .valuation_service()
         .get_historical_valuations(&account_id, from_date_opt, to_date_opt)
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -203,7 +203,7 @@ pub async fn get_latest_valuations(
         state
             .account_service()
             .get_active_accounts()
-            .map_err(|e| format!("Failed to fetch active accounts: {}", e))?
+            .await.map_err(|e| format!("Failed to fetch active accounts: {}", e))?
             .into_iter()
             .map(|acc| acc.id)
             .collect()
@@ -218,7 +218,7 @@ pub async fn get_latest_valuations(
     state
         .valuation_service()
         .get_latest_valuations(&ids_to_process)
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -230,7 +230,7 @@ pub async fn get_income_summary(
     state
         .income_service()
         .get_income_summary(account_id.as_deref())
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -248,7 +248,7 @@ pub async fn calculate_accounts_simple_performance(
         state
             .account_service()
             .get_active_accounts()
-            .map_err(|e| format!("Failed to fetch active accounts: {}", e))?
+            .await.map_err(|e| format!("Failed to fetch active accounts: {}", e))?
             .into_iter()
             .map(|acc| acc.id)
             .collect()
@@ -263,7 +263,7 @@ pub async fn calculate_accounts_simple_performance(
     state
         .performance_service()
         .calculate_accounts_simple_performance(&ids_to_process) // Pass the potentially modified list
-        .map_err(|e| e.to_string())
+        .await.map_err(|e| e.to_string())
 }
 
 /// Calculates performance history for a given item (account or symbol) over a given date range.
@@ -414,7 +414,7 @@ pub async fn save_manual_holdings(
     let account = state
         .account_service()
         .get_account(&account_id)
-        .map_err(|e| format!("Failed to get account: {}", e))?;
+        .await.map_err(|e| format!("Failed to get account: {}", e))?;
 
     // Get base currency for FX pair registration
     let base_currency = state.get_base_currency();
@@ -545,7 +545,7 @@ pub async fn check_holdings_import(
     state
         .account_service()
         .get_account(&account_id)
-        .map_err(|e| format!("Failed to get account: {}", e))?;
+        .await.map_err(|e| format!("Failed to get account: {}", e))?;
 
     let mut validation_errors: Vec<String> = Vec::new();
     let mut valid_dates: Vec<NaiveDate> = Vec::new();
@@ -591,7 +591,7 @@ pub async fn check_holdings_import(
         let existing = state
             .snapshot_service()
             .get_holdings_keyframes(&account_id, Some(min_date), Some(max_date))
-            .map_err(|e| format!("Failed to query snapshots: {}", e))?;
+            .await.map_err(|e| format!("Failed to query snapshots: {}", e))?;
 
         let import_dates: std::collections::HashSet<NaiveDate> = valid_dates.into_iter().collect();
         existing
@@ -718,7 +718,7 @@ pub async fn import_holdings_csv(
     let account = state
         .account_service()
         .get_account(&account_id)
-        .map_err(|e| format!("Failed to get account: {}", e))?;
+        .await.map_err(|e| format!("Failed to get account: {}", e))?;
 
     // Get base currency for FX pair registration
     let base_currency = state.get_base_currency();
@@ -890,7 +890,7 @@ pub async fn get_snapshots(
     let snapshots = state
         .snapshot_service()
         .get_holdings_keyframes(&account_id, start_date, end_date)
-        .map_err(|e| format!("Failed to get snapshots: {}", e))?;
+        .await.map_err(|e| format!("Failed to get snapshots: {}", e))?;
 
     let result: Vec<SnapshotInfo> = snapshots
         .into_iter()
@@ -939,7 +939,7 @@ pub async fn get_snapshot_by_date(
     let snapshots = state
         .snapshot_service()
         .get_holdings_keyframes(&account_id, Some(target_date), Some(target_date))
-        .map_err(|e| format!("Failed to get snapshot: {}", e))?;
+        .await.map_err(|e| format!("Failed to get snapshot: {}", e))?;
 
     let snapshot = snapshots
         .into_iter()
@@ -958,7 +958,7 @@ pub async fn get_snapshot_by_date(
         .collect();
 
     // Fetch asset details if we have positions
-    let assets_map: HashMap<String, wealthfolio_core::assets::Asset> = if !asset_ids.is_empty() {
+    let assets_map: HashMap<String, whaleit_core::assets::Asset> = if !asset_ids.is_empty() {
         state
             .asset_service()
             .get_assets_by_asset_ids(&asset_ids)
@@ -989,11 +989,11 @@ pub async fn get_snapshot_by_date(
 
         let (holding_type, id_prefix) = if asset.kind.is_alternative() {
             (
-                wealthfolio_core::holdings::HoldingType::AlternativeAsset,
+                whaleit_core::holdings::HoldingType::AlternativeAsset,
                 "ALT",
             )
         } else {
-            (wealthfolio_core::holdings::HoldingType::Security, "SEC")
+            (whaleit_core::holdings::HoldingType::Security, "SEC")
         };
 
         // Extract purchase_price from metadata for alternative assets
@@ -1009,7 +1009,7 @@ pub async fn get_snapshot_by_date(
             })
         });
 
-        let instrument = wealthfolio_core::holdings::Instrument {
+        let instrument = whaleit_core::holdings::Instrument {
             id: asset.id.clone(),
             symbol: asset.display_code.clone().unwrap_or_default(),
             name: asset.name.clone(),
@@ -1034,8 +1034,8 @@ pub async fn get_snapshot_by_date(
             local_currency: position.currency.clone(),
             base_currency: base_currency.clone(),
             fx_rate: None,
-            market_value: wealthfolio_core::holdings::MonetaryValue::zero(),
-            cost_basis: Some(wealthfolio_core::holdings::MonetaryValue {
+            market_value: whaleit_core::holdings::MonetaryValue::zero(),
+            cost_basis: Some(whaleit_core::holdings::MonetaryValue {
                 local: position.total_cost_basis,
                 base: Decimal::ZERO,
             }),
@@ -1066,7 +1066,7 @@ pub async fn get_snapshot_by_date(
         let holding = Holding {
             id: format!("CASH-{}-{}", account_id, currency),
             account_id: account_id.clone(),
-            holding_type: wealthfolio_core::holdings::HoldingType::Cash,
+            holding_type: whaleit_core::holdings::HoldingType::Cash,
             instrument: None,
             asset_kind: None, // Cash holdings have no asset
             quantity: amount,
@@ -1076,11 +1076,11 @@ pub async fn get_snapshot_by_date(
             local_currency: currency.clone(),
             base_currency: base_currency.clone(),
             fx_rate: None,
-            market_value: wealthfolio_core::holdings::MonetaryValue {
+            market_value: whaleit_core::holdings::MonetaryValue {
                 local: amount,
                 base: Decimal::ZERO,
             },
-            cost_basis: Some(wealthfolio_core::holdings::MonetaryValue {
+            cost_basis: Some(whaleit_core::holdings::MonetaryValue {
                 local: amount,
                 base: Decimal::ZERO,
             }),
@@ -1126,7 +1126,7 @@ pub async fn delete_snapshot(
     let snapshots = state
         .snapshot_service()
         .get_holdings_keyframes(&account_id, Some(target_date), Some(target_date))
-        .map_err(|e| format!("Failed to get snapshot: {}", e))?;
+        .await.map_err(|e| format!("Failed to get snapshot: {}", e))?;
 
     let snapshot = snapshots
         .into_iter()

@@ -5,8 +5,8 @@
 
 use std::sync::{Arc, RwLock};
 
-use wealthfolio_ai::{AiEnvironment, ChatRepositoryTrait};
-use wealthfolio_core::{
+use whaleit_ai::{AiEnvironment, ChatRepositoryTrait};
+use whaleit_core::{
     accounts::AccountServiceTrait, activities::ActivityServiceTrait,
     allocation::AllocationServiceTrait, goals::GoalServiceTrait, health::HealthServiceTrait,
     holdings::HoldingsServiceTrait, income::IncomeServiceTrait,

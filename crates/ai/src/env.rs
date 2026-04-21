@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use std::sync::Arc;
-use wealthfolio_core::{
+use whaleit_core::{
     accounts::AccountServiceTrait,
     activities::ActivityServiceTrait,
     goals::GoalServiceTrait,
@@ -82,7 +82,7 @@ pub mod test_env {
     use chrono::{DateTime, NaiveDate, Utc};
     use std::collections::{HashMap, HashSet};
     use std::sync::RwLock;
-    use wealthfolio_core::{
+    use whaleit_core::{
         accounts::TrackingMode,
         accounts::{Account, AccountServiceTrait, AccountUpdate, NewAccount},
         activities::{
@@ -308,7 +308,7 @@ pub mod test_env {
             _import_type: String,
         ) -> CoreResult<ImportMappingData> {
             // Return error to simulate no saved mapping (tests will use auto-detection)
-            Err(wealthfolio_core::errors::DatabaseError::NotFound(
+            Err(whaleit_core::errors::DatabaseError::NotFound(
                 "No saved import mapping".to_string(),
             )
             .into())
@@ -343,7 +343,7 @@ pub mod test_env {
         async fn import_activities(
             &self,
             _activities: Vec<ActivityImport>,
-        ) -> CoreResult<wealthfolio_core::activities::ImportActivitiesResult> {
+        ) -> CoreResult<whaleit_core::activities::ImportActivitiesResult> {
             unimplemented!("MockActivityService::import_activities")
         }
 
@@ -364,17 +364,17 @@ pub mod test_env {
         fn parse_csv(
             &self,
             content: &[u8],
-            config: &wealthfolio_core::activities::ParseConfig,
-        ) -> CoreResult<wealthfolio_core::activities::ParsedCsvResult> {
+            config: &whaleit_core::activities::ParseConfig,
+        ) -> CoreResult<whaleit_core::activities::ParsedCsvResult> {
             // Delegate to the actual core parser for testing
-            wealthfolio_core::activities::parse_csv(content, config)
+            whaleit_core::activities::parse_csv(content, config)
         }
 
         async fn prepare_activities_for_save(
             &self,
             _activities: Vec<NewActivity>,
             _account: &Account,
-        ) -> CoreResult<wealthfolio_core::activities::PrepareActivitiesResult> {
+        ) -> CoreResult<whaleit_core::activities::PrepareActivitiesResult> {
             unimplemented!("MockActivityService::prepare_activities_for_save")
         }
 
@@ -382,7 +382,7 @@ pub mod test_env {
             &self,
             _activities: Vec<NewActivity>,
             _account: &Account,
-        ) -> CoreResult<wealthfolio_core::activities::PrepareActivitiesResult> {
+        ) -> CoreResult<whaleit_core::activities::PrepareActivitiesResult> {
             unimplemented!("MockActivityService::prepare_activities_for_import")
         }
 
@@ -390,14 +390,14 @@ pub mod test_env {
             &self,
             _activities: Vec<NewActivity>,
             _account: &Account,
-        ) -> CoreResult<wealthfolio_core::activities::PrepareActivitiesResult> {
+        ) -> CoreResult<whaleit_core::activities::PrepareActivitiesResult> {
             unimplemented!("MockActivityService::prepare_activities_for_sync")
         }
 
         async fn upsert_activities_bulk(
             &self,
-            _activities: Vec<wealthfolio_core::activities::ActivityUpsert>,
-        ) -> CoreResult<wealthfolio_core::activities::BulkUpsertResult> {
+            _activities: Vec<whaleit_core::activities::ActivityUpsert>,
+        ) -> CoreResult<whaleit_core::activities::BulkUpsertResult> {
             unimplemented!("MockActivityService::upsert_activities_bulk")
         }
 
@@ -495,7 +495,7 @@ pub mod test_env {
 
         async fn holdings_from_snapshot(
             &self,
-            _snapshot: &wealthfolio_core::portfolio::snapshot::AccountStateSnapshot,
+            _snapshot: &whaleit_core::portfolio::snapshot::AccountStateSnapshot,
             _base_currency: &str,
         ) -> CoreResult<Vec<Holding>> {
             Ok(Vec::new())
@@ -1143,7 +1143,7 @@ pub mod test_env {
         fn calculate_accounts_simple_performance(
             &self,
             _account_ids: &[String],
-        ) -> CoreResult<Vec<wealthfolio_core::performance::SimplePerformanceMetrics>> {
+        ) -> CoreResult<Vec<whaleit_core::performance::SimplePerformanceMetrics>> {
             Ok(Vec::new())
         }
     }
@@ -1289,7 +1289,7 @@ pub mod test_env {
         async fn run_full_checks(
             &self,
             _base_currency: &str,
-            _account_service: Arc<dyn wealthfolio_core::accounts::AccountServiceTrait>,
+            _account_service: Arc<dyn whaleit_core::accounts::AccountServiceTrait>,
             _holdings_service: Arc<dyn HoldingsServiceTrait>,
             _quote_service: Arc<dyn QuoteServiceTrait>,
             _asset_service: Arc<dyn AssetServiceTrait>,

@@ -38,7 +38,7 @@ impl TaxonomyRepository {
 
 #[async_trait]
 impl TaxonomyRepositoryTrait for TaxonomyRepository {
-    fn get_taxonomies(&self) -> Result<Vec<Taxonomy>> {
+    async fn get_taxonomies(&self) -> Result<Vec<Taxonomy>> {
         let mut conn = get_connection(&self.pool)?;
         let results = taxonomies::table
             .order(taxonomies::sort_order.asc())
@@ -47,7 +47,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
         Ok(results.into_iter().map(Taxonomy::from).collect())
     }
 
-    fn get_taxonomy(&self, id: &str) -> Result<Option<Taxonomy>> {
+    async fn get_taxonomy(&self, id: &str) -> Result<Option<Taxonomy>> {
         let mut conn = get_connection(&self.pool)?;
         let result = taxonomies::table
             .find(id)
@@ -145,7 +145,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
             .await
     }
 
-    fn get_categories(&self, taxonomy_id: &str) -> Result<Vec<Category>> {
+    async fn get_categories(&self, taxonomy_id: &str) -> Result<Vec<Category>> {
         let mut conn = get_connection(&self.pool)?;
         let results = taxonomy_categories::table
             .filter(taxonomy_categories::taxonomy_id.eq(taxonomy_id))
@@ -155,7 +155,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
         Ok(results.into_iter().map(Category::from).collect())
     }
 
-    fn get_category(&self, taxonomy_id: &str, category_id: &str) -> Result<Option<Category>> {
+    async fn get_category(&self, taxonomy_id: &str, category_id: &str) -> Result<Option<Category>> {
         let mut conn = get_connection(&self.pool)?;
         let result = taxonomy_categories::table
             .filter(taxonomy_categories::taxonomy_id.eq(taxonomy_id))
@@ -310,7 +310,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
             .await
     }
 
-    fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>> {
+    async fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>> {
         let mut conn = get_connection(&self.pool)?;
         let results = asset_taxonomy_assignments::table
             .filter(asset_taxonomy_assignments::asset_id.eq(asset_id))
@@ -322,7 +322,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
             .collect())
     }
 
-    fn get_category_assignments(
+    async fn get_category_assignments(
         &self,
         taxonomy_id: &str,
         category_id: &str,
@@ -415,11 +415,11 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
             .await
     }
 
-    fn get_taxonomy_with_categories(&self, id: &str) -> Result<Option<TaxonomyWithCategories>> {
-        let taxonomy = self.get_taxonomy(id)?;
+    async fn get_taxonomy_with_categories(&self, id: &str) -> Result<Option<TaxonomyWithCategories>> {
+        let taxonomy = self.get_taxonomy(id).await?;
         match taxonomy {
             Some(t) => {
-                let categories = self.get_categories(id)?;
+                let categories = self.get_categories(id).await?;
                 Ok(Some(TaxonomyWithCategories {
                     taxonomy: t,
                     categories,
@@ -429,11 +429,11 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
         }
     }
 
-    fn get_all_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>> {
-        let taxonomies = self.get_taxonomies()?;
+    async fn get_all_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>> {
+        let taxonomies = self.get_taxonomies().await?;
         let mut results = Vec::new();
         for t in taxonomies {
-            let categories = self.get_categories(&t.id)?;
+            let categories = self.get_categories(&t.id).await?;
             results.push(TaxonomyWithCategories {
                 taxonomy: t,
                 categories,

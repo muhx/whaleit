@@ -1,24 +1,24 @@
 import {
-  deleteSecret,
-  isDesktop,
-  listenDeepLink,
-  logger,
-  openUrlInBrowser,
-  setSecret,
+    deleteSecret,
+    isDesktop,
+    listenDeepLink,
+    logger,
+    openUrlInBrowser,
+    setSecret,
 } from "@/adapters";
 import { useAuth } from "@/context/auth-context";
 import { getPlatform } from "@/hooks/use-platform";
 import { CONNECT_ENABLED } from "@/lib/connect-config";
 import { createClient, Session, SupabaseClient, User } from "@supabase/supabase-js";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ReactNode,
 } from "react";
 import { authenticate as authenticateWithASWebAuth } from "tauri-plugin-web-auth-api";
 import { clearSyncSession, restoreSyncSession, storeSyncSession } from "../services/auth-service";
@@ -27,17 +27,17 @@ import type { UserInfo } from "../types";
 
 // Auth configuration - these are public/publishable keys (safe for client-side)
 // Can be overridden via environment variables: CONNECT_AUTH_URL and CONNECT_AUTH_PUBLISHABLE_KEY
-const AUTH_URL = (import.meta.env.CONNECT_AUTH_URL as string) || "https://auth.wealthfolio.app";
+const AUTH_URL = (import.meta.env.CONNECT_AUTH_URL as string) || "https://auth.whaleit.app";
 const AUTH_PUBLISHABLE_KEY =
   (import.meta.env.CONNECT_AUTH_PUBLISHABLE_KEY as string) ||
   "sb_publishable_ZSZbXNtWtnh9i2nqJ2UL4A_NV8ZVutd";
 
 // Key for storing refresh token in keyring/localStorage (for session restoration)
-// Note: For keyring (Tauri), the "wealthfolio_" prefix is added automatically by SecretStore
+// Note: For keyring (Tauri), the "whaleit_" prefix is added automatically by SecretStore
 const REFRESH_TOKEN_KEY = "sync_refresh_token";
 
 // Deep-link URL for desktop callbacks (custom URL scheme)
-const DESKTOP_DEEP_LINK_URL = "wealthfolio://auth/callback";
+const DESKTOP_DEEP_LINK_URL = "whaleit://auth/callback";
 
 // Web redirect URL for OAuth and magic link
 const getWebRedirectUrl = () => {
@@ -49,7 +49,7 @@ const getWebRedirectUrl = () => {
 // Uses env variable in dev, falls back to production URL for bundled builds
 const HOSTED_OAUTH_CALLBACK_URL =
   (import.meta.env.CONNECT_OAUTH_CALLBACK_URL as string) ||
-  "https://connect.wealthfolio.app/deeplink";
+  "https://connect.whaleit.app/deeplink";
 
 type AuthCallbackPayload = { type: "code"; code: string } | { type: "error"; message: string };
 
@@ -511,7 +511,7 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
         const redirectUrl = useASWebAuth
           ? DESKTOP_DEEP_LINK_URL // iOS: direct custom scheme, captured by ASWebAuth
           : isTauri && import.meta.env.PROD
-            ? HOSTED_OAUTH_CALLBACK_URL // Desktop & Android: bounce page → wealthfolio://
+            ? HOSTED_OAUTH_CALLBACK_URL // Desktop & Android: bounce page → whaleit://
             : getWebRedirectUrl(); // Web or dev mode
 
         const useSystemBrowser = isTauri && import.meta.env.PROD && !useASWebAuth;
@@ -542,7 +542,7 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
           try {
             const result = await authenticateWithASWebAuth({
               url: data.url,
-              callbackScheme: "wealthfolio",
+              callbackScheme: "whaleit",
             });
 
             // The plugin returns the full callback URL with the auth code
@@ -593,8 +593,8 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
         const redirectUrl =
           isTauri && import.meta.env.PROD
             ? isMobile
-              ? HOSTED_OAUTH_CALLBACK_URL // Mobile: bounce page → wealthfolio://
-              : DESKTOP_DEEP_LINK_URL // Desktop: direct wealthfolio:// from email client
+              ? HOSTED_OAUTH_CALLBACK_URL // Mobile: bounce page → whaleit://
+              : DESKTOP_DEEP_LINK_URL // Desktop: direct whaleit:// from email client
             : getWebRedirectUrl();
 
         const { error: otpError } = await supabase.auth.signInWithOtp({

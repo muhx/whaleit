@@ -10,9 +10,9 @@ use uuid::Uuid;
 
 use crate::context::ServiceContext;
 use crate::events::{emit_portfolio_trigger_recalculate, PortfolioRequestPayload};
-use wealthfolio_core::quotes::MarketSyncMode;
-use wealthfolio_core::sync::APP_SYNC_TABLES;
-use wealthfolio_device_sync::SyncState;
+use whaleit_core::quotes::MarketSyncMode;
+use whaleit_core::sync::APP_SYNC_TABLES;
+use whaleit_device_sync::SyncState;
 
 use super::{
     clear_min_snapshot_created_at_from_store, create_client, encrypt_sync_payload,
@@ -59,7 +59,7 @@ pub async fn get_pairing_source_status_internal(
         .get_device(&token, &device_id)
         .await
         .map_err(|e| e.to_string())?;
-    if sync_state.trust_state != wealthfolio_device_sync::TrustState::Trusted {
+    if sync_state.trust_state != whaleit_device_sync::TrustState::Trusted {
         return Err("Current device is not ready to connect another device yet.".to_string());
     }
 
@@ -92,15 +92,15 @@ pub async fn get_pairing_source_status_internal(
 }
 
 async fn snapshot_satisfies_freshness_gate(
-    client: &wealthfolio_device_sync::DeviceSyncClient,
+    client: &whaleit_device_sync::DeviceSyncClient,
     token: &str,
     device_id: &str,
-    latest: &wealthfolio_device_sync::SnapshotLatestResponse,
+    latest: &whaleit_device_sync::SnapshotLatestResponse,
     min_created_at: &str,
 ) -> Result<bool, String> {
-    let latest_created_at = wealthfolio_device_sync::parse_sync_datetime_to_utc(&latest.created_at)
+    let latest_created_at = whaleit_device_sync::parse_sync_datetime_to_utc(&latest.created_at)
         .map_err(|e| format!("Invalid snapshot created_at in metadata: {}", e))?;
-    let min_created_at = wealthfolio_device_sync::parse_sync_datetime_to_utc(min_created_at)
+    let min_created_at = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at)
         .map_err(|e| format!("Invalid min snapshot freshness gate: {}", e))?;
     if latest_created_at + Duration::seconds(SNAPSHOT_FRESHNESS_CLOCK_SKEW_LEEWAY_SECS)
         > min_created_at
@@ -143,7 +143,7 @@ enum MissingSnapshotDisposition {
 }
 
 async fn classify_missing_snapshot_disposition(
-    client: &wealthfolio_device_sync::DeviceSyncClient,
+    client: &whaleit_device_sync::DeviceSyncClient,
     token: &str,
     device_id: &str,
 ) -> MissingSnapshotDisposition {
@@ -223,9 +223,9 @@ fn decode_snapshot_sqlite_payload(
     let blob_text = String::from_utf8(blob)
         .map_err(|_| "Snapshot payload is not valid UTF-8 (expected encrypted ciphertext)")?;
 
-    let dek = wealthfolio_device_sync::crypto::derive_dek(root_key, key_version as u32)
+    let dek = whaleit_device_sync::crypto::derive_dek(root_key, key_version as u32)
         .map_err(|e| format!("Failed to derive snapshot DEK: {}", e))?;
-    let decrypted = wealthfolio_device_sync::crypto::decrypt(&dek, blob_text.trim())
+    let decrypted = whaleit_device_sync::crypto::decrypt(&dek, blob_text.trim())
         .map_err(|e| format!("Failed to decrypt snapshot payload: {}", e))?;
 
     let sqlite_bytes = BASE64_STANDARD
@@ -260,7 +260,7 @@ pub async fn sync_bootstrap_snapshot_if_needed(
             .flatten()
     });
     let min_snapshot_created_at = match raw_freshness_gate {
-        Some(value) => match wealthfolio_device_sync::normalize_sync_datetime(&value) {
+        Some(value) => match whaleit_device_sync::normalize_sync_datetime(&value) {
             Ok(normalized) => Some(normalized),
             Err(_) => {
                 log::warn!(
@@ -601,7 +601,7 @@ pub async fn generate_snapshot_now_internal(
         "[DeviceSync] Snapshot upload eligibility: device_id={} trust_state={:?}",
         device_id, sync_state.trust_state
     );
-    if sync_state.trust_state != wealthfolio_device_sync::TrustState::Trusted {
+    if sync_state.trust_state != whaleit_device_sync::TrustState::Trusted {
         return Ok(SyncSnapshotUploadResult {
             status: "skipped".to_string(),
             snapshot_id: None,
@@ -696,7 +696,7 @@ pub async fn generate_snapshot_now_internal(
         "[DeviceSync] Snapshot upload cursor anchor local_cursor={:?} server_cursor={} base_seq={:?}",
         local_cursor, server_cursor, base_seq
     );
-    let upload_headers = wealthfolio_device_sync::SnapshotUploadHeaders {
+    let upload_headers = whaleit_device_sync::SnapshotUploadHeaders {
         event_id: Some(Uuid::now_v7().to_string()),
         schema_version: 1,
         covers_tables: APP_SYNC_TABLES.iter().map(|v| v.to_string()).collect(),

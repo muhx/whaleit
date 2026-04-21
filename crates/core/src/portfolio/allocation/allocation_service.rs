@@ -319,7 +319,7 @@ impl AllocationServiceTrait for AllocationService {
         let total_with_cash: Decimal = holdings.iter().map(|h| h.market_value.base).sum();
 
         // 3. Get all taxonomies with categories
-        let taxonomies = self.taxonomy_service.get_taxonomies_with_categories()?;
+        let taxonomies = self.taxonomy_service.get_taxonomies_with_categories().await?;
 
         // 4. Collect all asset IDs from holdings
         let asset_ids: Vec<String> = holdings
@@ -538,6 +538,7 @@ impl AllocationServiceTrait for AllocationService {
             if let Ok(assignments) = self
                 .taxonomy_service
                 .get_category_assignments(taxonomy_id, cat_id)
+                .await
             {
                 for assignment in assignments {
                     *asset_to_weight
@@ -573,6 +574,7 @@ impl AllocationServiceTrait for AllocationService {
                 let has_assignment = self
                     .taxonomy_service
                     .get_asset_assignments(asset_id)
+                    .await
                     .map(|assignments| assignments.iter().any(|a| a.taxonomy_id == taxonomy_id))
                     .unwrap_or(false);
 

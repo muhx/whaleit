@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::context::ServiceContext;
 use log::debug;
 use tauri::State;
-use wealthfolio_core::limits::{ContributionLimit, DepositsCalculation, NewContributionLimit};
+use whaleit_core::limits::{ContributionLimit, DepositsCalculation, NewContributionLimit};
 
 #[tauri::command]
 pub async fn get_contribution_limits(
@@ -13,7 +13,7 @@ pub async fn get_contribution_limits(
     state
         .limits_service()
         .get_contribution_limits()
-        .map_err(|e| format!("Failed to load contribution limits: {}", e))
+        .await.map_err(|e| format!("Failed to load contribution limits: {}", e))
 }
 
 #[tauri::command]
@@ -66,5 +66,5 @@ pub async fn calculate_deposits_for_contribution_limit(
     state
         .limits_service()
         .calculate_deposits_for_contribution_limit(&limit_id, &base_currency)
-        .map_err(|e| format!("Failed to calculate deposits for contribution limit: {}", e))
+        .await.map_err(|e| format!("Failed to calculate deposits for contribution limit: {}", e))
 }

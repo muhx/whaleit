@@ -1,11 +1,11 @@
 [package]
-name = "wealthfolio-device-sync"
+name = "whaleit-device-sync"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 # Core (for SecretStore trait)
-wealthfolio-core = { path = "../core" }
+whaleit-core = { path = "../core" }
 
 # HTTP client
 reqwest = { workspace = true }

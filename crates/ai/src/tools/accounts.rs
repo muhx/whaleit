@@ -99,6 +99,7 @@ impl<E: AiEnvironment + 'static> Tool for GetAccountsTool<E> {
             .env
             .account_service()
             .get_active_accounts()
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         let original_count = accounts.len();

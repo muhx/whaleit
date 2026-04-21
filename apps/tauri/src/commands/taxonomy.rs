@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use log::debug;
 use tauri::State;
-use wealthfolio_core::health::{MigrationResult, MigrationStatus};
-use wealthfolio_core::taxonomies::{
+use whaleit_core::health::{MigrationResult, MigrationStatus};
+use whaleit_core::taxonomies::{
     AssetTaxonomyAssignment, Category, NewAssetTaxonomyAssignment, NewCategory, NewTaxonomy,
     Taxonomy, TaxonomyWithCategories,
 };
@@ -18,7 +18,7 @@ pub async fn get_taxonomies(
     state
         .taxonomy_service()
         .get_taxonomies()
-        .map_err(|e| format!("Failed to load taxonomies: {}", e))
+        .await.map_err(|e| format!("Failed to load taxonomies: {}", e))
 }
 
 #[tauri::command]
@@ -30,7 +30,7 @@ pub async fn get_taxonomy(
     state
         .taxonomy_service()
         .get_taxonomy(&id)
-        .map_err(|e| format!("Failed to load taxonomy: {}", e))
+        .await.map_err(|e| format!("Failed to load taxonomy: {}", e))
 }
 
 #[tauri::command]
@@ -153,7 +153,7 @@ pub async fn export_taxonomy_json(
     state
         .taxonomy_service()
         .export_taxonomy_json(&id)
-        .map_err(|e| format!("Failed to export taxonomy: {}", e))
+        .await.map_err(|e| format!("Failed to export taxonomy: {}", e))
 }
 
 #[tauri::command]
@@ -165,7 +165,7 @@ pub async fn get_asset_taxonomy_assignments(
     state
         .taxonomy_service()
         .get_asset_assignments(&asset_id)
-        .map_err(|e| format!("Failed to load assignments: {}", e))
+        .await.map_err(|e| format!("Failed to load assignments: {}", e))
 }
 
 #[tauri::command]
@@ -207,11 +207,11 @@ pub async fn get_migration_status(
     state: State<'_, Arc<ServiceContext>>,
 ) -> Result<MigrationStatus, String> {
     debug!("Checking migration status...");
-    wealthfolio_core::health::get_migration_status(
+    whaleit_core::health::get_migration_status(
         state.asset_service().as_ref(),
         state.taxonomy_service().as_ref(),
     )
-    .map_err(|e| e.to_string())
+    .await.map_err(|e| e.to_string())
 }
 
 /// Migrate legacy sector and country classifications to taxonomy system
@@ -225,7 +225,7 @@ pub async fn migrate_legacy_classifications(
 /// Core migration logic - can be called from Tauri command or health fix action
 pub async fn run_legacy_migration(state: &Arc<ServiceContext>) -> Result<MigrationResult, String> {
     debug!("Starting legacy classification migration...");
-    wealthfolio_core::health::migrate_legacy_classifications(
+    whaleit_core::health::migrate_legacy_classifications(
         state.asset_service().as_ref(),
         state.taxonomy_service().as_ref(),
     )

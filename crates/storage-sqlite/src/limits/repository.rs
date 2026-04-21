@@ -49,11 +49,11 @@ impl ContributionLimitRepository {
 
 #[async_trait]
 impl ContributionLimitRepositoryTrait for ContributionLimitRepository {
-    fn get_contribution_limit(&self, id_param: &str) -> Result<ContributionLimit> {
+    async fn get_contribution_limit(&self, id_param: &str) -> Result<ContributionLimit> {
         self.get_contribution_limit_impl(id_param)
     }
 
-    fn get_contribution_limits(&self) -> Result<Vec<ContributionLimit>> {
+    async fn get_contribution_limits(&self) -> Result<Vec<ContributionLimit>> {
         self.get_contribution_limits_impl()
     }
 
