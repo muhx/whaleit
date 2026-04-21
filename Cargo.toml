@@ -26,10 +26,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # Database
-diesel = { version = "2.3", features = ["sqlite", "chrono", "r2d2", "numeric", "returning_clauses_for_sqlite_3_35"] }
-diesel_migrations = { version = "2.3", features = ["sqlite"] }
-diesel-async = { version = "0.5", features = ["postgres", "deadpool"] }
-deadpool = "0.12"
+diesel = { version = "2.3", features = ["sqlite", "postgres", "chrono", "r2d2", "numeric", "returning_clauses_for_sqlite_3_35", "uuid"] }
+diesel_migrations = { version = "2.3", features = ["sqlite", "postgres"] }
+diesel-async = { version = "0.8", features = ["postgres", "deadpool", "migrations"] }
+deadpool = "0.13"
 rusqlite = { version = "0.34", features = ["bundled"] }
 r2d2 = "0.8"
 
