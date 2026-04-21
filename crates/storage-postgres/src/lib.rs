@@ -42,6 +42,11 @@ pub mod settings;
 pub mod sync;
 pub mod taxonomies;
 
+// Re-export repository types for compatibility
+pub use assets::{AlternativeAssetRepository, PgAlternativeAssetRepository};
+pub use portfolio::{PgSnapshotRepository, PgValuationRepository, SnapshotRepository, ValuationRepository};
+pub use sync::{AppSyncRepository, ImportRunRepository, PlatformRepository, BrokerSyncStateRepository};
+
 // Re-export database utilities
 pub use db::{create_pool, init, run_migrations, PgPool};
 

@@ -9,3 +9,9 @@ pub use app_sync::PgAppSyncRepository;
 pub use import_run::PgImportRunRepository;
 pub use platform::PgPlatformRepository;
 pub use state::PgBrokerSyncStateRepository;
+
+// Type aliases for compatibility with SQLite storage API
+pub type AppSyncRepository = PgAppSyncRepository;
+pub type ImportRunRepository = PgImportRunRepository;
+pub type PlatformRepository = PgPlatformRepository;
+pub type BrokerSyncStateRepository = PgBrokerSyncStateRepository;
