@@ -4,20 +4,41 @@
 # Dev overlay: docker compose -f compose.yml -f compose.dev.yml up
 #
 # Works with any reverse proxy (Coolify, Nginx, Caddy, Traefik).
-# Uses expose (not ports) — the proxy handles external traffic.
+# Uses expose (not ports) — proxy handles external traffic.
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: whaleit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: whaleit
+      POSTGRES_USER: whaleit
+      POSTGRES_PASSWORD: "${WF_PG_PASSWORD:?Set WF_PG_PASSWORD}"
+    volumes:
+      - whaleit-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whaleit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   whaleit:
-    image: afadil/whaleit:latest
+    image: muhx/whaleit:latest
     container_name: whaleit
     restart: unless-stopped
     expose:
       - "8088"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - whaleit-data:/data
     environment:
       WF_LISTEN_ADDR: "0.0.0.0:8088"
-      WF_DB_PATH: "/data/wealthfolio.db"
+      # PostgreSQL database URL for production deployments
+      DATABASE_URL: "postgres://whaleit:${WF_PG_PASSWORD}@postgres:5432/whaleit"
+      WF_PG_POOL_SIZE: "${WF_PG_POOL_SIZE:-8}"
       # Required — generate with: openssl rand -base64 32
       WF_SECRET_KEY: "${WF_SECRET_KEY:?Set WF_SECRET_KEY}"
 
@@ -63,4 +84,6 @@ services:
 
 volumes:
   whaleit-data:
+    driver: local
+  whaleit-pgdata:
     driver: local

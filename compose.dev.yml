@@ -7,6 +7,11 @@
 #   docker compose -f compose.yml -f compose.dev.yml --env-file .env.docker up
 
 services:
+  postgres:
+    # Expose PostgreSQL port on localhost for development access
+    ports:
+      - "${WF_PG_PORT:-5432}:5432"
+
   whaleit:
     # Build from source instead of pulling from Docker Hub
     build:
@@ -22,7 +27,7 @@ services:
     deploy: !reset {}
     environment:
       WF_LISTEN_ADDR: "0.0.0.0:8088"
-      WF_DB_PATH: "/data/wealthfolio.db"
+      WF_DB_PATH: "/data/whaleit.db"
       WF_SECRET_KEY: "${WF_SECRET_KEY:?Set WF_SECRET_KEY}"
       WF_CORS_ALLOW_ORIGINS: "http://localhost:1420,http://localhost:3000"
       WF_AUTH_PASSWORD_HASH: ""
