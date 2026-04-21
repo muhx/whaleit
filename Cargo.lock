@@ -8712,6 +8712,7 @@ dependencies = [
  "rust_decimal",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 1.0.69",
  "tokio",
  "uuid",
@@ -8719,6 +8720,7 @@ dependencies = [
  "whaleit-connect",
  "whaleit-core",
  "whaleit-device-sync",
+ "whaleit-storage-sqlite",
 ]
 
 [[package]]
