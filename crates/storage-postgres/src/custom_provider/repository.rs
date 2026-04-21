@@ -280,7 +280,8 @@ impl CustomProviderRepository for PgCustomProviderRepository {
 
                 let row: CountRow = diesel::sql_query(
                     "SELECT COUNT(*) as cnt FROM assets WHERE \
-                     provider_config::json->>'custom_provider_code' = $1",
+                     provider_config IS NOT NULL AND provider_config != '' \
+                     AND provider_config::jsonb->>'custom_provider_code' = $1",
                 )
                 .bind::<Text, _>(&provider_code)
                 .get_result(&mut conn)
