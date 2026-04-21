@@ -1,20 +1,13 @@
 // PostgreSQL schema definition for Whaleit.
 //
 // This schema mirrors the SQLite schema but uses native PostgreSQL types:
-// - id columns: Uuid (native PG uuid type)
 // - boolean columns: Bool (native PG boolean, not Integer)
-// - timestamp columns: Timestamptz (not Text/Timestamp)
-// - foreign key id columns: Uuid (matching PK types)
+// - timestamp columns: Timestamp (maps to NaiveDateTime in Rust models)
 // - text columns: Text (PG handles TEXT without length limits)
 //
-// Note: Some tables use Text for IDs where the SQLite schema stores string-based
-// IDs (e.g., asset_id references, composite keys). Only primary key `id` columns
-// use Uuid type. Tables that store external/non-UUID identifiers keep Text.
-//
-// For the initial implementation, IDs remain as Text to maintain compatibility
-// with the existing UUID-as-string pattern used by whaleit-core domain models.
-// This avoids a type mismatch between core domain types (String IDs) and DB types.
-// A future migration can convert to native UUID columns.
+// IDs remain as Text to maintain compatibility with the existing UUID-as-string
+// pattern used by whaleit-core domain models. A future migration can convert
+// to native UUID columns.
 
 diesel::table! {
     accounts (id) {
@@ -25,8 +18,8 @@ diesel::table! {
         currency -> Text,
         is_default -> Bool,
         is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         platform_id -> Nullable<Text>,
         account_number -> Nullable<Text>,
         meta -> Nullable<Text>,
@@ -64,8 +57,8 @@ diesel::table! {
         import_run_id -> Nullable<Text>,
         is_user_modified -> Bool,
         needs_review -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -76,8 +69,8 @@ diesel::table! {
         context_kind -> Text,
         source_system -> Text,
         template_id -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -90,8 +83,8 @@ diesel::table! {
         source_system -> Text,
         config_version -> Integer,
         config -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -101,7 +94,7 @@ diesel::table! {
         thread_id -> Text,
         role -> Text,
         content_json -> Text,
-        created_at -> Timestamptz,
+        created_at -> Timestamp,
     }
 }
 
@@ -110,7 +103,7 @@ diesel::table! {
         id -> Text,
         thread_id -> Text,
         tag -> Text,
-        created_at -> Timestamptz,
+        created_at -> Timestamp,
     }
 }
 
@@ -118,8 +111,8 @@ diesel::table! {
     ai_threads (id) {
         id -> Text,
         title -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         config_snapshot -> Nullable<Text>,
         is_pinned -> Bool,
     }
@@ -140,8 +133,8 @@ diesel::table! {
         category_id -> Text,
         weight -> Integer,
         source -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -161,8 +154,8 @@ diesel::table! {
         instrument_exchange_mic -> Nullable<Text>,
         instrument_key -> Nullable<Text>,
         provider_config -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -171,13 +164,13 @@ diesel::table! {
         account_id -> Text,
         provider -> Text,
         checkpoint_json -> Nullable<Text>,
-        last_attempted_at -> Nullable<Timestamptz>,
-        last_successful_at -> Nullable<Timestamptz>,
+        last_attempted_at -> Nullable<Timestamp>,
+        last_successful_at -> Nullable<Timestamp>,
         last_error -> Nullable<Text>,
         last_run_id -> Nullable<Text>,
         sync_status -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -188,10 +181,10 @@ diesel::table! {
         contribution_year -> Integer,
         limit_amount -> Double,
         account_ids -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        start_date -> Nullable<Timestamptz>,
-        end_date -> Nullable<Timestamptz>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        start_date -> Nullable<Text>,
+        end_date -> Nullable<Text>,
     }
 }
 
@@ -204,8 +197,8 @@ diesel::table! {
         enabled -> Bool,
         priority -> Integer,
         config -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -222,7 +215,7 @@ diesel::table! {
         total_value -> Text,
         cost_basis -> Text,
         net_contribution -> Text,
-        calculated_at -> Timestamptz,
+        calculated_at -> Timestamp,
     }
 }
 
@@ -248,7 +241,7 @@ diesel::table! {
 diesel::table! {
     health_issue_dismissals (issue_id) {
         issue_id -> Text,
-        dismissed_at -> Timestamptz,
+        dismissed_at -> Timestamp,
         data_hash -> Text,
     }
 }
@@ -263,7 +256,7 @@ diesel::table! {
         cash_balances -> Text,
         cost_basis -> Text,
         net_contribution -> Text,
-        calculated_at -> Timestamptz,
+        calculated_at -> Timestamp,
         net_contribution_base -> Text,
         cash_total_account_currency -> Text,
         cash_total_base_currency -> Text,
@@ -279,17 +272,17 @@ diesel::table! {
         run_type -> Text,
         mode -> Text,
         status -> Text,
-        started_at -> Timestamptz,
-        finished_at -> Nullable<Timestamptz>,
+        started_at -> Timestamp,
+        finished_at -> Nullable<Timestamp>,
         review_mode -> Text,
-        applied_at -> Nullable<Timestamptz>,
+        applied_at -> Nullable<Timestamp>,
         checkpoint_in -> Nullable<Text>,
         checkpoint_out -> Nullable<Text>,
         summary -> Nullable<Text>,
         warnings -> Nullable<Text>,
         error -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -302,7 +295,7 @@ diesel::table! {
         priority -> Integer,
         enabled -> Bool,
         logo_filename -> Nullable<Text>,
-        last_synced_at -> Nullable<Timestamptz>,
+        last_synced_at -> Nullable<Timestamp>,
         last_sync_status -> Nullable<Text>,
         last_sync_error -> Nullable<Text>,
         provider_type -> Text,
@@ -326,14 +319,14 @@ diesel::table! {
     quote_sync_state (asset_id) {
         asset_id -> Text,
         position_closed_date -> Nullable<Text>,
-        last_synced_at -> Nullable<Timestamptz>,
+        last_synced_at -> Nullable<Timestamp>,
         data_source -> Text,
         sync_priority -> Integer,
         error_count -> Integer,
         last_error -> Nullable<Text>,
-        profile_enriched_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        profile_enriched_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -351,8 +344,8 @@ diesel::table! {
         volume -> Nullable<Text>,
         currency -> Text,
         notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        timestamp -> Timestamptz,
+        created_at -> Timestamp,
+        timestamp -> Timestamp,
     }
 }
 
@@ -362,7 +355,7 @@ diesel::table! {
         seq -> BigInt,
         entity -> Text,
         entity_id -> Text,
-        applied_at -> Timestamptz,
+        applied_at -> Timestamp,
     }
 }
 
@@ -370,7 +363,7 @@ diesel::table! {
     sync_cursor (id) {
         id -> Integer,
         cursor -> BigInt,
-        updated_at -> Timestamptz,
+        updated_at -> Timestamp,
     }
 }
 
@@ -379,8 +372,8 @@ diesel::table! {
         device_id -> Text,
         key_version -> Nullable<Integer>,
         trust_state -> Text,
-        last_bootstrap_at -> Nullable<Timestamptz>,
-        min_snapshot_created_at -> Nullable<Timestamptz>,
+        last_bootstrap_at -> Nullable<Timestamp>,
+        min_snapshot_created_at -> Nullable<Timestamp>,
     }
 }
 
@@ -388,11 +381,11 @@ diesel::table! {
     sync_engine_state (id) {
         id -> Integer,
         lock_version -> BigInt,
-        last_push_at -> Nullable<Timestamptz>,
-        last_pull_at -> Nullable<Timestamptz>,
+        last_push_at -> Nullable<Timestamp>,
+        last_pull_at -> Nullable<Timestamp>,
         last_error -> Nullable<Text>,
         consecutive_failures -> Integer,
-        next_retry_at -> Nullable<Timestamptz>,
+        next_retry_at -> Nullable<Timestamp>,
         last_cycle_status -> Nullable<Text>,
         last_cycle_duration_ms -> Nullable<BigInt>,
     }
@@ -403,7 +396,7 @@ diesel::table! {
         entity -> Text,
         entity_id -> Text,
         last_event_id -> Text,
-        last_client_timestamp -> Timestamptz,
+        last_client_timestamp -> Timestamp,
         last_seq -> BigInt,
     }
 }
@@ -414,17 +407,17 @@ diesel::table! {
         entity -> Text,
         entity_id -> Text,
         op -> Text,
-        client_timestamp -> Timestamptz,
+        client_timestamp -> Timestamp,
         payload -> Text,
         payload_key_version -> Integer,
         sent -> Bool,
         status -> Text,
         retry_count -> Integer,
-        next_retry_at -> Nullable<Timestamptz>,
+        next_retry_at -> Nullable<Timestamp>,
         last_error -> Nullable<Text>,
         last_error_code -> Nullable<Text>,
         device_id -> Nullable<Text>,
-        created_at -> Timestamptz,
+        created_at -> Timestamp,
     }
 }
 
@@ -432,8 +425,8 @@ diesel::table! {
     sync_table_state (table_name) {
         table_name -> Text,
         enabled -> Bool,
-        last_snapshot_restore_at -> Nullable<Timestamptz>,
-        last_incremental_apply_at -> Nullable<Timestamptz>,
+        last_snapshot_restore_at -> Nullable<Timestamp>,
+        last_incremental_apply_at -> Nullable<Timestamp>,
     }
 }
 
@@ -446,8 +439,8 @@ diesel::table! {
         is_system -> Bool,
         is_single_select -> Bool,
         sort_order -> Integer,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -461,8 +454,8 @@ diesel::table! {
         color -> Text,
         description -> Nullable<Text>,
         sort_order -> Integer,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
