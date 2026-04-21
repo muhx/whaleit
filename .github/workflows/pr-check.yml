@@ -93,6 +93,41 @@ jobs:
       - name: Check release build (src-server)
         run: cargo check -p whaleit-server --release
 
+      - name: Check postgres build
+        run: cargo check -p whaleit-server --features postgres
+
+  postgres-tests:
+    name: PostgreSQL Parity Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: whaleit_test
+          POSTGRES_USER: whaleit_test
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run PostgreSQL parity tests
+        env:
+          DATABASE_URL: postgres://whaleit_test:test_password@localhost:5432/whaleit_test
+        run: cargo test -p whaleit-storage-postgres --features postgres parity_ -- --test-threads=1
+
   build-status:
     name: Build Status
     runs-on: ubuntu-latest
