@@ -46,6 +46,8 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
             .collect();
 
         // PostgreSQL uses ON CONFLICT instead of replace_into
+        // Note: EXCLUDED.* column names are raw SQL strings — update if schema columns change.
+        // snapshot_date is intentionally excluded as dates are immutable per ID.
         for chunk in db_models.chunks(100) {
             diesel::insert_into(hs_dsl::holdings_snapshots)
                 .values(chunk)
@@ -438,6 +440,7 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
                 .map(AccountStateSnapshotDB::from)
                 .collect();
 
+            // Note: EXCLUDED.* column names are raw SQL strings — update if schema columns change.
             for chunk in db_models.chunks(100) {
                 diesel::insert_into(hs_dsl::holdings_snapshots)
                     .values(chunk)
@@ -481,6 +484,7 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
 
         let db_model = AccountStateSnapshotDB::from(snapshot.clone());
 
+        // Note: EXCLUDED.* column names are raw SQL strings — update if schema columns change.
         diesel::insert_into(hs_dsl::holdings_snapshots)
             .values(&db_model)
             .on_conflict(hs_dsl::id)

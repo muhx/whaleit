@@ -42,6 +42,7 @@ impl ValuationRepositoryTrait for PgValuationRepository {
             .collect();
 
         // Chunk to avoid oversized queries
+        // Note: EXCLUDED.* column names are raw SQL strings — update if schema columns change.
         for chunk in db_records.chunks(1000) {
             diesel::insert_into(dav_dsl::daily_account_valuation)
                 .values(chunk)
