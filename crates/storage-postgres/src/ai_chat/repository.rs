@@ -134,30 +134,6 @@ fn encode_cursor(is_pinned: bool, updated_at: &NaiveDateTime, id: &str) -> Strin
     format!("{}:{}:{}", if is_pinned { 1 } else { 0 }, updated_at, id)
 }
 
-/// Run a sync diesel query using the PG async pool by blocking on the current task.
-fn run_sync<F, T>(pool: &PgPool, f: F) -> ChatRepositoryResult<T>
-where
-    F: FnOnce(&mut diesel_async::AsyncPgConnection) -> diesel::QueryResult<T> + Send + 'static,
-    T: Send + 'static,
-{
-    let pool = pool.clone();
-    tokio::task::block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(async move {
-            let mut conn = pool.get().await.map_err(|e| {
-                AiError::Core(CoreError::Database(DatabaseError::ConnectionFailed(
-                    e.to_string(),
-                )))
-            })?;
-            // diesel-async connections implement Sync so we can use them in blocking context
-            f(&mut *conn).map_err(|e| {
-                AiError::Core(CoreError::Database(DatabaseError::QueryFailed(
-                    e.to_string(),
-                )))
-            })
-        })
-    })
-}
-
 pub struct PgAiChatRepository {
     pool: Arc<PgPool>,
 }
@@ -165,12 +141,6 @@ pub struct PgAiChatRepository {
 impl PgAiChatRepository {
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
-    }
-
-    async fn get_conn(&self) -> ChatRepositoryResult<crate::db::PgConnection<'_>> {
-        // We can't hold a connection across await points in this return type,
-        // so this helper is just for documentation. Use pool.get().await inline.
-        unimplemented!()
     }
 }
 
