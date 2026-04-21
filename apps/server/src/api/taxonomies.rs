@@ -38,7 +38,7 @@ pub struct ImportTaxonomyRequest {
 
 async fn get_taxonomies(State(state): State<Arc<AppState>>) -> ApiResult<Json<Vec<Taxonomy>>> {
     debug!("Fetching all taxonomies...");
-    let taxonomies = state.taxonomy_service.get_taxonomies()?;
+    let taxonomies = state.taxonomy_service.get_taxonomies().await?;
     Ok(Json(taxonomies))
 }
 
@@ -47,7 +47,7 @@ async fn get_taxonomy(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Option<TaxonomyWithCategories>>> {
     debug!("Fetching taxonomy {}...", id);
-    let taxonomy = state.taxonomy_service.get_taxonomy(&id)?;
+    let taxonomy = state.taxonomy_service.get_taxonomy(&id).await?;
     Ok(Json(taxonomy))
 }
 
@@ -153,7 +153,7 @@ async fn export_taxonomy_json(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<String>> {
     debug!("Exporting taxonomy {} to JSON...", id);
-    let json = state.taxonomy_service.export_taxonomy_json(&id)?;
+    let json = state.taxonomy_service.export_taxonomy_json(&id).await?;
     Ok(Json(json))
 }
 
@@ -166,7 +166,7 @@ async fn get_asset_taxonomy_assignments(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<AssetTaxonomyAssignment>>> {
     debug!("Fetching taxonomy assignments for asset {}...", asset_id);
-    let assignments = state.taxonomy_service.get_asset_assignments(&asset_id)?;
+    let assignments = state.taxonomy_service.get_asset_assignments(&asset_id).await?;
     Ok(Json(assignments))
 }
 
@@ -205,7 +205,7 @@ async fn get_migration_status(
     let status = whaleit_core::health::get_migration_status(
         state.asset_service.as_ref(),
         state.taxonomy_service.as_ref(),
-    )?;
+    ).await?;
     Ok(Json(status))
 }
 

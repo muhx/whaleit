@@ -27,9 +27,9 @@ async fn list_accounts(
 ) -> ApiResult<Json<Vec<Account>>> {
     let include_archived = query.include_archived.unwrap_or(false);
     let accounts = if include_archived {
-        state.account_service.get_all_accounts()?
+        state.account_service.get_all_accounts().await?
     } else {
-        state.account_service.get_non_archived_accounts()?
+        state.account_service.get_non_archived_accounts().await?
     };
     Ok(Json(accounts.into_iter().map(Account::from).collect()))
 }

@@ -161,14 +161,14 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
 
     let fx_repo = Arc::new(FxRepository::new(pool.clone(), writer.clone()));
     let fx_service = Arc::new(FxService::new(fx_repo).with_event_sink(domain_event_sink.clone()));
-    fx_service.initialize()?;
+    fx_service.initialize().await?;
 
     let settings_repo = Arc::new(SettingsRepository::new(pool.clone(), writer.clone()));
     let settings_service = Arc::new(SettingsService::new(
         settings_repo.clone(),
         fx_service.clone(),
     ));
-    let settings = settings_service.get_settings()?;
+    let settings = settings_service.get_settings().await?;
     let base_currency = Arc::new(RwLock::new(settings.base_currency));
     let timezone = Arc::new(RwLock::new(settings.timezone.clone()));
 

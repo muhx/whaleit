@@ -155,7 +155,7 @@ pub async fn process_portfolio_job(
                 ));
                 tracing::info!("Market data sync completed in {:?}", sync_start.elapsed());
                 state.health_service.clear_cache().await;
-                if let Err(err) = state.fx_service.initialize() {
+                if let Err(err) = state.fx_service.initialize().await {
                     tracing::warn!(
                         "Failed to initialize FxService after market data sync: {}",
                         err
@@ -179,6 +179,7 @@ pub async fn process_portfolio_job(
     let accounts_for_total = state
         .account_service
         .get_non_archived_accounts()
+        .await
         .map_err(|err| {
             let err_msg = format!("Failed to list non-archived accounts: {}", err);
             event_bus.publish(ServerEvent::with_payload(
@@ -237,13 +238,14 @@ pub async fn process_portfolio_job(
     if let Ok(Some(total_snapshot)) = state
         .snapshot_service
         .get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID)
+        .await
     {
         // Extract asset quantities from the TOTAL snapshot
         let current_holdings: std::collections::HashMap<String, rust_decimal::Decimal> =
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position)| (asset_id.clone(), position.quantity))
+                .map(|(asset_id, position): (&String, &whaleit_core::portfolio::snapshot::Position)| (asset_id.clone(), position.quantity))
                 .collect();
 
         if let Err(e) = state

@@ -553,6 +553,7 @@ async fn perform_broker_activities_only_sync(
     let synced_accounts = state
         .connect_sync_service
         .get_synced_accounts()
+        .await
         .map_err(|e| e.to_string())?;
 
     let mut summary = SyncActivitiesResponse::default();
@@ -822,6 +823,7 @@ async fn get_synced_accounts(
     let accounts = state
         .connect_sync_service
         .get_synced_accounts()
+        .await
         .map_err(|e| ApiError::Internal(e.to_string()))?;
 
     info!("[Connect] Found {} synced accounts", accounts.len());
@@ -907,7 +909,7 @@ async fn get_broker_sync_profile(
     Ok(Json(
         state
             .activity_service
-            .get_broker_sync_profile(q.account_id, q.source_system)?,
+            .get_broker_sync_profile(q.account_id, q.source_system).await?,
     ))
 }
 

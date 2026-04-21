@@ -31,7 +31,7 @@ async fn calculate_accounts_simple_performance(
     } else {
         state
             .account_service
-            .get_active_accounts()?
+            .get_active_accounts().await?
             .into_iter()
             .map(|a| a.id)
             .collect()
@@ -41,7 +41,7 @@ async fn calculate_accounts_simple_performance(
     }
     let metrics = state
         .performance_service
-        .calculate_accounts_simple_performance(&ids)?;
+        .calculate_accounts_simple_performance(&ids).await?;
     Ok(Json(metrics))
 }
 
@@ -107,7 +107,7 @@ async fn get_income_summary(
 ) -> ApiResult<Json<Vec<IncomeSummary>>> {
     let items = state
         .income_service
-        .get_income_summary(query.account_id.as_deref())?;
+        .get_income_summary(query.account_id.as_deref()).await?;
     Ok(Json(items))
 }
 

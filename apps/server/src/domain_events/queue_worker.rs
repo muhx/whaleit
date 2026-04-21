@@ -292,7 +292,7 @@ async fn run_portfolio_job(
                 ));
                 tracing::info!("Market data sync completed in {:?}", sync_start.elapsed());
                 deps.health_service.clear_cache().await;
-                if let Err(err) = deps.fx_service.initialize() {
+                if let Err(err) = deps.fx_service.initialize().await {
                     tracing::warn!(
                         "Failed to initialize FxService after market data sync: {}",
                         err
@@ -313,7 +313,7 @@ async fn run_portfolio_job(
     event_bus.publish(ServerEvent::new(PORTFOLIO_UPDATE_START));
 
     // For TOTAL portfolio calculation, use non-archived accounts (ignores is_active)
-    let accounts_for_total = match deps.account_service.get_non_archived_accounts() {
+    let accounts_for_total = match deps.account_service.get_non_archived_accounts().await {
         Ok(accounts) => accounts,
         Err(err) => {
             let err_msg = format!("Failed to list non-archived accounts: {}", err);
@@ -374,12 +374,13 @@ async fn run_portfolio_job(
     if let Ok(Some(total_snapshot)) = deps
         .snapshot_service
         .get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID)
+        .await
     {
         let current_holdings: std::collections::HashMap<String, rust_decimal::Decimal> =
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position)| (asset_id.clone(), position.quantity))
+                .map(|(asset_id, position): (&String, &whaleit_core::portfolio::snapshot::Position)| (asset_id.clone(), position.quantity))
                 .collect();
 
         if let Err(e) = deps

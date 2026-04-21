@@ -19,12 +19,12 @@ async fn get_asset_profile(
     State(state): State<Arc<AppState>>,
     Query(q): Query<AssetQuery>,
 ) -> ApiResult<Json<CoreAsset>> {
-    let asset = state.asset_service.get_asset_by_id(&q.asset_id)?;
+    let asset = state.asset_service.get_asset_by_id(&q.asset_id).await?;
     Ok(Json(asset))
 }
 
 async fn list_assets(State(state): State<Arc<AppState>>) -> ApiResult<Json<Vec<CoreAsset>>> {
-    let assets = state.asset_service.get_assets()?;
+    let assets = state.asset_service.get_assets().await?;
     Ok(Json(assets))
 }
 

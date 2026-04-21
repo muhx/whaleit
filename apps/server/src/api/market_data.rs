@@ -72,7 +72,7 @@ async fn get_quote_history(
     State(state): State<Arc<AppState>>,
     Query(q): Query<QuoteHistoryQuery>,
 ) -> ApiResult<Json<Vec<Quote>>> {
-    let res = state.quote_service.get_historical_quotes(&q.symbol)?;
+    let res = state.quote_service.get_historical_quotes(&q.symbol).await?;
     Ok(Json(res))
 }
 
@@ -233,7 +233,7 @@ async fn get_latest_quotes(
 ) -> ApiResult<Json<std::collections::HashMap<String, LatestQuoteSnapshot>>> {
     let quotes = state
         .quote_service
-        .get_latest_quotes_snapshot(&body.asset_ids)?;
+        .get_latest_quotes_snapshot(&body.asset_ids).await?;
     Ok(Json(quotes))
 }
 

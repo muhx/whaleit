@@ -93,7 +93,7 @@ async fn search_activities(
         date_from_parsed,
         date_to_parsed,
         instrument_types,
-    )?;
+    ).await?;
     Ok(Json(resp))
 }
 
@@ -204,7 +204,7 @@ async fn get_account_import_mapping(
 ) -> ApiResult<Json<ImportMappingData>> {
     let res = state
         .activity_service
-        .get_import_mapping(q.account_id, q.context_kind)?;
+        .get_import_mapping(q.account_id, q.context_kind).await?;
     Ok(Json(res))
 }
 
@@ -227,7 +227,7 @@ async fn save_account_import_mapping(
 async fn list_import_templates(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<ImportTemplateData>>> {
-    Ok(Json(state.activity_service.list_import_templates()?))
+    Ok(Json(state.activity_service.list_import_templates().await?))
 }
 
 #[derive(serde::Deserialize)]
@@ -239,7 +239,7 @@ async fn get_import_template(
     State(state): State<Arc<AppState>>,
     Query(q): Query<ImportTemplateQuery>,
 ) -> ApiResult<Json<ImportTemplateData>> {
-    Ok(Json(state.activity_service.get_import_template(q.id)?))
+    Ok(Json(state.activity_service.get_import_template(q.id).await?))
 }
 
 #[derive(serde::Deserialize)]
@@ -304,7 +304,7 @@ async fn check_existing_duplicates(
 ) -> ApiResult<Json<CheckDuplicatesResponse>> {
     let duplicates = state
         .activity_service
-        .check_existing_duplicates(body.idempotency_keys)?;
+        .check_existing_duplicates(body.idempotency_keys).await?;
     Ok(Json(CheckDuplicatesResponse { duplicates }))
 }
 

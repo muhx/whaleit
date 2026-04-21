@@ -31,7 +31,7 @@ use whaleit_core::{
 use whaleit_storage_sqlite::db;
 
 async fn get_settings(State(state): State<Arc<AppState>>) -> ApiResult<Json<Settings>> {
-    let s = state.settings_service.get_settings()?;
+    let s = state.settings_service.get_settings().await?;
     Ok(Json(s))
 }
 
@@ -42,7 +42,7 @@ async fn update_settings(
     let previous_base_currency = state.base_currency.read().unwrap().clone();
     let previous_timezone = state.timezone.read().unwrap().clone();
     state.settings_service.update_settings(&payload).await?;
-    let updated_settings = state.settings_service.get_settings()?;
+    let updated_settings = state.settings_service.get_settings().await?;
     *state.timezone.write().unwrap() = updated_settings.timezone.clone();
     state.health_service.clear_cache().await;
 
@@ -95,6 +95,7 @@ async fn is_auto_update_check_enabled(State(state): State<Arc<AppState>>) -> Api
     let enabled = state
         .settings_service
         .is_auto_update_check_enabled()
+        .await
         .unwrap_or(true);
     Ok(Json(enabled))
 }
