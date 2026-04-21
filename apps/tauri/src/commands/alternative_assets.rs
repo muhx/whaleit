@@ -489,7 +489,7 @@ pub async fn get_net_worth(
 
 /// Gets net worth history over a date range.
 #[tauri::command]
-pub fn get_net_worth_history(
+pub async fn get_net_worth_history(
     start_date: String,
     end_date: String,
     state: State<'_, Arc<ServiceContext>>,

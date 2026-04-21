@@ -316,7 +316,7 @@ pub async fn check_addon_update(
                     changelog_url: None,
                     is_critical: None,
                     has_breaking_changes: None,
-                    min_wealthfolio_version: None,
+                    min_whaleit_version: None,
                 },
                 error: Some(error),
             })
@@ -362,7 +362,7 @@ pub async fn check_all_addon_updates(
                         changelog_url: None,
                         is_critical: None,
                         has_breaking_changes: None,
-                        min_wealthfolio_version: None,
+                        min_whaleit_version: None,
                     },
                     error: Some(error),
                 });

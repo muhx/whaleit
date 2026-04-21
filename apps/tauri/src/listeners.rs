@@ -97,7 +97,7 @@ fn handle_portfolio_request(handle: AppHandle, payload_str: &str, force_recalc: 
                                 }
                                 // Initialize the FxService after successful sync
                                 let fx_service = context.fx_service();
-                                if let Err(e) = fx_service.initialize() {
+                                if let Err(e) = fx_service.initialize().await {
                                     error!(
                                         "Failed to initialize FxService after market data sync: {}",
                                         e
@@ -214,7 +214,7 @@ fn handle_portfolio_calculation(
         // This list might be empty if account_ids_input is None and no accounts are active,
         // or if account_ids_input specified accounts that are now all inactive.
         let initially_targeted_active_accounts: Vec<String> =
-            match account_service.list_accounts(Some(true), None, account_ids_input.as_deref()) {
+            match account_service.list_accounts(Some(true), None, account_ids_input.as_deref()).await {
                 Ok(accounts) => accounts.iter().map(|a| a.id.clone()).collect(),
                 Err(e) => {
                     let err_msg = format!("Failed to list active accounts: {}", e);
@@ -272,7 +272,7 @@ fn handle_portfolio_calculation(
         // --- Step 2.5: Update position status from TOTAL snapshot ---
         // This derives open/closed position transitions for quote sync planning
         if let Ok(Some(total_snapshot)) =
-            snapshot_service.get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID)
+            snapshot_service.get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID).await
         {
             let quote_service = context.quote_service();
 
@@ -281,7 +281,7 @@ fn handle_portfolio_calculation(
                 total_snapshot
                     .positions
                     .iter()
-                    .map(|(asset_id, position)| (asset_id.clone(), position.quantity))
+                    .map(|(asset_id, position): (&String, &whaleit_core::portfolio::snapshot::Position)| (asset_id.clone(), position.quantity))
                     .collect();
 
             if let Err(e) = quote_service
@@ -302,17 +302,18 @@ fn handle_portfolio_calculation(
         }
 
         if !accounts_for_valuation.is_empty() {
-            let history_futures = accounts_for_valuation.iter().map(|account_id| {
+            let mut history_futures = Vec::new();
+            for account_id in &accounts_for_valuation {
                 let valuation_service_clone = valuation_service.clone();
                 let account_id_clone = account_id.clone();
                 let valuation_mode_clone = valuation_mode.clone();
-                async move {
+                history_futures.push(async move {
                     let result = valuation_service_clone
                         .calculate_valuation_history(&account_id_clone, valuation_mode_clone)
                         .await;
                     (account_id_clone, result)
-                }
-            });
+                });
+            }
 
             let history_results = join_all(history_futures).await;
 

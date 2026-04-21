@@ -62,7 +62,7 @@ pub async fn calculate_deposits_for_contribution_limit(
     state: State<'_, Arc<ServiceContext>>,
 ) -> Result<DepositsCalculation, String> {
     debug!("Calculating deposits for contribution limit...");
-    let base_currency = state.base_currency.read().unwrap();
+    let base_currency = state.base_currency.read().unwrap().clone();
     state
         .limits_service()
         .calculate_deposits_for_contribution_limit(&limit_id, &base_currency)
