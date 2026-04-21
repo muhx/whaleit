@@ -3,7 +3,7 @@
 //! NOTE: This is a stub implementation for compatibility.
 //! Alternative assets feature is not yet fully implemented for PostgreSQL.
 
-use whaleit_core::Result;
+use whaleit_core::errors::{DatabaseError, Error, Result};
 
 /// PostgreSQL repository for alternative assets (stub implementation).
 pub struct PgAlternativeAssetRepository {
@@ -19,8 +19,9 @@ impl PgAlternativeAssetRepository {
 #[async_trait::async_trait]
 impl whaleit_core::assets::AlternativeAssetRepositoryTrait for PgAlternativeAssetRepository {
     async fn delete_alternative_asset(&self, _asset_id: &str) -> Result<()> {
-        // Stub: alternative assets not yet supported in PostgreSQL mode
-        Ok(())
+        Err(Error::Database(DatabaseError::Internal(
+            "Alternative assets are not yet supported in PostgreSQL mode".to_string(),
+        )))
     }
 
     async fn update_asset_metadata(
@@ -28,13 +29,15 @@ impl whaleit_core::assets::AlternativeAssetRepositoryTrait for PgAlternativeAsse
         _asset_id: &str,
         _metadata: Option<serde_json::Value>,
     ) -> Result<()> {
-        // Stub: alternative assets not yet supported in PostgreSQL mode
-        Ok(())
+        Err(Error::Database(DatabaseError::Internal(
+            "Alternative assets are not yet supported in PostgreSQL mode".to_string(),
+        )))
     }
 
     async fn find_liabilities_linked_to(&self, _linked_asset_id: &str) -> Result<Vec<String>> {
-        // Stub: alternative assets not yet supported in PostgreSQL mode
-        Ok(Vec::new())
+        Err(Error::Database(DatabaseError::Internal(
+            "Alternative assets are not yet supported in PostgreSQL mode".to_string(),
+        )))
     }
 
     async fn update_asset_details(
@@ -45,7 +48,8 @@ impl whaleit_core::assets::AlternativeAssetRepositoryTrait for PgAlternativeAsse
         _metadata: Option<serde_json::Value>,
         _notes: Option<&str>,
     ) -> Result<()> {
-        // Stub: alternative assets not yet supported in PostgreSQL mode
-        Ok(())
+        Err(Error::Database(DatabaseError::Internal(
+            "Alternative assets are not yet supported in PostgreSQL mode".to_string(),
+        )))
     }
 }
