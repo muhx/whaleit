@@ -48,13 +48,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. All existing investment domain queries (accounts, activities, holdings, goals) return identical results on both SQLite and PostgreSQL
   3. Separate migration directories exist for SQLite and PostgreSQL with consistent schema definitions
   4. Repository traits are async-native, abstracting the sync SQLite and async PostgreSQL write patterns behind a unified interface
-**Plans**: 4 plans
+**Plans**: 6 plans
 
 Plans:
 - [ ] 02-01-PLAN.md — Async trait conversion, diesel upgrade, storage-common crate
 - [ ] 02-02-PLAN.md — storage-postgres crate with all repositories and PG migrations
 - [ ] 02-03-PLAN.md — Server wiring with postgres feature flag, Docker Compose PG service
 - [ ] 02-04-PLAN.md — Parity tests and CI matrix for both engines
+- [ ] 02-05-PLAN.md — [GAP] Fix server PG compilation (sync module, missing trait impls)
+- [ ] 02-06-PLAN.md — [GAP] Complete FX, market_data, portfolio PG repo implementations
 
 ### Phase 3: Bank Accounts & Credit Cards
 **Goal**: Users can manage checking, savings, and credit card accounts alongside existing investment accounts
