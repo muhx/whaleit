@@ -5,6 +5,7 @@ use crate::{
     ai_environment::ServerAiEnvironment, auth::AuthManager, config::Config,
     domain_events::WebDomainEventSink, events::EventBus, secrets::build_secret_store,
 };
+#[cfg(not(feature = "postgres"))]
 use tracing::error;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, EnvFilter};
@@ -71,7 +72,7 @@ use whaleit_storage_postgres::{
     settings::PgSettingsRepository,
     sync::{PgAppSyncRepository, PgBrokerSyncStateRepository, PgImportRunRepository, PgPlatformRepository},
     taxonomies::PgTaxonomyRepository,
-    db::{self, PgPool},
+    db::{self},
 };
 
 pub struct AppState {
@@ -858,7 +859,7 @@ async fn build_state_postgres(config: &Config, database_url: &str) -> anyhow::Re
         connect_sync_service,
         ai_provider_service,
         ai_chat_service,
-        data_root,
+        data_root: data_root.clone(),
         db_path: data_root,
         instance_id: settings.instance_id,
         secret_store,

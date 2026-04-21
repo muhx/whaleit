@@ -226,7 +226,7 @@ impl PgAppSyncRepository {
     // Snapshot methods (stubs returning errors for unsupported operations)
     // -----------------------------------------------------------------------
 
-    pub fn export_snapshot_sqlite_image(&self) -> Result<Vec<u8>> {
+    pub async fn export_snapshot_sqlite_image(&self, _tables: Vec<String>) -> Result<Vec<u8>> {
         Err(Error::Database(DatabaseError::Internal(
             "Snapshot export not supported in PostgreSQL mode".to_string(),
         )))
@@ -234,8 +234,11 @@ impl PgAppSyncRepository {
 
     pub async fn restore_snapshot_tables_from_file(
         &self,
-        _snapshot_data: &[u8],
-        _device_id: &str,
+        _snapshot_db_path: String,
+        _tables: Vec<String>,
+        _cursor_value: i64,
+        _device_id: String,
+        _key_version: Option<i32>,
     ) -> Result<()> {
         Err(Error::Database(DatabaseError::Internal(
             "Snapshot restore not supported in PostgreSQL mode".to_string(),

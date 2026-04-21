@@ -7,17 +7,11 @@ use whaleit_core::Result;
 
 /// PostgreSQL repository for alternative assets (stub implementation).
 pub struct PgAlternativeAssetRepository {
-    _pool: deadpool::managed::Pool<
-        diesel_async::pooled_connection::AsyncDieselConnectionManager<diesel_async::AsyncPgConnection>,
-    >,
+    _pool: std::sync::Arc<crate::db::PgPool>,
 }
 
 impl PgAlternativeAssetRepository {
-    pub fn new(
-        pool: deadpool::managed::Pool<
-            diesel_async::pooled_connection::AsyncDieselConnectionManager<diesel_async::AsyncPgConnection>,
-        >,
-    ) -> Self {
+    pub fn new(pool: std::sync::Arc<crate::db::PgPool>) -> Self {
         Self { _pool: pool }
     }
 }

@@ -30,7 +30,24 @@ fn transport_err_from_sync(e: whaleit_device_sync::DeviceSyncError) -> Transport
         },
     }
 }
-use whaleit_storage_sqlite::sync::{SqliteSyncEngineDbPorts, SyncTableRowCount};
+#[cfg(not(feature = "postgres"))]
+use whaleit_storage_sqlite::sync::{SqliteSyncEngineDbPorts, SyncTableRowCount as SqliteSyncTableRowCount};
+
+#[cfg(feature = "postgres")]
+use whaleit_storage_postgres::sync::{PgSyncEngineDbPorts, SyncTableRowCount as PgSyncTableRowCount};
+
+#[cfg(not(feature = "postgres"))]
+type SyncTableRowCount = SqliteSyncTableRowCount;
+
+#[cfg(feature = "postgres")]
+type SyncTableRowCount = PgSyncTableRowCount;
+
+// Type alias for engine ports that works in both modes
+#[cfg(not(feature = "postgres"))]
+type EngineDbPorts = SqliteSyncEngineDbPorts;
+
+#[cfg(feature = "postgres")]
+type EngineDbPorts = PgSyncEngineDbPorts;
 
 const SYNC_IDENTITY_KEY: &str = "sync_identity";
 static MIN_SNAPSHOT_CREATED_AT: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
@@ -384,12 +401,12 @@ fn decode_snapshot_sqlite_payload(
 
 struct ServerEnginePorts {
     state: Arc<AppState>,
-    db: SqliteSyncEngineDbPorts,
+    db: EngineDbPorts,
 }
 
 impl ServerEnginePorts {
     fn new(state: Arc<AppState>) -> Self {
-        let db = SqliteSyncEngineDbPorts::new(Arc::clone(&state.app_sync_repository));
+        let db = EngineDbPorts::new(Arc::clone(&state.app_sync_repository));
         Self { state, db }
     }
 }

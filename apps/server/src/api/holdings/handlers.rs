@@ -19,6 +19,8 @@ use whaleit_core::{
         valuation::{DailyAccountValuation, ValuationRecalcMode},
     },
 };
+#[cfg(feature = "postgres")]
+use whaleit_core::portfolio::snapshot::SnapshotRepositoryTrait;
 
 use crate::{error::ApiResult, main_lib::AppState};
 
