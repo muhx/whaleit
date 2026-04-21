@@ -19,9 +19,9 @@ use crate::sync::{
 };
 use crate::taxonomies::AssetTaxonomyAssignmentDB;
 use uuid::Uuid;
-use wealthfolio_core::portfolio::snapshot::SnapshotSource;
-use wealthfolio_core::sync::SyncEntity;
-use wealthfolio_core::sync::SyncOperation;
+use whaleit_core::portfolio::snapshot::SnapshotSource;
+use whaleit_core::sync::SyncEntity;
+use whaleit_core::sync::SyncOperation;
 
 impl SyncOutboxModel for AccountDB {
     const ENTITY: SyncEntity = SyncEntity::Account;

@@ -52,14 +52,14 @@ pub struct LegacyCountry {
 }
 
 /// Check if legacy classification migration is needed.
-pub fn get_migration_status(
+pub async fn get_migration_status(
     asset_service: &dyn AssetServiceTrait,
     taxonomy_service: &dyn TaxonomyServiceTrait,
 ) -> crate::Result<MigrationStatus> {
-    let assets = asset_service.get_assets()?;
+    let assets = asset_service.get_assets().await?;
 
-    let gics_taxonomy = taxonomy_service.get_taxonomy("industries_gics")?;
-    let regions_taxonomy = taxonomy_service.get_taxonomy("regions")?;
+    let gics_taxonomy = taxonomy_service.get_taxonomy("industries_gics").await?;
+    let regions_taxonomy = taxonomy_service.get_taxonomy("regions").await?;
 
     let mut assets_with_legacy_data = 0;
     let mut assets_already_migrated = 0;
@@ -126,10 +126,10 @@ pub async fn migrate_legacy_classifications(
     let sector_mapping = build_sector_mapping();
     let country_mapping = build_country_mapping();
 
-    let assets = asset_service.get_assets()?;
+    let assets = asset_service.get_assets().await?;
 
-    let gics_taxonomy = taxonomy_service.get_taxonomy("industries_gics")?;
-    let regions_taxonomy = taxonomy_service.get_taxonomy("regions")?;
+    let gics_taxonomy = taxonomy_service.get_taxonomy("industries_gics").await?;
+    let regions_taxonomy = taxonomy_service.get_taxonomy("regions").await?;
 
     let gics_categories: HashMap<String, Category> = gics_taxonomy
         .as_ref()

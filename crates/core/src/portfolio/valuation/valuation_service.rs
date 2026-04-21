@@ -54,7 +54,7 @@ pub trait ValuationServiceTrait: Send + Sync {
     ///
     /// Returns:
     ///     A `Result` containing a vector of `DailyAccountValuation` or an error.
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -70,7 +70,7 @@ pub trait ValuationServiceTrait: Send + Sync {
     ///     A `Result` containing a `HashMap` mapping account IDs to their
     ///     latest `DailyAccountValuation` (if found), or `None` if no history exists.
     ///     latest `DailyAccountValuation` for each account that has one.
-    fn get_latest_valuations(
+    async fn get_latest_valuations(
         &self,
         account_ids: &[String],
     ) -> CoreResult<Vec<DailyAccountValuation>>;
@@ -367,7 +367,7 @@ impl ValuationServiceTrait for ValuationService {
 
         if !newly_calculated_valuations.is_empty() {
             self.valuation_repository
-                .save_valuations(&newly_calculated_valuations)
+                .save_valuations(&newly_calculated_valuations).await
                 .await?;
         }
 
@@ -380,7 +380,7 @@ impl ValuationServiceTrait for ValuationService {
         Ok(())
     }
 
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -394,15 +394,15 @@ impl ValuationServiceTrait for ValuationService {
             account_id,
             start_date_opt,
             end_date_opt,
-        )
+        ).await
     }
 
-    fn get_latest_valuations(
+    async fn get_latest_valuations(
         &self,
         account_ids: &[String],
     ) -> CoreResult<Vec<DailyAccountValuation>> {
         debug!("Loading latest valuations for accounts: {:?}", account_ids);
-        self.valuation_repository.get_latest_valuations(account_ids)
+        self.valuation_repository.get_latest_valuations(account_ids).await
     }
 
     fn get_valuations_on_date(

@@ -49,7 +49,7 @@ pub struct AddonManifest {
     pub repository: Option<String>,
     pub license: Option<String>,
     #[serde(rename = "minWealthfolioVersion")]
-    pub min_wealthfolio_version: Option<String>,
+    pub min_whaleit_version: Option<String>,
     pub keywords: Option<Vec<String>>,
     pub icon: Option<String>,
 
@@ -135,7 +135,7 @@ pub struct AddonUpdateInfo {
     pub changelog_url: Option<String>,
     pub is_critical: Option<bool>,
     pub has_breaking_changes: Option<bool>,
-    pub min_wealthfolio_version: Option<String>,
+    pub min_whaleit_version: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]

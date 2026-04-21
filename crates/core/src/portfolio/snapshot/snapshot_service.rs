@@ -365,7 +365,7 @@ impl SnapshotService {
     // Fetches accounts based on `account_ids_param`. If `account_ids_param` is None or contains "TOTAL",
     // fetches ALL active accounts and creates the virtual TOTAL account.
     // Fetches activities ONLY for the relevant accounts (specified or all).
-    fn fetch_required_data(
+    async fn fetch_required_data(
         &self,
         account_ids_param: Option<&[String]>,
     ) -> Result<(AccountsMap, ActivitiesVec, NaiveDate, NaiveDate)> {
@@ -388,7 +388,7 @@ impl SnapshotService {
                     if id == PORTFOLIO_TOTAL_ACCOUNT_ID {
                         continue;
                     } // TOTAL is virtual
-                    if let Ok(acc) = self.account_repository.get_by_id(id) {
+                    if let Ok(acc) = self.account_repository.get_by_id(id).await {
                         // Skip HOLDINGS mode accounts - they don't participate in transaction-based recalculation
                         if acc.tracking_mode == TrackingMode::Holdings {
                             debug!(
@@ -403,7 +403,7 @@ impl SnapshotService {
                 }
             }
             None => {
-                for acc in self.account_repository.list(Some(true), None, None)? {
+                for acc in self.account_repository.list(Some(true), None, None).await? {
                     // Skip HOLDINGS mode accounts - they don't participate in transaction-based recalculation
                     if acc.tracking_mode == TrackingMode::Holdings {
                         debug!(
@@ -429,7 +429,7 @@ impl SnapshotService {
         // ── ❹ pull activities for the collected individual accounts ──────────────────
         let all_activities = if !account_ids_to_fetch_activities.is_empty() {
             self.activity_repository
-                .get_activities_by_account_ids(&account_ids_to_fetch_activities)?
+                .get_activities_by_account_ids(&account_ids_to_fetch_activities).await?
         } else {
             Vec::new()
         };
@@ -1249,7 +1249,7 @@ impl SnapshotService {
         );
 
         // Use non-archived accounts for TOTAL calculation (includes closed but not archived accounts)
-        let non_archived_accounts = self.account_repository.list(None, Some(false), None)?;
+        let non_archived_accounts = self.account_repository.list(None, Some(false), None).await?;
         if non_archived_accounts.is_empty() {
             warn!("No non-archived accounts found. Cannot generate TOTAL snapshots.");
             self.snapshot_repository
@@ -1500,7 +1500,7 @@ impl SnapshotServiceTrait for SnapshotService {
             .await
     }
 
-    fn get_holdings_keyframes(
+    async fn get_holdings_keyframes(
         &self,
         account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -1512,10 +1512,10 @@ impl SnapshotServiceTrait for SnapshotService {
         );
         // Directly fetch from the repository without reconstruction
         self.snapshot_repository
-            .get_snapshots_by_account(account_id, start_date_opt, end_date_opt)
+            .get_snapshots_by_account(account_id, start_date_opt, end_date_opt).await
     }
 
-    fn get_daily_holdings_snapshots(
+    async fn get_daily_holdings_snapshots(
         &self,
         account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -1576,7 +1576,7 @@ impl SnapshotServiceTrait for SnapshotService {
             account_id,
             Some(start_date), // Fetch keyframes from start_date...
             Some(end_date),   // ...to end_date inclusive
-        )?;
+        ).await?;
         let keyframes_map: BTreeMap<NaiveDate, AccountStateSnapshot> = keyframes_in_range
             .into_iter()
             .map(|kf| (kf.snapshot_date, kf))
@@ -1600,7 +1600,7 @@ impl SnapshotServiceTrait for SnapshotService {
                 // Otherwise, history starts within our date range. We create a default "empty" state
                 // for the day before the loop, and the loop will then pick up the first keyframe correctly.
                 let account_details =
-                    self.account_repository.get_by_id(account_id).or_else(|_| {
+                    self.account_repository.get_by_id(account_id).await.or_else(|_| {
                         if account_id == PORTFOLIO_TOTAL_ACCOUNT_ID {
                             Ok(self.create_total_virtual_account())
                         } else {
@@ -1694,7 +1694,7 @@ impl SnapshotServiceTrait for SnapshotService {
             account_id,
             Some(snapshot.snapshot_date),
             Some(snapshot.snapshot_date),
-        )?;
+        ).await?;
 
         if let Some(existing) = same_date_snapshots.into_iter().next() {
             if existing.is_content_equal(&snapshot) {

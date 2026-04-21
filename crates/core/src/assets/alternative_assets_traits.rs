@@ -122,7 +122,7 @@ pub trait AlternativeAssetServiceTrait: Send + Sync {
     ///
     /// # Returns
     /// A list of alternative holdings with current valuations and gain calculations
-    fn get_alternative_holdings(&self) -> Result<Vec<AlternativeHolding>>;
+    async fn get_alternative_holdings(&self) -> Result<Vec<AlternativeHolding>>;
 }
 
 /// Trait for alternative asset repository operations.
@@ -162,7 +162,7 @@ pub trait AlternativeAssetRepositoryTrait: Send + Sync {
     ///
     /// # Returns
     /// List of liability asset IDs
-    fn find_liabilities_linked_to(&self, linked_asset_id: &str) -> Result<Vec<String>>;
+    async fn find_liabilities_linked_to(&self, linked_asset_id: &str) -> Result<Vec<String>>;
 
     /// Updates an asset's details (name and/or metadata).
     ///

@@ -13,7 +13,7 @@ pub trait ValuationRepositoryTrait: Send + Sync {
     async fn save_valuations(&self, valuation_records: &[DailyAccountValuation]) -> Result<()>;
 
     /// Get historical valuations for a specific account within optional date range.
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         account_id: &str,
         start_date: Option<NaiveDate>,
@@ -21,7 +21,7 @@ pub trait ValuationRepositoryTrait: Send + Sync {
     ) -> Result<Vec<DailyAccountValuation>>;
 
     /// Get the latest valuation date for a specific account.
-    fn load_latest_valuation_date(&self, account_id: &str) -> Result<Option<NaiveDate>>;
+    async fn load_latest_valuation_date(&self, account_id: &str) -> Result<Option<NaiveDate>>;
 
     /// Delete valuations for a specific account.
     /// If `since_date` is `Some(date)`, deletes only records on or after that date.
@@ -33,17 +33,17 @@ pub trait ValuationRepositoryTrait: Send + Sync {
     ) -> Result<()>;
 
     /// Get the latest valuations for multiple accounts.
-    fn get_latest_valuations(&self, account_ids: &[String]) -> Result<Vec<DailyAccountValuation>>;
+    async fn get_latest_valuations(&self, account_ids: &[String]) -> Result<Vec<DailyAccountValuation>>;
 
     /// Get valuations for multiple accounts on a specific date.
-    fn get_valuations_on_date(
+    async fn get_valuations_on_date(
         &self,
         account_ids: &[String],
         date: NaiveDate,
     ) -> Result<Vec<DailyAccountValuation>>;
 
     /// Returns info about accounts that have at least one negative total_value in their history.
-    fn get_accounts_with_negative_balance(
+    async fn get_accounts_with_negative_balance(
         &self,
         account_ids: &[String],
     ) -> Result<Vec<NegativeBalanceInfo>>;

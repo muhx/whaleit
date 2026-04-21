@@ -109,7 +109,7 @@ impl AssetClassificationService {
     }
 
     /// Get classifications for multiple assets efficiently (caches taxonomies)
-    pub fn get_classifications_batch(
+    pub async fn get_classifications_batch(
         &self,
         asset_ids: &[String],
     ) -> HashMap<String, AssetClassifications> {
@@ -119,7 +119,7 @@ impl AssetClassificationService {
         let mut taxonomy_cache: HashMap<String, TaxonomyWithCategories> = HashMap::new();
 
         for asset_id in asset_ids {
-            let assignments = match self.taxonomy_service.get_asset_assignments(asset_id) {
+            let assignments = match self.taxonomy_service.get_asset_assignments(asset_id).await {
                 Ok(a) => a,
                 Err(_) => continue,
             };
@@ -135,7 +135,7 @@ impl AssetClassificationService {
                 let taxonomy = if let Some(cached) = taxonomy_cache.get(&assignment.taxonomy_id) {
                     cached
                 } else {
-                    match self.taxonomy_service.get_taxonomy(&assignment.taxonomy_id) {
+                    match self.taxonomy_service.get_taxonomy(&assignment.taxonomy_id).await {
                         Ok(Some(twc)) => {
                             taxonomy_cache.insert(assignment.taxonomy_id.clone(), twc);
                             taxonomy_cache.get(&assignment.taxonomy_id).unwrap()

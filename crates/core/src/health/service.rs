@@ -229,7 +229,7 @@ impl HealthService {
         client_timezone: Option<&str>,
     ) -> Result<HealthStatus> {
         // Gather holdings data from all accounts
-        let accounts = account_service.get_active_accounts()?;
+        let accounts = account_service.get_active_accounts().await?;
 
         // Use a map to consolidate holdings by asset_id (same asset in multiple accounts)
         let mut holdings_map: HashMap<String, AssetHoldingInfo> = HashMap::new();
@@ -297,7 +297,7 @@ impl HealthService {
         // Get latest quote timestamps for held assets
         let asset_ids: Vec<String> = all_holdings.iter().map(|h| h.asset_id.clone()).collect();
         if !asset_ids.is_empty() {
-            if let Ok(quotes) = quote_service.get_latest_quotes(&asset_ids) {
+            if let Ok(quotes) = quote_service.get_latest_quotes(&asset_ids).await {
                 for (asset_id, quote) in quotes {
                     latest_quote_times.insert(asset_id, quote.timestamp);
                 }

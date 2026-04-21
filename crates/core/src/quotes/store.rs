@@ -127,7 +127,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// The latest quote, or None if no quotes exist
-    fn latest(&self, asset_id: &AssetId, source: Option<&QuoteSource>) -> Result<Option<Quote>>;
+    async fn latest(&self, asset_id: &AssetId, source: Option<&QuoteSource>) -> Result<Option<Quote>>;
 
     /// Gets quotes in date range for a single asset.
     ///
@@ -141,7 +141,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// Quotes within the specified date range
-    fn range(
+    async fn range(
         &self,
         asset_id: &AssetId,
         start: Day,
@@ -165,7 +165,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// A map from asset_id to its latest quote. Assets without quotes are omitted.
-    fn latest_batch(
+    async fn latest_batch(
         &self,
         asset_ids: &[AssetId],
         source: Option<&QuoteSource>,
@@ -183,7 +183,7 @@ pub trait QuoteStore: Send + Sync {
     ///
     /// A map from asset_id to its quote pair (latest + previous).
     /// Assets without quotes are omitted.
-    fn latest_with_previous(
+    async fn latest_with_previous(
         &self,
         asset_ids: &[AssetId],
     ) -> Result<HashMap<AssetId, LatestQuotePair>>;
@@ -203,7 +203,7 @@ pub trait QuoteStore: Send + Sync {
     ///
     /// A map from asset_id to (earliest_date, latest_date).
     /// Assets without quotes for the specified source are omitted.
-    fn get_quote_bounds_for_assets(
+    async fn get_quote_bounds_for_assets(
         &self,
         asset_ids: &[String],
         source: &str,
@@ -226,7 +226,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// The latest quote, or an error if no quotes exist for the symbol
-    fn get_latest_quote(&self, symbol: &str) -> Result<Quote>;
+    async fn get_latest_quote(&self, symbol: &str) -> Result<Quote>;
 
     /// Gets the most recent quotes for multiple symbols.
     ///
@@ -241,7 +241,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// A map from symbol to its latest quote. Symbols without quotes are omitted.
-    fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>>;
+    async fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>>;
 
     /// Gets the latest and previous quotes for multiple symbols.
     ///
@@ -256,7 +256,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// A map from symbol to its quote pair (latest + previous).
-    fn get_latest_quotes_pair(
+    async fn get_latest_quotes_pair(
         &self,
         symbols: &[String],
     ) -> Result<HashMap<String, LatestQuotePair>>;
@@ -269,9 +269,10 @@ pub trait QuoteStore: Send + Sync {
     /// The default implementation falls back to `get_historical_quotes` with
     /// an in-memory filter. Storage backends should override this with a
     /// targeted query for efficiency.
-    fn get_latest_quote_before(&self, symbol: &str, before: NaiveDate) -> Result<Option<Quote>> {
+    async fn get_latest_quote_before(&self, symbol: &str, before: NaiveDate) -> Result<Option<Quote>> {
         let quote = self
-            .get_historical_quotes(symbol)?
+            .get_historical_quotes(symbol)
+            .await?
             .into_iter()
             .filter(|q| q.timestamp.date_naive() < before)
             .max_by_key(|q| q.timestamp);
@@ -287,7 +288,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// All quotes for the symbol, typically ordered from oldest to newest
-    fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>>;
+    async fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>>;
 
     /// Gets all historical quotes for all symbols.
     ///
@@ -296,7 +297,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// All quotes in the store
-    fn get_all_historical_quotes(&self) -> Result<Vec<Quote>>;
+    async fn get_all_historical_quotes(&self) -> Result<Vec<Quote>>;
 
     /// Gets quotes for a symbol within a date range.
     ///
@@ -313,7 +314,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// Quotes within the specified date range
-    fn get_quotes_in_range(
+    async fn get_quotes_in_range(
         &self,
         symbol: &str,
         start: NaiveDate,
@@ -333,7 +334,7 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// All quotes for the symbol on the given date (should normally be 0 or 1)
-    fn find_duplicate_quotes(&self, symbol: &str, date: NaiveDate) -> Result<Vec<Quote>>;
+    async fn find_duplicate_quotes(&self, symbol: &str, date: NaiveDate) -> Result<Vec<Quote>>;
 }
 
 // =============================================================================
@@ -347,13 +348,14 @@ use crate::quotes::{MarketDataProviderSetting, UpdateMarketDataProviderSetting};
 /// Provider settings control which data sources are enabled, their priority order,
 /// and track sync status. This is separate from `QuoteStore` as it deals with
 /// configuration rather than quote data.
+#[async_trait]
 pub trait ProviderSettingsStore: Send + Sync {
     /// Gets all configured market data providers.
     ///
     /// # Returns
     ///
     /// All provider settings, typically ordered by priority
-    fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>>;
+    async fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>>;
 
     /// Gets a specific provider's settings by ID.
     ///
@@ -364,7 +366,7 @@ pub trait ProviderSettingsStore: Send + Sync {
     /// # Returns
     ///
     /// The provider settings, or an error if not found
-    fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting>;
+    async fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting>;
 
     /// Updates a provider's settings.
     ///
@@ -376,7 +378,7 @@ pub trait ProviderSettingsStore: Send + Sync {
     /// # Returns
     ///
     /// The updated provider settings
-    fn update_provider(
+    async fn update_provider(
         &self,
         id: &str,
         changes: UpdateMarketDataProviderSetting,

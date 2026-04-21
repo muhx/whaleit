@@ -7,10 +7,10 @@ use diesel::r2d2::{self, Pool};
 use diesel::sqlite::SqliteConnection;
 use std::sync::Arc;
 
-use wealthfolio_connect::broker_ingest::{
+use whaleit_connect::broker_ingest::{
     BrokerSyncState, BrokerSyncStateRepositoryTrait as ConnectBrokerSyncStateRepositoryTrait,
 };
-use wealthfolio_core::errors::Result;
+use whaleit_core::errors::Result;
 
 use crate::db::{get_connection, WriteHandle};
 use crate::errors::StorageError;

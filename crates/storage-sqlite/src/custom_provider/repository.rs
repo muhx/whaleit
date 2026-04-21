@@ -10,11 +10,11 @@ use crate::db::{get_connection, DbPool, WriteHandle};
 use crate::errors::{IntoCore, StorageError};
 use crate::schema::market_data_custom_providers as custom_providers;
 
-use wealthfolio_core::custom_provider::{
+use whaleit_core::custom_provider::{
     CustomProviderRepository, CustomProviderSource, CustomProviderWithSources, NewCustomProvider,
     NewCustomProviderSource, UpdateCustomProvider,
 };
-use wealthfolio_core::errors::Result;
+use whaleit_core::errors::Result;
 
 /// JSON wrapper stored in custom_providers.config
 #[derive(serde::Serialize, serde::Deserialize, Default)]

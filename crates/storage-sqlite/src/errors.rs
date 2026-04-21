@@ -1,16 +1,16 @@
 //! Storage-specific error types for SQLite operations.
 //!
 //! This module provides error types that wrap Diesel-specific errors and convert
-//! them to the database-agnostic error types defined in `wealthfolio_core`.
+//! them to the database-agnostic error types defined in `whaleit_core`.
 
 use diesel::result::Error as DieselError;
 use thiserror::Error;
-use wealthfolio_core::errors::{DatabaseError, Error};
+use whaleit_core::errors::{DatabaseError, Error};
 
 /// Storage-specific errors that wrap Diesel and r2d2 types.
 ///
 /// These errors are internal to the storage layer and are converted to
-/// `wealthfolio_core::Error` before being returned to callers.
+/// `whaleit_core::Error` before being returned to callers.
 #[derive(Error, Debug)]
 pub enum StorageError {
     #[error("Database connection failed: {0}")]
@@ -104,12 +104,12 @@ impl DieselErrorExt for diesel::ConnectionError {
 /// Helper function to convert a Diesel Result to a core Result.
 pub fn map_diesel_err<T>(
     result: std::result::Result<T, DieselError>,
-) -> wealthfolio_core::Result<T> {
+) -> whaleit_core::Result<T> {
     result.map_err(|e| e.into_core_error())
 }
 
 /// Helper function to convert an r2d2 Result to a core Result.
-pub fn map_pool_err<T>(result: std::result::Result<T, r2d2::Error>) -> wealthfolio_core::Result<T> {
+pub fn map_pool_err<T>(result: std::result::Result<T, r2d2::Error>) -> whaleit_core::Result<T> {
     result.map_err(|e| e.into_core_error())
 }
 
@@ -118,17 +118,17 @@ pub fn map_pool_err<T>(result: std::result::Result<T, r2d2::Error>) -> wealthfol
 /// This provides a `.into_core()` method on any `Result<T, diesel::result::Error>`
 /// which handles the conversion through StorageError.
 pub trait IntoCore<T> {
-    fn into_core(self) -> wealthfolio_core::Result<T>;
+    fn into_core(self) -> whaleit_core::Result<T>;
 }
 
 impl<T> IntoCore<T> for std::result::Result<T, DieselError> {
-    fn into_core(self) -> wealthfolio_core::Result<T> {
+    fn into_core(self) -> whaleit_core::Result<T> {
         self.map_err(|e| StorageError::from(e).into())
     }
 }
 
 impl<T> IntoCore<T> for std::result::Result<T, r2d2::Error> {
-    fn into_core(self) -> wealthfolio_core::Result<T> {
+    fn into_core(self) -> whaleit_core::Result<T> {
         self.map_err(|e| StorageError::from(e).into())
     }
 }

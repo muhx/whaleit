@@ -308,10 +308,10 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         );
 
         // Verify the asset exists
-        self.asset_repository.get_by_id(&request.asset_id)?;
+        self.asset_repository.get_by_id(&request.asset_id).await?;
 
         // Get the existing quote to find the currency
-        let currency = match self.quote_service.get_latest_quote(&request.asset_id) {
+        let currency = match self.quote_service.get_latest_quote(&request.asset_id).await {
             Ok(existing_quote) => existing_quote.currency,
             Err(_) => {
                 return Err(Error::Validation(ValidationError::InvalidInput(format!(
@@ -353,7 +353,7 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         debug!("Deleting alternative asset: {}", asset_id);
 
         // Verify the asset exists and is an alternative asset
-        let asset = self.asset_repository.get_by_id(asset_id)?;
+        let asset = self.asset_repository.get_by_id(asset_id).await?;
         if !asset.kind.is_alternative() {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Asset {} is not an alternative asset (kind: {:?})",
@@ -376,7 +376,7 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         );
 
         // Validate liability is actually a Liability kind
-        let liability = self.asset_repository.get_by_id(&request.liability_id)?;
+        let liability = self.asset_repository.get_by_id(&request.liability_id).await?;
         if liability.kind != AssetKind::Liability {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Asset {} is not a liability (kind: {:?})",
@@ -385,7 +385,7 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         }
 
         // Validate target asset exists and is an alternative asset
-        let target = self.asset_repository.get_by_id(&request.target_asset_id)?;
+        let target = self.asset_repository.get_by_id(&request.target_asset_id).await?;
         if !target.kind.is_alternative() {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Target asset {} is not an alternative asset (kind: {:?})",
@@ -414,7 +414,7 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         debug!("Unlinking liability {}", liability_id);
 
         // Validate liability is actually a Liability kind
-        let liability = self.asset_repository.get_by_id(liability_id)?;
+        let liability = self.asset_repository.get_by_id(liability_id).await?;
         if liability.kind != AssetKind::Liability {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Asset {} is not a liability (kind: {:?})",
@@ -442,7 +442,7 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         debug!("Updating asset details for {}", request.asset_id);
 
         // Verify the asset exists and is an alternative asset
-        let asset = self.asset_repository.get_by_id(&request.asset_id)?;
+        let asset = self.asset_repository.get_by_id(&request.asset_id).await?;
         if !asset.kind.is_alternative() {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Asset {} is not an alternative asset (kind: {:?})",
@@ -565,11 +565,11 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         })
     }
 
-    fn get_alternative_holdings(&self) -> Result<Vec<AlternativeHolding>> {
+    async fn get_alternative_holdings(&self) -> Result<Vec<AlternativeHolding>> {
         debug!("Fetching alternative holdings");
 
         // Get all assets
-        let all_assets = self.asset_repository.list()?;
+        let all_assets = self.asset_repository.list().await?;
 
         // Filter to alternative assets only
         let alternative_assets: Vec<_> = all_assets
@@ -585,7 +585,7 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         let asset_ids: Vec<String> = alternative_assets.iter().map(|a| a.id.clone()).collect();
 
         // Fetch latest quotes for all alternative assets
-        let quotes = self.quote_service.get_latest_quotes(&asset_ids)?;
+        let quotes = self.quote_service.get_latest_quotes(&asset_ids).await?;
 
         // Build AlternativeHolding for each asset
         let holdings: Vec<AlternativeHolding> = alternative_assets

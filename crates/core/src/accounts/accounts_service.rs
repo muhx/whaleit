@@ -84,7 +84,7 @@ impl AccountServiceTrait for AccountService {
                 "Account ID is required".to_string(),
             ))
         })?;
-        let existing = self.repository.get_by_id(account_id)?;
+        let existing = self.repository.get_by_id(account_id).await?;
 
         let result = self.repository.update(account_update).await?;
 
@@ -126,44 +126,44 @@ impl AccountServiceTrait for AccountService {
     }
 
     /// Retrieves an account by its ID.
-    fn get_account(&self, account_id: &str) -> Result<Account> {
-        self.repository.get_by_id(account_id)
+    async fn get_account(&self, account_id: &str) -> Result<Account> {
+        self.repository.get_by_id(account_id).await
     }
 
     /// Lists all accounts with optional filtering by active status, archived status, and account IDs.
-    fn list_accounts(
+    async fn list_accounts(
         &self,
         is_active_filter: Option<bool>,
         is_archived_filter: Option<bool>,
         account_ids: Option<&[String]>,
     ) -> Result<Vec<Account>> {
         self.repository
-            .list(is_active_filter, is_archived_filter, account_ids)
+            .list(is_active_filter, is_archived_filter, account_ids).await
     }
 
     /// Lists all accounts.
-    fn get_all_accounts(&self) -> Result<Vec<Account>> {
-        self.repository.list(None, None, None)
+    async fn get_all_accounts(&self) -> Result<Vec<Account>> {
+        self.repository.list(None, None, None).await
     }
 
     /// Lists only active accounts.
-    fn get_active_accounts(&self) -> Result<Vec<Account>> {
+    async fn get_active_accounts(&self) -> Result<Vec<Account>> {
         self.list_accounts(Some(true), None, None)
     }
 
     /// Retrieves multiple accounts by their IDs.
-    fn get_accounts_by_ids(&self, account_ids: &[String]) -> Result<Vec<Account>> {
+    async fn get_accounts_by_ids(&self, account_ids: &[String]) -> Result<Vec<Account>> {
         self.list_accounts(None, None, Some(account_ids))
     }
 
     /// Returns all non-archived accounts (for aggregates/history)
-    fn get_non_archived_accounts(&self) -> Result<Vec<Account>> {
-        self.repository.list(None, Some(false), None)
+    async fn get_non_archived_accounts(&self) -> Result<Vec<Account>> {
+        self.repository.list(None, Some(false), None).await
     }
 
     /// Returns active, non-archived accounts (for UI selectors)
-    fn get_active_non_archived_accounts(&self) -> Result<Vec<Account>> {
-        self.repository.list(Some(true), Some(false), None)
+    async fn get_active_non_archived_accounts(&self) -> Result<Vec<Account>> {
+        self.repository.list(Some(true), Some(false), None).await
     }
 
     fn get_base_currency(&self) -> Option<String> {

@@ -9,22 +9,22 @@ use std::collections::HashMap;
 /// Trait defining the contract for Activity repository operations.
 #[async_trait]
 pub trait ActivityRepositoryTrait: Send + Sync {
-    fn get_activity(&self, activity_id: &str) -> Result<Activity>;
-    fn get_activities(&self) -> Result<Vec<Activity>>;
-    fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>>;
-    fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>>;
-    fn get_trading_activities(&self) -> Result<Vec<Activity>>;
-    fn get_income_activities(&self) -> Result<Vec<Activity>>;
+    async fn get_activity(&self, activity_id: &str) -> Result<Activity>;
+    async fn get_activities(&self) -> Result<Vec<Activity>>;
+    async fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>>;
+    async fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>>;
+    async fn get_trading_activities(&self) -> Result<Vec<Activity>>;
+    async fn get_income_activities(&self) -> Result<Vec<Activity>>;
     /// Fetches contribution-eligible activities (DEPOSIT, TRANSFER_IN, TRANSFER_OUT, CREDIT)
     /// for the given accounts within the date range. Filtering logic applied in service layer.
-    fn get_contribution_activities(
+    async fn get_contribution_activities(
         &self,
         account_ids: &[String],
         start_utc: DateTime<Utc>,
         end_exclusive_utc: DateTime<Utc>,
     ) -> Result<Vec<ContributionActivity>>;
     #[allow(clippy::too_many_arguments)]
-    fn search_activities(
+    async fn search_activities(
         &self,
         page: i64,
         page_size: i64,
@@ -47,11 +47,11 @@ pub trait ActivityRepositoryTrait: Send + Sync {
         delete_ids: Vec<String>,
     ) -> Result<ActivityBulkMutationResult>;
     async fn create_activities(&self, activities: Vec<NewActivity>) -> Result<usize>;
-    fn get_first_activity_date(
+    async fn get_first_activity_date(
         &self,
         account_ids: Option<&[String]>,
     ) -> Result<Option<DateTime<Utc>>>;
-    fn get_import_mapping(
+    async fn get_import_mapping(
         &self,
         account_id: &str,
         context_kind: &str,
@@ -63,11 +63,11 @@ pub trait ActivityRepositoryTrait: Send + Sync {
         template_id: &str,
         context_kind: &str,
     ) -> Result<()>;
-    fn list_import_templates(&self) -> Result<Vec<ImportTemplate>>;
-    fn get_import_template(&self, template_id: &str) -> Result<Option<ImportTemplate>>;
+    async fn list_import_templates(&self) -> Result<Vec<ImportTemplate>>;
+    async fn get_import_template(&self, template_id: &str) -> Result<Option<ImportTemplate>>;
     async fn save_import_template(&self, template: &ImportTemplate) -> Result<()>;
     async fn delete_import_template(&self, template_id: &str) -> Result<()>;
-    fn get_broker_sync_profile(
+    async fn get_broker_sync_profile(
         &self,
         account_id: &str,
         source_system: &str,
@@ -80,9 +80,9 @@ pub trait ActivityRepositoryTrait: Send + Sync {
         source_system: &str,
     ) -> Result<()>;
     // Add other repository methods if necessary, e.g., calculate_average_cost, get_deposit_activities
-    fn calculate_average_cost(&self, account_id: &str, asset_id: &str) -> Result<Decimal>;
-    fn get_income_activities_data(&self, account_id: Option<&str>) -> Result<Vec<IncomeData>>;
-    fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>>;
+    async fn calculate_average_cost(&self, account_id: &str, asset_id: &str) -> Result<Decimal>;
+    async fn get_income_activities_data(&self, account_id: Option<&str>) -> Result<Vec<IncomeData>>;
+    async fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>>;
 
     /// Gets the first and last activity dates for each asset in the provided list.
     ///
@@ -94,7 +94,7 @@ pub trait ActivityRepositoryTrait: Send + Sync {
     /// A map from asset_id to a tuple of (first_activity_date, last_activity_date).
     /// Both dates may be None if no activities exist for the asset.
     #[allow(clippy::type_complexity)]
-    fn get_activity_bounds_for_assets(
+    async fn get_activity_bounds_for_assets(
         &self,
         asset_ids: &[String],
     ) -> Result<HashMap<String, (Option<NaiveDate>, Option<NaiveDate>)>>;
@@ -102,7 +102,7 @@ pub trait ActivityRepositoryTrait: Send + Sync {
     /// Checks for existing activities with the given idempotency keys.
     ///
     /// Returns a map of {idempotency_key: existing_activity_id} for keys that already exist.
-    fn check_existing_duplicates(
+    async fn check_existing_duplicates(
         &self,
         idempotency_keys: &[String],
     ) -> Result<HashMap<String, String>>;
@@ -132,14 +132,14 @@ pub trait ActivityRepositoryTrait: Send + Sync {
 /// Trait defining the contract for Activity service operations.
 #[async_trait]
 pub trait ActivityServiceTrait: Send + Sync {
-    fn get_activity(&self, activity_id: &str) -> Result<Activity>;
-    fn get_activities(&self) -> Result<Vec<Activity>>;
-    fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>>;
-    fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>>;
-    fn get_trading_activities(&self) -> Result<Vec<Activity>>;
-    fn get_income_activities(&self) -> Result<Vec<Activity>>;
+    async fn get_activity(&self, activity_id: &str) -> Result<Activity>;
+    async fn get_activities(&self) -> Result<Vec<Activity>>;
+    async fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>>;
+    async fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>>;
+    async fn get_trading_activities(&self) -> Result<Vec<Activity>>;
+    async fn get_income_activities(&self) -> Result<Vec<Activity>>;
     #[allow(clippy::too_many_arguments)]
-    fn search_activities(
+    async fn search_activities(
         &self,
         page: i64,
         page_size: i64,
@@ -152,17 +152,17 @@ pub trait ActivityServiceTrait: Send + Sync {
         date_to: Option<NaiveDate>,
         instrument_type_filter: Option<Vec<String>>,
     ) -> Result<ActivitySearchResponse>;
-    fn get_first_activity_date(
+    async fn get_first_activity_date(
         &self,
         account_ids: Option<&[String]>,
     ) -> Result<Option<DateTime<Utc>>>;
-    fn get_import_mapping(
+    async fn get_import_mapping(
         &self,
         account_id: String,
         context_kind: String,
     ) -> Result<ImportMappingData>;
-    fn list_import_templates(&self) -> Result<Vec<ImportTemplateData>>;
-    fn get_import_template(&self, template_id: String) -> Result<ImportTemplateData>;
+    async fn list_import_templates(&self) -> Result<Vec<ImportTemplateData>>;
+    async fn get_import_template(&self, template_id: String) -> Result<ImportTemplateData>;
     async fn create_activity(&self, activity: NewActivity) -> Result<Activity>;
     async fn update_activity(&self, activity: ActivityUpdate) -> Result<Activity>;
     async fn delete_activity(&self, activity_id: String) -> Result<Activity>;
@@ -201,7 +201,7 @@ pub trait ActivityServiceTrait: Send + Sync {
     /// Checks for existing activities with the given idempotency keys.
     ///
     /// Returns a map of {idempotency_key: existing_activity_id} for keys that already exist.
-    fn check_existing_duplicates(
+    async fn check_existing_duplicates(
         &self,
         idempotency_keys: Vec<String>,
     ) -> Result<HashMap<String, String>>;
@@ -253,7 +253,7 @@ pub trait ActivityServiceTrait: Send + Sync {
         account: &crate::accounts::Account,
     ) -> Result<PrepareActivitiesResult>;
 
-    fn get_broker_sync_profile(
+    async fn get_broker_sync_profile(
         &self,
         account_id: String,
         source_system: String,

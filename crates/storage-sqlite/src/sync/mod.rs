@@ -7,9 +7,9 @@ pub mod state;
 
 use serde::Serialize;
 use uuid::Uuid;
-use wealthfolio_core::portfolio::snapshot::SnapshotSource;
-use wealthfolio_core::sync::{SyncEntity, SyncOperation};
-use wealthfolio_core::Result;
+use whaleit_core::portfolio::snapshot::SnapshotSource;
+use whaleit_core::sync::{SyncEntity, SyncOperation};
+use whaleit_core::Result;
 
 /// Broker ingest aliases. `import_run` includes both broker ingest and manual CSV imports.
 pub mod broker_ingest {

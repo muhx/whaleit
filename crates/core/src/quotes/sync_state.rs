@@ -471,22 +471,22 @@ pub struct ProviderSyncStats {
 #[async_trait]
 pub trait SyncStateStore: Send + Sync {
     /// Get sync statistics aggregated by provider (data_source).
-    fn get_provider_sync_stats(&self) -> Result<Vec<ProviderSyncStats>>;
+    async fn get_provider_sync_stats(&self) -> Result<Vec<ProviderSyncStats>>;
 
     /// Get all sync states.
-    fn get_all(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_all(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get sync state by asset ID.
-    fn get_by_asset_id(&self, asset_id: &str) -> Result<Option<QuoteSyncState>>;
+    async fn get_by_asset_id(&self, asset_id: &str) -> Result<Option<QuoteSyncState>>;
 
     /// Get sync states for multiple asset IDs.
-    fn get_by_asset_ids(&self, asset_ids: &[String]) -> Result<HashMap<String, QuoteSyncState>>;
+    async fn get_by_asset_ids(&self, asset_ids: &[String]) -> Result<HashMap<String, QuoteSyncState>>;
 
     /// Get all active assets (is_active = true).
-    fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get assets that need syncing (active or recently closed).
-    fn get_assets_needing_sync(&self, grace_period_days: i64) -> Result<Vec<QuoteSyncState>>;
+    async fn get_assets_needing_sync(&self, grace_period_days: i64) -> Result<Vec<QuoteSyncState>>;
 
     /// Upsert a sync state (insert or update).
     async fn upsert(&self, state: &QuoteSyncState) -> Result<QuoteSyncState>;
@@ -516,10 +516,10 @@ pub trait SyncStateStore: Send + Sync {
     async fn mark_profile_enriched(&self, asset_id: &str) -> Result<()>;
 
     /// Get assets that need profile enrichment (profile_enriched_at is NULL).
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get sync states with errors (error_count > 0).
-    fn get_with_errors(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_with_errors(&self) -> Result<Vec<QuoteSyncState>>;
 }
 
 #[cfg(test)]

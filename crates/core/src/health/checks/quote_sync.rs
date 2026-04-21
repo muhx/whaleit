@@ -62,7 +62,7 @@ pub fn gather_quote_sync_errors(
         .collect();
 
     // Get all assets and filter to those with errors
-    let all_assets = match asset_service.get_assets() {
+    let all_assets = match asset_service.get_assets().await {
         Ok(assets) => assets,
         Err(_) => return Vec::new(),
     };

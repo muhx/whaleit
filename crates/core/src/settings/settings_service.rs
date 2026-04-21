@@ -10,20 +10,20 @@ use std::sync::Arc;
 // Define the trait for SettingsService
 #[async_trait]
 pub trait SettingsServiceTrait: Send + Sync {
-    fn get_settings(&self) -> Result<Settings>;
+    async fn get_settings(&self) -> Result<Settings>;
 
     async fn update_settings(&self, new_settings: &SettingsUpdate) -> Result<()>;
 
-    fn get_base_currency(&self) -> Result<Option<String>>;
+    async fn get_base_currency(&self) -> Result<Option<String>>;
 
     async fn update_base_currency(&self, new_base_currency: &str) -> Result<()>;
 
-    fn is_auto_update_check_enabled(&self) -> Result<bool>;
+    async fn is_auto_update_check_enabled(&self) -> Result<bool>;
 
-    fn is_sync_enabled(&self) -> Result<bool>;
+    async fn is_sync_enabled(&self) -> Result<bool>;
 
     /// Get a single setting value by key. Returns None if not found.
-    fn get_setting_value(&self, key: &str) -> Result<Option<String>>;
+    async fn get_setting_value(&self, key: &str) -> Result<Option<String>>;
 
     /// Set a single setting value by key.
     async fn set_setting_value(&self, key: &str, value: &str) -> Result<()>;
@@ -37,8 +37,8 @@ pub struct SettingsService {
 // Implement the trait for SettingsService
 #[async_trait]
 impl SettingsServiceTrait for SettingsService {
-    fn get_settings(&self) -> Result<Settings> {
-        self.settings_repository.get_settings()
+    async fn get_settings(&self) -> Result<Settings> {
+        self.settings_repository.get_settings().await
     }
 
     async fn update_settings(&self, new_settings: &SettingsUpdate) -> Result<()> {
@@ -62,8 +62,8 @@ impl SettingsServiceTrait for SettingsService {
         Ok(())
     }
 
-    fn get_base_currency(&self) -> Result<Option<String>> {
-        match self.settings_repository.get_setting("base_currency") {
+    async fn get_base_currency(&self) -> Result<Option<String>> {
+        match self.settings_repository.get_setting("base_currency").await {
             Ok(value) => Ok(Some(value)),
             Err(Error::Database(DatabaseError::NotFound(_))) => Ok(None),
             Err(e) => Err(e),
@@ -100,7 +100,7 @@ impl SettingsServiceTrait for SettingsService {
         Ok(())
     }
 
-    fn is_auto_update_check_enabled(&self) -> Result<bool> {
+    async fn is_auto_update_check_enabled(&self) -> Result<bool> {
         match self
             .settings_repository
             .get_setting("auto_update_check_enabled")
@@ -111,16 +111,16 @@ impl SettingsServiceTrait for SettingsService {
         }
     }
 
-    fn is_sync_enabled(&self) -> Result<bool> {
-        match self.settings_repository.get_setting("sync_enabled") {
+    async fn is_sync_enabled(&self) -> Result<bool> {
+        match self.settings_repository.get_setting("sync_enabled").await {
             Ok(value) => Ok(value.parse().unwrap_or(false)),
             Err(Error::Database(DatabaseError::NotFound(_))) => Ok(false),
             Err(e) => Err(e),
         }
     }
 
-    fn get_setting_value(&self, key: &str) -> Result<Option<String>> {
-        match self.settings_repository.get_setting(key) {
+    async fn get_setting_value(&self, key: &str) -> Result<Option<String>> {
+        match self.settings_repository.get_setting(key).await {
             Ok(value) => Ok(Some(value)),
             Err(Error::Database(DatabaseError::NotFound(_))) => Ok(None),
             Err(e) => Err(e),

@@ -1,9 +1,9 @@
-use wealthfolio_core::assets::{AssetKind, NewAsset};
-use wealthfolio_core::errors::{DatabaseError, ValidationError};
-use wealthfolio_core::fx::{ExchangeRate, FxRepositoryTrait};
-use wealthfolio_core::quotes::constants::DATA_SOURCE_MANUAL;
-use wealthfolio_core::quotes::Quote;
-use wealthfolio_core::{Error, Result};
+use whaleit_core::assets::{AssetKind, NewAsset};
+use whaleit_core::errors::{DatabaseError, ValidationError};
+use whaleit_core::fx::{ExchangeRate, FxRepositoryTrait};
+use whaleit_core::quotes::constants::DATA_SOURCE_MANUAL;
+use whaleit_core::quotes::Quote;
+use whaleit_core::{Error, Result};
 
 use crate::assets::{AssetDB, InsertableAssetDB};
 use crate::db::get_connection;

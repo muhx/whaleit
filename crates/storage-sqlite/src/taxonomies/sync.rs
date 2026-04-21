@@ -3,7 +3,7 @@
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
-use wealthfolio_core::sync::{SyncEntity, SyncOperation};
+use whaleit_core::sync::{SyncEntity, SyncOperation};
 
 use super::model::{CategoryDB, TaxonomyDB};
 use crate::db::write_actor::WriteProjection;

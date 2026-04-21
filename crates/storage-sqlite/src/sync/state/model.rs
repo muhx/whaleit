@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use wealthfolio_connect::broker_ingest::{BrokerSyncState, SyncStatus};
+use whaleit_connect::broker_ingest::{BrokerSyncState, SyncStatus};
 
 /// Database model for broker sync state
 #[derive(

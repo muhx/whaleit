@@ -14,8 +14,8 @@ use crate::db::{get_connection, WriteHandle};
 use crate::errors::StorageError;
 use crate::schema::daily_account_valuation;
 use crate::schema::daily_account_valuation::dsl::*;
-use wealthfolio_core::errors::Result;
-use wealthfolio_core::portfolio::valuation::{
+use whaleit_core::errors::Result;
+use whaleit_core::portfolio::valuation::{
     DailyAccountValuation, NegativeBalanceInfo, ValuationRepositoryTrait,
 };
 

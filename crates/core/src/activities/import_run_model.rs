@@ -187,8 +187,8 @@ pub trait ImportRunRepositoryTrait: Send + Sync {
     async fn update(&self, import_run: ImportRun) -> Result<ImportRun>;
 
     /// Get import run by ID
-    fn get_by_id(&self, id: &str) -> Result<Option<ImportRun>>;
+    async fn get_by_id(&self, id: &str) -> Result<Option<ImportRun>>;
 
     /// Get recent import runs for an account
-    fn get_recent_for_account(&self, account_id: &str, limit: i64) -> Result<Vec<ImportRun>>;
+    async fn get_recent_for_account(&self, account_id: &str, limit: i64) -> Result<Vec<ImportRun>>;
 }

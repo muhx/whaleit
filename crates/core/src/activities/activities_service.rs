@@ -38,7 +38,7 @@ type QuoteCcyCache = HashMap<(String, Option<String>, Option<String>), Option<St
 /// Cache key: (symbol, activity currency, ISIN) → symbol resolution result
 type SymbolResolutionKey = (String, String, Option<String>);
 use uuid::Uuid;
-use wealthfolio_market_data::{
+use whaleit_market_data::{
     exchanges_for_currency, mic_to_currency, yahoo_exchange_suffixes, yahoo_suffix_to_mic,
 };
 
@@ -221,13 +221,13 @@ impl ActivityService {
         }
     }
 
-    fn existing_asset_quote_ccy_by_id(&self, asset_id: Option<&str>) -> Option<String> {
+    async fn existing_asset_quote_ccy_by_id(&self, asset_id: Option<&str>) -> Option<String> {
         let id = asset_id?.trim();
         if id.is_empty() {
             return None;
         }
         self.asset_service
-            .get_asset_by_id(id)
+            .get_asset_by_id(id).await
             .ok()
             .and_then(|asset| normalize_quote_ccy_code(Some(asset.quote_ccy.as_str())))
     }
@@ -500,7 +500,7 @@ impl ActivityService {
         activity.is_valid = false;
     }
 
-    fn hydrate_import_activity_from_asset_id(&self, activity: &mut ActivityImport) {
+    async fn hydrate_import_activity_from_asset_id(&self, activity: &mut ActivityImport) {
         let Some(asset_id) = activity.asset_id.as_deref().map(str::trim) else {
             return;
         };
@@ -508,7 +508,7 @@ impl ActivityService {
             return;
         }
 
-        let Ok(asset) = self.asset_service.get_asset_by_id(asset_id) else {
+        let Ok(asset) = self.asset_service.get_asset_by_id(asset_id).await else {
             return;
         };
 
@@ -612,7 +612,7 @@ impl ActivityService {
         }
 
         // 1. Build a lookup map from existing assets (case-insensitive symbol and ISIN)
-        let existing_assets = self.asset_service.get_assets().unwrap_or_default();
+        let existing_assets = self.asset_service.get_assets().await.unwrap_or_default();
         let existing_map: HashMap<String, Option<String>> = existing_assets
             .iter()
             .filter_map(|a| {
@@ -1031,14 +1031,14 @@ impl ActivityService {
     }
 
     /// Finds an existing asset by instrument fields, searching all assets.
-    fn find_existing_asset_id(
+    async fn find_existing_asset_id(
         &self,
         symbol: &str,
         exchange_mic: Option<&str>,
         instrument_type: Option<&InstrumentType>,
         quote_ccy: Option<&str>,
     ) -> Option<String> {
-        let assets = self.asset_service.get_assets().unwrap_or_default();
+        let assets = self.asset_service.get_assets().await.unwrap_or_default();
         let upper_symbol = symbol.to_uppercase();
         let expected_key = instrument_type.and_then(|itype| match itype {
             InstrumentType::Crypto | InstrumentType::Fx => quote_ccy.and_then(|ccy| {
@@ -1142,7 +1142,7 @@ impl ActivityService {
     }
 
     async fn prepare_new_activity(&self, mut activity: NewActivity) -> Result<NewActivity> {
-        let account: Account = self.account_service.get_account(&activity.account_id)?;
+        let account: Account = self.account_service.get_account(&activity.account_id).await?;
         let base_ccy = self.account_service.get_base_currency().unwrap_or_default();
         let account_currency = resolve_currency(&[&account.currency, &base_ccy]);
 
@@ -1231,7 +1231,7 @@ impl ActivityService {
                     effective_instrument_type.as_ref(),
                     parsed_quote_mode,
                     quote_ccy_input.as_deref(),
-                )?;
+                ).await?;
             }
             None if activity
                 .get_symbol_id()
@@ -1277,7 +1277,7 @@ impl ActivityService {
                                 resolved_symbol,
                                 exchange_mic.as_deref(),
                                 effective_instrument_type.as_ref(),
-                            )
+                            ).await
                         })
                 });
             let (resolved_quote_ccy, resolution_source) = self
@@ -1541,7 +1541,7 @@ impl ActivityService {
         &self,
         mut activity: ActivityUpdate,
     ) -> Result<ActivityUpdate> {
-        let account: Account = self.account_service.get_account(&activity.account_id)?;
+        let account: Account = self.account_service.get_account(&activity.account_id).await?;
         let base_ccy = self.account_service.get_base_currency().unwrap_or_default();
         let account_currency = resolve_currency(&[&account.currency, &base_ccy]);
         let currency = resolve_currency(&[&activity.currency, &account_currency]);
@@ -1627,7 +1627,7 @@ impl ActivityService {
                     effective_instrument_type.as_ref(),
                     parsed_quote_mode,
                     quote_ccy_input.as_deref(),
-                )?;
+                ).await?;
             }
             None if activity
                 .get_symbol_id()
@@ -1670,7 +1670,7 @@ impl ActivityService {
                                 resolved_symbol,
                                 exchange_mic.as_deref(),
                                 effective_instrument_type.as_ref(),
-                            )
+                            ).await
                         })
                 });
             let (resolved_quote_ccy, resolution_source) = self
@@ -2031,7 +2031,7 @@ impl ActivityService {
                 instrument_type.as_ref(),
                 quote_mode,
                 quote_ccy_input.as_deref(),
-            )?;
+            ).await?;
         }
 
         // For crypto, use the quote currency from the pair if available
@@ -2051,7 +2051,7 @@ impl ActivityService {
                         normalized_symbol.as_str(),
                         exchange_mic.as_deref(),
                         instrument_type.as_ref(),
-                    )
+                    ).await
                 });
             let allow_provider_lookup = allow_live_resolution
                 && quote_mode != Some(QuoteMode::Manual)
@@ -2147,7 +2147,7 @@ impl ActivityService {
         account_id: String,
         activities: Vec<ActivityImport>,
     ) -> Result<Vec<ActivityImport>> {
-        let account: Account = self.account_service.get_account(&account_id)?;
+        let account: Account = self.account_service.get_account(&account_id).await?;
         let base_ccy = self.account_service.get_base_currency().unwrap_or_default();
         let account_currency = resolve_currency(&[&account.currency, &base_ccy]);
 
@@ -2369,7 +2369,7 @@ impl ActivityService {
             }
             if let Some(ref id) = existing_id {
                 activity.asset_id = Some(id.clone());
-                if let Ok(asset) = self.asset_service.get_asset_by_id(id) {
+                if let Ok(asset) = self.asset_service.get_asset_by_id(id).await {
                     activity.symbol_name = asset.name;
                     asset_currency = Some(asset.quote_ccy.clone());
                     if activity.quote_mode.is_none() {
@@ -2579,39 +2579,39 @@ impl ActivityService {
 
 #[async_trait::async_trait]
 impl ActivityServiceTrait for ActivityService {
-    fn get_activity(&self, activity_id: &str) -> Result<Activity> {
-        self.activity_repository.get_activity(activity_id)
+    async fn get_activity(&self, activity_id: &str) -> Result<Activity> {
+        self.activity_repository.get_activity(activity_id).await
     }
 
     /// Retrieves all activities
-    fn get_activities(&self) -> Result<Vec<Activity>> {
-        self.activity_repository.get_activities()
+    async fn get_activities(&self) -> Result<Vec<Activity>> {
+        self.activity_repository.get_activities().await
     }
 
     /// Retrieves activities by account ID
-    fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>> {
+    async fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>> {
         self.activity_repository
-            .get_activities_by_account_id(account_id)
+            .get_activities_by_account_id(account_id).await
     }
 
     /// Retrieves activities by account IDs
-    fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>> {
+    async fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>> {
         self.activity_repository
-            .get_activities_by_account_ids(account_ids)
+            .get_activities_by_account_ids(account_ids).await
     }
 
     /// Retrieves all trading activities
-    fn get_trading_activities(&self) -> Result<Vec<Activity>> {
-        self.activity_repository.get_trading_activities()
+    async fn get_trading_activities(&self) -> Result<Vec<Activity>> {
+        self.activity_repository.get_trading_activities().await
     }
 
     /// Retrieves all income activities
-    fn get_income_activities(&self) -> Result<Vec<Activity>> {
-        self.activity_repository.get_income_activities()
+    async fn get_income_activities(&self) -> Result<Vec<Activity>> {
+        self.activity_repository.get_income_activities().await
     }
 
     /// Searches activities with various filters and pagination
-    fn search_activities(
+    async fn search_activities(
         &self,
         page: i64,
         page_size: i64,
@@ -2635,7 +2635,7 @@ impl ActivityServiceTrait for ActivityService {
             date_from,
             date_to,
             instrument_type_filter,
-        )
+        ).await
     }
 
     /// Creates a new activity
@@ -2665,7 +2665,7 @@ impl ActivityServiceTrait for ActivityService {
     async fn update_activity(&self, activity: ActivityUpdate) -> Result<Activity> {
         // Get the existing activity BEFORE the update to capture old account_id and asset_id
         // This ensures we emit events for both old and new locations if they changed
-        let existing = self.activity_repository.get_activity(&activity.id)?;
+        let existing = self.activity_repository.get_activity(&activity.id).await?;
 
         let prepared = self.prepare_update_activity(activity).await?;
         let updated = self.activity_repository.update_activity(prepared).await?;
@@ -2744,7 +2744,7 @@ impl ActivityServiceTrait for ActivityService {
         if !request.creates.is_empty() {
             // Get account from first create (all creates in a bulk request typically share the same account)
             let account_id = &request.creates[0].account_id;
-            let account = self.account_service.get_account(account_id)?;
+            let account = self.account_service.get_account(account_id).await?;
 
             // Store temp_ids for error reporting (prepare result uses indices)
             let temp_ids: Vec<Option<String>> =
@@ -2775,7 +2775,7 @@ impl ActivityServiceTrait for ActivityService {
         for update_request in request.updates {
             let target_id = update_request.id.clone();
             // Get the existing activity to capture old account_id and asset_id
-            match self.activity_repository.get_activity(&target_id) {
+            match self.activity_repository.get_activity(&target_id).await {
                 Ok(existing) => {
                     old_account_ids.insert(existing.account_id.clone());
                     if let Some(ref asset_id) = existing.asset_id {
@@ -2801,7 +2801,7 @@ impl ActivityServiceTrait for ActivityService {
 
         // For deletes: capture OLD values before deletion
         for delete_id in request.delete_ids {
-            match self.activity_repository.get_activity(&delete_id) {
+            match self.activity_repository.get_activity(&delete_id).await {
                 Ok(existing) => {
                     // Capture old values for event emission
                     old_account_ids.insert(existing.account_id.clone());
@@ -3176,7 +3176,7 @@ impl ActivityServiceTrait for ActivityService {
             HashMap::with_capacity(unique_account_ids.len());
 
         for account_id in &unique_account_ids {
-            let account = self.account_service.get_account(account_id)?;
+            let account = self.account_service.get_account(account_id).await?;
             let currency = resolve_currency(&[&account.currency, &base_ccy]);
             account_currencies.insert(account_id.clone(), currency);
         }
@@ -3568,17 +3568,17 @@ impl ActivityServiceTrait for ActivityService {
     }
 
     /// Gets the first activity date for given account IDs
-    fn get_first_activity_date(
+    async fn get_first_activity_date(
         &self,
         account_ids: Option<&[String]>,
     ) -> Result<Option<chrono::DateTime<Utc>>> {
         self.activity_repository
-            .get_first_activity_date(account_ids)
+            .get_first_activity_date(account_ids).await
     }
 
     /// Gets the import mapping for a given account ID and context kind.
     /// Normalizes legacy values ("ACTIVITY" → "CSV_ACTIVITY", "HOLDINGS" → "CSV_HOLDINGS").
-    fn get_import_mapping(
+    async fn get_import_mapping(
         &self,
         account_id: String,
         context_kind: String,
@@ -3599,9 +3599,9 @@ impl ActivityServiceTrait for ActivityService {
         Ok(result)
     }
 
-    fn list_import_templates(&self) -> Result<Vec<ImportTemplateData>> {
+    async fn list_import_templates(&self) -> Result<Vec<ImportTemplateData>> {
         self.activity_repository
-            .list_import_templates()?
+            .list_import_templates().await?
             .into_iter()
             .map(|template| {
                 template.to_template_data().map_err(|e| {
@@ -3614,8 +3614,8 @@ impl ActivityServiceTrait for ActivityService {
             .collect()
     }
 
-    fn get_import_template(&self, template_id: String) -> Result<ImportTemplateData> {
-        let template = self.activity_repository.get_import_template(&template_id)?;
+    async fn get_import_template(&self, template_id: String) -> Result<ImportTemplateData> {
+        let template = self.activity_repository.get_import_template(&template_id).await?;
         match template {
             Some(template) => template.to_template_data().map_err(|e| {
                 ActivityError::InvalidData(format!("Failed to parse import template data: {}", e))
@@ -3671,7 +3671,7 @@ impl ActivityServiceTrait for ActivityService {
             .await
     }
 
-    fn get_broker_sync_profile(
+    async fn get_broker_sync_profile(
         &self,
         account_id: String,
         source_system: String,
@@ -3712,7 +3712,7 @@ impl ActivityServiceTrait for ActivityService {
         // 1. If the exact target template already exists, use it (subsequent saves).
         // 2. Otherwise, seed from the precedence chain so inherited defaults are preserved.
         //    For BROKER scope: skip account-specific profiles to avoid leaking private overrides.
-        let existing = match self.activity_repository.get_import_template(&template_id)? {
+        let existing = match self.activity_repository.get_import_template(&template_id).await? {
             Some(t) if t.kind == TemplateKind::BrokerActivity => {
                 t.to_broker_profile_data().unwrap_or_default()
             }
@@ -3784,12 +3784,12 @@ impl ActivityServiceTrait for ActivityService {
     /// Checks for existing activities with the given idempotency keys.
     ///
     /// Returns a map of {idempotency_key: existing_activity_id} for keys that already exist.
-    fn check_existing_duplicates(
+    async fn check_existing_duplicates(
         &self,
         idempotency_keys: Vec<String>,
     ) -> Result<HashMap<String, String>> {
         self.activity_repository
-            .check_existing_duplicates(&idempotency_keys)
+            .check_existing_duplicates(&idempotency_keys).await
     }
 
     fn parse_csv(

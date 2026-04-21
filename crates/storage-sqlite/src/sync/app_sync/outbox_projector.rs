@@ -2,8 +2,8 @@
 
 use diesel::sqlite::SqliteConnection;
 use serde_json::Value;
-use wealthfolio_core::errors::Result;
-use wealthfolio_core::sync::{SyncEntity, SyncOperation};
+use whaleit_core::errors::Result;
+use whaleit_core::sync::{SyncEntity, SyncOperation};
 
 use super::repository::{insert_outbox_event, OutboxWriteRequest};
 use crate::sync::SyncOutboxModel;

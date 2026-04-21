@@ -689,7 +689,7 @@ pub fn parse_manifest_json_metadata(manifest_content: &str) -> Result<AddonManif
     let homepage = raw_manifest["homepage"].as_str().map(|s| s.to_string());
     let repository = raw_manifest["repository"].as_str().map(|s| s.to_string());
     let license = raw_manifest["license"].as_str().map(|s| s.to_string());
-    let min_wealthfolio_version = raw_manifest["minWealthfolioVersion"]
+    let min_whaleit_version = raw_manifest["minWealthfolioVersion"]
         .as_str()
         .map(|s| s.to_string());
     let keywords = raw_manifest["keywords"].as_array().map(|arr| {
@@ -781,7 +781,7 @@ pub fn parse_manifest_json_metadata(manifest_content: &str) -> Result<AddonManif
         homepage,
         repository,
         license,
-        min_wealthfolio_version,
+        min_whaleit_version,
         keywords,
         icon,
         installed_at: None,
@@ -1595,7 +1595,7 @@ impl AddonServiceTrait for AddonService {
                                 changelog_url: None,
                                 is_critical: None,
                                 has_breaking_changes: None,
-                                min_wealthfolio_version: None,
+                                min_whaleit_version: None,
                             },
                             error: Some(err),
                         });

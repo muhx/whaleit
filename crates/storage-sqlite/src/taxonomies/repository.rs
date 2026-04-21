@@ -7,11 +7,11 @@ use diesel::SqliteConnection;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use wealthfolio_core::taxonomies::{
+use whaleit_core::taxonomies::{
     AssetTaxonomyAssignment, Category, NewAssetTaxonomyAssignment, NewCategory, NewTaxonomy,
     Taxonomy, TaxonomyRepositoryTrait, TaxonomyWithCategories,
 };
-use wealthfolio_core::Result;
+use whaleit_core::Result;
 
 use super::model::{
     AssetTaxonomyAssignmentDB, CategoryDB, NewAssetTaxonomyAssignmentDB, NewCategoryDB,
@@ -74,7 +74,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
                     conn,
                     projection,
                     &result.id,
-                    wealthfolio_core::sync::SyncOperation::Create,
+                    whaleit_core::sync::SyncOperation::Create,
                 )
                 .map_err(StorageError::from)?;
 
@@ -116,7 +116,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
                     conn,
                     projection,
                     &id,
-                    wealthfolio_core::sync::SyncOperation::Update,
+                    whaleit_core::sync::SyncOperation::Update,
                 )
                 .map_err(StorageError::from)?;
 
@@ -184,7 +184,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
                     conn,
                     projection,
                     &taxonomy_id,
-                    wealthfolio_core::sync::SyncOperation::Update,
+                    whaleit_core::sync::SyncOperation::Update,
                 )
                 .map_err(StorageError::from)?;
 
@@ -234,7 +234,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
                     conn,
                     projection,
                     &taxonomy_id,
-                    wealthfolio_core::sync::SyncOperation::Update,
+                    whaleit_core::sync::SyncOperation::Update,
                 )
                 .map_err(StorageError::from)?;
 
@@ -265,7 +265,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
                         conn,
                         projection,
                         &taxonomy_id,
-                        wealthfolio_core::sync::SyncOperation::Update,
+                        whaleit_core::sync::SyncOperation::Update,
                     )
                     .map_err(StorageError::from)?;
                 }
@@ -300,7 +300,7 @@ impl TaxonomyRepositoryTrait for TaxonomyRepository {
                         conn,
                         projection,
                         &tid,
-                        wealthfolio_core::sync::SyncOperation::Update,
+                        whaleit_core::sync::SyncOperation::Update,
                     )
                     .map_err(StorageError::from)?;
                 }

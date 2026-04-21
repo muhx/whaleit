@@ -68,7 +68,7 @@ impl IncomeService {
 
 // Implement the trait for IncomeService
 impl IncomeServiceTrait for IncomeService {
-    fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>> {
+    async fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>> {
         debug!("Getting income summary...");
 
         let activities = match self
@@ -97,7 +97,7 @@ impl IncomeServiceTrait for IncomeService {
         // denominators are correct.  Falls back to portfolio-wide when no filter.
         let oldest_date = if let Some(id) = account_id {
             let ids = vec![id.to_string()];
-            match self.activity_repository.get_first_activity_date(Some(&ids)) {
+            match self.activity_repository.get_first_activity_date(Some(&ids)).await {
                 Ok(Some(date)) => date,
                 Ok(None) => return Ok(Vec::new()),
                 Err(e) => {
@@ -150,7 +150,7 @@ impl IncomeServiceTrait for IncomeService {
                 activity.amount,
                 &activity.currency,
                 &base_currency,
-            ) {
+            ).await {
                 Ok(amount) => amount,
                 Err(e) => {
                     error!("Error converting currency: {:?}", e);

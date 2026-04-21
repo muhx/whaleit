@@ -8,8 +8,8 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, OnceLock};
 use uuid::Uuid;
 
-use wealthfolio_core::errors::{DatabaseError, Error, Result};
-use wealthfolio_core::sync::{
+use whaleit_core::errors::{DatabaseError, Error, Result};
+use whaleit_core::sync::{
     should_apply_lww, SyncEngineStatus, SyncEntity, SyncEntityMetadata, SyncOperation,
     SyncOutboxEvent, SyncOutboxStatus, APP_SYNC_TABLES,
 };
@@ -250,7 +250,7 @@ fn apply_value_migration(table: &str, column: &str, value: serde_json::Value) ->
     match (table, column) {
         ("import_account_templates", "context_kind") => {
             if let Some(s) = value.as_str() {
-                let migrated = wealthfolio_core::activities::normalize_context_kind_value(s);
+                let migrated = whaleit_core::activities::normalize_context_kind_value(s);
                 if migrated != s {
                     return serde_json::Value::String(migrated.to_string());
                 }

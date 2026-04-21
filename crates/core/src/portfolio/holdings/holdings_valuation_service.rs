@@ -55,13 +55,13 @@ impl HoldingsValuationService {
     }
 
     // Private helper to get FX rate with logging and fallback
-    fn get_fx_rate_or_fallback(
+    async fn get_fx_rate_or_fallback(
         &self,
         from_curr: &str,
         to_curr: &str,
         context_msg: &str,
     ) -> Decimal {
-        match self.fx_service.get_latest_exchange_rate(from_curr, to_curr) {
+        match self.fx_service.get_latest_exchange_rate(from_curr, to_curr).await {
             Ok(rate) => rate,
             Err(e) => {
                 warn!(
@@ -95,7 +95,7 @@ impl HoldingsValuationService {
 
         let latest_quote_pairs = if !required_asset_ids.is_empty() {
             self.quote_service
-                .get_latest_quotes_pair(&required_asset_ids)?
+                .get_latest_quotes_pair(&required_asset_ids).await?
         } else {
             HashMap::new()
         };
@@ -199,7 +199,7 @@ impl HoldingsValuationService {
             pos_currency,
             base_currency,
             &format!("{}: FX Local->Base", context_msg),
-        );
+        ).await;
         holding.fx_rate = Some(fx_rate_local_to_base);
 
         // --- Calculate Base Cost Basis (If applicable) ---
@@ -281,7 +281,7 @@ impl HoldingsValuationService {
                 normalized_quote_currency,
                 base_currency,
                 &format!("{}: FX Quote->Base", context_msg),
-            );
+            ).await;
 
             let market_value_quote_major =
                 normalized_price * quantity * holding.contract_multiplier;
@@ -290,7 +290,7 @@ impl HoldingsValuationService {
                 normalized_quote_currency,
                 pos_currency,
                 &format!("{}: FX Quote->Local", context_msg),
-            );
+            ).await;
             let market_price_local = normalized_price * fx_rate_quote_to_local;
             holding.price = Some(market_price_local);
 
@@ -447,7 +447,7 @@ impl HoldingsValuationService {
             pos_currency,
             base_currency,
             &format!("{}: FX Local->Base", context_msg),
-        );
+        ).await;
         holding.fx_rate = Some(fx_rate_local_to_base);
 
         // --- Calculate Base Cost Basis (If applicable) ---
@@ -486,13 +486,13 @@ impl HoldingsValuationService {
                 normalized_quote_currency,
                 base_currency,
                 &format!("{}: FX Quote->Base", context_msg),
-            );
+            ).await;
 
             let fx_rate_quote_to_local = self.get_fx_rate_or_fallback(
                 normalized_quote_currency,
                 pos_currency,
                 &format!("{}: FX Quote->Local", context_msg),
-            );
+            ).await;
 
             // --- Calculate Market Value ---
             // For all alternative assets: market_value = quantity * unit_price
@@ -599,7 +599,7 @@ impl HoldingsValuationService {
         Ok(())
     }
 
-    fn calculate_cash_valuation(&self, holding: &mut Holding, base_currency: &str) -> Result<()> {
+    async fn calculate_cash_valuation(&self, holding: &mut Holding, base_currency: &str) -> Result<()> {
         let cash_currency = &holding.local_currency;
         let cash_amount = holding.quantity;
         let context_msg = format!("HoldingValuation [CASH {}]", cash_currency);
@@ -608,7 +608,7 @@ impl HoldingsValuationService {
         holding.price = Some(dec!(1.0));
 
         let fx_rate_cash_to_base =
-            self.get_fx_rate_or_fallback(cash_currency, base_currency, &context_msg);
+            self.get_fx_rate_or_fallback(cash_currency, base_currency, &context_msg).await;
         holding.fx_rate = Some(fx_rate_cash_to_base);
 
         let value_base = cash_amount * fx_rate_cash_to_base;

@@ -26,7 +26,7 @@ fn build_test_addon_zip(entries: &[(&str, &str)]) -> Vec<u8> {
 fn test_detect_addon_permissions_hello_world() {
     // Test with actual hello world addon content
     let hello_world_content = r#"
-import { type AddonContext } from '@wealthfolio/addon-sdk';
+import { type AddonContext } from '@whaleit/addon-sdk';
 import React from 'react';
 import { AlertsIcon } from './icons';
 
@@ -231,7 +231,7 @@ fn test_addon_manifest_to_installed() {
         homepage: None,
         repository: None,
         license: None,
-        min_wealthfolio_version: None,
+        min_whaleit_version: None,
         keywords: None,
         icon: None,
         installed_at: None,
@@ -261,7 +261,7 @@ fn test_addon_manifest_get_main() {
         homepage: None,
         repository: None,
         license: None,
-        min_wealthfolio_version: None,
+        min_whaleit_version: None,
         keywords: None,
         icon: None,
         installed_at: None,
@@ -285,7 +285,7 @@ fn test_addon_manifest_get_main() {
         homepage: None,
         repository: None,
         license: None,
-        min_wealthfolio_version: None,
+        min_whaleit_version: None,
         keywords: None,
         icon: None,
         installed_at: None,
@@ -741,7 +741,7 @@ mod service_tests {
     #[test]
     fn test_ensure_addons_directory_service() {
         // Test the service function ensure_addons_directory
-        let temp_dir = env::temp_dir().join("wealthfolio_test_addons");
+        let temp_dir = env::temp_dir().join("whaleit_test_addons");
         let app_data_path = temp_dir.to_str().unwrap();
 
         // Clean up any existing test directory
@@ -764,7 +764,7 @@ mod service_tests {
     #[test]
     fn test_get_addon_path_service() {
         // Test the service function get_addon_path
-        let temp_dir = env::temp_dir().join("wealthfolio_test_addon_path");
+        let temp_dir = env::temp_dir().join("whaleit_test_addon_path");
         let app_data_path = temp_dir.to_str().unwrap();
 
         // Clean up any existing test directory
@@ -789,7 +789,7 @@ mod service_tests {
     #[test]
     fn test_addon_service_load_manifest() {
         // Test that AddonService can load an installed addo
-        let temp_dir = env::temp_dir().join("wealthfolio_test_manifest_service");
+        let temp_dir = env::temp_dir().join("whaleit_test_manifest_service");
         let app_data_path = temp_dir.to_str().unwrap();
 
         if temp_dir.exists() {
@@ -837,7 +837,7 @@ mod service_tests {
 
     #[tokio::test]
     async fn test_install_addon_zip_rejects_unsafe_paths_without_writing_files() {
-        let temp_dir = env::temp_dir().join("wealthfolio_test_addon_zip_traversal");
+        let temp_dir = env::temp_dir().join("whaleit_test_addon_zip_traversal");
         if temp_dir.exists() {
             std::fs::remove_dir_all(&temp_dir).ok();
         }

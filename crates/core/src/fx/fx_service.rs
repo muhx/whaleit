@@ -37,8 +37,8 @@ impl FxService {
     }
 
     /// Initialize the currency converter with all exchange rates, filling missing days
-    fn initialize_converter(&self) -> Result<()> {
-        let all_historical_rates = self.repository.get_historical_exchange_rates()?;
+    async fn initialize_converter(&self) -> Result<()> {
+        let all_historical_rates = self.repository.get_historical_exchange_rates().await?;
 
         if all_historical_rates.is_empty() {
             log::warn!("No exchange rates available, converter not initialized");
@@ -71,8 +71,8 @@ impl FxService {
         }
     }
 
-    fn load_latest_exchange_rate(&self, from: &str, to: &str) -> Result<ExchangeRate> {
-        match self.repository.get_latest_exchange_rate(from, to)? {
+    async fn load_latest_exchange_rate(&self, from: &str, to: &str) -> Result<ExchangeRate> {
+        match self.repository.get_latest_exchange_rate(from, to).await? {
             Some(rate) => Ok(rate),
             None => {
                 // Try inverse rate via instrument_key
@@ -179,7 +179,7 @@ impl FxService {
 
 #[async_trait]
 impl FxServiceTrait for FxService {
-    fn initialize(&self) -> Result<()> {
+    async fn initialize(&self) -> Result<()> {
         self.initialize_converter()?;
         Ok(())
     }
@@ -207,7 +207,7 @@ impl FxServiceTrait for FxService {
         self.repository.save_exchange_rate(rate).await
     }
 
-    fn get_historical_rates(&self, from: &str, to: &str, days: i64) -> Result<Vec<ExchangeRate>> {
+    async fn get_historical_rates(&self, from: &str, to: &str, days: i64) -> Result<Vec<ExchangeRate>> {
         let normalized_from = normalize_currency_code(from);
         let normalized_to = normalize_currency_code(to);
 
@@ -219,7 +219,7 @@ impl FxServiceTrait for FxService {
             &instrument_key,
             start.naive_utc(),
             end.naive_utc(),
-        ) {
+        ).await {
             Ok(quotes) => Ok(quotes
                 .into_iter()
                 .map(|q| ExchangeRate {
@@ -252,7 +252,7 @@ impl FxServiceTrait for FxService {
         self.add_exchange_rate(new_rate).await
     }
 
-    fn get_latest_exchange_rate(&self, from_currency: &str, to_currency: &str) -> Result<Decimal> {
+    async fn get_latest_exchange_rate(&self, from_currency: &str, to_currency: &str) -> Result<Decimal> {
         let (normalized_from, normalized_to, source_multiplier, target_multiplier) =
             Self::normalize_currency_pair(from_currency, to_currency);
 
@@ -276,7 +276,7 @@ impl FxServiceTrait for FxService {
         Ok(source_multiplier * base_rate * target_multiplier)
     }
 
-    fn get_exchange_rate_for_date(
+    async fn get_exchange_rate_for_date(
         &self,
         from_currency: &str,
         to_currency: &str,
@@ -311,7 +311,7 @@ impl FxServiceTrait for FxService {
         Ok(source_multiplier * base_rate * target_multiplier)
     }
 
-    fn convert_currency(
+    async fn convert_currency(
         &self,
         amount: Decimal,
         from_currency: &str,
@@ -325,7 +325,7 @@ impl FxServiceTrait for FxService {
         Ok(amount * rate)
     }
 
-    fn convert_currency_for_date(
+    async fn convert_currency_for_date(
         &self,
         amount: Decimal,
         from_currency: &str,
@@ -340,8 +340,8 @@ impl FxServiceTrait for FxService {
         Ok(amount * rate)
     }
 
-    fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
-        self.repository.get_latest_exchange_rates()
+    async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        self.repository.get_latest_exchange_rates().await
     }
 
     async fn delete_exchange_rate(&self, rate_id: &str) -> Result<()> {
@@ -450,15 +450,15 @@ mod tests {
 
     #[async_trait]
     impl FxRepositoryTrait for MockFxRepository {
-        fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
             Ok(vec![])
         }
 
-        fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        async fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
             Ok(vec![])
         }
 
-        fn get_latest_exchange_rate(&self, _from: &str, _to: &str) -> Result<Option<ExchangeRate>> {
+        async fn get_latest_exchange_rate(&self, _from: &str, _to: &str) -> Result<Option<ExchangeRate>> {
             Ok(None)
         }
 
@@ -469,7 +469,7 @@ mod tests {
             Ok(None)
         }
 
-        fn get_historical_quotes(
+        async fn get_historical_quotes(
             &self,
             _symbol: &str,
             _start_date: NaiveDateTime,

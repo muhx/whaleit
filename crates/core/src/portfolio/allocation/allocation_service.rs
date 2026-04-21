@@ -331,7 +331,7 @@ impl AllocationServiceTrait for AllocationService {
         let mut assignments_by_asset: HashMap<String, Vec<(String, String, i32)>> = HashMap::new();
 
         for asset_id in &asset_ids {
-            let assignments = self.taxonomy_service.get_asset_assignments(asset_id)?;
+            let assignments = self.taxonomy_service.get_asset_assignments(asset_id).await?;
             let entries: Vec<(String, String, i32)> = assignments
                 .into_iter()
                 .map(|a| (a.taxonomy_id, a.category_id, a.weight))
@@ -463,7 +463,7 @@ impl AllocationServiceTrait for AllocationService {
         );
 
         // Get taxonomy with categories for hierarchy lookup and metadata
-        let taxonomy_with_cats = self.taxonomy_service.get_taxonomy(taxonomy_id)?;
+        let taxonomy_with_cats = self.taxonomy_service.get_taxonomy(taxonomy_id).await?;
         let empty_categories: Vec<Category> = Vec::new();
 
         // Extract taxonomy metadata

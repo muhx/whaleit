@@ -15,12 +15,12 @@ use crate::errors::{IntoCore, StorageError};
 use crate::schema::market_data_providers::dsl as market_data_providers_dsl;
 use crate::schema::quotes::dsl as quotes_dsl;
 use crate::utils::chunk_for_sqlite;
-use wealthfolio_core::quotes::store::{ProviderSettingsStore, QuoteStore};
-use wealthfolio_core::quotes::types::{AssetId, Day, QuoteSource};
-use wealthfolio_core::quotes::{
+use whaleit_core::quotes::store::{ProviderSettingsStore, QuoteStore};
+use whaleit_core::quotes::types::{AssetId, Day, QuoteSource};
+use whaleit_core::quotes::{
     LatestQuotePair, MarketDataProviderSetting, Quote, UpdateMarketDataProviderSetting,
 };
-use wealthfolio_core::Result;
+use whaleit_core::Result;
 
 // Source priority for tie-breaking latest-quote lookups on the same `day`.
 // MANUAL wins (explicit user override), then BROKER (connect-synced broker
@@ -484,8 +484,8 @@ impl QuoteStore for MarketDataRepository {
 
         match query_result {
             Some(quote_db) => Ok(Quote::from(quote_db)),
-            None => Err(wealthfolio_core::errors::Error::Database(
-                wealthfolio_core::errors::DatabaseError::NotFound(format!(
+            None => Err(whaleit_core::errors::Error::Database(
+                whaleit_core::errors::DatabaseError::NotFound(format!(
                     "No quote found in database for symbol: {}",
                     symbol
                 )),
@@ -829,7 +829,7 @@ mod tests {
     use chrono::{NaiveDate, TimeZone, Utc};
     use rust_decimal::Decimal;
     use tempfile::tempdir;
-    use wealthfolio_core::quotes::Quote;
+    use whaleit_core::quotes::Quote;
 
     async fn create_test_repository() -> (MarketDataRepository, tempfile::TempDir) {
         std::env::set_var("CONNECT_API_URL", "http://test.local");

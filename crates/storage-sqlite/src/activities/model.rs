@@ -6,7 +6,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use wealthfolio_core::activities::{
+use whaleit_core::activities::{
     Activity, ActivityStatus, ActivityUpdate, ActivityUpsert, NewActivity,
 };
 
@@ -256,9 +256,9 @@ impl IncomeDataDB {
     }
 }
 
-impl From<ActivityDetailsDB> for wealthfolio_core::activities::ActivityDetails {
+impl From<ActivityDetailsDB> for whaleit_core::activities::ActivityDetails {
     fn from(db: ActivityDetailsDB) -> Self {
-        use wealthfolio_core::activities::ActivityStatus;
+        use whaleit_core::activities::ActivityStatus;
 
         // Parse status string to ActivityStatus enum
         let status = match db.status.as_str() {
@@ -314,9 +314,9 @@ impl From<ActivityDetailsDB> for wealthfolio_core::activities::ActivityDetails {
     }
 }
 
-impl From<ImportTemplateDB> for wealthfolio_core::activities::ImportTemplate {
+impl From<ImportTemplateDB> for whaleit_core::activities::ImportTemplate {
     fn from(db: ImportTemplateDB) -> Self {
-        use wealthfolio_core::activities::{ImportTemplateScope, TemplateKind};
+        use whaleit_core::activities::{ImportTemplateScope, TemplateKind};
 
         let scope = match db.scope.as_str() {
             "SYSTEM" => ImportTemplateScope::System,
@@ -343,11 +343,11 @@ impl From<ImportTemplateDB> for wealthfolio_core::activities::ImportTemplate {
     }
 }
 
-impl From<wealthfolio_core::activities::ImportTemplate> for ImportTemplateDB {
-    fn from(domain: wealthfolio_core::activities::ImportTemplate) -> Self {
+impl From<whaleit_core::activities::ImportTemplate> for ImportTemplateDB {
+    fn from(domain: whaleit_core::activities::ImportTemplate) -> Self {
         let scope = match domain.scope {
-            wealthfolio_core::activities::ImportTemplateScope::System => "SYSTEM",
-            wealthfolio_core::activities::ImportTemplateScope::User => "USER",
+            whaleit_core::activities::ImportTemplateScope::System => "SYSTEM",
+            whaleit_core::activities::ImportTemplateScope::User => "USER",
         };
 
         Self {

@@ -67,7 +67,7 @@ impl ContributionLimitService {
             .unwrap_or(false)
     }
 
-    fn calculate_contributions_by_period(
+    async fn calculate_contributions_by_period(
         &self,
         account_ids: &[String],
         start_utc: DateTime<Utc>,
@@ -86,7 +86,7 @@ impl ContributionLimitService {
             account_ids,
             start_utc,
             end_exclusive_utc,
-        )?;
+        ).await?;
         let tz = self.user_timezone();
 
         // Build set of limit account_ids for O(1) lookup
@@ -148,7 +148,7 @@ impl ContributionLimitService {
                 &activity.currency,
                 base_currency,
                 activity_date,
-            )?;
+            ).await?;
 
             total += converted_amount;
 
@@ -175,8 +175,8 @@ impl ContributionLimitService {
 
 #[async_trait]
 impl ContributionLimitServiceTrait for ContributionLimitService {
-    fn get_contribution_limits(&self) -> Result<Vec<ContributionLimit>> {
-        self.limit_repository.get_contribution_limits()
+    async fn get_contribution_limits(&self) -> Result<Vec<ContributionLimit>> {
+        self.limit_repository.get_contribution_limits().await
     }
 
     async fn create_contribution_limit(
@@ -202,12 +202,12 @@ impl ContributionLimitServiceTrait for ContributionLimitService {
         self.limit_repository.delete_contribution_limit(id).await
     }
 
-    fn calculate_deposits_for_contribution_limit(
+    async fn calculate_deposits_for_contribution_limit(
         &self,
         limit_id: &str,
         base_currency: &str,
     ) -> Result<DepositsCalculation> {
-        let limit = self.limit_repository.get_contribution_limit(limit_id)?;
+        let limit = self.limit_repository.get_contribution_limit(limit_id).await?;
 
         let account_ids = match limit.account_ids {
             Some(ids_str) if !ids_str.trim().is_empty() => ids_str
@@ -280,7 +280,7 @@ mod tests {
 
     #[async_trait]
     impl ActivityRepositoryTrait for MockActivityRepository {
-        fn get_contribution_activities(
+        async fn get_contribution_activities(
             &self,
             account_ids: &[String],
             start_utc: DateTime<Utc>,
@@ -302,25 +302,25 @@ mod tests {
         }
 
         // Stub implementations for other trait methods
-        fn get_activity(&self, _: &str) -> Result<Activity> {
+        async fn get_activity(&self, _: &str) -> Result<Activity> {
             unimplemented!()
         }
-        fn get_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_activities_by_account_id(&self, _: &str) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_id(&self, _: &str) -> Result<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_activities_by_account_ids(&self, _: &[String]) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_ids(&self, _: &[String]) -> Result<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_trading_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_trading_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_income_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_income_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!()
         }
-        fn search_activities(
+        async fn search_activities(
             &self,
             _: i64,
             _: i64,
@@ -355,10 +355,10 @@ mod tests {
         async fn create_activities(&self, _: Vec<NewActivity>) -> Result<usize> {
             unimplemented!()
         }
-        fn get_first_activity_date(&self, _: Option<&[String]>) -> Result<Option<DateTime<Utc>>> {
+        async fn get_first_activity_date(&self, _: Option<&[String]>) -> Result<Option<DateTime<Utc>>> {
             unimplemented!()
         }
-        fn get_import_mapping(
+        async fn get_import_mapping(
             &self,
             _: &str,
             _context_kind: &str,
@@ -376,10 +376,10 @@ mod tests {
         ) -> Result<()> {
             unimplemented!()
         }
-        fn list_import_templates(&self) -> Result<Vec<crate::activities::ImportTemplate>> {
+        async fn list_import_templates(&self) -> Result<Vec<crate::activities::ImportTemplate>> {
             Ok(Vec::new())
         }
-        fn get_import_template(
+        async fn get_import_template(
             &self,
             _template_id: &str,
         ) -> Result<Option<crate::activities::ImportTemplate>> {
@@ -394,7 +394,7 @@ mod tests {
         async fn delete_import_template(&self, _template_id: &str) -> Result<()> {
             unimplemented!()
         }
-        fn get_broker_sync_profile(
+        async fn get_broker_sync_profile(
             &self,
             _account_id: &str,
             _source_system: &str,
@@ -430,7 +430,7 @@ mod tests {
         ) -> Result<HashMap<String, (Option<NaiveDate>, Option<NaiveDate>)>> {
             unimplemented!()
         }
-        fn check_existing_duplicates(&self, _: &[String]) -> Result<HashMap<String, String>> {
+        async fn check_existing_duplicates(&self, _: &[String]) -> Result<HashMap<String, String>> {
             unimplemented!()
         }
         async fn bulk_upsert(&self, _: Vec<ActivityUpsert>) -> Result<BulkUpsertResult> {
@@ -453,11 +453,11 @@ mod tests {
 
     #[async_trait]
     impl FxServiceTrait for MockFxService {
-        fn initialize(&self) -> Result<()> {
+        async fn initialize(&self) -> Result<()> {
             Ok(())
         }
 
-        fn get_historical_rates(
+        async fn get_historical_rates(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -466,7 +466,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_latest_exchange_rate(
+        async fn get_latest_exchange_rate(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -474,7 +474,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_exchange_rate_for_date(
+        async fn get_exchange_rate_for_date(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -483,7 +483,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn convert_currency(
+        async fn convert_currency(
             &self,
             amount: Decimal,
             from_currency: &str,
@@ -503,7 +503,7 @@ mod tests {
             Ok(amount * rate)
         }
 
-        fn convert_currency_for_date(
+        async fn convert_currency_for_date(
             &self,
             amount: Decimal,
             from_currency: &str,
@@ -513,7 +513,7 @@ mod tests {
             self.convert_currency(amount, from_currency, to_currency)
         }
 
-        fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
             unimplemented!()
         }
 
@@ -559,10 +559,10 @@ mod tests {
 
     #[async_trait]
     impl ContributionLimitRepositoryTrait for MockLimitRepository {
-        fn get_contribution_limits(&self) -> Result<Vec<ContributionLimit>> {
+        async fn get_contribution_limits(&self) -> Result<Vec<ContributionLimit>> {
             unimplemented!()
         }
-        fn get_contribution_limit(&self, _: &str) -> Result<ContributionLimit> {
+        async fn get_contribution_limit(&self, _: &str) -> Result<ContributionLimit> {
             unimplemented!()
         }
         async fn create_contribution_limit(

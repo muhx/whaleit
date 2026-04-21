@@ -16,8 +16,8 @@ impl<T: GoalRepositoryTrait> GoalService<T> {
 
 #[async_trait]
 impl<T: GoalRepositoryTrait + Send + Sync> GoalServiceTrait for GoalService<T> {
-    fn get_goals(&self) -> Result<Vec<Goal>> {
-        self.goal_repo.load_goals()
+    async fn get_goals(&self) -> Result<Vec<Goal>> {
+        self.goal_repo.load_goals().await
     }
 
     async fn create_goal(&self, new_goal: NewGoal) -> Result<Goal> {
@@ -36,7 +36,7 @@ impl<T: GoalRepositoryTrait + Send + Sync> GoalServiceTrait for GoalService<T> {
         self.goal_repo.upsert_goal_allocations(allocations).await
     }
 
-    fn load_goals_allocations(&self) -> Result<Vec<GoalsAllocation>> {
+    async fn load_goals_allocations(&self) -> Result<Vec<GoalsAllocation>> {
         self.goal_repo.load_allocations_for_non_achieved_goals()
     }
 }
