@@ -930,7 +930,7 @@ mod tests {
 
         // Typed-API lookup uses the same priority.
         let latest_typed = repo
-            .latest(&AssetId::new(asset_id.to_string()), None)
+            .latest(&AssetId::new(asset_id.to_string()), None).await
             .expect("latest should succeed")
             .expect("quote should exist");
         assert_eq!(latest_typed.data_source, "MANUAL");

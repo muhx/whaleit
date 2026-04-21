@@ -1009,7 +1009,7 @@ mod tests {
         );
 
         // Save all initial snapshots
-        repo.save_snapshots(&[
+        repo.save_snapshots().await&[
             calculated_snapshot.clone(),
             manual_snapshot.clone(),
             broker_snapshot.clone(),
@@ -1085,7 +1085,7 @@ mod tests {
             SnapshotSource::CsvImport,
         );
 
-        repo.save_snapshots(&[calculated_snapshot, csv_snapshot.clone()])
+        repo.save_snapshots().await&[calculated_snapshot, csv_snapshot.clone()])
             .await
             .expect("Failed to save initial snapshots");
 
@@ -1136,7 +1136,7 @@ mod tests {
             SnapshotSource::Calculated,
         );
 
-        repo.save_snapshots(&[snapshot1, snapshot2])
+        repo.save_snapshots().await&[snapshot1, snapshot2])
             .await
             .expect("Failed to save snapshots");
 
@@ -1186,7 +1186,7 @@ mod tests {
             SnapshotSource::Calculated,
         );
 
-        repo.save_snapshots(&[broker1.clone(), broker2.clone(), old_calculated])
+        repo.save_snapshots().await&[broker1.clone(), broker2.clone(), old_calculated])
             .await
             .expect("Failed to save initial");
 
@@ -1239,7 +1239,7 @@ mod tests {
             SnapshotSource::Calculated,
         );
 
-        repo.save_snapshots(&[calc1, manual.clone(), calc2])
+        repo.save_snapshots().await&[calc1, manual.clone(), calc2])
             .await
             .expect("Failed to save");
 
@@ -1296,7 +1296,7 @@ mod tests {
             SnapshotSource::Calculated,
         );
 
-        repo.save_snapshots(&[calc1, calc2])
+        repo.save_snapshots().await&[calc1, calc2])
             .await
             .expect("Failed to save");
 
@@ -1334,7 +1334,7 @@ mod tests {
             SnapshotSource::Synthetic,
         );
 
-        repo.save_snapshots(&[calc, manual, broker, synthetic])
+        repo.save_snapshots().await&[calc, manual, broker, synthetic])
             .await
             .expect("Failed to save");
 
@@ -1374,7 +1374,7 @@ mod tests {
             SnapshotSource::Calculated,
         );
 
-        repo.save_snapshots(&[calc]).await.expect("Failed to save");
+        repo.save_snapshots().await&[calc]).await.expect("Failed to save");
 
         let earliest = repo
             .get_earliest_non_calculated_snapshot(account_id)
@@ -1413,7 +1413,7 @@ mod tests {
             SnapshotSource::Calculated,
         );
 
-        repo.save_snapshots(&[
+        repo.save_snapshots().await&[
             later_broker,
             earliest_manual.clone(),
             middle_synthetic,
