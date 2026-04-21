@@ -1,26 +1,10 @@
 //! Database models for market data.
 
 use diesel::prelude::*;
+use whaleit_core::quotes::{MarketDataProviderSetting, ProviderCapabilities};
 
-#[derive(Queryable, Identifiable, Selectable, PartialEq, Debug, Clone)]
-#[diesel(table_name = crate::schema::quotes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct QuoteDB {
-    pub id: String,
-    pub asset_id: String,
-    pub day: String,
-    pub source: String,
-    pub open: Option<String>,
-    pub high: Option<String>,
-    pub low: Option<String>,
-    pub close: String,
-    pub adjclose: Option<String>,
-    pub volume: Option<String>,
-    pub currency: String,
-    pub notes: Option<String>,
-    pub created_at: chrono::NaiveDateTime,
-    pub timestamp: chrono::NaiveDateTime,
-}
+// Re-export QuoteDB from fx module (shared quotes table)
+pub use crate::fx::{NewQuoteDB, QuoteDB};
 
 #[derive(Queryable, Identifiable, Selectable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::quote_sync_state)]
@@ -64,7 +48,28 @@ pub struct MarketDataProviderSettingDB {
     pub config: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+impl From<MarketDataProviderSettingDB> for MarketDataProviderSetting {
+    fn from(db: MarketDataProviderSettingDB) -> Self {
+        let capabilities = ProviderCapabilities::for_provider(&db.id);
+        Self {
+            id: db.id,
+            name: db.name,
+            description: db.description,
+            url: db.url,
+            priority: db.priority,
+            enabled: db.enabled,
+            logo_filename: db.logo_filename,
+            last_synced_at: db.last_synced_at.map(|dt| dt.to_string()),
+            last_sync_status: db.last_sync_status,
+            last_sync_error: db.last_sync_error,
+            capabilities,
+            provider_type: Some(db.provider_type),
+        }
+    }
+}
+
+#[derive(Debug, Clone, AsChangeset)]
+#[diesel(table_name = crate::schema::market_data_providers)]
 pub struct UpdateMarketDataProviderSettingDB {
     pub enabled: Option<bool>,
     pub priority: Option<i32>,
