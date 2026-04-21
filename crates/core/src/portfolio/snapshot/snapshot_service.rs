@@ -57,7 +57,7 @@ pub trait SnapshotServiceTrait: Send + Sync {
 
     /// Retrieves calculated **holdings** keyframe snapshots for a specific account or the total portfolio within a date range.
     /// Does NOT reconstruct daily snapshots; returns only the saved keyframes.
-    fn get_holdings_keyframes(
+    async fn get_holdings_keyframes(
         &self,
         account_id: &str, // Use specific ID, "TOTAL" for portfolio total
         start_date: Option<NaiveDate>,
@@ -67,7 +67,7 @@ pub trait SnapshotServiceTrait: Send + Sync {
     /// Retrieves **holdings** snapshots for a specific account or the total portfolio within a date range,
     /// reconstructing daily snapshots between saved keyframes by carrying forward holdings.
     /// Valuation fields in the returned snapshots will be zero or default.
-    fn get_daily_holdings_snapshots(
+    async fn get_daily_holdings_snapshots(
         &self,
         account_id: &str, // Use specific ID, "TOTAL" for portfolio total
         start_date: Option<NaiveDate>,
@@ -76,7 +76,7 @@ pub trait SnapshotServiceTrait: Send + Sync {
 
     /// Retrieves the most recent calculated **holdings** snapshot for a specific account.
     /// Returns `Ok(None)` when no snapshot exists yet. Valuation fields will be zero or default.
-    fn get_latest_holdings_snapshot(
+    async fn get_latest_holdings_snapshot(
         &self,
         account_id: &str,
     ) -> Result<Option<AccountStateSnapshot>>;
@@ -237,7 +237,7 @@ impl SnapshotService {
         );
 
         let (accounts_to_process, all_activities, min_activity_date, calculation_end_date) =
-            self.fetch_required_data(account_ids_param)?;
+            self.fetch_required_data(account_ids_param).await?;
 
         if accounts_to_process.is_empty() {
             warn!("No accounts found to process.");
@@ -294,7 +294,7 @@ impl SnapshotService {
                 &effective_start_dates,
                 calculation_min_date,
                 calculation_end_date,
-            )?;
+            ).await?;
 
         // Log detailed warnings for any activities that couldn't be processed
         if !calculation_warnings.is_empty() {
@@ -574,7 +574,7 @@ impl SnapshotService {
                     let day_before_since = since.pred_opt().unwrap_or(*since);
                     if let Some(latest_snapshot) = self
                         .snapshot_repository
-                        .get_latest_snapshot_before_date(acc_id, day_before_since)?
+                        .get_latest_snapshot_before_date(acc_id, day_before_since).await?
                     {
                         initial_snapshot_for_acc = Some(latest_snapshot);
                     }
@@ -587,7 +587,7 @@ impl SnapshotService {
                 SnapshotRecalcMode::IncrementalFromLast => {
                     if let Some(latest_snapshot) = self
                         .snapshot_repository
-                        .get_latest_snapshot_before_date(acc_id, calculation_end_date)?
+                        .get_latest_snapshot_before_date(acc_id, calculation_end_date).await?
                     {
                         let snapshot_day = latest_snapshot.snapshot_date;
                         // Resume from the last known keyframe. The calculator expects the in-memory
@@ -665,7 +665,7 @@ impl SnapshotService {
     // Iterates through dates and calculates holdings for each account needing processing (incl. TOTAL).
     // Returns (final_states, keyframes, warnings) - warnings contain info about activities that couldn't be processed.
     #[allow(clippy::type_complexity)]
-    fn calculate_daily_holdings_snapshots(
+    async fn calculate_daily_holdings_snapshots(
         &self,
         accounts_needing_calculation: &AccountsMap, // Actual accounts to process
         activities_by_account_date: &ActivitiesByAccount, // Includes TOTAL key if needed
@@ -747,7 +747,7 @@ impl SnapshotService {
                         previous_holdings_snapshot,
                         &activities_today, // Pass the already fetched activities
                         current_date,
-                    ) {
+                    ).await {
                         Ok(calc_result) => {
                             // Collect any warnings from activity processing
                             if calc_result.has_warnings() {
@@ -824,7 +824,7 @@ impl SnapshotService {
     }
 
     // Renamed and refined from the previous aggregate_total_portfolio_snapshot
-    fn generate_total_portfolio_snapshot_for_date(
+    async fn generate_total_portfolio_snapshot_for_date(
         &self,
         target_date: NaiveDate,
         // Map of Account ID -> AccountStateSnapshot for all *individual* accounts as of target_date
@@ -901,7 +901,7 @@ impl SnapshotService {
                         &pos.currency,
                         base_portfolio_currency,
                         target_date,
-                    ) {
+                    ).await {
                     Ok(converted_pos_cost_basis) => {
                         overall_cost_basis_base_ccy += converted_pos_cost_basis;
                     }
@@ -954,7 +954,7 @@ impl SnapshotService {
                         currency,
                         base_portfolio_currency,
                         target_date,
-                    ) {
+                    ).await {
                     Ok(converted) => cash_total_base += converted,
                     Err(e) => {
                         warn!(
@@ -993,14 +993,14 @@ impl SnapshotService {
         })
     }
 
-    fn internal_transfer_adjustments_by_date_base(
+    async fn internal_transfer_adjustments_by_date_base(
         &self,
         account_ids: &[String],
         base_currency: &str,
     ) -> Result<HashMap<NaiveDate, Decimal>> {
         let activities = self
             .activity_repository
-            .get_activities_by_account_ids(account_ids)?;
+            .get_activities_by_account_ids(account_ids).await?;
 
         let mut grouped: HashMap<String, Vec<Activity>> = HashMap::new();
         for activity in activities {
@@ -1066,7 +1066,7 @@ impl SnapshotService {
                             &activity.currency,
                             base_currency,
                             activity_date,
-                        ) {
+                        ).await {
                         Ok(converted) => converted,
                         Err(e) => {
                             warn!(
@@ -1260,7 +1260,7 @@ impl SnapshotService {
 
         let all_individual_keyframes = self
             .snapshot_repository
-            .get_all_non_archived_account_snapshots(None, None)?;
+            .get_all_non_archived_account_snapshots(None, None).await?;
 
         if all_individual_keyframes.is_empty() {
             warn!("No keyframes found for any non-archived individual accounts. Cannot generate TOTAL snapshots.");
@@ -1317,7 +1317,7 @@ impl SnapshotService {
                 let tomorrow = today.succ_opt().unwrap_or(today);
                 let latest_total_snapshot = self
                     .snapshot_repository
-                    .get_latest_snapshot_before_date(PORTFOLIO_TOTAL_ACCOUNT_ID, tomorrow)?;
+                    .get_latest_snapshot_before_date(PORTFOLIO_TOTAL_ACCOUNT_ID, tomorrow).await?;
 
                 if let Some(ref total_snapshot) = latest_total_snapshot {
                     if let Some(max_date) = max_individual_keyframe_date {
@@ -1374,7 +1374,7 @@ impl SnapshotService {
             .map(|account| account.id.clone())
             .collect();
         let transfer_adjustments_by_date = self
-            .internal_transfer_adjustments_by_date_base(&account_ids, &base_portfolio_currency)?;
+            .internal_transfer_adjustments_by_date_base(&account_ids, &base_portfolio_currency).await?;
 
         // Calculate cumulative transfer adjustment up to (but not including) the first date we're calculating
         let mut cumulative_transfer_adjustment = Decimal::ZERO;
@@ -1410,7 +1410,7 @@ impl SnapshotService {
                     &individual_snapshots_on_or_before_date,
                     &base_portfolio_currency,
                     cumulative_transfer_adjustment,
-                ) {
+                ).await {
                     Ok(total_snapshot) => {
                         total_portfolio_snapshots_to_save.push(total_snapshot);
                     }
@@ -1529,7 +1529,7 @@ impl SnapshotServiceTrait for SnapshotService {
         // Determine start date: Use provided, else earliest snapshot date
         let earliest_snapshot_date = self
             .snapshot_repository
-            .get_earliest_snapshot_date(account_id)?;
+            .get_earliest_snapshot_date(account_id).await?;
 
         let start_date = match start_date_opt {
             Some(date) => date,
@@ -1555,7 +1555,7 @@ impl SnapshotServiceTrait for SnapshotService {
                 let far_future = today + chrono::Duration::days(365);
                 match self
                     .snapshot_repository
-                    .get_latest_snapshot_before_date(account_id, far_future)?
+                    .get_latest_snapshot_before_date(account_id, far_future).await?
                 {
                     Some(latest_snapshot) => latest_snapshot.snapshot_date.max(today),
                     None => today,
@@ -1585,7 +1585,7 @@ impl SnapshotServiceTrait for SnapshotService {
         // Try to get the state from the day before the loop starts.
         let initial_state_result = self
             .snapshot_repository
-            .get_latest_snapshot_before_date(account_id, start_date);
+            .get_latest_snapshot_before_date(account_id, start_date).await;
 
         let mut current_state = match initial_state_result? {
             Some(initial_snapshot) => initial_snapshot,
@@ -1644,7 +1644,7 @@ impl SnapshotServiceTrait for SnapshotService {
         Ok(reconstructed_snapshots)
     }
 
-    fn get_latest_holdings_snapshot(
+    async fn get_latest_holdings_snapshot(
         &self,
         account_id: &str,
     ) -> Result<Option<AccountStateSnapshot>> {
@@ -1653,7 +1653,7 @@ impl SnapshotServiceTrait for SnapshotService {
         let tomorrow = today.succ_opt().unwrap_or(today);
         match self
             .snapshot_repository
-            .get_latest_snapshot_before_date(account_id, tomorrow)?
+            .get_latest_snapshot_before_date(account_id, tomorrow).await?
         {
             Some(snapshot) => Ok(Some(snapshot)),
             None => {
@@ -1756,7 +1756,7 @@ impl SnapshotServiceTrait for SnapshotService {
         // Get count of non-calculated snapshots
         let count = self
             .snapshot_repository
-            .get_non_calculated_snapshot_count(account_id)?;
+            .get_non_calculated_snapshot_count(account_id).await?;
 
         if count >= 2 {
             debug!(
@@ -1777,7 +1777,7 @@ impl SnapshotServiceTrait for SnapshotService {
         // count == 1: Create synthetic snapshot 3 months before the earliest
         let earliest = self
             .snapshot_repository
-            .get_earliest_non_calculated_snapshot(account_id)?;
+            .get_earliest_non_calculated_snapshot(account_id).await?;
 
         let earliest = match earliest {
             Some(s) => s,

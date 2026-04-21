@@ -79,7 +79,7 @@ impl FxService {
                 let inverse_key = ExchangeRate::make_instrument_key(to, from);
                 match self
                     .repository
-                    .get_latest_exchange_rate_by_symbol(&inverse_key)?
+                    .get_latest_exchange_rate_by_symbol(&inverse_key).await?
                 {
                     Some(inverse_rate) => {
                         let direct_rate = ExchangeRate {
@@ -126,7 +126,7 @@ impl FxService {
         )
     }
 
-    fn get_latest_rate_between_normalized(&self, from: &str, to: &str) -> Result<Decimal> {
+    async fn get_latest_rate_between_normalized(&self, from: &str, to: &str) -> Result<Decimal> {
         if from == to {
             return Ok(Decimal::ONE);
         }
@@ -140,11 +140,11 @@ impl FxService {
             }
         }
 
-        let rate = self.load_latest_exchange_rate(from, to)?;
+        let rate = self.load_latest_exchange_rate(from, to).await?;
         Ok(rate.rate)
     }
 
-    fn get_rate_for_date_between_normalized(
+    async fn get_rate_for_date_between_normalized(
         &self,
         from: &str,
         to: &str,
@@ -162,7 +162,7 @@ impl FxService {
             }
         }
 
-        let latest_rate = self.load_latest_exchange_rate(from, to)?;
+        let latest_rate = self.load_latest_exchange_rate(from, to).await?;
         let fallback_date = latest_rate.timestamp.date_naive();
 
         log::warn!(
@@ -180,7 +180,7 @@ impl FxService {
 #[async_trait]
 impl FxServiceTrait for FxService {
     async fn initialize(&self) -> Result<()> {
-        self.initialize_converter()?;
+        self.initialize_converter().await?;
         Ok(())
     }
 
@@ -261,7 +261,7 @@ impl FxServiceTrait for FxService {
         }
 
         let base_rate =
-            match self.get_latest_rate_between_normalized(normalized_from, normalized_to) {
+            match self.get_latest_rate_between_normalized(normalized_from, normalized_to).await {
                 Ok(rate) => rate,
                 Err(e) => {
                     log::error!(
@@ -306,7 +306,7 @@ impl FxServiceTrait for FxService {
         }
 
         let base_rate =
-            self.get_rate_for_date_between_normalized(normalized_from, normalized_to, date)?;
+            self.get_rate_for_date_between_normalized(normalized_from, normalized_to, date).await?;
 
         Ok(source_multiplier * base_rate * target_multiplier)
     }
@@ -321,7 +321,7 @@ impl FxServiceTrait for FxService {
             return Ok(amount);
         }
 
-        let rate = self.get_latest_exchange_rate(from_currency, to_currency)?;
+        let rate = self.get_latest_exchange_rate(from_currency, to_currency).await?;
         Ok(amount * rate)
     }
 
@@ -336,7 +336,7 @@ impl FxServiceTrait for FxService {
             return Ok(amount);
         }
 
-        let rate = self.get_exchange_rate_for_date(from_currency, to_currency, date)?;
+        let rate = self.get_exchange_rate_for_date(from_currency, to_currency, date).await?;
         Ok(amount * rate)
     }
 
@@ -348,7 +348,7 @@ impl FxServiceTrait for FxService {
         self.repository.delete_exchange_rate(rate_id).await?;
 
         // Reinitialize the converter with updated rates
-        self.initialize_converter()?;
+        self.initialize_converter().await?;
 
         Ok(())
     }
@@ -373,6 +373,7 @@ impl FxServiceTrait for FxService {
 
         let existing_rate = self
             .load_latest_exchange_rate(normalized_from, normalized_to)
+            .await
             .ok();
 
         if existing_rate.is_none() {
@@ -408,6 +409,7 @@ impl FxServiceTrait for FxService {
 
         let existing_rate = self
             .load_latest_exchange_rate(normalized_from, normalized_to)
+            .await
             .ok();
 
         if existing_rate.is_none() {

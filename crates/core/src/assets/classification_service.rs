@@ -51,10 +51,11 @@ impl AssetClassificationService {
     }
 
     /// Get all classifications for an asset
-    pub fn get_classifications(&self, asset_id: &str) -> Result<AssetClassifications, String> {
+    pub async fn get_classifications(&self, asset_id: &str) -> Result<AssetClassifications, String> {
         let assignments = self
             .taxonomy_service
             .get_asset_assignments(asset_id)
+            .await
             .map_err(|e| e.to_string())?;
 
         let mut classifications = AssetClassifications::default();
@@ -64,6 +65,7 @@ impl AssetClassificationService {
             let taxonomy_with_cats = self
                 .taxonomy_service
                 .get_taxonomy(&assignment.taxonomy_id)
+                .await
                 .map_err(|e| e.to_string())?;
 
             if let Some(twc) = taxonomy_with_cats {

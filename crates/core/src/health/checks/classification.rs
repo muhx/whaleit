@@ -84,6 +84,7 @@ pub async fn gather_legacy_migration_status(
     // Get GICS and Regions taxonomy info
     let gics_taxonomy = taxonomy_service
         .get_taxonomy("industries_gics")
+        .await
         .ok()
         .flatten();
 
@@ -116,6 +117,7 @@ pub async fn gather_legacy_migration_status(
         // Check if asset has taxonomy assignments for GICS or regions
         let assignments = taxonomy_service
             .get_asset_assignments(&asset.id)
+            .await
             .unwrap_or_default();
 
         let has_gics_assignment = gics_taxonomy

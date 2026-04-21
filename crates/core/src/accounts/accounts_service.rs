@@ -148,12 +148,12 @@ impl AccountServiceTrait for AccountService {
 
     /// Lists only active accounts.
     async fn get_active_accounts(&self) -> Result<Vec<Account>> {
-        self.list_accounts(Some(true), None, None)
+        self.list_accounts(Some(true), None, None).await
     }
 
     /// Retrieves multiple accounts by their IDs.
     async fn get_accounts_by_ids(&self, account_ids: &[String]) -> Result<Vec<Account>> {
-        self.list_accounts(None, None, Some(account_ids))
+        self.list_accounts(None, None, Some(account_ids)).await
     }
 
     /// Returns all non-archived accounts (for aggregates/history)
