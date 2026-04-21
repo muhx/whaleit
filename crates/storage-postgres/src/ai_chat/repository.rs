@@ -283,7 +283,8 @@ impl ChatRepositoryTrait for PgAiChatRepository {
                 if let Some(search_str) =
                     search.as_deref().map(str::trim).filter(|s| !s.is_empty())
                 {
-                    let search_pattern = format!("%{}%", search_str);
+                    let escaped = search_str.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_");
+                    let search_pattern = format!("%{}%", escaped);
                     query = query.filter(ai_threads::title.like(search_pattern));
                 }
 
