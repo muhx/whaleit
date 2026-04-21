@@ -13,7 +13,7 @@ WhaleIt evolves Whaleit from an investment-only tracker into a full personal fin
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Codebase Health & Rebrand** - WhaleIt identity and clean architecture for expansion
-- [ ] **Phase 2: Dual Database Engine** - PostgreSQL alongside SQLite through shared repository traits
+- [x] **Phase 2: Dual Database Engine** - PostgreSQL alongside SQLite through shared repository traits (completed 2026-04-21)
 - [ ] **Phase 3: Bank Accounts & Credit Cards** - All account types in a unified view
 - [ ] **Phase 4: Transaction Core** - Record, import, search, and categorize transactions
 - [ ] **Phase 5: Budgeting** - Category-based and percentage-based spending budgets
@@ -51,12 +51,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 6 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Async trait conversion, diesel upgrade, storage-common crate
-- [ ] 02-02-PLAN.md — storage-postgres crate with all repositories and PG migrations
-- [ ] 02-03-PLAN.md — Server wiring with postgres feature flag, Docker Compose PG service
-- [ ] 02-04-PLAN.md — Parity tests and CI matrix for both engines
-- [ ] 02-05-PLAN.md — [GAP] Fix server PG compilation (sync module, missing trait impls)
-- [ ] 02-06-PLAN.md — [GAP] Complete FX, market_data, portfolio PG repo implementations
+- [x] 02-01-PLAN.md — Async trait conversion, diesel upgrade, storage-common crate
+- [x] 02-02-PLAN.md — storage-postgres crate with all repositories and PG migrations
+- [x] 02-03-PLAN.md — Server wiring with postgres feature flag, Docker Compose PG service
+- [x] 02-04-PLAN.md — Parity tests and CI matrix for both engines
+- [x] 02-05-PLAN.md — [GAP] Fix server PG compilation (sync module, missing trait impls)
+- [x] 02-06-PLAN.md — [GAP] Complete FX, market_data, portfolio PG repo implementations
 
 ### Phase 3: Bank Accounts & Credit Cards
 **Goal**: Users can manage checking, savings, and credit card accounts alongside existing investment accounts
@@ -191,7 +191,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5/6/7/8/11/12 (Phase 4 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Codebase Health & Rebrand | 0/? | Not started | - |
-| 2. Dual Database Engine | 0/? | Not started | - |
+| 2. Dual Database Engine | 6/6 | Complete   | 2026-04-21 |
 | 3. Bank Accounts & Credit Cards | 0/? | Not started | - |
 | 4. Transaction Core | 0/? | Not started | - |
 | 5. Budgeting | 0/? | Not started | - |

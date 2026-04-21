@@ -10,10 +10,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Database Engine
 
 - [ ] **DB-01**: Dual database engine runs SQLite for desktop mode and PostgreSQL for web mode through shared repository traits
-- [ ] **DB-02**: PostgreSQL crate (`crates/storage-postgres/`) implements all existing repository traits using diesel-async + deadpool
+- [x] **DB-02**: PostgreSQL crate (`crates/storage-postgres/`) implements all existing repository traits using diesel-async + deadpool
 - [ ] **DB-03**: Separate migration directories per database dialect (SQLite migrations, PostgreSQL migrations)
 - [ ] **DB-04**: Runtime database selection based on build target — desktop auto-selects SQLite, web auto-selects PostgreSQL
-- [ ] **DB-05**: Unified data model supports bank accounts, credit cards, transactions, and investments through a single schema abstraction
+- [x] **DB-05**: Unified data model supports bank accounts, credit cards, transactions, and investments through a single schema abstraction
 
 ### Accounts
 
@@ -165,10 +165,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BRAND-05 | Phase 1: Codebase Health & Rebrand | Pending |
 | BRAND-06 | Phase 1: Codebase Health & Rebrand | Pending |
 | DB-01 | Phase 2: Dual Database Engine | Pending |
-| DB-02 | Phase 2: Dual Database Engine | Pending |
+| DB-02 | Phase 2: Dual Database Engine | Complete |
 | DB-03 | Phase 2: Dual Database Engine | Pending |
 | DB-04 | Phase 2: Dual Database Engine | Pending |
-| DB-05 | Phase 2: Dual Database Engine | Pending |
+| DB-05 | Phase 2: Dual Database Engine | Complete |
 | ACCT-01 | Phase 3: Bank Accounts & Credit Cards | Pending |
 | ACCT-02 | Phase 3: Bank Accounts & Credit Cards | Pending |
 | ACCT-03 | Phase 3: Bank Accounts & Credit Cards | Pending |
