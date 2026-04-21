@@ -64,7 +64,10 @@ use whaleit_storage_postgres::{
     custom_provider::PgCustomProviderRepository, fx::PgFxRepository, goals::PgGoalRepository,
     health::PgHealthDismissalRepository, limits::PgContributionLimitRepository,
     market_data::{PgMarketDataRepository, PgQuoteSyncStateRepository},
-    portfolio::{snapshot::PgSnapshotRepository, valuation::PgValuationRepository},
+    // Type aliases for compatibility (re-exported from lib.rs) used in AppState struct
+    AppSyncRepository, SnapshotRepository,
+    // Concrete types for instantiation
+    portfolio::{PgSnapshotRepository, PgValuationRepository},
     settings::PgSettingsRepository,
     sync::{PgAppSyncRepository, PgBrokerSyncStateRepository, PgImportRunRepository, PgPlatformRepository},
     taxonomies::PgTaxonomyRepository,
