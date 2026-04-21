@@ -44,7 +44,7 @@ impl AiThreadDB {
         Self {
             id,
             title,
-            created_at: now.clone(),
+            created_at: now,
             updated_at: now,
             config_snapshot: None,
             is_pinned: false,
