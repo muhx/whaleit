@@ -61,6 +61,10 @@ Both SQLite and PostgreSQL work as storage backends through shared repository tr
 ### ID Strategy
 - **D-24:** UUID v7 as primary key for all 34 tables in both engines. Replaces all INTEGER PRIMARY KEY AUTOINCREMENT with UUID v7. Domain models use `uuid::Uuid` type throughout.
 - **D-25:** Both engines migrated to UUID v7 in Phase 2. SQLite stores UUIDs as TEXT, PostgreSQL uses native `uuid` type. All foreign keys updated to reference UUID columns.
+  > **Implementation note:** IDs are stored as TEXT in both engines (not native UUID in PG).
+  > This was an intentional implementation decision documented in 02-02-SUMMARY.md:
+  > "Core domain models use String for all IDs. Native PG UUID columns would require
+  > conversion at every repository boundary." This deviation from D-25 is accepted.
 
 ### OpenCode's Discretion
 - Exact Diesel model struct organization per crate
