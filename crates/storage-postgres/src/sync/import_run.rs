@@ -13,6 +13,17 @@ use crate::db::PgPool;
 use crate::errors::IntoCore;
 use crate::schema::import_runs;
 
+/// Safely extract the string representation of a serde-serialized enum value.
+///
+/// This avoids the fragile `serde_json::to_string(...).unwrap_or_default().trim_matches('"')`
+/// pattern which can silently produce empty strings or incorrectly strip embedded quotes.
+fn enum_to_db_string<T: serde::Serialize>(val: &T) -> String {
+    serde_json::to_string(val)
+        .ok()
+        .and_then(|s| serde_json::from_str::<String>(&s).ok())
+        .unwrap_or_default()
+}
+
 pub struct PgImportRunRepository {
     pool: Arc<PgPool>,
 }
@@ -49,12 +60,12 @@ impl whaleit_core::activities::ImportRunRepositoryTrait for PgImportRunRepositor
                 import_runs::id.eq(&import_run.id),
                 import_runs::account_id.eq(&import_run.account_id),
                 import_runs::source_system.eq(&import_run.source_system),
-                import_runs::run_type.eq(serde_json::to_string(&import_run.run_type).unwrap_or_default().trim_matches('"')),
-                import_runs::mode.eq(serde_json::to_string(&import_run.mode).unwrap_or_default().trim_matches('"')),
-                import_runs::status.eq(serde_json::to_string(&import_run.status).unwrap_or_default().trim_matches('"')),
+                import_runs::run_type.eq(enum_to_db_string(&import_run.run_type)),
+                import_runs::mode.eq(enum_to_db_string(&import_run.mode)),
+                import_runs::status.eq(enum_to_db_string(&import_run.status)),
                 import_runs::started_at.eq(now),
                 import_runs::finished_at.eq::<Option<chrono::NaiveDateTime>>(None),
-                import_runs::review_mode.eq(serde_json::to_string(&import_run.review_mode).unwrap_or_default().trim_matches('"')),
+                import_runs::review_mode.eq(enum_to_db_string(&import_run.review_mode)),
                 import_runs::applied_at.eq::<Option<chrono::NaiveDateTime>>(None),
                 import_runs::checkpoint_in.eq::<Option<String>>(None),
                 import_runs::checkpoint_out.eq::<Option<String>>(None),
@@ -76,7 +87,7 @@ impl whaleit_core::activities::ImportRunRepositoryTrait for PgImportRunRepositor
         import_run: whaleit_core::activities::ImportRun,
     ) -> whaleit_core::Result<whaleit_core::activities::ImportRun> {
         let now = chrono::Utc::now().naive_utc();
-        let status_str = serde_json::to_string(&import_run.status).unwrap_or_default().trim_matches('"').to_string();
+        let status_str = enum_to_db_string(&import_run.status);
         let error = import_run.error.clone();
         let summary_json = import_run
             .summary
@@ -159,12 +170,12 @@ impl whaleit_connect::ImportRunRepositoryTrait for PgImportRunRepository {
                 import_runs::id.eq(&import_run.id),
                 import_runs::account_id.eq(&import_run.account_id),
                 import_runs::source_system.eq(&import_run.source_system),
-                import_runs::run_type.eq(serde_json::to_string(&import_run.run_type).unwrap_or_default().trim_matches('"')),
-                import_runs::mode.eq(serde_json::to_string(&import_run.mode).unwrap_or_default().trim_matches('"')),
-                import_runs::status.eq(serde_json::to_string(&import_run.status).unwrap_or_default().trim_matches('"')),
+                import_runs::run_type.eq(enum_to_db_string(&import_run.run_type)),
+                import_runs::mode.eq(enum_to_db_string(&import_run.mode)),
+                import_runs::status.eq(enum_to_db_string(&import_run.status)),
                 import_runs::started_at.eq(now),
                 import_runs::finished_at.eq::<Option<chrono::NaiveDateTime>>(None),
-                import_runs::review_mode.eq(serde_json::to_string(&import_run.review_mode).unwrap_or_default().trim_matches('"')),
+                import_runs::review_mode.eq(enum_to_db_string(&import_run.review_mode)),
                 import_runs::applied_at.eq::<Option<chrono::NaiveDateTime>>(None),
                 import_runs::checkpoint_in.eq(checkpoint_in_json),
                 import_runs::checkpoint_out.eq(checkpoint_out_json),
@@ -186,7 +197,7 @@ impl whaleit_connect::ImportRunRepositoryTrait for PgImportRunRepository {
         import_run: whaleit_connect::ImportRun,
     ) -> whaleit_core::Result<whaleit_connect::ImportRun> {
         let now = chrono::Utc::now().naive_utc();
-        let status_str = serde_json::to_string(&import_run.status).unwrap_or_default().trim_matches('"').to_string();
+        let status_str = enum_to_db_string(&import_run.status);
         let error = import_run.error.clone();
         let id = import_run.id.clone();
 
