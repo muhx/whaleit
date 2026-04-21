@@ -214,12 +214,14 @@ impl ValuationRepositoryTrait for PgValuationRepository {
         let mut conn = self.pool.get().await.map_err(StoragePgError::from)?;
 
         // PG: use DISTINCT ON to get the earliest negative per account
+        // Guard against non-numeric total_value with regex before casting
         let sql = format!(
             "SELECT DISTINCT ON (account_id) \
              account_id, valuation_date AS first_negative_date, \
              cash_balance, total_value, account_currency \
              FROM daily_account_valuation \
-             WHERE account_id = ANY($1) AND total_value::numeric < 0 \
+             WHERE account_id = ANY($1) \
+             AND total_value ~ '^-?\\d' AND total_value::numeric < 0 \
              ORDER BY account_id, valuation_date ASC"
         );
 
