@@ -1,8 +1,7 @@
 //! PostgreSQL storage implementation for Whaleit.
 //!
 //! This crate provides all database-related functionality using Diesel ORM with PostgreSQL
-//! via diesel-async. It implements the same repository traits as `whaleit-storage-sqlite`
-//! but uses native PostgreSQL features:
+//! via diesel-async, using native PostgreSQL features:
 //! - Async connection pooling via deadpool + diesel-async
 //! - Native UUID primary keys (UUID v7)
 //! - Native boolean and timestamptz types
@@ -15,11 +14,9 @@
 //!       │                      │
 //!       └──────────┬───────────┘
 //!                  │
-//!          ┌───────┴───────┐
-//!          │               │
-//!   storage-sqlite   storage-postgres (this crate)
-//!          │               │
-//!       SQLite DB     PostgreSQL DB
+//!          storage-postgres (this crate)
+//!                  │
+//!           PostgreSQL DB
 //! ```
 
 pub mod db;
@@ -41,15 +38,21 @@ pub mod portfolio;
 pub mod settings;
 pub mod sync;
 pub mod taxonomies;
+pub mod users;
 
 // Re-export repository types for compatibility
-pub use assets::{AlternativeAssetRepository, PgAlternativeAssetRepository, PgAssetRepository};
-pub use portfolio::{PgSnapshotRepository, PgValuationRepository, SnapshotRepository, ValuationRepository};
-pub use sync::{AppSyncRepository, ImportRunRepository, PlatformRepository, BrokerSyncStateRepository};
 pub use accounts::PgAccountRepository;
 pub use activities::PgActivityRepository;
+pub use assets::{AlternativeAssetRepository, PgAlternativeAssetRepository, PgAssetRepository};
 pub use fx::PgFxRepository;
+pub use portfolio::{
+    PgSnapshotRepository, PgValuationRepository, SnapshotRepository, ValuationRepository,
+};
 pub use settings::PgSettingsRepository;
+pub use users::PgUserRepository;
+pub use sync::{
+    AppSyncRepository, BrokerSyncStateRepository, ImportRunRepository, PlatformRepository,
+};
 
 // Re-export database utilities
 pub use db::{create_pool, init, run_migrations, PgPool};

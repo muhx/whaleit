@@ -2,7 +2,7 @@
 //!
 //! This crate contains the core business logic for Whaleit.
 //! It is database-agnostic and defines traits that are implemented
-//! by the `storage-sqlite` crate.
+//! by the `storage-postgres` crate.
 
 pub mod accounts;
 pub mod activities;
@@ -22,6 +22,7 @@ pub mod secrets;
 pub mod settings;
 pub mod sync;
 pub mod taxonomies;
+pub mod users;
 pub mod utils;
 
 // Re-export common types from asset and portfolio modules

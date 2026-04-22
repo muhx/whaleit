@@ -3,6 +3,7 @@ mod api;
 mod auth;
 mod config;
 mod domain_events;
+mod email;
 mod error;
 mod events;
 mod features;

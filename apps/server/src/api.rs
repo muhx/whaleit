@@ -24,7 +24,9 @@ mod addons;
 mod ai_chat;
 mod ai_providers;
 mod alternative_assets;
+mod api_keys;
 mod assets;
+mod auth_handlers;
 #[cfg(any(feature = "connect-sync", feature = "device-sync"))]
 pub mod connect;
 mod custom_providers;
@@ -106,7 +108,8 @@ pub fn app_router(state: Arc<AppState>, config: &Config) -> Router {
         .merge(ai_providers::router())
         .merge(ai_chat::router())
         .merge(health::router())
-        .merge(custom_providers::router());
+        .merge(custom_providers::router())
+        .merge(api_keys::router());
 
     #[cfg(feature = "device-sync")]
     {
@@ -144,6 +147,13 @@ pub fn app_router(state: Arc<AppState>, config: &Config) -> Router {
         .finish()
         .expect("valid governor config");
 
+    // Rate limit register: 5 requests per 60 seconds per peer IP
+    let register_governor = GovernorConfigBuilder::default()
+        .per_second(12)
+        .burst_size(5)
+        .finish()
+        .expect("valid governor config");
+
     let api = Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
@@ -151,6 +161,19 @@ pub fn app_router(state: Arc<AppState>, config: &Config) -> Router {
         .route(
             "/auth/login",
             axum::routing::post(auth::login).layer(GovernorLayer::new(login_governor)),
+        )
+        .route(
+            "/auth/register",
+            axum::routing::post(auth_handlers::register).layer(GovernorLayer::new(register_governor)),
+        )
+        .route("/auth/verify", axum::routing::post(auth_handlers::verify_email))
+        .route(
+            "/auth/forgot-password",
+            axum::routing::post(auth_handlers::forgot_password),
+        )
+        .route(
+            "/auth/reset-password",
+            axum::routing::post(auth_handlers::reset_password),
         )
         .route("/auth/logout", axum::routing::post(auth::logout))
         .route("/auth/me", get(auth::auth_me))

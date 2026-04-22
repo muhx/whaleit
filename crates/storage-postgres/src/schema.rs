@@ -459,6 +459,45 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    users (id) {
+        id -> Text,
+        email -> Text,
+        password_hash -> Text,
+        display_name -> Nullable<Text>,
+        email_verified -> Bool,
+        is_active -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    verification_tokens (id) {
+        id -> Text,
+        user_id -> Text,
+        token_hash -> Text,
+        token_type -> Text,
+        expires_at -> Timestamp,
+        used_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    api_keys (id) {
+        id -> Text,
+        user_id -> Text,
+        key_prefix -> Text,
+        key_hash -> Text,
+        name -> Text,
+        last_used_at -> Nullable<Timestamp>,
+        expires_at -> Nullable<Timestamp>,
+        is_active -> Bool,
+        created_at -> Timestamp,
+    }
+}
+
 diesel::joinable!(accounts -> platforms (platform_id));
 diesel::joinable!(activities -> accounts (account_id));
 diesel::joinable!(activities -> assets (asset_id));
@@ -474,8 +513,11 @@ diesel::joinable!(import_runs -> accounts (account_id));
 diesel::joinable!(quotes -> assets (asset_id));
 diesel::joinable!(taxonomy_categories -> taxonomies (taxonomy_id));
 diesel::joinable!(import_account_templates -> import_templates (template_id));
+diesel::joinable!(verification_tokens -> users (user_id));
+diesel::joinable!(api_keys -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    api_keys,
     import_account_templates,
     accounts,
     activities,
@@ -508,4 +550,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     sync_table_state,
     taxonomies,
     taxonomy_categories,
+    users,
+    verification_tokens,
 );
