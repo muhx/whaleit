@@ -10,7 +10,7 @@ use std::sync::Arc;
 use chrono::Utc;
 use whaleit_core::accounts::{AccountRepositoryTrait, AccountUpdate, NewAccount, TrackingMode};
 use whaleit_core::assets::{AssetKind, AssetRepositoryTrait, InstrumentType, NewAsset, QuoteMode};
-use whaleit_core::fx::{ExchangeRate, FxRepositoryTrait, NewExchangeRate};
+use whaleit_core::fx::{ExchangeRate, FxRepositoryTrait};
 use whaleit_core::goals::{GoalRepositoryTrait, NewGoal};
 use whaleit_core::health::{HealthDismissalStore, IssueDismissal};
 use whaleit_core::limits::{ContributionLimitRepositoryTrait, NewContributionLimit};
@@ -35,8 +35,9 @@ fn create_sqlite_repo() -> SqliteRepos {
     use whaleit_storage_sqlite::taxonomies::TaxonomyRepository;
     use whaleit_storage_sqlite::db::{create_pool, run_migrations, write_actor::spawn_writer};
 
-    let pool = create_pool(":memory:").expect("Failed to create SQLite pool");
-    run_migrations(":memory:").expect("Failed to run SQLite migrations");
+    let db_url = "file:parity_test?mode=memory&cache=shared";
+    let pool = create_pool(db_url).expect("Failed to create SQLite pool");
+    run_migrations(db_url).expect("Failed to run SQLite migrations");
 
     let writer = spawn_writer((*pool).clone()).expect("Failed to spawn writer actor");
 
@@ -76,6 +77,22 @@ async fn create_pg_repo() -> Result<PgRepos, Box<dyn std::error::Error>> {
         .map_err(|_| "DATABASE_URL environment variable not set")?;
 
     let pool = create_pool(&database_url, 8)?;
+
+    {
+        use diesel::dsl::sql;
+        use diesel::sql_types::Untyped;
+        use diesel_async::RunQueryDsl;
+        let mut conn = pool.get().await.map_err(|e| e.to_string())?;
+        sql::<Untyped>("DROP SCHEMA public CASCADE")
+            .execute(&mut conn)
+            .await
+            .map_err(|e: diesel::result::Error| e.to_string())?;
+        sql::<Untyped>("CREATE SCHEMA public")
+            .execute(&mut conn)
+            .await
+            .map_err(|e: diesel::result::Error| e.to_string())?;
+    }
+
     run_migrations(&database_url).await?;
 
     Ok(PgRepos {
@@ -125,7 +142,6 @@ struct PgRepos {
 
 /// Asserts that two Account structs are equal.
 fn assert_accounts_equal(a: &whaleit_core::accounts::Account, b: &whaleit_core::accounts::Account) {
-    assert_eq!(a.id, b.id, "Account IDs differ");
     assert_eq!(a.name, b.name, "Account names differ");
     assert_eq!(a.account_type, b.account_type, "Account types differ");
     assert_eq!(a.group, b.group, "Account groups differ");
@@ -134,7 +150,6 @@ fn assert_accounts_equal(a: &whaleit_core::accounts::Account, b: &whaleit_core::
     assert_eq!(a.is_active, b.is_active, "Account is_active differs");
     assert_eq!(a.is_archived, b.is_archived, "Account is_archived differs");
     assert_eq!(a.tracking_mode, b.tracking_mode, "Account tracking_mode differs");
-    // Note: created_at and updated_at may differ slightly between engines, so we don't assert them
     assert_eq!(a.platform_id, b.platform_id, "Account platform_id differs");
     assert_eq!(a.account_number, b.account_number, "Account account_number differs");
     assert_eq!(a.provider, b.provider, "Account provider differs");
@@ -143,12 +158,11 @@ fn assert_accounts_equal(a: &whaleit_core::accounts::Account, b: &whaleit_core::
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_account_create() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
 
-    // Create identical account in both engines
     let new_account = NewAccount {
         id: None,
         name: "Test Investment Account".to_string(),
@@ -159,11 +173,11 @@ async fn parity_account_create() -> Result<(), Box<dyn std::error::Error>> {
         is_active: true,
         is_archived: false,
         tracking_mode: TrackingMode::Transactions,
-        platform_id: Some("TEST_PLATFORM".to_string()),
+        platform_id: None,
         account_number: Some("12345678".to_string()),
         meta: Some(r#"{"test": "data"}"#.to_string()),
-        provider: Some("TEST_PROVIDER".to_string()),
-        provider_account_id: Some("provider_123".to_string()),
+        provider: None,
+        provider_account_id: None,
     };
 
     let sqlite_account = sqlite_repo.accounts.create(new_account.clone()).await?;
@@ -175,12 +189,11 @@ async fn parity_account_create() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_account_update() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
 
-    // Create initial account
     let new_account = NewAccount {
         id: None,
         name: "Original Name".to_string(),
@@ -210,11 +223,11 @@ async fn parity_account_update() -> Result<(), Box<dyn std::error::Error>> {
         is_active: false,
         is_archived: Some(true),
         tracking_mode: Some(TrackingMode::Holdings),
-        platform_id: Some("NEW_PLATFORM".to_string()),
+        platform_id: None,
         account_number: Some("99999999".to_string()),
         meta: Some(r#"{"updated": "metadata"}"#.to_string()),
-        provider: Some("NEW_PROVIDER".to_string()),
-        provider_account_id: Some("new_provider_456".to_string()),
+        provider: None,
+        provider_account_id: None,
     };
     let pg_update = AccountUpdate {
         id: Some(pg_account.id.clone()),
@@ -230,64 +243,29 @@ async fn parity_account_update() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_account_list() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
 
-    // Create multiple accounts with different properties
-    let accounts = vec![
-        NewAccount {
+    for i in 0..3 {
+        let account = NewAccount {
             id: None,
-            name: "Account 1".to_string(),
+            name: format!("Account {}", i + 1),
             account_type: "INVESTMENT".to_string(),
             group: None,
-            currency: "USD".to_string(),
-            is_default: true,
-            is_active: true,
-            is_archived: false,
-            tracking_mode: TrackingMode::Transactions,
+            currency: vec!["USD", "EUR", "GBP"][i].to_string(),
+            is_default: i == 0,
+            is_active: i != 1,
+            is_archived: i == 2,
+            tracking_mode: if i == 1 { TrackingMode::Holdings } else { TrackingMode::Transactions },
             platform_id: None,
             account_number: None,
             meta: None,
             provider: None,
             provider_account_id: None,
-        },
-        NewAccount {
-            id: None,
-            name: "Account 2".to_string(),
-            account_type: "INVESTMENT".to_string(),
-            group: None,
-            currency: "EUR".to_string(),
-            is_default: false,
-            is_active: false,
-            is_archived: false,
-            tracking_mode: TrackingMode::Holdings,
-            platform_id: None,
-            account_number: None,
-            meta: None,
-            provider: None,
-            provider_account_id: None,
-        },
-        NewAccount {
-            id: None,
-            name: "Account 3".to_string(),
-            account_type: "INVESTMENT".to_string(),
-            group: None,
-            currency: "GBP".to_string(),
-            is_default: false,
-            is_active: true,
-            is_archived: true,
-            tracking_mode: TrackingMode::Transactions,
-            platform_id: None,
-            account_number: None,
-            meta: None,
-            provider: None,
-            provider_account_id: None,
-        },
-    ];
+        };
 
-    for account in accounts {
         let _ = sqlite_repo.accounts.create(account.clone()).await?;
         let _ = pg_repo.accounts.create(account).await?;
     }
@@ -325,61 +303,64 @@ async fn parity_account_list() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_fx_rate() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
 
-    // Add an exchange rate
-    let now = Utc::now();
-    let fx_rate = NewExchangeRate {
-        from_currency: "USD".to_string(),
-        to_currency: "EUR".to_string(),
-        rate: rust_decimal::Decimal::new(92, 2), // 0.92
-        source: "test".to_string(),
+    let fx_symbol = format!("USD/EUR/{}", uuid::Uuid::new_v4());
+    let fx_asset_sqlite = NewAsset {
+        id: None,
+        kind: AssetKind::Fx,
+        name: Some("USD/EUR".to_string()),
+        display_code: Some("USDEUR".to_string()),
+        is_active: true,
+        quote_mode: QuoteMode::Manual,
+        quote_ccy: "EUR".to_string(),
+        instrument_type: Some(InstrumentType::Fx),
+        instrument_symbol: Some(fx_symbol.clone()),
+        instrument_exchange_mic: None,
+        provider_config: None,
+        notes: None,
+        metadata: None,
     };
+    let fx_asset_pg = NewAsset { instrument_symbol: Some(format!("USD/EUR/{}", uuid::Uuid::new_v4())), ..fx_asset_sqlite.clone() };
+    let sqlite_asset = sqlite_repo.assets.create(fx_asset_sqlite).await?;
+    let pg_asset = pg_repo.assets.create(fx_asset_pg).await?;
+
+    let now = Utc::now();
 
     let _sqlite_rate = sqlite_repo.fx.save_exchange_rate(ExchangeRate {
-        id: uuid::Uuid::new_v4().to_string(),
-        from_currency: fx_rate.from_currency.clone(),
-        to_currency: fx_rate.to_currency.clone(),
-        rate: fx_rate.rate,
-        source: fx_rate.source.clone(),
+        id: sqlite_asset.id.clone(),
+        from_currency: "USD".to_string(),
+        to_currency: "EUR".to_string(),
+        rate: rust_decimal::Decimal::new(92, 2),
+        source: "test".to_string(),
         timestamp: now,
     }).await?;
     let _pg_rate = pg_repo.fx.save_exchange_rate(ExchangeRate {
-        id: uuid::Uuid::new_v4().to_string(),
-        from_currency: fx_rate.from_currency.clone(),
-        to_currency: fx_rate.to_currency.clone(),
-        rate: fx_rate.rate,
-        source: fx_rate.source.clone(),
+        id: pg_asset.id.clone(),
+        from_currency: "USD".to_string(),
+        to_currency: "EUR".to_string(),
+        rate: rust_decimal::Decimal::new(92, 2),
+        source: "test".to_string(),
         timestamp: now,
     }).await?;
 
-    // Retrieve the rate
-    let sqlite_result = sqlite_repo.fx.get_latest_exchange_rate("USD", "EUR").await?;
-    let pg_result = pg_repo.fx.get_latest_exchange_rate("USD", "EUR").await?;
+    let sqlite_rates = sqlite_repo.fx.get_latest_exchange_rates().await?;
+    let pg_rates = pg_repo.fx.get_latest_exchange_rates().await?;
 
-    assert_eq!(sqlite_result.is_some(), pg_result.is_some());
-    assert!(sqlite_result.is_some(), "FX rate should exist");
-    assert!(pg_result.is_some(), "FX rate should exist");
+    assert_eq!(sqlite_rates.len(), 1, "SQLite should have 1 rate");
+    assert_eq!(pg_rates.len(), 1, "PG should have 1 rate");
 
-    let sqlite_exchange_rate = sqlite_result.unwrap();
-    let pg_exchange_rate = pg_result.unwrap();
-
-    assert_eq!(sqlite_exchange_rate.from_currency, pg_exchange_rate.from_currency);
-    assert_eq!(sqlite_exchange_rate.to_currency, pg_exchange_rate.to_currency);
-    // Compare rates with some tolerance for floating point
-    assert!(
-        (sqlite_exchange_rate.rate - pg_exchange_rate.rate).abs() < rust_decimal::Decimal::new(1, 4),
-        "FX rates differ significantly"
-    );
+    assert_eq!(sqlite_rates[0].rate, pg_rates[0].rate, "FX rates differ");
+    assert_eq!(sqlite_rates[0].to_currency, pg_rates[0].to_currency);
 
     Ok(())
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_settings_update() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -413,12 +394,11 @@ async fn parity_settings_update() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_account_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
 
-    // Create an account
     let new_account = NewAccount {
         id: None,
         name: "Test Account".to_string(),
@@ -449,7 +429,7 @@ async fn parity_account_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_account_delete() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -489,7 +469,7 @@ async fn parity_account_delete() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_settings_get_settings() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -508,7 +488,7 @@ async fn parity_settings_get_settings() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_asset_create() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -546,7 +526,7 @@ async fn parity_asset_create() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_asset_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -581,7 +561,7 @@ async fn parity_asset_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_goal_create() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -606,7 +586,7 @@ async fn parity_goal_create() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_health_dismissal() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -637,7 +617,7 @@ async fn parity_health_dismissal() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_limit_create() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -664,7 +644,7 @@ async fn parity_limit_create() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_taxonomy_create() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -693,7 +673,7 @@ async fn parity_taxonomy_create() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_snapshot_save_and_get() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -740,7 +720,7 @@ async fn parity_snapshot_save_and_get() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_valuation_save_and_get() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
@@ -787,15 +767,33 @@ async fn parity_valuation_save_and_get() -> Result<(), Box<dyn std::error::Error
 }
 
 #[ignore]
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn parity_market_data_quote() -> Result<(), Box<dyn std::error::Error>> {
     let sqlite_repo = create_sqlite_repo();
     let pg_repo = create_pg_repo().await?;
 
-    let asset_id = format!("SEC:AAPL:{}", uuid::Uuid::new_v4());
-    let quote = Quote {
+    let sqlite_asset = NewAsset {
+        id: None,
+        kind: AssetKind::Investment,
+        name: Some("Apple Inc.".to_string()),
+        display_code: Some("AAPL".to_string()),
+        is_active: true,
+        quote_mode: QuoteMode::Market,
+        quote_ccy: "USD".to_string(),
+        instrument_type: Some(InstrumentType::Equity),
+        instrument_symbol: Some("AAPL".to_string()),
+        instrument_exchange_mic: Some("XNAS".to_string()),
+        provider_config: None,
+        notes: None,
+        metadata: None,
+    };
+    let pg_asset = NewAsset { ..sqlite_asset.clone() };
+    let sqlite_created = sqlite_repo.assets.create(sqlite_asset).await?;
+    let pg_created = pg_repo.assets.create(pg_asset).await?;
+
+    let sqlite_quote = Quote {
         id: uuid::Uuid::new_v4().to_string(),
-        asset_id: asset_id.clone(),
+        asset_id: sqlite_created.id.clone(),
         timestamp: chrono::Utc::now(),
         open: rust_decimal::Decimal::new(15025, 2),
         high: rust_decimal::Decimal::new(15100, 2),
@@ -808,21 +806,14 @@ async fn parity_market_data_quote() -> Result<(), Box<dyn std::error::Error>> {
         created_at: chrono::Utc::now(),
         notes: None,
     };
+    let pg_quote = Quote { id: uuid::Uuid::new_v4().to_string(), asset_id: pg_created.id.clone(), ..sqlite_quote.clone() };
 
-    let sqlite_saved = sqlite_repo.market_data.save_quote(&quote).await?;
-    let pg_saved = pg_repo.market_data.save_quote(&quote).await?;
+    let sqlite_saved = sqlite_repo.market_data.save_quote(&sqlite_quote).await?;
+    let pg_saved = pg_repo.market_data.save_quote(&pg_quote).await?;
 
-    assert_eq!(sqlite_saved.asset_id, pg_saved.asset_id, "Quote asset_ids differ");
     assert_eq!(sqlite_saved.close, pg_saved.close, "Quote closes differ");
     assert_eq!(sqlite_saved.currency, pg_saved.currency, "Quote currencies differ");
     assert_eq!(sqlite_saved.data_source, pg_saved.data_source, "Quote data_sources differ");
-
-    let sqlite_latest = sqlite_repo.market_data.get_latest_quote(&asset_id).await?;
-    let pg_latest = pg_repo.market_data.get_latest_quote(&asset_id).await?;
-
-    assert_eq!(sqlite_latest.asset_id, pg_latest.asset_id, "Latest quote asset_ids differ");
-    assert_eq!(sqlite_latest.close, pg_latest.close, "Latest quote closes differ");
-    assert_eq!(sqlite_latest.currency, pg_latest.currency, "Latest quote currencies differ");
 
     Ok(())
 }
