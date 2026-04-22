@@ -20,6 +20,14 @@ import NotFoundPage from "@/pages/not-found";
 import PerformancePage from "@/pages/performance/performance-page";
 import SettingsAccountsPage from "@/pages/settings/accounts/accounts-page";
 import SettingsAppearancePage from "@/pages/settings/appearance/appearance-page";
+import {
+  ForgotPasswordPage,
+  LoginPage,
+  RegisterPage,
+  RegisterPendingPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+} from "@/pages/auth";
 import AccountPage from "./pages/account/account-page";
 import AiAssistantPage from "./pages/ai-assistant/ai-assistant-page";
 import AssetProfilePage from "./pages/asset/asset-profile-page";
@@ -29,6 +37,7 @@ import OnboardingPage from "./pages/onboarding/onboarding-page";
 import AboutSettingsPage from "./pages/settings/about/about-page";
 import AddonSettingsPage from "./pages/settings/addons/addon-settings";
 import AiProvidersPage from "./pages/settings/ai-providers/ai-providers-page";
+import ApiKeysPage from "./pages/settings/api-keys/api-keys-page";
 import ContributionLimitPage from "./pages/settings/contribution-limits/contribution-limits-page";
 import ExportSettingsPage from "./pages/settings/exports/exports-page";
 import GeneralSettingsPage from "./pages/settings/general/general-page";
@@ -70,6 +79,14 @@ export function AppRoutes() {
 
         {/* Auth callback - No layout needed */}
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+        {/* Auth pages - No layout */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register/pending" element={<RegisterPendingPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Onboarding with dedicated layout */}
         <Route path="/onboarding" element={<OnboardingLayout />}>
@@ -124,6 +141,7 @@ export function AppRoutes() {
             <Route path="taxonomies" element={<TaxonomiesPage />} />
             <Route path="connect" element={<ConnectSettingsPage />} />
             <Route path="ai-providers" element={<AiProvidersPage />} />
+            <Route path="api-keys" element={<ApiKeysPage />} />
             <Route path="addons" element={<AddonSettingsPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
