@@ -4,7 +4,6 @@ use async_trait::async_trait;
 use chrono::NaiveDate;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use log::{debug, warn};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -60,9 +59,12 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
                     hs_dsl::cost_basis.eq(diesel::dsl::sql("EXCLUDED.cost_basis")),
                     hs_dsl::net_contribution.eq(diesel::dsl::sql("EXCLUDED.net_contribution")),
                     hs_dsl::calculated_at.eq(diesel::dsl::sql("EXCLUDED.calculated_at")),
-                    hs_dsl::net_contribution_base.eq(diesel::dsl::sql("EXCLUDED.net_contribution_base")),
-                    hs_dsl::cash_total_account_currency.eq(diesel::dsl::sql("EXCLUDED.cash_total_account_currency")),
-                    hs_dsl::cash_total_base_currency.eq(diesel::dsl::sql("EXCLUDED.cash_total_base_currency")),
+                    hs_dsl::net_contribution_base
+                        .eq(diesel::dsl::sql("EXCLUDED.net_contribution_base")),
+                    hs_dsl::cash_total_account_currency
+                        .eq(diesel::dsl::sql("EXCLUDED.cash_total_account_currency")),
+                    hs_dsl::cash_total_base_currency
+                        .eq(diesel::dsl::sql("EXCLUDED.cash_total_base_currency")),
                     hs_dsl::source.eq(diesel::dsl::sql("EXCLUDED.source")),
                 ))
                 .execute(&mut conn)
@@ -99,7 +101,10 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
             .await
             .map_err(StoragePgError::from)?;
 
-        Ok(results.into_iter().map(AccountStateSnapshot::from).collect())
+        Ok(results
+            .into_iter()
+            .map(AccountStateSnapshot::from)
+            .collect())
     }
 
     async fn get_latest_snapshot_before_date(
@@ -384,7 +389,10 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
             .await
             .map_err(StoragePgError::from)?;
 
-        Ok(results.into_iter().map(AccountStateSnapshot::from).collect())
+        Ok(results
+            .into_iter()
+            .map(AccountStateSnapshot::from)
+            .collect())
     }
 
     async fn get_earliest_snapshot_date(&self, account_id: &str) -> Result<Option<NaiveDate>> {
@@ -453,9 +461,12 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
                         hs_dsl::cost_basis.eq(diesel::dsl::sql("EXCLUDED.cost_basis")),
                         hs_dsl::net_contribution.eq(diesel::dsl::sql("EXCLUDED.net_contribution")),
                         hs_dsl::calculated_at.eq(diesel::dsl::sql("EXCLUDED.calculated_at")),
-                        hs_dsl::net_contribution_base.eq(diesel::dsl::sql("EXCLUDED.net_contribution_base")),
-                        hs_dsl::cash_total_account_currency.eq(diesel::dsl::sql("EXCLUDED.cash_total_account_currency")),
-                        hs_dsl::cash_total_base_currency.eq(diesel::dsl::sql("EXCLUDED.cash_total_base_currency")),
+                        hs_dsl::net_contribution_base
+                            .eq(diesel::dsl::sql("EXCLUDED.net_contribution_base")),
+                        hs_dsl::cash_total_account_currency
+                            .eq(diesel::dsl::sql("EXCLUDED.cash_total_account_currency")),
+                        hs_dsl::cash_total_base_currency
+                            .eq(diesel::dsl::sql("EXCLUDED.cash_total_base_currency")),
                         hs_dsl::source.eq(diesel::dsl::sql("EXCLUDED.source")),
                     ))
                     .execute(&mut conn)
@@ -470,11 +481,12 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
     async fn update_snapshots_source(&self, account_id: &str, new_source: &str) -> Result<usize> {
         let mut conn = self.pool.get().await.map_err(StoragePgError::from)?;
 
-        let count = diesel::update(hs_dsl::holdings_snapshots.filter(hs_dsl::account_id.eq(account_id)))
-            .set(hs_dsl::source.eq(new_source))
-            .execute(&mut conn)
-            .await
-            .map_err(StoragePgError::from)?;
+        let count =
+            diesel::update(hs_dsl::holdings_snapshots.filter(hs_dsl::account_id.eq(account_id)))
+                .set(hs_dsl::source.eq(new_source))
+                .execute(&mut conn)
+                .await
+                .map_err(StoragePgError::from)?;
 
         Ok(count)
     }
@@ -496,9 +508,12 @@ impl SnapshotRepositoryTrait for PgSnapshotRepository {
                 hs_dsl::cost_basis.eq(diesel::dsl::sql("EXCLUDED.cost_basis")),
                 hs_dsl::net_contribution.eq(diesel::dsl::sql("EXCLUDED.net_contribution")),
                 hs_dsl::calculated_at.eq(diesel::dsl::sql("EXCLUDED.calculated_at")),
-                hs_dsl::net_contribution_base.eq(diesel::dsl::sql("EXCLUDED.net_contribution_base")),
-                hs_dsl::cash_total_account_currency.eq(diesel::dsl::sql("EXCLUDED.cash_total_account_currency")),
-                hs_dsl::cash_total_base_currency.eq(diesel::dsl::sql("EXCLUDED.cash_total_base_currency")),
+                hs_dsl::net_contribution_base
+                    .eq(diesel::dsl::sql("EXCLUDED.net_contribution_base")),
+                hs_dsl::cash_total_account_currency
+                    .eq(diesel::dsl::sql("EXCLUDED.cash_total_account_currency")),
+                hs_dsl::cash_total_base_currency
+                    .eq(diesel::dsl::sql("EXCLUDED.cash_total_base_currency")),
                 hs_dsl::source.eq(diesel::dsl::sql("EXCLUDED.source")),
             ))
             .execute(&mut conn)

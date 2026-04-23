@@ -420,16 +420,19 @@ mod tests {
         ) -> Result<()> {
             Ok(())
         }
-        fn calculate_average_cost(&self, _: &str, _: &str) -> Result<Decimal> {
+        async fn calculate_average_cost(&self, _: &str, _: &str) -> Result<Decimal> {
             unimplemented!()
         }
-        fn get_income_activities_data(&self, _account_id: Option<&str>) -> Result<Vec<IncomeData>> {
+        async fn get_income_activities_data(
+            &self,
+            _account_id: Option<&str>,
+        ) -> Result<Vec<IncomeData>> {
             unimplemented!()
         }
-        fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>> {
+        async fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>> {
             unimplemented!()
         }
-        fn get_activity_bounds_for_assets(
+        async fn get_activity_bounds_for_assets(
             &self,
             _: &[String],
         ) -> Result<HashMap<String, (Option<NaiveDate>, Option<NaiveDate>)>> {
@@ -516,6 +519,7 @@ mod tests {
             _date: NaiveDate,
         ) -> Result<Decimal> {
             self.convert_currency(amount, from_currency, to_currency)
+                .await
         }
 
         async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
@@ -631,34 +635,36 @@ mod tests {
 
     // ============== Tests ==============
 
-    #[test]
-    fn test_empty_accounts_returns_zero() {
+    #[tokio::test]
+    async fn test_empty_accounts_returns_zero() {
         let service = make_service(vec![]);
         let (start, end) = dates();
 
         let result = service
             .calculate_contributions_by_period(&[], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
         assert!(result.by_account.is_empty());
     }
 
-    #[test]
-    fn test_no_activities_returns_zero() {
+    #[tokio::test]
+    async fn test_no_activities_returns_zero() {
         let service = make_service(vec![]);
         let (start, end) = dates();
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
         assert!(result.by_account.is_empty());
     }
 
-    #[test]
-    fn test_deposit_always_counts() {
+    #[tokio::test]
+    async fn test_deposit_always_counts() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "DEPOSIT".to_string(),
@@ -673,14 +679,15 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(1000));
         assert_eq!(result.by_account.get("acc1").unwrap().amount, dec!(1000));
     }
 
-    #[test]
-    fn test_multiple_deposits_sum_correctly() {
+    #[tokio::test]
+    async fn test_multiple_deposits_sum_correctly() {
         let activities = vec![
             ContributionActivity {
                 account_id: "acc1".to_string(),
@@ -706,13 +713,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(800));
     }
 
-    #[test]
-    fn test_transfer_in_without_external_flag_not_counted() {
+    #[tokio::test]
+    async fn test_transfer_in_without_external_flag_not_counted() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "TRANSFER_IN".to_string(),
@@ -727,13 +735,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_transfer_in_with_external_false_not_counted() {
+    #[tokio::test]
+    async fn test_transfer_in_with_external_false_not_counted() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "TRANSFER_IN".to_string(),
@@ -748,13 +757,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_transfer_in_external_no_link_counts() {
+    #[tokio::test]
+    async fn test_transfer_in_external_no_link_counts() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "TRANSFER_IN".to_string(),
@@ -769,13 +779,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(1000));
     }
 
-    #[test]
-    fn test_transfer_in_external_with_link_to_same_limit_not_counted() {
+    #[tokio::test]
+    async fn test_transfer_in_external_with_link_to_same_limit_not_counted() {
         // Both accounts in same limit - internal transfer within the limit
         let activities = vec![
             ContributionActivity {
@@ -808,14 +819,15 @@ mod tests {
                 end,
                 "USD",
             )
+            .await
             .unwrap();
 
         // Should not count - it's internal to the limit
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_transfer_in_external_with_link_to_outside_limit_counts() {
+    #[tokio::test]
+    async fn test_transfer_in_external_with_link_to_outside_limit_counts() {
         // TRANSFER_OUT from account outside the limit
         let activities = vec![
             ContributionActivity {
@@ -843,14 +855,15 @@ mod tests {
         // Only acc1 is in the limit (acc_outside is not)
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         // Should count - source is outside this limit
         assert_eq!(result.total, dec!(1000));
     }
 
-    #[test]
-    fn test_credit_without_external_flag_not_counted() {
+    #[tokio::test]
+    async fn test_credit_without_external_flag_not_counted() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "CREDIT".to_string(),
@@ -865,13 +878,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_credit_with_external_true_counts() {
+    #[tokio::test]
+    async fn test_credit_with_external_true_counts() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "CREDIT".to_string(),
@@ -886,13 +900,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(100));
     }
 
-    #[test]
-    fn test_credit_with_external_false_not_counted() {
+    #[tokio::test]
+    async fn test_credit_with_external_false_not_counted() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "CREDIT".to_string(),
@@ -907,13 +922,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_transfer_out_never_counts() {
+    #[tokio::test]
+    async fn test_transfer_out_never_counts() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "TRANSFER_OUT".to_string(),
@@ -928,13 +944,14 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_currency_conversion() {
+    #[tokio::test]
+    async fn test_currency_conversion() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "DEPOSIT".to_string(),
@@ -949,6 +966,7 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         // 1000 CAD * 0.75 = 750 USD
@@ -960,8 +978,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_multiple_accounts_tracked_separately() {
+    #[tokio::test]
+    async fn test_multiple_accounts_tracked_separately() {
         let activities = vec![
             ContributionActivity {
                 account_id: "acc1".to_string(),
@@ -992,6 +1010,7 @@ mod tests {
                 end,
                 "USD",
             )
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(1500));
@@ -999,8 +1018,8 @@ mod tests {
         assert_eq!(result.by_account.get("acc2").unwrap().amount, dec!(500));
     }
 
-    #[test]
-    fn test_mixed_activity_types() {
+    #[tokio::test]
+    async fn test_mixed_activity_types() {
         let activities = vec![
             // Counts: deposit
             ContributionActivity {
@@ -1068,14 +1087,15 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         // 1000 (deposit) + 500 (external transfer) + 100 (external credit) = 1600
         assert_eq!(result.total, dec!(1600));
     }
 
-    #[test]
-    fn test_missing_amount_returns_error() {
+    #[tokio::test]
+    async fn test_missing_amount_returns_error() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "DEPOSIT".to_string(),
@@ -1088,14 +1108,15 @@ mod tests {
         let service = make_service(activities);
         let (start, end) = dates();
 
-        let result =
-            service.calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD");
+        let result = service
+            .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await;
 
         assert!(result.is_err());
     }
 
-    #[test]
-    fn test_malformed_metadata_treated_as_internal() {
+    #[tokio::test]
+    async fn test_malformed_metadata_treated_as_internal() {
         let activities = vec![ContributionActivity {
             account_id: "acc1".to_string(),
             activity_type: "TRANSFER_IN".to_string(),
@@ -1110,14 +1131,15 @@ mod tests {
 
         let result = service
             .calculate_contributions_by_period(&["acc1".to_string()], start, end, "USD")
+            .await
             .unwrap();
 
         // Malformed metadata = is_external defaults to false = not counted
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_is_external_helper() {
+    #[tokio::test]
+    async fn test_is_external_helper() {
         // Test the is_external helper directly
         let external = ContributionActivity {
             account_id: "acc1".to_string(),
@@ -1153,8 +1175,8 @@ mod tests {
         assert!(!ContributionLimitService::is_external(&no_metadata));
     }
 
-    #[test]
-    fn test_complex_scenario_tfsa_contribution_room() {
+    #[tokio::test]
+    async fn test_complex_scenario_tfsa_contribution_room() {
         // Simulates a TFSA with 2 accounts
         // - acc1: TFSA Savings
         // - acc2: TFSA Investment
@@ -1239,6 +1261,7 @@ mod tests {
                 end,
                 "CAD",
             )
+            .await
             .unwrap();
 
         // Expected: 5000 (deposit) + 2000 (external transfer) + 100 (external credit) = 7100
@@ -1253,8 +1276,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_internal_transfer_from_outside_limit_counts_without_external_flag() {
+    #[tokio::test]
+    async fn test_internal_transfer_from_outside_limit_counts_without_external_flag() {
         // Reproduces GitHub issue #775:
         // Internal transfer (no is_external metadata) from a Cash account
         // outside the limit into a Registered account inside the limit.
@@ -1287,14 +1310,15 @@ mod tests {
         // Only the registered account is in the limit
         let result = service
             .calculate_contributions_by_period(&["registered".to_string()], start, end, "CAD")
+            .await
             .unwrap();
 
         // Should count — source account is outside this limit
         assert_eq!(result.total, dec!(1000));
     }
 
-    #[test]
-    fn test_internal_transfer_within_limit_not_counted_without_external_flag() {
+    #[tokio::test]
+    async fn test_internal_transfer_within_limit_not_counted_without_external_flag() {
         // Internal transfer between two accounts both in the limit — should NOT count.
         let activities = vec![
             ContributionActivity {
@@ -1326,13 +1350,14 @@ mod tests {
                 end,
                 "USD",
             )
+            .await
             .unwrap();
 
         assert_eq!(result.total, Decimal::ZERO);
     }
 
-    #[test]
-    fn test_contribution_year_boundary_utc_minus_3() {
+    #[tokio::test]
+    async fn test_contribution_year_boundary_utc_minus_3() {
         let activities = vec![
             ContributionActivity {
                 account_id: "acc1".to_string(),
@@ -1366,13 +1391,14 @@ mod tests {
                 end_exclusive_utc,
                 "USD",
             )
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(100));
     }
 
-    #[test]
-    fn test_contribution_year_boundary_utc_plus_14() {
+    #[tokio::test]
+    async fn test_contribution_year_boundary_utc_plus_14() {
         let activities = vec![
             ContributionActivity {
                 account_id: "acc1".to_string(),
@@ -1416,6 +1442,7 @@ mod tests {
                 end_exclusive_utc,
                 "USD",
             )
+            .await
             .unwrap();
 
         assert_eq!(result.total, dec!(140));

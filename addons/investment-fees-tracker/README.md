@@ -1,8 +1,8 @@
 # Investment Fees Tracker
 
-A comprehensive Whaleit addon that helps you track and analyze investment
-fees across your portfolio, providing detailed insights into your investment
-costs and their impact on returns.
+A comprehensive Whaleit addon that helps you track and analyze investment fees
+across your portfolio, providing detailed insights into your investment costs
+and their impact on returns.
 
 ## Features
 

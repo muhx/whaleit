@@ -380,7 +380,12 @@ async fn run_portfolio_job(
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position): (&String, &whaleit_core::portfolio::snapshot::Position)| (asset_id.clone(), position.quantity))
+                .map(
+                    |(asset_id, position): (
+                        &String,
+                        &whaleit_core::portfolio::snapshot::Position,
+                    )| (asset_id.clone(), position.quantity),
+                )
                 .collect();
 
         if let Err(e) = deps

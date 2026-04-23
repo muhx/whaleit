@@ -37,6 +37,7 @@ pub fn parse_date_optional(
 }
 
 /// Normalize file paths by stripping file:// prefix
+#[allow(dead_code)]
 pub fn normalize_file_path(path: &str) -> String {
     path.strip_prefix("file://").unwrap_or(path).to_string()
 }
@@ -245,7 +246,12 @@ pub async fn process_portfolio_job(
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position): (&String, &whaleit_core::portfolio::snapshot::Position)| (asset_id.clone(), position.quantity))
+                .map(
+                    |(asset_id, position): (
+                        &String,
+                        &whaleit_core::portfolio::snapshot::Position,
+                    )| (asset_id.clone(), position.quantity),
+                )
                 .collect();
 
         if let Err(e) = state

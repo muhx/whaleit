@@ -165,9 +165,10 @@ impl PlatformRepositoryTrait for PgPlatformRepository {
     async fn upsert(&self, platform: ConnectPlatform) -> Result<ConnectPlatform> {
         let p: Platform = platform.into();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(platforms::table)
             .values((
@@ -196,9 +197,10 @@ impl PlatformRepositoryTrait for PgPlatformRepository {
     async fn delete(&self, platform_id: &str) -> Result<usize> {
         let id = platform_id.to_string();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         let affected = diesel::delete(platforms::table.find(&id))
             .execute(&mut conn)

@@ -17,8 +17,7 @@ and this project adheres to
   and security controls
 - **Manifest Management**: Validation, compatibility checks, and metadata
   handling
-- **Host API Interface**: Secure communication layer between addons and
-  Whaleit
+- **Host API Interface**: Secure communication layer between addons and Whaleit
 - **Utility Functions**: Addon validation, version compatibility, ID generation,
   and size formatting
 - **Development Tools**: Complete TypeScript definitions and development

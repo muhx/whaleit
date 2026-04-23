@@ -37,6 +37,8 @@ impl<T: GoalRepositoryTrait + Send + Sync> GoalServiceTrait for GoalService<T> {
     }
 
     async fn load_goals_allocations(&self) -> Result<Vec<GoalsAllocation>> {
-        self.goal_repo.load_allocations_for_non_achieved_goals().await
+        self.goal_repo
+            .load_allocations_for_non_achieved_goals()
+            .await
     }
 }

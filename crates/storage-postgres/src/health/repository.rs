@@ -56,7 +56,10 @@ impl HealthDismissalStore for PgHealthDismissalRepository {
             .load::<HealthIssueDismissalDB>(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
-        Ok(dismissals_db.into_iter().map(IssueDismissal::from).collect())
+        Ok(dismissals_db
+            .into_iter()
+            .map(IssueDismissal::from)
+            .collect())
     }
 
     async fn get_dismissal(&self, id: &str) -> Result<Option<IssueDismissal>> {

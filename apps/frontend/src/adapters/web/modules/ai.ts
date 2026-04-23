@@ -106,7 +106,10 @@ export function handleRemoveAiThreadTag(
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
   const { threadId, tag } = payload as { threadId: string; tag: string };
-  return { url: `${url}/${encodeURIComponent(threadId)}/tags/${encodeURIComponent(tag)}`, body: undefined };
+  return {
+    url: `${url}/${encodeURIComponent(threadId)}/tags/${encodeURIComponent(tag)}`,
+    body: undefined,
+  };
 }
 
 export function handleGetAiThreadTags(

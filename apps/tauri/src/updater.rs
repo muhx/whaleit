@@ -1,4 +1,3 @@
-use chrono::DateTime;
 use log::{error, info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -64,14 +63,11 @@ fn extract_screenshots(raw_json: &serde_json::Value) -> Option<Vec<String>> {
 /// `Ok(None)` if already up-to-date.
 pub async fn check_for_update(
     app_handle: AppHandle,
-    instance_id: &str,
 ) -> Result<Option<UpdateInfo>, String> {
     let is_appstore = is_app_store_build();
 
     let update = app_handle
         .updater_builder()
-        .header("X-Instance-Id", instance_id)
-        .map_err(|e| format!("Failed to set header: {}", e))?
         .build()
         .map_err(|e| format!("Failed to build updater: {}", e))?
         .check()
@@ -85,11 +81,7 @@ pub async fn check_for_update(
         Some(update) => {
             let current_version = app_handle.package_info().version.to_string();
             if update.version != current_version {
-                let pub_date = update.date.and_then(|d| {
-                    let seconds = d.unix_timestamp();
-                    let nanos = d.nanosecond();
-                    DateTime::from_timestamp(seconds, nanos).map(|dt| dt.to_rfc3339())
-                });
+                let pub_date = update.date.map(|d| format!("{}", d));
 
                 let changelog_url = extract_changelog_url(&update.raw_json);
                 let screenshots = extract_screenshots(&update.raw_json);
@@ -115,6 +107,7 @@ pub async fn check_for_update(
 /// Progress payload emitted during update download/install.
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct UpdateDownloadProgress {
     downloaded: u64,
     total: Option<u64>,
@@ -125,6 +118,7 @@ struct UpdateDownloadProgress {
 /// Download and install an available update, then restart the app.
 /// Emits `app:update-download-progress` events so the frontend can show progress.
 /// Returns `Err` on failure so the frontend can display the error inline.
+#[allow(dead_code)]
 pub async fn install_update(app_handle: AppHandle) -> Result<(), String> {
     info!("Starting update download and installation");
 

@@ -304,7 +304,7 @@ mod tests {
                     Some(&InstrumentType::Equity),
                     Some(QuoteMode::Manual),
                     None,
-                )
+                ),
             )
         });
 
@@ -324,7 +324,7 @@ mod tests {
                     Some(&InstrumentType::Equity),
                     Some(QuoteMode::Market),
                     None,
-                )
+                ),
             )
         });
 

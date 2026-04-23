@@ -438,7 +438,11 @@ where
                 .push(asset.id.clone());
         }
         for (provider, ids) in &assets_by_provider {
-            if let Ok(bounds) = self.quote_store.get_quote_bounds_for_assets(ids, provider).await {
+            if let Ok(bounds) = self
+                .quote_store
+                .get_quote_bounds_for_assets(ids, provider)
+                .await
+            {
                 quote_bounds.extend(bounds);
             }
         }
@@ -511,7 +515,11 @@ where
         };
 
         // Check if any quote already exists for this asset
-        if let Ok(Some(_)) = self.quote_store.latest(&AssetId(asset.id.clone()), None).await {
+        if let Ok(Some(_)) = self
+            .quote_store
+            .latest(&AssetId(asset.id.clone()), None)
+            .await
+        {
             return;
         }
 
@@ -1358,7 +1366,10 @@ where
 
         let now = Utc::now();
         let syncable_ids: Vec<String> = syncable.iter().map(|asset| asset.id.clone()).collect();
-        let existing_states = self.sync_state_store.get_by_asset_ids(&syncable_ids).await?;
+        let existing_states = self
+            .sync_state_store
+            .get_by_asset_ids(&syncable_ids)
+            .await?;
         let activity_bounds = self
             .activity_repo
             .get_activity_bounds_for_assets(&syncable_ids)
@@ -1375,7 +1386,11 @@ where
                 .push(asset.id.clone());
         }
         for (provider, ids) in &assets_by_provider {
-            if let Ok(bounds) = self.quote_store.get_quote_bounds_for_assets(ids, provider).await {
+            if let Ok(bounds) = self
+                .quote_store
+                .get_quote_bounds_for_assets(ids, provider)
+                .await
+            {
                 quote_bounds.extend(bounds);
             }
         }
@@ -1478,13 +1493,15 @@ where
                 continue;
             }
 
-            let (start_date, end_date) = self.calculate_date_range_for_mode(
-                &inputs,
-                mode,
-                effective_today,
-                fetch_end_date,
-                asset,
-            ).await;
+            let (start_date, end_date) = self
+                .calculate_date_range_for_mode(
+                    &inputs,
+                    mode,
+                    effective_today,
+                    fetch_end_date,
+                    asset,
+                )
+                .await;
 
             plans.push(SymbolSyncPlan {
                 asset_id: asset.id.clone(),

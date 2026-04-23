@@ -5,8 +5,8 @@ financial goals using an interactive calendar-style representation.
 
 ## Features
 
-- **Goal Integration**: Seamlessly integrates with your existing Whaleit
-  goals through a searchable dropdown selector
+- **Goal Integration**: Seamlessly integrates with your existing Whaleit goals
+  through a searchable dropdown selector
 - **Visual Progress Tracking**: Calendar grid visualization where each dot
   represents a milestone towards your goal
 - **Real-time Portfolio Sync**: Automatically calculates progress using your

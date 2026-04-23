@@ -9,12 +9,7 @@ import {
   DialogTitle,
 } from "@whaleit/ui/components/ui/dialog";
 import { Icons } from "@whaleit/ui/components/ui/icons";
-import type {
-  AddonManifest,
-  Permission,
-  PermissionCategory,
-  RiskLevel,
-} from "@whaleit/addon-sdk";
+import type { AddonManifest, Permission, PermissionCategory, RiskLevel } from "@whaleit/addon-sdk";
 import { AlertFeedback } from "@whaleit/ui";
 import { PermissionCategoriesDisplay } from "./permission-categories-display";
 

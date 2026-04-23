@@ -11,7 +11,10 @@ pub trait FxRepositoryTrait: Send + Sync {
     async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
     async fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
     async fn get_latest_exchange_rate(&self, from: &str, to: &str) -> Result<Option<ExchangeRate>>;
-    async fn get_latest_exchange_rate_by_symbol(&self, symbol: &str) -> Result<Option<ExchangeRate>>;
+    async fn get_latest_exchange_rate_by_symbol(
+        &self,
+        symbol: &str,
+    ) -> Result<Option<ExchangeRate>>;
     async fn get_historical_quotes(
         &self,
         symbol: &str,
@@ -47,7 +50,11 @@ pub trait FxServiceTrait: Send + Sync {
         to_currency: &str,
         days: i64,
     ) -> Result<Vec<ExchangeRate>>;
-    async fn get_latest_exchange_rate(&self, from_currency: &str, to_currency: &str) -> Result<Decimal>;
+    async fn get_latest_exchange_rate(
+        &self,
+        from_currency: &str,
+        to_currency: &str,
+    ) -> Result<Decimal>;
     async fn get_exchange_rate_for_date(
         &self,
         from_currency: &str,

@@ -150,71 +150,40 @@ export {
   updatePortfolio,
 } from "../shared/portfolio";
 
-// Market Data Commands
+export type { HoldingInput } from "../shared/portfolio";
 export {
-  checkQuotesImport,
-  createAsset,
-  deleteAsset,
-  deleteQuote,
-  fetchYahooDividends,
-  getAssetProfile,
-  getAssets,
-  getExchanges,
-  getLatestQuotes,
-  getMarketDataProviders,
-  getMarketDataProviderSettings,
-  getQuoteHistory,
-  importManualQuotes,
-  resolveSymbolQuote,
-  searchTicker,
-  syncHistoryQuotes,
-  syncMarketData,
-  updateAssetProfile,
-  updateMarketDataProviderSettings,
-  updateQuote,
-  updateQuoteMode,
-} from "../shared/market-data";
+  getAiProviders,
+  listAiModels,
+  setDefaultAiProvider,
+  updateAiProviderSettings,
+} from "../shared/ai-providers";
 
-// Custom Provider Commands
+// AI Threads Commands
 export {
-  getCustomProviders,
-  createCustomProvider,
-  updateCustomProvider,
-  deleteCustomProvider,
-  testCustomProviderSource,
-} from "../shared/custom-provider";
+  addAiThreadTag,
+  deleteAiThread,
+  getAiThread,
+  getAiThreadMessages,
+  getAiThreadTags,
+  listAiThreads,
+  removeAiThreadTag,
+  updateAiThread,
+  updateToolResult,
+} from "../shared/ai-threads";
 
-// Contribution Limits Commands
+// Health Center Commands
 export {
-  calculateDepositsForLimit,
-  createContributionLimit,
-  deleteContributionLimit,
-  getContributionLimit,
-  updateContributionLimit,
-} from "../shared/contribution-limits";
+  dismissHealthIssue,
+  executeHealthFix,
+  getDismissedHealthIssues,
+  getHealthConfig,
+  getHealthStatus,
+  restoreHealthIssue,
+  runHealthChecks,
+  updateHealthConfig,
+} from "../shared/health";
 
-// Exchange Rates Commands
-export {
-  addExchangeRate,
-  deleteExchangeRate,
-  getExchangeRates,
-  updateExchangeRate,
-} from "../shared/exchange-rates";
-
-// Alternative Assets Commands
-export {
-  createAlternativeAsset,
-  deleteAlternativeAsset,
-  getAlternativeHoldings,
-  getNetWorth,
-  getNetWorthHistory,
-  linkLiability,
-  unlinkLiability,
-  updateAlternativeAssetMetadata,
-  updateAlternativeAssetValuation,
-} from "../shared/alternative-assets";
-
-// Connect Commands (Broker + Device Sync + Auth)
+// Connect / Device Sync Commands
 export {
   approvePairing,
   approvePairingOverwrite,
@@ -265,38 +234,10 @@ export {
   updateDevice,
 } from "../shared/connect";
 
-// AI Providers Commands
-export {
-  getAiProviders,
-  listAiModels,
-  setDefaultAiProvider,
-  updateAiProviderSettings,
-} from "../shared/ai-providers";
-
-// AI Threads Commands
-export {
-  addAiThreadTag,
-  deleteAiThread,
-  getAiThread,
-  getAiThreadMessages,
-  getAiThreadTags,
-  listAiThreads,
-  removeAiThreadTag,
-  updateAiThread,
-  updateToolResult,
-} from "../shared/ai-threads";
-
-// Health Center Commands
-export {
-  dismissHealthIssue,
-  executeHealthFix,
-  getDismissedHealthIssues,
-  getHealthConfig,
-  getHealthStatus,
-  restoreHealthIssue,
-  runHealthChecks,
-  updateHealthConfig,
-} from "../shared/health";
+export type {
+  PairingFlowPhase,
+  ConfirmPairingWithBootstrapResult,
+} from "../shared/connect";
 
 // ============================================================================
 // Platform-specific modules (different implementations for web vs desktop)

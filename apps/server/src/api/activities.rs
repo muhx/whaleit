@@ -82,18 +82,21 @@ async fn search_activities(
     let date_from_parsed = parse_date_optional(body.date_from, "dateFrom")?;
     let date_to_parsed = parse_date_optional(body.date_to, "dateTo")?;
 
-    let resp = state.activity_service.search_activities(
-        body.page,
-        body.page_size,
-        account_ids,
-        types,
-        body.asset_id_keyword,
-        sort_normalized,
-        body.needs_review_filter,
-        date_from_parsed,
-        date_to_parsed,
-        instrument_types,
-    ).await?;
+    let resp = state
+        .activity_service
+        .search_activities(
+            body.page,
+            body.page_size,
+            account_ids,
+            types,
+            body.asset_id_keyword,
+            sort_normalized,
+            body.needs_review_filter,
+            date_from_parsed,
+            date_to_parsed,
+            instrument_types,
+        )
+        .await?;
     Ok(Json(resp))
 }
 
@@ -204,7 +207,8 @@ async fn get_account_import_mapping(
 ) -> ApiResult<Json<ImportMappingData>> {
     let res = state
         .activity_service
-        .get_import_mapping(q.account_id, q.context_kind).await?;
+        .get_import_mapping(q.account_id, q.context_kind)
+        .await?;
     Ok(Json(res))
 }
 
@@ -239,7 +243,9 @@ async fn get_import_template(
     State(state): State<Arc<AppState>>,
     Query(q): Query<ImportTemplateQuery>,
 ) -> ApiResult<Json<ImportTemplateData>> {
-    Ok(Json(state.activity_service.get_import_template(q.id).await?))
+    Ok(Json(
+        state.activity_service.get_import_template(q.id).await?,
+    ))
 }
 
 #[derive(serde::Deserialize)]
@@ -304,7 +310,8 @@ async fn check_existing_duplicates(
 ) -> ApiResult<Json<CheckDuplicatesResponse>> {
     let duplicates = state
         .activity_service
-        .check_existing_duplicates(body.idempotency_keys).await?;
+        .check_existing_duplicates(body.idempotency_keys)
+        .await?;
     Ok(Json(CheckDuplicatesResponse { duplicates }))
 }
 

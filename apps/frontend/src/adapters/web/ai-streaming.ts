@@ -1,7 +1,24 @@
 // Web adapter - AI Chat Streaming (platform-specific HTTP implementation)
 
-import { logger, AI_CHAT_STREAM_ENDPOINT } from "./core";
+import { logger, API_PREFIX } from "./core";
+import { getConnectionConfig } from "@/lib/connection-config";
 import type { AiSendMessageRequest, AiStreamEvent } from "@/features/ai-assistant/types";
+
+function resolveEndpoint(path: string): string {
+  const connection = getConnectionConfig();
+  if (connection) {
+    return `${connection.apiHost.replace(/\/+$/, "")}${path}`;
+  }
+  return path;
+}
+
+function buildAuthHeaders(): Record<string, string> {
+  const connection = getConnectionConfig();
+  if (connection) {
+    return { Authorization: `Bearer ${connection.apiKey}` };
+  }
+  return {};
+}
 
 /**
  * Stream AI chat responses via HTTP fetch.
@@ -16,12 +33,15 @@ export async function* streamAiChat(
   request: AiSendMessageRequest,
   signal?: AbortSignal,
 ): AsyncGenerator<AiStreamEvent, void, undefined> {
-  const response = await fetch(AI_CHAT_STREAM_ENDPOINT, {
+  const response = await fetch(resolveEndpoint(`${API_PREFIX}/ai/chat/stream`), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...buildAuthHeaders(),
+    },
     body: JSON.stringify(request),
     signal,
-    credentials: "same-origin",
+    ...(getConnectionConfig() ? {} : { credentials: "same-origin" as RequestCredentials }),
   });
 
   if (!response.ok) {

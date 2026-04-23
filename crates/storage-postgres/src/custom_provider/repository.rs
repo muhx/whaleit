@@ -173,9 +173,10 @@ impl CustomProviderRepository for PgCustomProviderRepository {
             updated_at: now,
         };
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(custom_providers::table)
             .values(&row)
@@ -195,9 +196,10 @@ impl CustomProviderRepository for PgCustomProviderRepository {
         let payload = payload.clone();
         let now = chrono::Utc::now().naive_utc();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         let existing: CustomProviderDB = custom_providers::table
             .filter(custom_providers::code.eq(&code))
@@ -246,9 +248,10 @@ impl CustomProviderRepository for PgCustomProviderRepository {
     async fn delete(&self, provider_code: &str) -> Result<()> {
         let code = provider_code.to_string();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::delete(custom_providers::table.filter(custom_providers::code.eq(&code)))
             .execute(&mut conn)

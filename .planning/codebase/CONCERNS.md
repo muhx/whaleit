@@ -2,11 +2,11 @@
 
 **Analysis Date:** 2026-04-20
 
-Whaleit is a 158k-LoC Rust + 161k-LoC TS/TSX monorepo (Cargo workspace +
-pnpm workspace). It has three deployment surfaces (Tauri desktop, Axum web
-server, iOS/Android via Tauri mobile) that share a `crates/core` business-logic
-layer. The issues below are grouped by theme; file paths and line numbers point
-to the actual offending sites.
+Whaleit is a 158k-LoC Rust + 161k-LoC TS/TSX monorepo (Cargo workspace + pnpm
+workspace). It has three deployment surfaces (Tauri desktop, Axum web server,
+iOS/Android via Tauri mobile) that share a `crates/core` business-logic layer.
+The issues below are grouped by theme; file paths and line numbers point to the
+actual offending sites.
 
 ## Tech Debt
 
@@ -441,8 +441,7 @@ zones:
   - Addon loading + context creation (`apps/frontend/src/addons/addons-core.ts`,
     `addons-runtime-context.ts`).
   - Device sync UI (`apps/frontend/src/features/devices-sync/`).
-  - Whaleit Connect auth flow
-    (`apps/frontend/src/features/whaleit-connect/`).
+  - Whaleit Connect auth flow (`apps/frontend/src/features/whaleit-connect/`).
 - Risk: UI regressions in security-critical flows (OAuth callback, device
   pairing) ship undetected.
 - Priority: **High** for addon loading and auth flows; **Medium** elsewhere.

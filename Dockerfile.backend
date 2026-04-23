@@ -1,0 +1,39 @@
+ARG RUST_IMAGE=rust:1.91-alpine
+
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
+
+FROM --platform=$BUILDPLATFORM ${RUST_IMAGE} AS build
+
+ARG TARGETPLATFORM
+ARG CONNECT_AUTH_URL=
+ARG CONNECT_AUTH_PUBLISHABLE_KEY=
+ENV CONNECT_AUTH_URL=${CONNECT_AUTH_URL}
+ENV CONNECT_AUTH_PUBLISHABLE_KEY=${CONNECT_AUTH_PUBLISHABLE_KEY}
+
+WORKDIR /app
+
+RUN apk add --no-cache clang lld build-base git file pkgconfig
+RUN xx-apk add --no-cache musl-dev gcc openssl-dev openssl-libs-static postgresql-dev
+RUN rustup target add $(xx-cargo --print-target-triple)
+
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY apps/server ./apps/server
+COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
+RUN mkdir -p apps/tauri/src && echo "fn main(){}" > apps/tauri/src/main.rs && echo "" > apps/tauri/src/lib.rs
+RUN mkdir -p apps/server/src && \
+    echo "fn main(){}" > apps/server/src/main.rs && \
+    xx-cargo fetch --manifest-path apps/server/Cargo.toml
+
+COPY crates ./crates
+COPY apps/server ./apps/server
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+ENV OPENSSL_STATIC=1
+RUN xx-cargo build --release --manifest-path apps/server/Cargo.toml && \
+    cp target/$(xx-cargo --print-target-triple)/release/whaleit-server /whaleit-server
+
+FROM alpine:3.19
+RUN apk add --no-cache libpq
+COPY --from=build /whaleit-server /usr/local/bin/whaleit-server
+EXPOSE 8088
+CMD ["/usr/local/bin/whaleit-server"]

@@ -1,6 +1,5 @@
 //! Database model for account state snapshots (PostgreSQL).
 
-use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
 use rust_decimal::Decimal;
 use std::str::FromStr;
@@ -9,7 +8,17 @@ use whaleit_core::constants::DECIMAL_PRECISION;
 use whaleit_core::portfolio::snapshot::{AccountStateSnapshot, SnapshotSource};
 
 /// Database read model for holdings_snapshots.
-#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, Insertable, AsChangeset, PartialEq)]
+#[derive(
+    Debug,
+    Clone,
+    Queryable,
+    QueryableByName,
+    Selectable,
+    Identifiable,
+    Insertable,
+    AsChangeset,
+    PartialEq,
+)]
 #[diesel(table_name = crate::schema::holdings_snapshots)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct AccountStateSnapshotDB {
@@ -30,7 +39,7 @@ pub struct AccountStateSnapshotDB {
 
 impl From<AccountStateSnapshotDB> for AccountStateSnapshot {
     fn from(db: AccountStateSnapshotDB) -> Self {
-        use chrono::Utc;
+        
 
         Self {
             id: db.id,
@@ -60,12 +69,19 @@ impl From<AccountStateSnapshot> for AccountStateSnapshotDB {
             account_id: domain.account_id,
             snapshot_date: domain.snapshot_date,
             currency: domain.currency,
-            positions: serde_json::to_string(&domain.positions).unwrap_or_else(|_| "{}".to_string()),
+            positions: serde_json::to_string(&domain.positions)
+                .unwrap_or_else(|_| "{}".to_string()),
             cash_balances: serde_json::to_string(&domain.cash_balances)
                 .unwrap_or_else(|_| "{}".to_string()),
             cost_basis: domain.cost_basis.round_dp(DECIMAL_PRECISION).to_string(),
-            net_contribution: domain.net_contribution.round_dp(DECIMAL_PRECISION).to_string(),
-            net_contribution_base: domain.net_contribution_base.round_dp(DECIMAL_PRECISION).to_string(),
+            net_contribution: domain
+                .net_contribution
+                .round_dp(DECIMAL_PRECISION)
+                .to_string(),
+            net_contribution_base: domain
+                .net_contribution_base
+                .round_dp(DECIMAL_PRECISION)
+                .to_string(),
             cash_total_account_currency: domain
                 .cash_total_account_currency
                 .round_dp(DECIMAL_PRECISION)

@@ -4,7 +4,6 @@ use async_trait::async_trait;
 use chrono::NaiveDate;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use rust_decimal::Decimal;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -14,7 +13,9 @@ use crate::db::PgPool;
 use crate::errors::StoragePgError;
 use crate::schema::daily_account_valuation::dsl as dav_dsl;
 use whaleit_core::errors::Result;
-use whaleit_core::portfolio::valuation::{DailyAccountValuation, NegativeBalanceInfo, ValuationRepositoryTrait};
+use whaleit_core::portfolio::valuation::{
+    DailyAccountValuation, NegativeBalanceInfo, ValuationRepositoryTrait,
+};
 
 pub struct PgValuationRepository {
     pool: Arc<PgPool>,
@@ -53,7 +54,8 @@ impl ValuationRepositoryTrait for PgValuationRepository {
                     dav_dsl::base_currency.eq(diesel::dsl::sql("EXCLUDED.base_currency")),
                     dav_dsl::fx_rate_to_base.eq(diesel::dsl::sql("EXCLUDED.fx_rate_to_base")),
                     dav_dsl::cash_balance.eq(diesel::dsl::sql("EXCLUDED.cash_balance")),
-                    dav_dsl::investment_market_value.eq(diesel::dsl::sql("EXCLUDED.investment_market_value")),
+                    dav_dsl::investment_market_value
+                        .eq(diesel::dsl::sql("EXCLUDED.investment_market_value")),
                     dav_dsl::total_value.eq(diesel::dsl::sql("EXCLUDED.total_value")),
                     dav_dsl::cost_basis.eq(diesel::dsl::sql("EXCLUDED.cost_basis")),
                     dav_dsl::net_contribution.eq(diesel::dsl::sql("EXCLUDED.net_contribution")),
@@ -93,7 +95,10 @@ impl ValuationRepositoryTrait for PgValuationRepository {
             .await
             .map_err(StoragePgError::from)?;
 
-        Ok(results.into_iter().map(DailyAccountValuation::from).collect())
+        Ok(results
+            .into_iter()
+            .map(DailyAccountValuation::from)
+            .collect())
     }
 
     async fn load_latest_valuation_date(&self, account_id: &str) -> Result<Option<NaiveDate>> {
@@ -200,7 +205,10 @@ impl ValuationRepositoryTrait for PgValuationRepository {
             .await
             .map_err(StoragePgError::from)?;
 
-        Ok(results.into_iter().map(DailyAccountValuation::from).collect())
+        Ok(results
+            .into_iter()
+            .map(DailyAccountValuation::from)
+            .collect())
     }
 
     async fn get_accounts_with_negative_balance(

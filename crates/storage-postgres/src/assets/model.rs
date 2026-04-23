@@ -54,9 +54,18 @@ impl From<AssetDB> for whaleit_core::assets::Asset {
             "MANUAL" => QuoteMode::Manual,
             _ => QuoteMode::Market,
         };
-        let instrument_type = db.instrument_type.as_deref().and_then(InstrumentType::from_db_str);
-        let metadata = db.metadata.as_ref().and_then(|s| serde_json::from_str(s).ok());
-        let provider_config = db.provider_config.as_ref().and_then(|s| serde_json::from_str(s).ok());
+        let instrument_type = db
+            .instrument_type
+            .as_deref()
+            .and_then(InstrumentType::from_db_str);
+        let metadata = db
+            .metadata
+            .as_ref()
+            .and_then(|s| serde_json::from_str(s).ok());
+        let provider_config = db
+            .provider_config
+            .as_ref()
+            .and_then(|s| serde_json::from_str(s).ok());
 
         Self {
             id: db.id,

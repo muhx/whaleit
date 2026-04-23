@@ -13,11 +13,11 @@ use crate::errors::StoragePgError;
 use crate::schema::market_data_providers::dsl as mdp_dsl;
 use crate::schema::quotes::dsl as q_dsl;
 use whaleit_core::errors::{DatabaseError, Result};
+use whaleit_core::quotes::types::{AssetId, Day, QuoteSource};
 use whaleit_core::quotes::{
     LatestQuotePair, MarketDataProviderSetting, ProviderSettingsStore, Quote, QuoteStore,
     UpdateMarketDataProviderSetting,
 };
-use whaleit_core::quotes::types::{AssetId, Day, QuoteSource};
 
 pub struct PgMarketDataRepository {
     pool: Arc<PgPool>,
@@ -137,7 +137,10 @@ impl QuoteStore for PgMarketDataRepository {
 
         // Check which days already have MANUAL quotes (they should not be overwritten)
         let asset_ids: Vec<&str> = input_quotes.iter().map(|q| q.asset_id.as_str()).collect();
-        let days: Vec<String> = input_quotes.iter().map(|q| q.timestamp.format("%Y-%m-%d").to_string()).collect();
+        let days: Vec<String> = input_quotes
+            .iter()
+            .map(|q| q.timestamp.format("%Y-%m-%d").to_string())
+            .collect();
 
         let manual_days: std::collections::HashSet<(String, String)> = q_dsl::quotes
             .filter(q_dsl::source.eq("MANUAL"))
@@ -156,7 +159,9 @@ impl QuoteStore for PgMarketDataRepository {
             let day_str = quote.timestamp.format("%Y-%m-%d").to_string();
 
             // Skip provider quotes for days that already have MANUAL override
-            if quote.data_source != "MANUAL" && manual_days.contains(&(quote.asset_id.clone(), day_str.clone())) {
+            if quote.data_source != "MANUAL"
+                && manual_days.contains(&(quote.asset_id.clone(), day_str.clone()))
+            {
                 continue;
             }
 
@@ -242,7 +247,11 @@ impl QuoteStore for PgMarketDataRepository {
     // Single Asset Queries (Strong Types)
     // =========================================================================
 
-    async fn latest(&self, asset_id: &AssetId, source: Option<&QuoteSource>) -> Result<Option<Quote>> {
+    async fn latest(
+        &self,
+        asset_id: &AssetId,
+        source: Option<&QuoteSource>,
+    ) -> Result<Option<Quote>> {
         let mut conn = self.pool.get().await.map_err(StoragePgError::from)?;
 
         let mut query = q_dsl::quotes
@@ -395,8 +404,7 @@ impl QuoteStore for PgMarketDataRepository {
         for quote_db in ranked_quotes {
             let quote = Quote::from(quote_db);
 
-            if current_asset_quotes.is_empty()
-                || quote.asset_id == current_asset_quotes[0].asset_id
+            if current_asset_quotes.is_empty() || quote.asset_id == current_asset_quotes[0].asset_id
             {
                 current_asset_quotes.push(quote);
             } else {
@@ -480,7 +488,10 @@ impl QuoteStore for PgMarketDataRepository {
         match query_result {
             Some(quote_db) => Ok(Quote::from(quote_db)),
             None => Err(whaleit_core::errors::Error::Database(
-                DatabaseError::NotFound(format!("No quote found in database for symbol: {}", symbol)),
+                DatabaseError::NotFound(format!(
+                    "No quote found in database for symbol: {}",
+                    symbol
+                )),
             )),
         }
     }
@@ -552,8 +563,7 @@ impl QuoteStore for PgMarketDataRepository {
         for quote_db in ranked_quotes {
             let quote = Quote::from(quote_db);
 
-            if current_asset_quotes.is_empty()
-                || quote.asset_id == current_asset_quotes[0].asset_id
+            if current_asset_quotes.is_empty() || quote.asset_id == current_asset_quotes[0].asset_id
             {
                 current_asset_quotes.push(quote);
             } else {
@@ -647,7 +657,10 @@ impl ProviderSettingsStore for PgMarketDataRepository {
             .await
             .map_err(StoragePgError::from)?;
 
-        Ok(db_results.into_iter().map(MarketDataProviderSetting::from).collect())
+        Ok(db_results
+            .into_iter()
+            .map(MarketDataProviderSetting::from)
+            .collect())
     }
 
     async fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
@@ -699,10 +712,7 @@ impl ProviderSettingsStore for PgMarketDataRepository {
 // =============================================================================
 
 impl PgMarketDataRepository {
-    fn flush_pair(
-        current: &mut Vec<Quote>,
-        result_map: &mut HashMap<AssetId, LatestQuotePair>,
-    ) {
+    fn flush_pair(current: &mut Vec<Quote>, result_map: &mut HashMap<AssetId, LatestQuotePair>) {
         if current.is_empty() {
             return;
         }

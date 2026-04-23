@@ -1,11 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@whaleit/ui/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@whaleit/ui/components/ui/dialog";
 import { Button } from "@whaleit/ui/components/ui/button";
 import { Input } from "@whaleit/ui/components/ui/input";
 import { Label } from "@whaleit/ui/components/ui/label";

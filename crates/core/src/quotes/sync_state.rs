@@ -480,7 +480,10 @@ pub trait SyncStateStore: Send + Sync {
     async fn get_by_asset_id(&self, asset_id: &str) -> Result<Option<QuoteSyncState>>;
 
     /// Get sync states for multiple asset IDs.
-    async fn get_by_asset_ids(&self, asset_ids: &[String]) -> Result<HashMap<String, QuoteSyncState>>;
+    async fn get_by_asset_ids(
+        &self,
+        asset_ids: &[String],
+    ) -> Result<HashMap<String, QuoteSyncState>>;
 
     /// Get all active assets (is_active = true).
     async fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>>;

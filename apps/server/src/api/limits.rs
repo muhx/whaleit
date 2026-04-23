@@ -59,7 +59,8 @@ async fn calculate_deposits_for_contribution_limit(
     let base = state.base_currency.read().unwrap().clone();
     let calc = state
         .limits_service
-        .calculate_deposits_for_contribution_limit(&id, &base).await?;
+        .calculate_deposits_for_contribution_limit(&id, &base)
+        .await?;
     Ok(Json(calc))
 }
 

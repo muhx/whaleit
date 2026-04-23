@@ -2,7 +2,6 @@
 //!
 //! Defines DB models for threads, messages, and tags using PG-native types.
 
-use chrono::Utc;
 use diesel::prelude::*;
 
 #[derive(Debug, Clone, Queryable, Identifiable, Selectable, Insertable, AsChangeset, PartialEq)]

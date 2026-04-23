@@ -21,5 +21,8 @@ pub trait SettingsRepositoryTrait: Send + Sync {
     async fn update_setting(&self, setting_key: &str, setting_value: &str) -> Result<()>;
 
     /// Get all distinct currencies (excluding the base currency) from accounts and assets.
-    async fn get_distinct_currencies_excluding_base(&self, base_currency: &str) -> Result<Vec<String>>;
+    async fn get_distinct_currencies_excluding_base(
+        &self,
+        base_currency: &str,
+    ) -> Result<Vec<String>>;
 }

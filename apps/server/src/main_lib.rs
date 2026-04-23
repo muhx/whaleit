@@ -433,8 +433,8 @@ async fn build_state_postgres(
     let user_repo: Option<Arc<dyn UserRepositoryTrait>> = Some(Arc::new(
         PgUserRepository::new(pool.clone()),
     ));
-    let email_service = user_repo.as_ref().map(|repo| {
-        Arc::new(EmailService::new(repo.clone()))
+    let email_service = user_repo.as_ref().map(|_| {
+        Arc::new(EmailService::new())
     });
 
     Ok(Arc::new(AppState {

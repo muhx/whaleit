@@ -93,18 +93,8 @@ pub(crate) struct Claims {
 #[derive(Clone)]
 pub struct AuthenticatedUser {
     pub user_id: String,
+    #[allow(dead_code)]
     pub email: String,
-}
-
-#[derive(Deserialize)]
-pub struct LoginRequest {
-    pub email: String,
-    pub password: String,
-}
-
-#[derive(Deserialize)]
-pub struct LegacyLoginRequest {
-    pub password: String,
 }
 
 #[derive(Serialize)]

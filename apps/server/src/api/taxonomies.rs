@@ -166,7 +166,10 @@ async fn get_asset_taxonomy_assignments(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<AssetTaxonomyAssignment>>> {
     debug!("Fetching taxonomy assignments for asset {}...", asset_id);
-    let assignments = state.taxonomy_service.get_asset_assignments(&asset_id).await?;
+    let assignments = state
+        .taxonomy_service
+        .get_asset_assignments(&asset_id)
+        .await?;
     Ok(Json(assignments))
 }
 
@@ -205,7 +208,8 @@ async fn get_migration_status(
     let status = whaleit_core::health::get_migration_status(
         state.asset_service.as_ref(),
         state.taxonomy_service.as_ref(),
-    ).await?;
+    )
+    .await?;
     Ok(Json(status))
 }
 

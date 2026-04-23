@@ -579,7 +579,9 @@ async fn spawn_chat_stream<E: AiEnvironment + 'static>(
     let provider_service = ProviderService::new(env.clone());
     let api_key = provider_service.get_api_key(&provider_id)?;
     let provider_url = provider_service.get_provider_url(&provider_id).await;
-    let mut capabilities = provider_service.get_model_capabilities(&provider_id, &model_id).await;
+    let mut capabilities = provider_service
+        .get_model_capabilities(&provider_id, &model_id)
+        .await;
 
     // Best-effort preflight for Ollama: if we can list models and the selected model
     // is definitely missing, fail fast with a clear actionable error.

@@ -376,7 +376,10 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         );
 
         // Validate liability is actually a Liability kind
-        let liability = self.asset_repository.get_by_id(&request.liability_id).await?;
+        let liability = self
+            .asset_repository
+            .get_by_id(&request.liability_id)
+            .await?;
         if liability.kind != AssetKind::Liability {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Asset {} is not a liability (kind: {:?})",
@@ -385,7 +388,10 @@ impl AlternativeAssetServiceTrait for AlternativeAssetService {
         }
 
         // Validate target asset exists and is an alternative asset
-        let target = self.asset_repository.get_by_id(&request.target_asset_id).await?;
+        let target = self
+            .asset_repository
+            .get_by_id(&request.target_asset_id)
+            .await?;
         if !target.kind.is_alternative() {
             return Err(Error::Validation(ValidationError::InvalidInput(format!(
                 "Target asset {} is not an alternative asset (kind: {:?})",

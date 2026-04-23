@@ -30,23 +30,12 @@ fn transport_err_from_sync(e: whaleit_device_sync::DeviceSyncError) -> Transport
         },
     }
 }
-#[cfg(not(feature = "postgres"))]
-use whaleit_storage_sqlite::sync::{SqliteSyncEngineDbPorts, SyncTableRowCount as SqliteSyncTableRowCount};
+use whaleit_storage_postgres::sync::{
+    PgSyncEngineDbPorts, SyncTableRowCount as PgSyncTableRowCount,
+};
 
-#[cfg(feature = "postgres")]
-use whaleit_storage_postgres::sync::{PgSyncEngineDbPorts, SyncTableRowCount as PgSyncTableRowCount};
-
-#[cfg(not(feature = "postgres"))]
-type SyncTableRowCount = SqliteSyncTableRowCount;
-
-#[cfg(feature = "postgres")]
 type SyncTableRowCount = PgSyncTableRowCount;
 
-// Type alias for engine ports that works in both modes
-#[cfg(not(feature = "postgres"))]
-type EngineDbPorts = SqliteSyncEngineDbPorts;
-
-#[cfg(feature = "postgres")]
 type EngineDbPorts = PgSyncEngineDbPorts;
 
 const SYNC_IDENTITY_KEY: &str = "sync_identity";
@@ -1595,12 +1584,10 @@ pub async fn confirm_pairing_with_bootstrap(
 
     // 2. Set freshness gate
     if let Some(min_created_at) = min_snapshot_created_at.as_deref() {
-        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at)
-        {
+        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at) {
             let max_allowed = chrono::Utc::now() + chrono::Duration::minutes(10);
             if parsed_min <= max_allowed {
-                if let Ok(normalized) =
-                    whaleit_device_sync::normalize_sync_datetime(min_created_at)
+                if let Ok(normalized) = whaleit_device_sync::normalize_sync_datetime(min_created_at)
                 {
                     let _ = set_min_snapshot_created_at_in_store(&device_id, &normalized);
                     let _ = state
@@ -1741,12 +1728,10 @@ pub async fn begin_pairing_confirm(
 
     // 2. Set freshness gate
     if let Some(min_created_at) = min_snapshot_created_at.as_deref() {
-        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at)
-        {
+        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at) {
             let max_allowed = chrono::Utc::now() + chrono::Duration::minutes(10);
             if parsed_min <= max_allowed {
-                if let Ok(normalized) =
-                    whaleit_device_sync::normalize_sync_datetime(min_created_at)
+                if let Ok(normalized) = whaleit_device_sync::normalize_sync_datetime(min_created_at)
                 {
                     let _ = set_min_snapshot_created_at_in_store(&device_id, &normalized);
                     let _ = state

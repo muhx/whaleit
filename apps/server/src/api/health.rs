@@ -138,10 +138,7 @@ async fn execute_health_fix(
 
         state
             .quote_service
-            .sync(
-                whaleit_core::quotes::SyncMode::Incremental,
-                Some(asset_ids),
-            )
+            .sync(whaleit_core::quotes::SyncMode::Incremental, Some(asset_ids))
             .await
             .map_err(|e| anyhow::anyhow!("Market data sync failed: {}", e))?;
 

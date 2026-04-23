@@ -41,7 +41,8 @@
 
 ## Introduction
 
-**WhaleIt** is Your Friendly Finance Companion — track your entire financial life with local data storage. No Subscriptions, No Cloud.
+**WhaleIt** is Your Friendly Finance Companion — track your entire financial
+life with local data storage. No Subscriptions, No Cloud.
 
 Visit the app website at [WhaleIt](https://whaleit.app/).
 
@@ -341,8 +342,8 @@ The latest server build is published to Docker Hub.
 docker pull muhx/whaleit:latest
 ```
 
-After pulling, use `muhx/whaleit:latest` in the run commands below. If you
-build the image locally, swap the image name back to `whaleit`.
+After pulling, use `muhx/whaleit:latest` in the run commands below. If you build
+the image locally, swap the image name back to `whaleit`.
 
 ### Building the Image
 
@@ -397,8 +398,8 @@ See examples below for inline configuration.
 
 ### Running the Container
 
-All examples below use the published image (`muhx/whaleit:latest`). If you
-built locally, substitute your local tag (e.g., `whaleit`).
+All examples below use the published image (`muhx/whaleit:latest`). If you built
+locally, substitute your local tag (e.g., `whaleit`).
 
 **Using environment file** (recommended):
 
@@ -598,10 +599,9 @@ Check out the [addons/](addons/) directory for sample addons including:
 
 ### Addon System
 
-- **@whaleit/addon-sdk**: TypeScript SDK for addon development with full
-  type safety.
-- **@whaleit/addon-dev-tools**: CLI tools and development server for hot
-  reload.
+- **@whaleit/addon-sdk**: TypeScript SDK for addon development with full type
+  safety.
+- **@whaleit/addon-dev-tools**: CLI tools and development server for hot reload.
 - **@whaleit/ui**: Shared UI component library for consistent styling.
 
 ### Development Tools
@@ -711,8 +711,8 @@ Brand assets in `assets/brand/` are trademarks; see
 
 ---
 
-WhaleIt and the WhaleIt logo are trademarks of Teymz Inc. The code is
-licensed under AGPL-3.0; trademarks are not granted under that license.
+WhaleIt and the WhaleIt logo are trademarks of Teymz Inc. The code is licensed
+under AGPL-3.0; trademarks are not granted under that license.
 
 ## 🌟 Star History
 

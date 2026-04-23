@@ -138,7 +138,8 @@ impl AccountServiceTrait for AccountService {
         account_ids: Option<&[String]>,
     ) -> Result<Vec<Account>> {
         self.repository
-            .list(is_active_filter, is_archived_filter, account_ids).await
+            .list(is_active_filter, is_archived_filter, account_ids)
+            .await
     }
 
     /// Lists all accounts.

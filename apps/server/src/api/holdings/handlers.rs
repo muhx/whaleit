@@ -6,6 +6,7 @@ use axum::{
 };
 use chrono::{NaiveDate, Utc};
 use rust_decimal::Decimal;
+use whaleit_core::portfolio::snapshot::SnapshotRepositoryTrait;
 use whaleit_core::{
     accounts::AccountServiceTrait,
     constants::PORTFOLIO_TOTAL_ACCOUNT_ID,
@@ -19,8 +20,6 @@ use whaleit_core::{
         valuation::{DailyAccountValuation, ValuationRecalcMode},
     },
 };
-#[cfg(feature = "postgres")]
-use whaleit_core::portfolio::snapshot::SnapshotRepositoryTrait;
 
 use crate::{error::ApiResult, main_lib::AppState};
 
@@ -96,7 +95,8 @@ pub async fn get_historical_valuations(
         .transpose()?;
     let vals = state
         .valuation_service
-        .get_historical_valuations(&q.account_id, start, end).await?;
+        .get_historical_valuations(&q.account_id, start, end)
+        .await?;
     Ok(Json(vals))
 }
 
@@ -121,7 +121,8 @@ pub async fn get_latest_valuations(
     if ids.is_empty() {
         ids = state
             .account_service
-            .get_active_accounts().await?
+            .get_active_accounts()
+            .await?
             .into_iter()
             .map(|a| a.id)
             .collect();
@@ -166,10 +167,10 @@ pub async fn get_snapshots(
     let start_date = parse_date_optional(q.date_from, "dateFrom")?;
     let end_date = parse_date_optional(q.date_to, "dateTo")?;
 
-    let snapshots =
-        state
-            .snapshot_service
-            .get_holdings_keyframes(&q.account_id, start_date, end_date).await?;
+    let snapshots = state
+        .snapshot_service
+        .get_holdings_keyframes(&q.account_id, start_date, end_date)
+        .await?;
 
     let result: Vec<SnapshotInfo> = snapshots
         .into_iter()
@@ -192,11 +193,10 @@ pub async fn get_snapshot_by_date(
     let target_date = parse_date(&q.date, "date")?;
 
     // Get keyframes for this specific date
-    let snapshots = state.snapshot_service.get_holdings_keyframes(
-        &q.account_id,
-        Some(target_date),
-        Some(target_date),
-    ).await?;
+    let snapshots = state
+        .snapshot_service
+        .get_holdings_keyframes(&q.account_id, Some(target_date), Some(target_date))
+        .await?;
 
     let snapshot = snapshots
         .into_iter()
@@ -220,11 +220,10 @@ pub async fn delete_snapshot_handler(
     let target_date = parse_date(&q.date, "date")?;
 
     // First verify the snapshot exists and is not CALCULATED
-    let snapshots = state.snapshot_service.get_holdings_keyframes(
-        &q.account_id,
-        Some(target_date),
-        Some(target_date),
-    ).await?;
+    let snapshots = state
+        .snapshot_service
+        .get_holdings_keyframes(&q.account_id, Some(target_date), Some(target_date))
+        .await?;
 
     let snapshot = snapshots
         .into_iter()
@@ -282,7 +281,12 @@ pub async fn delete_snapshot_handler(
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position): (&String, &whaleit_core::portfolio::snapshot::Position)| (asset_id.clone(), position.quantity))
+                .map(
+                    |(asset_id, position): (
+                        &String,
+                        &whaleit_core::portfolio::snapshot::Position,
+                    )| (asset_id.clone(), position.quantity),
+                )
                 .collect();
 
         if let Err(e) = state
@@ -457,11 +461,10 @@ pub async fn check_holdings_import_handler(
     let existing_dates = if !valid_dates.is_empty() {
         let min_date = *valid_dates.iter().min().unwrap();
         let max_date = *valid_dates.iter().max().unwrap();
-        let existing = state.snapshot_service.get_holdings_keyframes(
-            &req.account_id,
-            Some(min_date),
-            Some(max_date),
-        ).await?;
+        let existing = state
+            .snapshot_service
+            .get_holdings_keyframes(&req.account_id, Some(min_date), Some(max_date))
+            .await?;
 
         let import_dates: std::collections::HashSet<NaiveDate> = valid_dates.into_iter().collect();
         existing

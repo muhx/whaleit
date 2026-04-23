@@ -42,7 +42,10 @@ pub trait TaxonomyRepositoryTrait: Send + Sync {
     async fn delete_asset_assignments(&self, asset_id: &str, taxonomy_id: &str) -> Result<usize>;
 
     // Bulk operations
-    async fn get_taxonomy_with_categories(&self, id: &str) -> Result<Option<TaxonomyWithCategories>>;
+    async fn get_taxonomy_with_categories(
+        &self,
+        id: &str,
+    ) -> Result<Option<TaxonomyWithCategories>>;
     async fn get_all_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>>;
 }
 

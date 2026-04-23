@@ -353,11 +353,10 @@ export const invoke = async <T>(command: string, payload?: Record<string, unknow
   const config = COMMANDS[command];
   if (!config) throw new Error(`Unsupported command ${command}`);
   let url = `${API_PREFIX}${config.path}`;
-  let body: BodyInit | undefined;
 
   const result = handleCommand(command, url, payload);
   url = result.url;
-  body = result.body;
+  const body = result.body;
 
   const headers: HeadersInit = {};
   if (body !== undefined) {
@@ -424,7 +423,11 @@ export const invoke = async <T>(command: string, payload?: Record<string, unknow
  * Dispatch command to the appropriate domain module handler.
  * Returns modified url and body for the HTTP request.
  */
-function handleCommand(command: string, url: string, payload?: Record<string, unknown>): HandleResult {
+export function handleCommand(
+  command: string,
+  url: string,
+  payload?: Record<string, unknown>,
+): HandleResult {
   const p = payload as Record<string, unknown> | undefined;
 
   switch (command) {
@@ -584,8 +587,7 @@ function handleCommand(command: string, url: string, payload?: Record<string, un
     case "get_platforms":
     case "get_broker_sync_states":
     case "get_broker_ingest_states":
-    // Device Sync / Enrollment (no payload transformation)
-    case "get_device_sync_state":
+    case "get_device_sync_state": // falls through - Device Sync / Enrollment (no payload transformation)
     case "enable_device_sync":
     case "clear_device_sync_data":
     case "reinitialize_device_sync":

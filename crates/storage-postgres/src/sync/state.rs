@@ -12,9 +12,7 @@ use crate::db::PgPool;
 use crate::errors::IntoCore;
 use crate::schema::brokers_sync_state;
 
-use whaleit_connect::broker_ingest::{
-    BrokerSyncState, BrokerSyncStateRepositoryTrait, SyncStatus,
-};
+use whaleit_connect::broker_ingest::{BrokerSyncState, BrokerSyncStateRepositoryTrait, SyncStatus};
 use whaleit_core::errors::Result;
 
 #[derive(Queryable, Identifiable, Selectable, PartialEq, Debug, Clone)]
@@ -50,12 +48,12 @@ impl From<BrokerSyncStateDB> for BrokerSyncState {
             checkpoint_json: db
                 .checkpoint_json
                 .and_then(|s| serde_json::from_str(&s).ok()),
-            last_attempted_at: db.last_attempted_at.map(|ndt| {
-                DateTime::from_naive_utc_and_offset(ndt, Utc)
-            }),
-            last_successful_at: db.last_successful_at.map(|ndt| {
-                DateTime::from_naive_utc_and_offset(ndt, Utc)
-            }),
+            last_attempted_at: db
+                .last_attempted_at
+                .map(|ndt| DateTime::from_naive_utc_and_offset(ndt, Utc)),
+            last_successful_at: db
+                .last_successful_at
+                .map(|ndt| DateTime::from_naive_utc_and_offset(ndt, Utc)),
             last_error: db.last_error,
             last_run_id: db.last_run_id,
             sync_status,
@@ -101,9 +99,10 @@ impl BrokerSyncStateRepositoryTrait for PgBrokerSyncStateRepository {
     async fn upsert_attempt(&self, account_id: String, provider: String) -> Result<()> {
         let now = chrono::Utc::now().naive_utc();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(brokers_sync_state::table)
             .values((
@@ -131,14 +130,15 @@ impl BrokerSyncStateRepositoryTrait for PgBrokerSyncStateRepository {
         &self,
         account_id: String,
         provider: String,
-        last_synced_date: String,
+        _last_synced_date: String,
         import_run_id: Option<String>,
     ) -> Result<()> {
         let now = chrono::Utc::now().naive_utc();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(brokers_sync_state::table)
             .values((
@@ -176,9 +176,10 @@ impl BrokerSyncStateRepositoryTrait for PgBrokerSyncStateRepository {
     ) -> Result<()> {
         let now = chrono::Utc::now().naive_utc();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(brokers_sync_state::table)
             .values((
@@ -215,9 +216,10 @@ impl BrokerSyncStateRepositoryTrait for PgBrokerSyncStateRepository {
     ) -> Result<()> {
         let now = chrono::Utc::now().naive_utc();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(brokers_sync_state::table)
             .values((

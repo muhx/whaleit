@@ -233,7 +233,8 @@ async fn get_latest_quotes(
 ) -> ApiResult<Json<std::collections::HashMap<String, LatestQuoteSnapshot>>> {
     let quotes = state
         .quote_service
-        .get_latest_quotes_snapshot(&body.asset_ids).await?;
+        .get_latest_quotes_snapshot(&body.asset_ids)
+        .await?;
     Ok(Json(quotes))
 }
 

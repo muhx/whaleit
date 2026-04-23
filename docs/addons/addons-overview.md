@@ -6,8 +6,8 @@ functionality. This guide covers how to build, test, and distribute addons.
 
 ## What are Whaleit Addons?
 
-Addons are TypeScript/React-based extensions that provide access to
-Whaleit's financial data and UI system.
+Addons are TypeScript/React-based extensions that provide access to Whaleit's
+financial data and UI system.
 
 **Technical Foundation** Each addon is a JavaScript function that receives an
 `AddonContext` object with access to APIs, UI components, and event system.

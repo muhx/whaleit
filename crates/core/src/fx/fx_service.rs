@@ -79,7 +79,8 @@ impl FxService {
                 let inverse_key = ExchangeRate::make_instrument_key(to, from);
                 match self
                     .repository
-                    .get_latest_exchange_rate_by_symbol(&inverse_key).await?
+                    .get_latest_exchange_rate_by_symbol(&inverse_key)
+                    .await?
                 {
                     Some(inverse_rate) => {
                         let direct_rate = ExchangeRate {
@@ -207,7 +208,12 @@ impl FxServiceTrait for FxService {
         self.repository.save_exchange_rate(rate).await
     }
 
-    async fn get_historical_rates(&self, from: &str, to: &str, days: i64) -> Result<Vec<ExchangeRate>> {
+    async fn get_historical_rates(
+        &self,
+        from: &str,
+        to: &str,
+        days: i64,
+    ) -> Result<Vec<ExchangeRate>> {
         let normalized_from = normalize_currency_code(from);
         let normalized_to = normalize_currency_code(to);
 
@@ -215,11 +221,11 @@ impl FxServiceTrait for FxService {
         let end = Utc::now();
         let start = end - chrono::Duration::days(days);
 
-        match self.repository.get_historical_quotes(
-            &instrument_key,
-            start.naive_utc(),
-            end.naive_utc(),
-        ).await {
+        match self
+            .repository
+            .get_historical_quotes(&instrument_key, start.naive_utc(), end.naive_utc())
+            .await
+        {
             Ok(quotes) => Ok(quotes
                 .into_iter()
                 .map(|q| ExchangeRate {
@@ -252,7 +258,11 @@ impl FxServiceTrait for FxService {
         self.add_exchange_rate(new_rate).await
     }
 
-    async fn get_latest_exchange_rate(&self, from_currency: &str, to_currency: &str) -> Result<Decimal> {
+    async fn get_latest_exchange_rate(
+        &self,
+        from_currency: &str,
+        to_currency: &str,
+    ) -> Result<Decimal> {
         let (normalized_from, normalized_to, source_multiplier, target_multiplier) =
             Self::normalize_currency_pair(from_currency, to_currency);
 
@@ -260,18 +270,20 @@ impl FxServiceTrait for FxService {
             return Ok(source_multiplier * target_multiplier);
         }
 
-        let base_rate =
-            match self.get_latest_rate_between_normalized(normalized_from, normalized_to).await {
-                Ok(rate) => rate,
-                Err(e) => {
-                    log::error!(
-                        "Exchange rate not available for {}/{}",
-                        normalized_from,
-                        normalized_to
-                    );
-                    return Err(e);
-                }
-            };
+        let base_rate = match self
+            .get_latest_rate_between_normalized(normalized_from, normalized_to)
+            .await
+        {
+            Ok(rate) => rate,
+            Err(e) => {
+                log::error!(
+                    "Exchange rate not available for {}/{}",
+                    normalized_from,
+                    normalized_to
+                );
+                return Err(e);
+            }
+        };
 
         Ok(source_multiplier * base_rate * target_multiplier)
     }
@@ -305,8 +317,9 @@ impl FxServiceTrait for FxService {
             return Ok(source_multiplier * target_multiplier);
         }
 
-        let base_rate =
-            self.get_rate_for_date_between_normalized(normalized_from, normalized_to, date).await?;
+        let base_rate = self
+            .get_rate_for_date_between_normalized(normalized_from, normalized_to, date)
+            .await?;
 
         Ok(source_multiplier * base_rate * target_multiplier)
     }
@@ -321,7 +334,9 @@ impl FxServiceTrait for FxService {
             return Ok(amount);
         }
 
-        let rate = self.get_latest_exchange_rate(from_currency, to_currency).await?;
+        let rate = self
+            .get_latest_exchange_rate(from_currency, to_currency)
+            .await?;
         Ok(amount * rate)
     }
 
@@ -336,7 +351,9 @@ impl FxServiceTrait for FxService {
             return Ok(amount);
         }
 
-        let rate = self.get_exchange_rate_for_date(from_currency, to_currency, date).await?;
+        let rate = self
+            .get_exchange_rate_for_date(from_currency, to_currency, date)
+            .await?;
         Ok(amount * rate)
     }
 
@@ -460,11 +477,15 @@ mod tests {
             Ok(vec![])
         }
 
-        async fn get_latest_exchange_rate(&self, _from: &str, _to: &str) -> Result<Option<ExchangeRate>> {
+        async fn get_latest_exchange_rate(
+            &self,
+            _from: &str,
+            _to: &str,
+        ) -> Result<Option<ExchangeRate>> {
             Ok(None)
         }
 
-        fn get_latest_exchange_rate_by_symbol(
+        async fn get_latest_exchange_rate_by_symbol(
             &self,
             _symbol: &str,
         ) -> Result<Option<ExchangeRate>> {

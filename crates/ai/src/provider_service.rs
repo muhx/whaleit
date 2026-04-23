@@ -79,7 +79,11 @@ impl AiProviderService {
 
     /// Load user settings from app_settings, falling back to defaults if missing/corrupt.
     async fn load_user_settings(&self) -> AiProviderSettings {
-        match self.settings_repo.get_setting(AI_PROVIDER_SETTINGS_KEY).await {
+        match self
+            .settings_repo
+            .get_setting(AI_PROVIDER_SETTINGS_KEY)
+            .await
+        {
             Ok(json) => {
                 serde_json::from_str(&json).unwrap_or_else(|_| self.create_default_settings())
             }

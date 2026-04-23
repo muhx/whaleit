@@ -1,24 +1,24 @@
 import {
-    deleteSecret,
-    isDesktop,
-    listenDeepLink,
-    logger,
-    openUrlInBrowser,
-    setSecret,
+  deleteSecret,
+  isDesktop,
+  listenDeepLink,
+  logger,
+  openUrlInBrowser,
+  setSecret,
 } from "@/adapters";
 import { useAuth } from "@/context/auth-context";
 import { getPlatform } from "@/hooks/use-platform";
 import { CONNECT_ENABLED } from "@/lib/connect-config";
 import { createClient, Session, SupabaseClient, User } from "@supabase/supabase-js";
 import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
 } from "react";
 import { authenticate as authenticateWithASWebAuth } from "tauri-plugin-web-auth-api";
 import { clearSyncSession, restoreSyncSession, storeSyncSession } from "../services/auth-service";
@@ -48,8 +48,7 @@ const getWebRedirectUrl = () => {
 // This is necessary because browsers block direct navigation to custom URL schemes
 // Uses env variable in dev, falls back to production URL for bundled builds
 const HOSTED_OAUTH_CALLBACK_URL =
-  (import.meta.env.CONNECT_OAUTH_CALLBACK_URL as string) ||
-  "https://connect.whaleit.app/deeplink";
+  (import.meta.env.CONNECT_OAUTH_CALLBACK_URL as string) || "https://connect.whaleit.app/deeplink";
 
 type AuthCallbackPayload = { type: "code"; code: string } | { type: "error"; message: string };
 
@@ -109,9 +108,7 @@ interface WhaleItConnectContextValue {
   refetchUserInfo: () => Promise<void>;
 }
 
-const WhaleItConnectContext = createContext<WhaleItConnectContextValue | undefined>(
-  undefined,
-);
+const WhaleItConnectContext = createContext<WhaleItConnectContextValue | undefined>(undefined);
 
 // Disabled context value - used when CONNECT_ENABLED is false
 // All methods are no-ops that return resolved promises
@@ -765,11 +762,7 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return (
-    <WhaleItConnectContext.Provider value={value}>
-      {children}
-    </WhaleItConnectContext.Provider>
-  );
+  return <WhaleItConnectContext.Provider value={value}>{children}</WhaleItConnectContext.Provider>;
 }
 
 // Main provider that chooses enabled/disabled path based on configuration

@@ -1,7 +1,10 @@
 import { expect, Page } from "@playwright/test";
 
 export const BASE_URL = "http://localhost:1420";
+const API_URL = "http://localhost:8088";
 export const TEST_PASSWORD = "password001";
+const TEST_USER_EMAIL = "e2e-test-user@whaleit.local";
+const TEST_USER_PASSWORD = "TestPass123!";
 
 export function getDatePartsAgo(daysAgo: number): { month: string; day: string; year: string } {
   const date = new Date();
@@ -190,17 +193,67 @@ export async function waitForSyncToast(page: Page, maxWaitMs = 60000) {
 export async function loginIfNeeded(page: Page) {
   await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
 
-  const loginInput = page.getByPlaceholder("Enter your password");
   const dashboardHeading = page.getByRole("heading", { name: "Dashboard" });
   const accountsHeading = page.getByRole("heading", { name: "Accounts" });
 
-  await expect(loginInput.or(dashboardHeading).or(accountsHeading)).toBeVisible({
-    timeout: 120000,
-  });
+  const alreadyLoggedIn =
+    (await dashboardHeading.isVisible().catch(() => false)) ||
+    (await accountsHeading.isVisible().catch(() => false));
+  if (alreadyLoggedIn) {
+    return;
+  }
 
-  if (await loginInput.isVisible()) {
-    await loginInput.fill(TEST_PASSWORD);
+  const emailInput = page.locator('input[id="email"]');
+  const passwordInput = page.getByPlaceholder("Enter your password");
+
+  await expect(emailInput.or(passwordInput)).toBeVisible({ timeout: 120000 });
+
+  if (await emailInput.isVisible()) {
+    await ensureTestUserExists();
+    await emailInput.fill(TEST_USER_EMAIL);
+    await page.locator('input[id="password"]').fill(TEST_USER_PASSWORD);
     await page.getByRole("button", { name: "Sign In" }).click();
     await expect(dashboardHeading.or(accountsHeading)).toBeVisible({ timeout: 15000 });
+  } else {
+    await passwordInput.fill(TEST_PASSWORD);
+    await page.getByRole("button", { name: "Sign In" }).click();
+    await expect(dashboardHeading.or(accountsHeading)).toBeVisible({ timeout: 15000 });
+  }
+}
+
+async function ensureTestUserExists() {
+  const registerResp = await fetch(`${API_URL}/api/v1/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: TEST_USER_EMAIL,
+      password: TEST_USER_PASSWORD,
+      displayName: "E2E Test User",
+    }),
+  });
+
+  if (registerResp.status === 201) {
+    const verifyToken = await extractVerificationTokenFromLog();
+    if (verifyToken) {
+      await fetch(`${API_URL}/api/v1/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: verifyToken }),
+      });
+    }
+  }
+}
+
+async function extractVerificationTokenFromLog(): Promise<string | null> {
+  const { execSync } = await import("node:child_process");
+  try {
+    const log = execSync("tail -100 /tmp/whaleit-dev2.log 2>/dev/null || true", {
+      encoding: "utf8",
+      timeout: 5000,
+    });
+    const match = log.match(/Verification URL:.*[?&]token=([A-Za-z0-9_-]+)/);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
   }
 }

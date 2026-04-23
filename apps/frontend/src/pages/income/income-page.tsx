@@ -2,11 +2,7 @@ import { getIncomeSummary } from "@/adapters";
 import { Badge } from "@whaleit/ui/components/ui/badge";
 import { Button } from "@whaleit/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@whaleit/ui/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@whaleit/ui/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@whaleit/ui/components/ui/chart";
 import { EmptyPlaceholder } from "@whaleit/ui/components/ui/empty-placeholder";
 import { Icons } from "@whaleit/ui/components/ui/icons";
 import { Skeleton } from "@whaleit/ui/components/ui/skeleton";

@@ -3,9 +3,7 @@
 use diesel::prelude::*;
 
 /// Database model for goals
-#[derive(
-    Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::goals)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct GoalDB {
@@ -28,9 +26,7 @@ pub struct NewGoalDB {
 }
 
 /// Database model for goal allocations
-#[derive(
-    Insertable, Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Insertable, Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::goals_allocation)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct GoalsAllocationDB {

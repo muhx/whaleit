@@ -75,7 +75,10 @@ export function handleInstallAddonFromStaging(
   url: string,
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
-  const { addonId, enableAfterInstall } = payload as { addonId: string; enableAfterInstall?: boolean };
+  const { addonId, enableAfterInstall } = payload as {
+    addonId: string;
+    enableAfterInstall?: boolean;
+  };
   return { url, body: JSON.stringify({ addonId, enableAfterInstall }) };
 }
 
@@ -96,7 +99,11 @@ export function handleSubmitAddonRating(
   url: string,
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
-  const { addonId, rating, review } = payload as { addonId: string; rating: number; review?: string };
+  const { addonId, rating, review } = payload as {
+    addonId: string;
+    rating: number;
+    review?: string;
+  };
   return { url, body: JSON.stringify({ addonId, rating, review }) };
 }
 

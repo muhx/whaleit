@@ -858,7 +858,10 @@ where
 
         let mut all_quotes = Vec::new();
         for symbol in symbols {
-            let mut quotes = self.quote_store.get_quotes_in_range(symbol, start, end).await?;
+            let mut quotes = self
+                .quote_store
+                .get_quotes_in_range(symbol, start, end)
+                .await?;
             if let Some(asset) = assets_by_id.get(symbol) {
                 for quote in quotes.iter_mut() {
                     reconcile_quote_currency(quote, asset);
@@ -983,7 +986,11 @@ where
         account_currency: Option<&str>,
     ) -> Result<Vec<SymbolSearchResult>> {
         // 1. Search existing assets in user's database
-        let existing_assets = self.asset_repo.search_by_symbol(query).await.unwrap_or_default();
+        let existing_assets = self
+            .asset_repo
+            .search_by_symbol(query)
+            .await
+            .unwrap_or_default();
 
         // 2. Search provider for external results
         let provider_results = self
@@ -1009,7 +1016,12 @@ where
         for result in provider_results {
             let key_opt = instrument_key_from_search_result(&result);
             let existing_asset = match key_opt {
-                Some(key) => self.asset_repo.find_by_instrument_key(&key).await.ok().flatten(),
+                Some(key) => self
+                    .asset_repo
+                    .find_by_instrument_key(&key)
+                    .await
+                    .ok()
+                    .flatten(),
                 None => None,
             };
 
@@ -1545,14 +1557,15 @@ where
     ) -> Result<()> {
         use super::provider_settings::UpdateMarketDataProviderSetting;
 
-        self.provider_settings_store.update_provider(
-            provider_id,
-            UpdateMarketDataProviderSetting {
-                priority: Some(priority),
-                enabled: Some(enabled),
-            },
-        )
-        .await?;
+        self.provider_settings_store
+            .update_provider(
+                provider_id,
+                UpdateMarketDataProviderSetting {
+                    priority: Some(priority),
+                    enabled: Some(enabled),
+                },
+            )
+            .await?;
 
         // Refresh client with new settings
         self.refresh_client().await?;
@@ -2128,7 +2141,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn latest_batch(
+        async fn latest_batch(
             &self,
             _asset_ids: &[AssetId],
             _source: Option<&QuoteSource>,
@@ -2136,7 +2149,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn latest_with_previous(
+        async fn latest_with_previous(
             &self,
             _asset_ids: &[AssetId],
         ) -> Result<HashMap<AssetId, LatestQuotePair>> {
@@ -2183,7 +2196,11 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn find_duplicate_quotes(&self, _symbol: &str, _date: NaiveDate) -> Result<Vec<Quote>> {
+        async fn find_duplicate_quotes(
+            &self,
+            _symbol: &str,
+            _date: NaiveDate,
+        ) -> Result<Vec<Quote>> {
             unimplemented!("unused in this test")
         }
     }
@@ -2218,7 +2235,10 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_assets_needing_sync(&self, _grace_period_days: i64) -> Result<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_sync(
+            &self,
+            _grace_period_days: i64,
+        ) -> Result<Vec<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
@@ -2258,7 +2278,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
@@ -2271,12 +2291,13 @@ mod tests {
         providers: Vec<MarketDataProviderSetting>,
     }
 
+    #[async_trait]
     impl ProviderSettingsStore for MockProviderSettingsStore {
-        fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>> {
+        async fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>> {
             Ok(self.providers.clone())
         }
 
-        fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
+        async fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
             self.providers
                 .iter()
                 .find(|p| p.id == id)
@@ -2284,7 +2305,7 @@ mod tests {
                 .ok_or_else(|| crate::Error::Unexpected(format!("Provider not found: {}", id)))
         }
 
-        fn update_provider(
+        async fn update_provider(
             &self,
             _id: &str,
             _changes: crate::quotes::UpdateMarketDataProviderSetting,
@@ -2380,7 +2401,10 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        async fn get_activities_by_account_ids(&self, _account_ids: &[String]) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_ids(
+            &self,
+            _account_ids: &[String],
+        ) -> Result<Vec<Activity>> {
             unimplemented!("unused in this test")
         }
 
@@ -2516,7 +2540,7 @@ mod tests {
             Ok(())
         }
 
-        fn calculate_average_cost(
+        async fn calculate_average_cost(
             &self,
             _account_id: &str,
             _asset_id: &str,
@@ -2524,15 +2548,18 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_income_activities_data(&self, _account_id: Option<&str>) -> Result<Vec<IncomeData>> {
+        async fn get_income_activities_data(
+            &self,
+            _account_id: Option<&str>,
+        ) -> Result<Vec<IncomeData>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_first_activity_date_overall(&self) -> Result<chrono::DateTime<Utc>> {
+        async fn get_first_activity_date_overall(&self) -> Result<chrono::DateTime<Utc>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_activity_bounds_for_assets(
+        async fn get_activity_bounds_for_assets(
             &self,
             _asset_ids: &[String],
         ) -> Result<HashMap<String, (Option<NaiveDate>, Option<NaiveDate>)>> {

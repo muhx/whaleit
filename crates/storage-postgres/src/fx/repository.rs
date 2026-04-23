@@ -11,12 +11,12 @@ use crate::db::PgPool;
 use crate::errors::StoragePgError;
 use crate::schema::assets;
 use crate::schema::quotes::dsl as q_dsl;
-use whaleit_core::errors::{DatabaseError, Result};
-use whaleit_core::fx::{ExchangeRate, FxRepositoryTrait};
-use whaleit_core::quotes::Quote;
 use chrono::{NaiveDateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use std::str::FromStr;
+use whaleit_core::errors::{DatabaseError, Result};
+use whaleit_core::fx::{ExchangeRate, FxRepositoryTrait};
+use whaleit_core::quotes::Quote;
 
 pub struct PgFxRepository {
     pool: Arc<PgPool>,
@@ -129,7 +129,11 @@ impl FxRepositoryTrait for PgFxRepository {
             .collect())
     }
 
-    async fn get_latest_exchange_rate(&self, from: &str, _to: &str) -> Result<Option<ExchangeRate>> {
+    async fn get_latest_exchange_rate(
+        &self,
+        from: &str,
+        _to: &str,
+    ) -> Result<Option<ExchangeRate>> {
         let mut conn = self.pool.get().await.map_err(StoragePgError::from)?;
 
         let expected_key = format!("FX:{}/{}", from, _to);
@@ -147,7 +151,10 @@ impl FxRepositoryTrait for PgFxRepository {
         Ok(result.map(|(q, a)| build_exchange_rate(&q, &a)))
     }
 
-    async fn get_latest_exchange_rate_by_symbol(&self, symbol: &str) -> Result<Option<ExchangeRate>> {
+    async fn get_latest_exchange_rate_by_symbol(
+        &self,
+        symbol: &str,
+    ) -> Result<Option<ExchangeRate>> {
         let mut conn = self.pool.get().await.map_err(StoragePgError::from)?;
 
         let result: Option<(QuoteDB, AssetDB)> = q_dsl::quotes
@@ -177,11 +184,7 @@ impl FxRepositoryTrait for PgFxRepository {
 
         // symbol is an instrument_key (e.g., "FX:EUR/USD") or asset_id
         let asset_ids: Vec<String> = assets::table
-            .filter(
-                assets::instrument_key
-                    .eq(symbol)
-                    .or(assets::id.eq(symbol)),
-            )
+            .filter(assets::instrument_key.eq(symbol).or(assets::id.eq(symbol)))
             .select(assets::id)
             .load::<String>(&mut conn)
             .await
@@ -227,14 +230,12 @@ impl FxRepositoryTrait for PgFxRepository {
         let naive_date = chrono::NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").map_err(|e| {
             whaleit_core::errors::Error::Unexpected(format!("Invalid date format: {}", e))
         })?;
-        let naive_datetime = naive_date
-            .and_hms_opt(16, 0, 0)
-            .ok_or_else(|| {
-                whaleit_core::errors::Error::Unexpected(format!(
-                    "Failed to create NaiveDateTime for {}",
-                    date_str
-                ))
-            })?;
+        let naive_datetime = naive_date.and_hms_opt(16, 0, 0).ok_or_else(|| {
+            whaleit_core::errors::Error::Unexpected(format!(
+                "Failed to create NaiveDateTime for {}",
+                date_str
+            ))
+        })?;
         let timestamp_utc = Utc.from_utc_datetime(&naive_datetime);
         let now = Utc::now();
 
@@ -318,18 +319,18 @@ impl FxRepositoryTrait for PgFxRepository {
         let updated = diesel::update(q_dsl::quotes)
             .filter(q_dsl::asset_id.eq(&quote.asset_id))
             .filter(q_dsl::day.eq(&day_str))
-            .set((
-                q_dsl::close.eq(close_str),
-                q_dsl::source.eq(source_str),
-            ))
+            .set((q_dsl::close.eq(close_str), q_dsl::source.eq(source_str)))
             .execute(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
 
         if updated == 0 {
-            return Err(whaleit_core::errors::Error::Database(DatabaseError::NotFound(
-                format!("Exchange rate quote not found for asset {}", quote.asset_id),
-            )));
+            return Err(whaleit_core::errors::Error::Database(
+                DatabaseError::NotFound(format!(
+                    "Exchange rate quote not found for asset {}",
+                    quote.asset_id
+                )),
+            ));
         }
 
         Ok(rate.clone())

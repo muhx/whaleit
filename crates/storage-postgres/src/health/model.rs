@@ -3,9 +3,7 @@
 use diesel::prelude::*;
 
 /// Database model for health issue dismissals
-#[derive(
-    Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::health_issue_dismissals)]
 #[diesel(primary_key(issue_id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]

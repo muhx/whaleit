@@ -49,13 +49,13 @@ mod tests {
 
     #[async_trait]
     impl FxServiceTrait for MockFxService {
-        fn initialize(&self) -> Result<()> {
+        async fn initialize(&self) -> Result<()> {
             Ok(())
         } // Not used
         async fn add_exchange_rate(&self, _new_rate: NewExchangeRate) -> Result<ExchangeRate> {
             unimplemented!()
         }
-        fn get_historical_rates(
+        async fn get_historical_rates(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -71,7 +71,7 @@ mod tests {
         ) -> Result<ExchangeRate> {
             unimplemented!()
         }
-        fn get_exchange_rate_for_date(
+        async fn get_exchange_rate_for_date(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -79,7 +79,7 @@ mod tests {
         ) -> Result<Decimal> {
             unimplemented!()
         }
-        fn convert_currency(
+        async fn convert_currency(
             &self,
             _amount: Decimal,
             _from_currency: &str,
@@ -87,7 +87,7 @@ mod tests {
         ) -> Result<Decimal> {
             unimplemented!()
         }
-        fn convert_currency_for_date(
+        async fn convert_currency_for_date(
             &self,
             _amount: Decimal,
             _from_currency: &str,
@@ -96,7 +96,7 @@ mod tests {
         ) -> Result<Decimal> {
             unimplemented!()
         }
-        fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
             unimplemented!()
         }
         async fn delete_exchange_rate(&self, _rate_id: &str) -> Result<()> {
@@ -121,7 +121,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_latest_exchange_rate(
+        async fn get_latest_exchange_rate(
             &self,
             from_currency: &str,
             to_currency: &str,
@@ -168,20 +168,20 @@ mod tests {
         // Quote CRUD Operations
         // =========================================================================
 
-        fn get_latest_quote(&self, _symbol: &str) -> Result<Quote> {
+        async fn get_latest_quote(&self, _symbol: &str) -> Result<Quote> {
             unimplemented!()
         }
 
-        fn get_latest_quotes(&self, _symbols: &[String]) -> Result<HashMap<String, Quote>> {
+        async fn get_latest_quotes(&self, _symbols: &[String]) -> Result<HashMap<String, Quote>> {
             unimplemented!()
         }
 
-        fn get_latest_quotes_snapshot(
+        async fn get_latest_quotes_snapshot(
             &self,
             asset_ids: &[String],
         ) -> Result<HashMap<String, LatestQuoteSnapshot>> {
             let today = Utc::now().date_naive();
-            let quotes = self.get_latest_quotes(asset_ids)?;
+            let quotes = self.get_latest_quotes(asset_ids).await?;
             Ok(quotes
                 .into_iter()
                 .map(|(asset_id, quote)| {
@@ -199,7 +199,7 @@ mod tests {
                 .collect())
         }
 
-        fn get_latest_quotes_pair(
+        async fn get_latest_quotes_pair(
             &self,
             symbols: &[String],
         ) -> Result<HashMap<String, LatestQuotePair>> {
@@ -218,15 +218,17 @@ mod tests {
             Ok(result)
         }
 
-        fn get_historical_quotes(&self, _symbol: &str) -> Result<Vec<Quote>> {
+        async fn get_historical_quotes(&self, _symbol: &str) -> Result<Vec<Quote>> {
             unimplemented!()
         }
 
-        fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
+        async fn get_all_historical_quotes(
+            &self,
+        ) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
             unimplemented!()
         }
 
-        fn get_quotes_in_range(
+        async fn get_quotes_in_range(
             &self,
             _symbols: &HashSet<String>,
             _start: NaiveDate,
@@ -235,7 +237,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_quotes_in_range_filled(
+        async fn get_quotes_in_range_filled(
             &self,
             _symbols: &HashSet<String>,
             _start: NaiveDate,
@@ -328,7 +330,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+        async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
             Ok(Vec::new())
         }
 
@@ -348,11 +350,11 @@ mod tests {
             Ok(())
         }
 
-        fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(Vec::new())
         }
 
-        fn get_sync_state(&self, _symbol: &str) -> Result<Option<QuoteSyncState>> {
+        async fn get_sync_state(&self, _symbol: &str) -> Result<Option<QuoteSyncState>> {
             Ok(None)
         }
 
@@ -360,7 +362,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(Vec::new())
         }
 
@@ -371,7 +373,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(Vec::new())
         }
 
@@ -686,7 +688,10 @@ mod tests {
     #[tokio::test]
     async fn test_security_valuation_with_fx() {
         let (fx_service, market_data_service, valuation_service) = setup_test_env();
-        let usd_cad_rate = fx_service.get_latest_exchange_rate("USD", "CAD").unwrap(); // 1.3
+        let usd_cad_rate = fx_service
+            .get_latest_exchange_rate("USD", "CAD")
+            .await
+            .unwrap(); // 1.3
 
         let latest_quote = create_quote("2024-01-10", dec!(100.0), "USD");
         let prev_quote = create_quote("2024-01-09", dec!(95.0), "USD");
@@ -822,7 +827,10 @@ mod tests {
     async fn test_security_valuation_quote_currency_differs_from_local() {
         // Holding is in CAD, Base is CAD, Quote is in USD
         let (fx_service, market_data_service, valuation_service) = setup_test_env();
-        let usd_cad_rate = fx_service.get_latest_exchange_rate("USD", "CAD").unwrap(); // 1.3
+        let usd_cad_rate = fx_service
+            .get_latest_exchange_rate("USD", "CAD")
+            .await
+            .unwrap(); // 1.3
 
         // Quote is in USD, even though we might track the holding in CAD locally (e.g., ADR)
         let latest_quote = create_quote("2024-01-10", dec!(50.0), "USD");
@@ -1049,7 +1057,10 @@ mod tests {
     #[tokio::test]
     async fn test_cash_valuation_with_fx() {
         let (fx_service, _market_data_service, valuation_service) = setup_test_env();
-        let usd_cad_rate = fx_service.get_latest_exchange_rate("USD", "CAD").unwrap(); // 1.3
+        let usd_cad_rate = fx_service
+            .get_latest_exchange_rate("USD", "CAD")
+            .await
+            .unwrap(); // 1.3
 
         let mut holdings = vec![create_holding(
             "h_cash_usd",
@@ -1127,8 +1138,14 @@ mod tests {
     #[tokio::test]
     async fn test_multiple_holdings_mixed_currencies() {
         let (fx_service, market_data_service, valuation_service) = setup_test_env();
-        let usd_cad_rate = fx_service.get_latest_exchange_rate("USD", "CAD").unwrap(); // 1.3
-        let eur_cad_rate = fx_service.get_latest_exchange_rate("EUR", "CAD").unwrap(); // 1.45
+        let usd_cad_rate = fx_service
+            .get_latest_exchange_rate("USD", "CAD")
+            .await
+            .unwrap(); // 1.3
+        let eur_cad_rate = fx_service
+            .get_latest_exchange_rate("EUR", "CAD")
+            .await
+            .unwrap(); // 1.45
 
         // Setup market data
         market_data_service.add_quote_pair(
@@ -1403,7 +1420,10 @@ mod tests {
             "Missing holding prev close should be None"
         );
         // Cost basis should still be calculated based on FX rate
-        let usd_cad_rate = _fx_service.get_latest_exchange_rate("USD", "CAD").unwrap();
+        let usd_cad_rate = _fx_service
+            .get_latest_exchange_rate("USD", "CAD")
+            .await
+            .unwrap();
         assert_monetary_value_approx(
             h_missing.cost_basis.as_ref(),
             dec!(5000.0),
@@ -1680,7 +1700,10 @@ mod tests {
     #[tokio::test]
     async fn test_missing_cost_basis_security() {
         let (fx_service, market_data_service, valuation_service) = setup_test_env();
-        let usd_cad_rate = fx_service.get_latest_exchange_rate("USD", "CAD").unwrap();
+        let usd_cad_rate = fx_service
+            .get_latest_exchange_rate("USD", "CAD")
+            .await
+            .unwrap();
 
         market_data_service.add_quote_pair(
             "AAPL",

@@ -51,7 +51,10 @@ impl AssetClassificationService {
     }
 
     /// Get all classifications for an asset
-    pub async fn get_classifications(&self, asset_id: &str) -> Result<AssetClassifications, String> {
+    pub async fn get_classifications(
+        &self,
+        asset_id: &str,
+    ) -> Result<AssetClassifications, String> {
         let assignments = self
             .taxonomy_service
             .get_asset_assignments(asset_id)
@@ -137,7 +140,11 @@ impl AssetClassificationService {
                 let taxonomy = if let Some(cached) = taxonomy_cache.get(&assignment.taxonomy_id) {
                     cached
                 } else {
-                    match self.taxonomy_service.get_taxonomy(&assignment.taxonomy_id).await {
+                    match self
+                        .taxonomy_service
+                        .get_taxonomy(&assignment.taxonomy_id)
+                        .await
+                    {
                         Ok(Some(twc)) => {
                             taxonomy_cache.insert(assignment.taxonomy_id.clone(), twc);
                             taxonomy_cache.get(&assignment.taxonomy_id).unwrap()

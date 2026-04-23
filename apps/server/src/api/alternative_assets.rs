@@ -343,7 +343,10 @@ async fn unlink_liability(
 async fn get_alternative_holdings(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<AlternativeHoldingResponse>>> {
-    let holdings = state.alternative_asset_service.get_alternative_holdings().await?;
+    let holdings = state
+        .alternative_asset_service
+        .get_alternative_holdings()
+        .await?;
 
     // Convert core holdings to response format
     let response: Vec<AlternativeHoldingResponse> = holdings

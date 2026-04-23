@@ -29,13 +29,25 @@ impl AssetRepositoryTrait for PgAssetRepository {
     async fn create(&self, new_asset: NewAsset) -> Result<Asset> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let now = chrono::Utc::now().naive_utc();
-        let id_val = new_asset.id.clone().unwrap_or_else(|| Uuid::now_v7().to_string());
+        let id_val = new_asset
+            .id
+            .clone()
+            .unwrap_or_else(|| Uuid::now_v7().to_string());
 
         let asset_kind = new_asset.kind.as_db_str().to_string();
         let asset_quote_mode = new_asset.quote_mode.as_db_str().to_string();
-        let asset_instrument_type = new_asset.instrument_type.as_ref().map(|t| t.as_db_str().to_string());
-        let asset_provider_config = new_asset.provider_config.as_ref().and_then(|v| serde_json::to_string(v).ok());
-        let asset_metadata = new_asset.metadata.as_ref().and_then(|v| serde_json::to_string(v).ok());
+        let asset_instrument_type = new_asset
+            .instrument_type
+            .as_ref()
+            .map(|t| t.as_db_str().to_string());
+        let asset_provider_config = new_asset
+            .provider_config
+            .as_ref()
+            .and_then(|v| serde_json::to_string(v).ok());
+        let asset_metadata = new_asset
+            .metadata
+            .as_ref()
+            .and_then(|v| serde_json::to_string(v).ok());
 
         diesel::insert_into(assets::table)
             .values(InsertableAssetDB {
@@ -76,7 +88,11 @@ impl AssetRepositoryTrait for PgAssetRepository {
         Ok(results)
     }
 
-    async fn update_profile(&self, asset_id_param: &str, _payload: UpdateAssetProfile) -> Result<Asset> {
+    async fn update_profile(
+        &self,
+        asset_id_param: &str,
+        _payload: UpdateAssetProfile,
+    ) -> Result<Asset> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         diesel::update(assets::table.find(asset_id_param))
             .set(updated_at.eq(chrono::Utc::now().naive_utc()))
@@ -95,7 +111,10 @@ impl AssetRepositoryTrait for PgAssetRepository {
     async fn update_quote_mode(&self, asset_id_param: &str, mode: &str) -> Result<Asset> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         diesel::update(assets::table.find(asset_id_param))
-            .set((quote_mode.eq(mode), updated_at.eq(chrono::Utc::now().naive_utc())))
+            .set((
+                quote_mode.eq(mode),
+                updated_at.eq(chrono::Utc::now().naive_utc()),
+            ))
             .execute(&mut conn)
             .await
             .map_err(StoragePgError::from)?;

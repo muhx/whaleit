@@ -14,15 +14,15 @@ npm install -g pnpm
 Requirements:
 
 - Node.js 20+ and pnpm
-- Whaleit desktop app (optional but recommended: running in development mode
-  for live reload and testing)
+- Whaleit desktop app (optional but recommended: running in development mode for
+  live reload and testing)
 - Basic TypeScript and React knowledge
 - Code editor (VS Code recommended)
 
 ## Start Whaleit (Recommended)
 
-For the best development experience with live reload and testing, start
-Whaleit in addon development mode:
+For the best development experience with live reload and testing, start Whaleit
+in addon development mode:
 
 ```bash
 # Clone Whaleit repository (if not already done)
@@ -526,5 +526,5 @@ You now understand:
 Continue with:
 
 - [API Reference](/docs/addons/api-reference) - All available APIs
-- [Examples](https://github.com/muhx/whaleit/tree/main/addons/) - Real
-  addon implementations
+- [Examples](https://github.com/muhx/whaleit/tree/main/addons/) - Real addon
+  implementations

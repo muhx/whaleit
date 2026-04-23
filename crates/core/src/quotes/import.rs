@@ -532,9 +532,10 @@ impl QuoteImportService {
         }
 
         // Also check by range for more thorough duplicate detection
-        let quotes_on_day =
-            self.quote_store
-                .range(&asset_id, day, day, Some(&QuoteSource::Manual)).await?;
+        let quotes_on_day = self
+            .quote_store
+            .range(&asset_id, day, day, Some(&QuoteSource::Manual))
+            .await?;
         if !quotes_on_day.is_empty() {
             return Ok(ImportValidation::duplicate(
                 asset_id,
@@ -673,7 +674,10 @@ impl QuoteImportService {
         let start_day = start.unwrap_or_else(|| Day::from_ymd(1900, 1, 1).unwrap());
         let end_day = end.unwrap_or_else(Day::today);
 
-        let quotes = self.quote_store.range(asset_id, start_day, end_day, None).await?;
+        let quotes = self
+            .quote_store
+            .range(asset_id, start_day, end_day, None)
+            .await?;
 
         Ok(quotes.iter().map(QuoteExport::from_quote).collect())
     }

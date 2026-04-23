@@ -127,7 +127,11 @@ pub trait QuoteStore: Send + Sync {
     /// # Returns
     ///
     /// The latest quote, or None if no quotes exist
-    async fn latest(&self, asset_id: &AssetId, source: Option<&QuoteSource>) -> Result<Option<Quote>>;
+    async fn latest(
+        &self,
+        asset_id: &AssetId,
+        source: Option<&QuoteSource>,
+    ) -> Result<Option<Quote>>;
 
     /// Gets quotes in date range for a single asset.
     ///
@@ -269,7 +273,11 @@ pub trait QuoteStore: Send + Sync {
     /// The default implementation falls back to `get_historical_quotes` with
     /// an in-memory filter. Storage backends should override this with a
     /// targeted query for efficiency.
-    async fn get_latest_quote_before(&self, symbol: &str, before: NaiveDate) -> Result<Option<Quote>> {
+    async fn get_latest_quote_before(
+        &self,
+        symbol: &str,
+        before: NaiveDate,
+    ) -> Result<Option<Quote>> {
         let quote = self
             .get_historical_quotes(symbol)
             .await?

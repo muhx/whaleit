@@ -12,16 +12,16 @@ use crate::db::PgPool;
 use crate::errors::StoragePgError;
 use crate::schema::activities;
 use crate::schema::activities::dsl::*;
+use chrono::{DateTime, NaiveDate, Utc};
+use rust_decimal::Decimal;
 use whaleit_core::activities::{
-    Activity, ActivityBulkMutationResult, ActivityBulkIdentifierMapping, ActivityBulkMutationError,
+    Activity, ActivityBulkMutationResult,
     ActivityRepositoryTrait, ActivitySearchResponse, ActivitySearchResponseMeta,
     ActivityUpdate as CoreActivityUpdate, BulkUpsertResult, ImportMapping,
     ImportTemplate as CoreImportTemplate, NewActivity,
 };
 use whaleit_core::limits::ContributionActivity;
 use whaleit_core::Result;
-use chrono::{DateTime, NaiveDate, Utc};
-use rust_decimal::Decimal;
 
 pub struct PgActivityRepository {
     pool: Arc<PgPool>,
@@ -64,7 +64,10 @@ impl ActivityRepositoryTrait for PgActivityRepository {
         Ok(results.into_iter().map(Activity::from).collect())
     }
 
-    async fn get_activities_by_account_ids(&self, account_ids_param: &[String]) -> Result<Vec<Activity>> {
+    async fn get_activities_by_account_ids(
+        &self,
+        account_ids_param: &[String],
+    ) -> Result<Vec<Activity>> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let results = activities::table
             .filter(account_id.eq_any(account_ids_param))
@@ -107,42 +110,44 @@ impl ActivityRepositoryTrait for PgActivityRepository {
             .load::<ActivityDB>(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
-        Ok(results.into_iter().map(|db| ContributionActivity {
-            account_id: db.account_id,
-            activity_type: db.activity_type,
-            activity_instant: chrono::DateTime::parse_from_rfc3339(&db.activity_date)
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(|_| Utc::now()),
-            amount: db.amount.as_ref().map(|s| {
-                whaleit_core::activities::parse_decimal_string_tolerant(s, "amount")
-            }),
-            currency: db.currency,
-            metadata: None,
-            source_group_id: db.source_group_id,
-        }).collect())
+        Ok(results
+            .into_iter()
+            .map(|db| ContributionActivity {
+                account_id: db.account_id,
+                activity_type: db.activity_type,
+                activity_instant: chrono::DateTime::parse_from_rfc3339(&db.activity_date)
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .unwrap_or_else(|_| Utc::now()),
+                amount: db
+                    .amount
+                    .as_ref()
+                    .map(|s| whaleit_core::activities::parse_decimal_string_tolerant(s, "amount")),
+                currency: db.currency,
+                metadata: None,
+                source_group_id: db.source_group_id,
+            })
+            .collect())
     }
 
     #[allow(clippy::too_many_arguments)]
     async fn search_activities(
         &self,
-        page: i64,
-        page_size: i64,
-        account_id_filter: Option<Vec<String>>,
-        activity_type_filter: Option<Vec<String>>,
-        asset_id_keyword: Option<String>,
-        sort: Option<whaleit_core::activities::Sort>,
-        needs_review_filter: Option<bool>,
-        date_from: Option<NaiveDate>,
-        date_to: Option<NaiveDate>,
-        instrument_type_filter: Option<Vec<String>>,
+        _page: i64,
+        _page_size: i64,
+        _account_id_filter: Option<Vec<String>>,
+        _activity_type_filter: Option<Vec<String>>,
+        _asset_id_keyword: Option<String>,
+        _sort: Option<whaleit_core::activities::Sort>,
+        _needs_review_filter: Option<bool>,
+        _date_from: Option<NaiveDate>,
+        _date_to: Option<NaiveDate>,
+        _instrument_type_filter: Option<Vec<String>>,
     ) -> Result<ActivitySearchResponse> {
         // Simplified implementation: returns empty results.
         // Full implementation requires JOINs with assets/accounts tables for ActivityDetails.
         Ok(ActivitySearchResponse {
             data: vec![],
-            meta: ActivitySearchResponseMeta {
-                total_row_count: 0,
-            },
+            meta: ActivitySearchResponseMeta { total_row_count: 0 },
         })
     }
 
@@ -153,7 +158,8 @@ impl ActivityRepositoryTrait for PgActivityRepository {
 
         let asset_id_val = new_activity.get_symbol_id().map(|s| s.to_string());
 
-        let status_str = new_activity.status
+        let status_str = new_activity
+            .status
             .as_ref()
             .map(|s| match s {
                 whaleit_core::activities::ActivityStatus::Posted => "POSTED",
@@ -255,7 +261,11 @@ impl ActivityRepositoryTrait for PgActivityRepository {
                 .await
                 .map_err(StoragePgError::from)?;
 
-            if let Ok(db) = activities::table.find(&id_val).first::<ActivityDB>(&mut conn).await {
+            if let Ok(db) = activities::table
+                .find(&id_val)
+                .first::<ActivityDB>(&mut conn)
+                .await
+            {
                 created.push(db.into());
             }
         }
@@ -263,7 +273,11 @@ impl ActivityRepositoryTrait for PgActivityRepository {
         let mut deleted = Vec::new();
         if !delete_ids.is_empty() {
             for del_id in &delete_ids {
-                if let Ok(db) = activities::table.find(del_id).first::<ActivityDB>(&mut conn).await {
+                if let Ok(db) = activities::table
+                    .find(del_id)
+                    .first::<ActivityDB>(&mut conn)
+                    .await
+                {
                     diesel::delete(activities::table.find(del_id))
                         .execute(&mut conn)
                         .await
@@ -321,7 +335,8 @@ impl ActivityRepositoryTrait for PgActivityRepository {
             .first(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
-        Ok(result.and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok())
+        Ok(result
+            .and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok())
             .map(|d| d.and_hms_opt(0, 0, 0).unwrap().and_utc()))
     }
 
@@ -383,11 +398,7 @@ impl ActivityRepositoryTrait for PgActivityRepository {
         Ok(())
     }
 
-    async fn calculate_average_cost(
-        &self,
-        _account_id: &str,
-        _asset_id: &str,
-    ) -> Result<Decimal> {
+    async fn calculate_average_cost(&self, _account_id: &str, _asset_id: &str) -> Result<Decimal> {
         Ok(Decimal::ZERO)
     }
 
@@ -437,11 +448,7 @@ impl ActivityRepositoryTrait for PgActivityRepository {
         })
     }
 
-    async fn reassign_asset(
-        &self,
-        _old_asset_id: &str,
-        _new_asset_id: &str,
-    ) -> Result<u32> {
+    async fn reassign_asset(&self, _old_asset_id: &str, _new_asset_id: &str) -> Result<u32> {
         Ok(0)
     }
 

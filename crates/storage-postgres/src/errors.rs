@@ -54,9 +54,7 @@ impl From<StoragePgError> for Error {
             StoragePgError::ConnectionFailed(e) => {
                 Error::Database(DatabaseError::ConnectionFailed(e))
             }
-            StoragePgError::PoolError(e) => {
-                Error::Database(DatabaseError::PoolCreationFailed(e))
-            }
+            StoragePgError::PoolError(e) => Error::Database(DatabaseError::PoolCreationFailed(e)),
             StoragePgError::QueryFailed(DieselError::NotFound) => {
                 Error::Database(DatabaseError::NotFound("Record not found".to_string()))
             }
@@ -76,12 +74,8 @@ impl From<StoragePgError> for Error {
             StoragePgError::MigrationFailed(e) => {
                 Error::Database(DatabaseError::MigrationFailed(e))
             }
-            StoragePgError::SerializationError(e) => {
-                Error::Database(DatabaseError::Internal(e))
-            }
-            StoragePgError::CoreError(e) => {
-                Error::Database(DatabaseError::Internal(e))
-            }
+            StoragePgError::SerializationError(e) => Error::Database(DatabaseError::Internal(e)),
+            StoragePgError::CoreError(e) => Error::Database(DatabaseError::Internal(e)),
         }
     }
 }
@@ -99,9 +93,7 @@ impl DieselErrorExt for DieselError {
 }
 
 /// Helper function to convert a Diesel Result to a core Result.
-pub fn map_diesel_err<T>(
-    result: std::result::Result<T, DieselError>,
-) -> whaleit_core::Result<T> {
+pub fn map_diesel_err<T>(result: std::result::Result<T, DieselError>) -> whaleit_core::Result<T> {
     result.map_err(|e| e.into_core_error())
 }
 

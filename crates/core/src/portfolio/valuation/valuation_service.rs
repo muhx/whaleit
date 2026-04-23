@@ -186,7 +186,7 @@ impl ValuationServiceTrait for ValuationService {
                 let last_saved_date_opt = self
                     .valuation_repository
                     .load_latest_valuation_date(account_id)
-                .await?;
+                    .await?;
 
                 if let Some(last_saved) = last_saved_date_opt {
                     calculation_start_date = Some(last_saved);
@@ -250,12 +250,14 @@ impl ValuationServiceTrait for ValuationService {
         let account_curr = normalized_account_currency.unwrap_or_else(|| base_curr.clone());
 
         // Fetch quotes with single call
-        let quotes_vec = self.quote_service.get_quotes_in_range_filled(
-            &required_asset_ids,
-            actual_calculation_start_date,
-            calculation_end_date,
-        )
-        .await?;
+        let quotes_vec = self
+            .quote_service
+            .get_quotes_in_range_filled(
+                &required_asset_ids,
+                actual_calculation_start_date,
+                calculation_end_date,
+            )
+            .await?;
 
         for quote in &quotes_vec {
             let normalized_quote_currency = normalize_currency_code(&quote.currency);
@@ -372,7 +374,7 @@ impl ValuationServiceTrait for ValuationService {
         if !newly_calculated_valuations.is_empty() {
             self.valuation_repository
                 .save_valuations(&newly_calculated_valuations)
-                    .await?;
+                .await?;
         }
 
         let total_duration = total_start_time.elapsed();
@@ -394,11 +396,9 @@ impl ValuationServiceTrait for ValuationService {
             "Loading historical valuations for account '{}' from {:?} to {:?}",
             account_id, start_date_opt, end_date_opt
         );
-        self.valuation_repository.get_historical_valuations(
-            account_id,
-            start_date_opt,
-            end_date_opt,
-        ).await
+        self.valuation_repository
+            .get_historical_valuations(account_id, start_date_opt, end_date_opt)
+            .await
     }
 
     async fn get_latest_valuations(
@@ -406,7 +406,9 @@ impl ValuationServiceTrait for ValuationService {
         account_ids: &[String],
     ) -> CoreResult<Vec<DailyAccountValuation>> {
         debug!("Loading latest valuations for accounts: {:?}", account_ids);
-        self.valuation_repository.get_latest_valuations(account_ids).await
+        self.valuation_repository
+            .get_latest_valuations(account_ids)
+            .await
     }
 
     async fn get_valuations_on_date(

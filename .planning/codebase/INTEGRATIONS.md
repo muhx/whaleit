@@ -92,8 +92,8 @@
 - Entrypoints: `apps/server/src/api/brokers_sync.rs`,
   `apps/tauri/src/commands/brokers_sync.rs`
 - Ingest models: `crates/connect/src/broker_ingest/models.rs`
-- Downstream broker services are brokered through `api.whaleit.app` — no
-  direct broker SDK dependencies in the workspace
+- Downstream broker services are brokered through `api.whaleit.app` — no direct
+  broker SDK dependencies in the workspace
 
 ## Data Storage
 
@@ -205,8 +205,8 @@
 - Windows install mode: `passive`
 - iOS: App Store (`appstore` Cargo feature flag in `apps/tauri/Cargo.toml:64`,
   signing `Apple Distribution: Teymz Inc (DYDJ2RNL5H)`)
-- Web/server: Docker image `muhx/whaleit:latest` on Docker Hub,
-  self-hostable via `compose.yml`
+- Web/server: Docker image `muhx/whaleit:latest` on Docker Hub, self-hostable
+  via `compose.yml`
 
 **CI Pipeline (GitHub Actions):**
 

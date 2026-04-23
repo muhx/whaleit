@@ -1,7 +1,7 @@
 # Contributing to Whaleit
 
-Thank you for your interest in contributing to Whaleit! We welcome
-contributions from the community.
+Thank you for your interest in contributing to Whaleit! We welcome contributions
+from the community.
 
 ## Contributor License Agreement (CLA)
 

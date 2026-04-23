@@ -10,8 +10,8 @@ changed, ~9,200 insertions, ~2,600 deletions
 The CSV import experience has been redesigned to be more reliable, faster, and
 easier to use. Here's what changed:
 
-**Smarter asset matching.** Before importing, Whaleit now shows you exactly
-how each ticker in your CSV will be matched to an asset in your portfolio. If
+**Smarter asset matching.** Before importing, Whaleit now shows you exactly how
+each ticker in your CSV will be matched to an asset in your portfolio. If
 something looks off — a symbol that could belong to multiple exchanges, or a
 delisted stock — you can fix it right there with a search, instead of finding
 out after the import that something went wrong.
@@ -39,9 +39,9 @@ Large CSVs with many different tickers resolve noticeably faster.
 non-standard encodings (like Windows-1252) are detected and handled
 automatically. No more garbled characters in transaction descriptions.
 
-**Duplicate protection.** If you accidentally import the same CSV twice,
-Whaleit detects the overlap and skips transactions that already exist.
-You'll see exactly how many were skipped and why.
+**Duplicate protection.** If you accidentally import the same CSV twice, Whaleit
+detects the overlap and skips transactions that already exist. You'll see
+exactly how many were skipped and why.
 
 ---
 

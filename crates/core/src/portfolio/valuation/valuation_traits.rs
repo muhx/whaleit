@@ -33,7 +33,10 @@ pub trait ValuationRepositoryTrait: Send + Sync {
     ) -> Result<()>;
 
     /// Get the latest valuations for multiple accounts.
-    async fn get_latest_valuations(&self, account_ids: &[String]) -> Result<Vec<DailyAccountValuation>>;
+    async fn get_latest_valuations(
+        &self,
+        account_ids: &[String],
+    ) -> Result<Vec<DailyAccountValuation>>;
 
     /// Get valuations for multiple accounts on a specific date.
     async fn get_valuations_on_date(

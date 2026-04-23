@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 use std::sync::Arc;
-use whaleit_core::sync::{SyncEngineStatus, SyncEntity, SyncOperation, SyncOutboxEvent};
+use whaleit_core::sync::{SyncEngineStatus, SyncOutboxEvent};
 use whaleit_device_sync::engine::{OutboxStore, ReplayEvent, ReplayStore};
 
 use super::app_sync::PgAppSyncRepository;
@@ -23,10 +23,7 @@ impl PgSyncEngineDbPorts {
 
 #[async_trait]
 impl OutboxStore for PgSyncEngineDbPorts {
-    async fn list_pending_outbox(
-        &self,
-        limit: i64,
-    ) -> Result<Vec<SyncOutboxEvent>, String> {
+    async fn list_pending_outbox(&self, limit: i64) -> Result<Vec<SyncOutboxEvent>, String> {
         self.repository
             .list_pending_outbox(limit)
             .map_err(|e| e.to_string())

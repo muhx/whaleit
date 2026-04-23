@@ -95,7 +95,10 @@ impl GoalRepositoryTrait for PgGoalRepository {
             .load::<GoalsAllocationDB>(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
-        Ok(allocations_db.into_iter().map(GoalsAllocation::from).collect())
+        Ok(allocations_db
+            .into_iter()
+            .map(GoalsAllocation::from)
+            .collect())
     }
 
     async fn upsert_goal_allocations(&self, allocations: Vec<GoalsAllocation>) -> Result<usize> {

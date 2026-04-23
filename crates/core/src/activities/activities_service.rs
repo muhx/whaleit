@@ -227,7 +227,8 @@ impl ActivityService {
             return None;
         }
         self.asset_service
-            .get_asset_by_id(id).await
+            .get_asset_by_id(id)
+            .await
             .ok()
             .and_then(|asset| normalize_quote_ccy_code(Some(asset.quote_ccy.as_str())))
     }
@@ -1142,7 +1143,10 @@ impl ActivityService {
     }
 
     async fn prepare_new_activity(&self, mut activity: NewActivity) -> Result<NewActivity> {
-        let account: Account = self.account_service.get_account(&activity.account_id).await?;
+        let account: Account = self
+            .account_service
+            .get_account(&activity.account_id)
+            .await?;
         let base_ccy = self.account_service.get_base_currency().unwrap_or_default();
         let account_currency = resolve_currency(&[&account.currency, &base_ccy]);
 
@@ -1222,16 +1226,18 @@ impl ActivityService {
                     .into());
                 }
 
-                self.asset_service.validate_persisted_symbol_metadata(
-                    normalized_symbol_for_lookup
-                        .as_deref()
-                        .unwrap_or(raw_symbol),
-                    activity.get_symbol_id(),
-                    exchange_mic.as_deref(),
-                    effective_instrument_type.as_ref(),
-                    parsed_quote_mode,
-                    quote_ccy_input.as_deref(),
-                ).await?;
+                self.asset_service
+                    .validate_persisted_symbol_metadata(
+                        normalized_symbol_for_lookup
+                            .as_deref()
+                            .unwrap_or(raw_symbol),
+                        activity.get_symbol_id(),
+                        exchange_mic.as_deref(),
+                        effective_instrument_type.as_ref(),
+                        parsed_quote_mode,
+                        quote_ccy_input.as_deref(),
+                    )
+                    .await?;
             }
             None if activity
                 .get_symbol_id()
@@ -1272,11 +1278,14 @@ impl ActivityService {
                 .await;
             if existing_asset_quote_ccy.is_none() {
                 if let Some(resolved_symbol) = normalized_symbol_for_lookup.as_deref() {
-                    existing_asset_quote_ccy = self.asset_service.existing_quote_ccy_by_symbol(
-                        resolved_symbol,
-                        exchange_mic.as_deref(),
-                        effective_instrument_type.as_ref(),
-                    ).await;
+                    existing_asset_quote_ccy = self
+                        .asset_service
+                        .existing_quote_ccy_by_symbol(
+                            resolved_symbol,
+                            exchange_mic.as_deref(),
+                            effective_instrument_type.as_ref(),
+                        )
+                        .await;
                 }
             }
             let (resolved_quote_ccy, resolution_source) = self
@@ -1305,13 +1314,14 @@ impl ActivityService {
         // 3. Cash activities: no asset
         let resolved_asset_id = if let Some(ref normalized_symbol) = normalized_symbol_for_lookup {
             // Look up existing asset by instrument fields
-            let existing_id = self.find_existing_asset_id(
-                normalized_symbol,
-                exchange_mic.as_deref(),
-                effective_instrument_type.as_ref(),
-                Some(&asset_currency),
-            )
-            .await;
+            let existing_id = self
+                .find_existing_asset_id(
+                    normalized_symbol,
+                    exchange_mic.as_deref(),
+                    effective_instrument_type.as_ref(),
+                    Some(&asset_currency),
+                )
+                .await;
 
             if let Some(id) = existing_id {
                 Some(id)
@@ -1542,7 +1552,10 @@ impl ActivityService {
         &self,
         mut activity: ActivityUpdate,
     ) -> Result<ActivityUpdate> {
-        let account: Account = self.account_service.get_account(&activity.account_id).await?;
+        let account: Account = self
+            .account_service
+            .get_account(&activity.account_id)
+            .await?;
         let base_ccy = self.account_service.get_base_currency().unwrap_or_default();
         let account_currency = resolve_currency(&[&account.currency, &base_ccy]);
         let currency = resolve_currency(&[&activity.currency, &account_currency]);
@@ -1619,16 +1632,18 @@ impl ActivityService {
                     .into());
                 }
 
-                self.asset_service.validate_persisted_symbol_metadata(
-                    normalized_symbol_for_lookup
-                        .as_deref()
-                        .unwrap_or(raw_symbol),
-                    activity.get_symbol_id(),
-                    exchange_mic.as_deref(),
-                    effective_instrument_type.as_ref(),
-                    parsed_quote_mode,
-                    quote_ccy_input.as_deref(),
-                ).await?;
+                self.asset_service
+                    .validate_persisted_symbol_metadata(
+                        normalized_symbol_for_lookup
+                            .as_deref()
+                            .unwrap_or(raw_symbol),
+                        activity.get_symbol_id(),
+                        exchange_mic.as_deref(),
+                        effective_instrument_type.as_ref(),
+                        parsed_quote_mode,
+                        quote_ccy_input.as_deref(),
+                    )
+                    .await?;
             }
             None if activity
                 .get_symbol_id()
@@ -1666,11 +1681,14 @@ impl ActivityService {
                 .await;
             if existing_asset_quote_ccy.is_none() {
                 if let Some(resolved_symbol) = normalized_symbol_for_lookup.as_deref() {
-                    existing_asset_quote_ccy = self.asset_service.existing_quote_ccy_by_symbol(
-                        resolved_symbol,
-                        exchange_mic.as_deref(),
-                        effective_instrument_type.as_ref(),
-                    ).await;
+                    existing_asset_quote_ccy = self
+                        .asset_service
+                        .existing_quote_ccy_by_symbol(
+                            resolved_symbol,
+                            exchange_mic.as_deref(),
+                            effective_instrument_type.as_ref(),
+                        )
+                        .await;
                 }
             }
             let (resolved_quote_ccy, resolution_source) = self
@@ -1695,13 +1713,14 @@ impl ActivityService {
 
         // Resolve asset_id (same logic as prepare_new_activity)
         let resolved_asset_id = if let Some(ref normalized_symbol) = normalized_symbol_for_lookup {
-            let existing_id = self.find_existing_asset_id(
-                normalized_symbol,
-                exchange_mic.as_deref(),
-                effective_instrument_type.as_ref(),
-                Some(&asset_currency),
-            )
-            .await;
+            let existing_id = self
+                .find_existing_asset_id(
+                    normalized_symbol,
+                    exchange_mic.as_deref(),
+                    effective_instrument_type.as_ref(),
+                    Some(&asset_currency),
+                )
+                .await;
 
             if let Some(id) = existing_id {
                 Some(id)
@@ -2025,14 +2044,16 @@ impl ActivityService {
         let quote_lookup_symbol = normalized_symbol.clone();
 
         if !allow_live_resolution {
-            self.asset_service.validate_persisted_symbol_metadata(
-                normalized_symbol.as_str(),
-                activity.get_symbol_id(),
-                exchange_mic.as_deref(),
-                instrument_type.as_ref(),
-                quote_mode,
-                quote_ccy_input.as_deref(),
-            ).await?;
+            self.asset_service
+                .validate_persisted_symbol_metadata(
+                    normalized_symbol.as_str(),
+                    activity.get_symbol_id(),
+                    exchange_mic.as_deref(),
+                    instrument_type.as_ref(),
+                    quote_mode,
+                    quote_ccy_input.as_deref(),
+                )
+                .await?;
         }
 
         // For crypto, use the quote currency from the pair if available
@@ -2049,11 +2070,14 @@ impl ActivityService {
                 )
                 .await;
             if existing_asset_quote_ccy.is_none() {
-                existing_asset_quote_ccy = self.asset_service.existing_quote_ccy_by_symbol(
-                    normalized_symbol.as_str(),
-                    exchange_mic.as_deref(),
-                    instrument_type.as_ref(),
-                ).await;
+                existing_asset_quote_ccy = self
+                    .asset_service
+                    .existing_quote_ccy_by_symbol(
+                        normalized_symbol.as_str(),
+                        exchange_mic.as_deref(),
+                        instrument_type.as_ref(),
+                    )
+                    .await;
             }
             let allow_provider_lookup = allow_live_resolution
                 && quote_mode != Some(QuoteMode::Manual)
@@ -2093,13 +2117,14 @@ impl ActivityService {
         };
 
         // Look up existing asset by instrument fields to get its UUID
-        let existing_id = self.find_existing_asset_id(
-            &normalized_symbol,
-            exchange_mic.as_deref(),
-            instrument_type.as_ref(),
-            Some(&asset_currency),
-        )
-        .await;
+        let existing_id = self
+            .find_existing_asset_id(
+                &normalized_symbol,
+                exchange_mic.as_deref(),
+                instrument_type.as_ref(),
+                Some(&asset_currency),
+            )
+            .await;
 
         Ok(Some(AssetSpec {
             id: existing_id,
@@ -2201,7 +2226,8 @@ impl ActivityService {
             if activity.account_id.is_none() {
                 activity.account_id = Some(account_id.clone());
             }
-            self.hydrate_import_activity_from_asset_id(&mut activity).await;
+            self.hydrate_import_activity_from_asset_id(&mut activity)
+                .await;
 
             let symbol = activity.symbol.trim().to_string();
 
@@ -2344,13 +2370,14 @@ impl ActivityService {
             };
             let mut existing_id = activity.asset_id.clone();
             if existing_id.is_none() {
-                existing_id = self.find_existing_asset_id(
-                    &normalized_symbol,
-                    resolved_mic.as_deref(),
-                    effective_instrument_type.as_ref(),
-                    quote_ccy_input.as_deref(),
-                )
-                .await;
+                existing_id = self
+                    .find_existing_asset_id(
+                        &normalized_symbol,
+                        resolved_mic.as_deref(),
+                        effective_instrument_type.as_ref(),
+                        quote_ccy_input.as_deref(),
+                    )
+                    .await;
             }
 
             // Equity without MIC must either match an existing asset or be manual-quoted.
@@ -2597,13 +2624,15 @@ impl ActivityServiceTrait for ActivityService {
     /// Retrieves activities by account ID
     async fn get_activities_by_account_id(&self, account_id: &str) -> Result<Vec<Activity>> {
         self.activity_repository
-            .get_activities_by_account_id(account_id).await
+            .get_activities_by_account_id(account_id)
+            .await
     }
 
     /// Retrieves activities by account IDs
     async fn get_activities_by_account_ids(&self, account_ids: &[String]) -> Result<Vec<Activity>> {
         self.activity_repository
-            .get_activities_by_account_ids(account_ids).await
+            .get_activities_by_account_ids(account_ids)
+            .await
     }
 
     /// Retrieves all trading activities
@@ -2630,18 +2659,20 @@ impl ActivityServiceTrait for ActivityService {
         date_to: Option<NaiveDate>,
         instrument_type_filter: Option<Vec<String>>,
     ) -> Result<ActivitySearchResponse> {
-        self.activity_repository.search_activities(
-            page,
-            page_size,
-            account_id_filter,
-            activity_type_filter,
-            asset_id_keyword,
-            sort,
-            needs_review_filter,
-            date_from,
-            date_to,
-            instrument_type_filter,
-        ).await
+        self.activity_repository
+            .search_activities(
+                page,
+                page_size,
+                account_id_filter,
+                activity_type_filter,
+                asset_id_keyword,
+                sort,
+                needs_review_filter,
+                date_from,
+                date_to,
+                instrument_type_filter,
+            )
+            .await
     }
 
     /// Creates a new activity
@@ -3022,102 +3053,102 @@ impl ActivityServiceTrait for ActivityService {
 
         let mut previews = Vec::new();
         for (idx, candidate) in candidates.into_iter().enumerate() {
-                let line_number = (idx + 1) as i32;
-                let Some(activity) = validated_by_line.get(&line_number) else {
-                    previews.push(ImportAssetPreviewItem {
-                        key: candidate.key,
-                        status: ImportAssetPreviewStatus::NeedsFixing,
-                        resolution_source: "missing_preview_result".to_string(),
-                        asset_id: None,
-                        draft: None,
-                        errors: Some(HashMap::from([(
-                            "symbol".to_string(),
-                            vec!["Asset preview did not return a result.".to_string()],
-                        )])),
-                        warnings: None,
-                    });
-                    continue;
-                };
+            let line_number = (idx + 1) as i32;
+            let Some(activity) = validated_by_line.get(&line_number) else {
+                previews.push(ImportAssetPreviewItem {
+                    key: candidate.key,
+                    status: ImportAssetPreviewStatus::NeedsFixing,
+                    resolution_source: "missing_preview_result".to_string(),
+                    asset_id: None,
+                    draft: None,
+                    errors: Some(HashMap::from([(
+                        "symbol".to_string(),
+                        vec!["Asset preview did not return a result.".to_string()],
+                    )])),
+                    warnings: None,
+                });
+                continue;
+            };
 
-                let has_errors = activity
-                    .errors
-                    .as_ref()
-                    .is_some_and(|errors| !errors.is_empty())
-                    || !activity.is_valid;
+            let has_errors = activity
+                .errors
+                .as_ref()
+                .is_some_and(|errors| !errors.is_empty())
+                || !activity.is_valid;
 
-                if has_errors {
-                    previews.push(ImportAssetPreviewItem {
-                        key: candidate.key,
-                        status: ImportAssetPreviewStatus::NeedsFixing,
-                        resolution_source: "validation_error".to_string(),
-                        asset_id: None,
-                        draft: None,
-                        errors: activity.errors.clone(),
-                        warnings: activity.warnings.clone(),
-                    });
-                    continue;
-                }
+            if has_errors {
+                previews.push(ImportAssetPreviewItem {
+                    key: candidate.key,
+                    status: ImportAssetPreviewStatus::NeedsFixing,
+                    resolution_source: "validation_error".to_string(),
+                    asset_id: None,
+                    draft: None,
+                    errors: activity.errors.clone(),
+                    warnings: activity.warnings.clone(),
+                });
+                continue;
+            }
 
-                if let Some(asset_id) = activity.asset_id.clone() {
-                    let draft = self
-                        .asset_service
-                        .get_asset_by_id(&asset_id)
-                        .await
-                        .ok()
-                        .map(|asset| Self::asset_to_new_asset_draft(&asset));
+            if let Some(asset_id) = activity.asset_id.clone() {
+                let draft = self
+                    .asset_service
+                    .get_asset_by_id(&asset_id)
+                    .await
+                    .ok()
+                    .map(|asset| Self::asset_to_new_asset_draft(&asset));
 
-                    previews.push(ImportAssetPreviewItem {
-                        key: candidate.key,
-                        status: ImportAssetPreviewStatus::ExistingAsset,
-                        resolution_source: "existing_asset".to_string(),
-                        asset_id: Some(asset_id),
-                        draft,
-                        errors: None,
-                        warnings: activity.warnings.clone(),
-                    });
-                    continue;
-                }
+                previews.push(ImportAssetPreviewItem {
+                    key: candidate.key,
+                    status: ImportAssetPreviewStatus::ExistingAsset,
+                    resolution_source: "existing_asset".to_string(),
+                    asset_id: Some(asset_id),
+                    draft,
+                    errors: None,
+                    warnings: activity.warnings.clone(),
+                });
+                continue;
+            }
 
-                // Equity without exchange MIC → needs manual resolution
-                let is_equity = matches!(
-                    Self::parse_instrument_type(activity.instrument_type.as_deref()),
-                    Some(InstrumentType::Equity)
-                );
-                let is_manual = activity
-                    .quote_mode
-                    .as_deref()
-                    .map(|m| m.eq_ignore_ascii_case("MANUAL"))
-                    .unwrap_or(false);
-                if is_equity && activity.exchange_mic.is_none() && !is_manual {
-                    let mut errors = std::collections::HashMap::new();
-                    errors.insert(
+            // Equity without exchange MIC → needs manual resolution
+            let is_equity = matches!(
+                Self::parse_instrument_type(activity.instrument_type.as_deref()),
+                Some(InstrumentType::Equity)
+            );
+            let is_manual = activity
+                .quote_mode
+                .as_deref()
+                .map(|m| m.eq_ignore_ascii_case("MANUAL"))
+                .unwrap_or(false);
+            if is_equity && activity.exchange_mic.is_none() && !is_manual {
+                let mut errors = std::collections::HashMap::new();
+                errors.insert(
                         "symbol".to_string(),
                         vec![format!(
                             "Could not determine the exchange for '{}'. Please search for the correct ticker.",
                             &activity.symbol
                         )],
                     );
-                    previews.push(ImportAssetPreviewItem {
-                        key: candidate.key,
-                        status: ImportAssetPreviewStatus::NeedsFixing,
-                        resolution_source: "missing_exchange".to_string(),
-                        asset_id: None,
-                        draft: self.build_new_asset_draft_from_import(activity),
-                        errors: Some(errors),
-                        warnings: activity.warnings.clone(),
-                    });
-                    continue;
-                }
-
                 previews.push(ImportAssetPreviewItem {
                     key: candidate.key,
-                    status: ImportAssetPreviewStatus::AutoResolvedNewAsset,
-                    resolution_source: "provider_resolution".to_string(),
+                    status: ImportAssetPreviewStatus::NeedsFixing,
+                    resolution_source: "missing_exchange".to_string(),
                     asset_id: None,
                     draft: self.build_new_asset_draft_from_import(activity),
-                    errors: None,
+                    errors: Some(errors),
                     warnings: activity.warnings.clone(),
                 });
+                continue;
+            }
+
+            previews.push(ImportAssetPreviewItem {
+                key: candidate.key,
+                status: ImportAssetPreviewStatus::AutoResolvedNewAsset,
+                resolution_source: "provider_resolution".to_string(),
+                asset_id: None,
+                draft: self.build_new_asset_draft_from_import(activity),
+                errors: None,
+                warnings: activity.warnings.clone(),
+            });
         }
 
         Ok(previews)
@@ -3582,7 +3613,8 @@ impl ActivityServiceTrait for ActivityService {
         account_ids: Option<&[String]>,
     ) -> Result<Option<chrono::DateTime<Utc>>> {
         self.activity_repository
-            .get_first_activity_date(account_ids).await
+            .get_first_activity_date(account_ids)
+            .await
     }
 
     /// Gets the import mapping for a given account ID and context kind.
@@ -3611,7 +3643,8 @@ impl ActivityServiceTrait for ActivityService {
 
     async fn list_import_templates(&self) -> Result<Vec<ImportTemplateData>> {
         self.activity_repository
-            .list_import_templates().await?
+            .list_import_templates()
+            .await?
             .into_iter()
             .map(|template| {
                 template.to_template_data().map_err(|e| {
@@ -3625,7 +3658,10 @@ impl ActivityServiceTrait for ActivityService {
     }
 
     async fn get_import_template(&self, template_id: String) -> Result<ImportTemplateData> {
-        let template = self.activity_repository.get_import_template(&template_id).await?;
+        let template = self
+            .activity_repository
+            .get_import_template(&template_id)
+            .await?;
         match template {
             Some(template) => template.to_template_data().map_err(|e| {
                 ActivityError::InvalidData(format!("Failed to parse import template data: {}", e))
@@ -3723,7 +3759,11 @@ impl ActivityServiceTrait for ActivityService {
         // 1. If the exact target template already exists, use it (subsequent saves).
         // 2. Otherwise, seed from the precedence chain so inherited defaults are preserved.
         //    For BROKER scope: skip account-specific profiles to avoid leaking private overrides.
-        let existing = match self.activity_repository.get_import_template(&template_id).await? {
+        let existing = match self
+            .activity_repository
+            .get_import_template(&template_id)
+            .await?
+        {
             Some(t) if t.kind == TemplateKind::BrokerActivity => {
                 t.to_broker_profile_data().unwrap_or_default()
             }
@@ -3801,7 +3841,8 @@ impl ActivityServiceTrait for ActivityService {
         idempotency_keys: Vec<String>,
     ) -> Result<HashMap<String, String>> {
         self.activity_repository
-            .check_existing_duplicates(&idempotency_keys).await
+            .check_existing_duplicates(&idempotency_keys)
+            .await
     }
 
     fn parse_csv(

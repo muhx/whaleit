@@ -41,8 +41,8 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
 - Contains: pages (`pages/`), feature modules (`features/`), reusable components
   (`components/`), hooks (`hooks/`), contexts (`context/`), platform adapters
   (`adapters/`), addon runtime (`addons/`).
-- Depends on: `@whaleit/ui`, `@whaleit/addon-sdk`, Tauri JS APIs
-  (desktop build) or `fetch`/SSE (web build).
+- Depends on: `@whaleit/ui`, `@whaleit/addon-sdk`, Tauri JS APIs (desktop build)
+  or `fetch`/SSE (web build).
 - Used by: end user; is the only UI surface.
 
 **Platform Adapter Layer (frontend):**
@@ -89,16 +89,14 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
     (`portfolio:update-start`, `market:sync-start`, `broker:sync-*`,
     `asset:enrichment-*`, `app:ready`, `deep-link-received`) and listeners that
     spawn background jobs via `tauri::async_runtime::spawn`.
-  - `services/connect_service.rs` — HTTP-based bridge to Whaleit Connect
-    cloud used by broker + device sync commands.
+  - `services/connect_service.rs` — HTTP-based bridge to Whaleit Connect cloud
+    used by broker + device sync commands.
   - `scheduler.rs` — startup sync + 4h broker sync scheduler; market-data sync
-    scheduler delegated to
-    `whaleit_core::quotes::scheduler::run_periodic_sync`.
+    scheduler delegated to `whaleit_core::quotes::scheduler::run_periodic_sync`.
   - `secret_store.rs` — OS keyring-backed `SecretStore` implementation shared
     across services.
-- Depends on: `whaleit-core`, `whaleit-market-data`,
-  `whaleit-connect`, `whaleit-storage-sqlite`,
-  `whaleit-device-sync`, `whaleit-ai`.
+- Depends on: `whaleit-core`, `whaleit-market-data`, `whaleit-connect`,
+  `whaleit-storage-sqlite`, `whaleit-device-sync`, `whaleit-ai`.
 - Used by: the frontend (through the Tauri adapter).
 
 **Axum HTTP Server (web mode):**
@@ -153,9 +151,9 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
   entities), `*_service.rs` (use cases), `*_traits.rs` (service + repository
   traits), `*_constants.rs`, and `mod.rs` that re-exports the public surface.
   Example: `crates/core/src/accounts/mod.rs:1-13`.
-- Depends on: `whaleit-market-data` (for quote providers), workspace
-  primitives (`rust_decimal`, `chrono`, `uuid`, `reqwest`, ...). Does NOT depend
-  on Diesel directly beyond the workspace dep surfaced for migration embedding.
+- Depends on: `whaleit-market-data` (for quote providers), workspace primitives
+  (`rust_decimal`, `chrono`, `uuid`, `reqwest`, ...). Does NOT depend on Diesel
+  directly beyond the workspace dep surfaced for migration embedding.
 - Used by: Tauri, Axum, and indirectly the storage crate (repository traits live
   here).
 
@@ -192,8 +190,8 @@ framework-free Rust crates under `crates/*`. Storage is SQLite via Diesel.
 
 **Connect (`crates/connect`):**
 
-- Purpose: HTTP client and broker-sync orchestration against the Whaleit
-  Connect cloud service.
+- Purpose: HTTP client and broker-sync orchestration against the Whaleit Connect
+  cloud service.
 - Location: `crates/connect/src/`
 - Modules: `client.rs` (REST client), `token_lifecycle.rs` (access/refresh token
   management, `CLOUD_ACCESS_TOKEN_KEY`, `CLOUD_REFRESH_TOKEN_KEY`), `broker/`
@@ -406,8 +404,8 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
 
 **Tauri desktop/mobile (`apps/tauri/src/main.rs`):**
 
-- `main()` → `whaleit_app_lib::run()` (`apps/tauri/src/lib.rs:197-633`).
-  Sets up plugins (log, shell, dialog, fs, deep-link, single-instance, updater,
+- `main()` → `whaleit_app_lib::run()` (`apps/tauri/src/lib.rs:197-633`). Sets up
+  plugins (log, shell, dialog, fs, deep-link, single-instance, updater,
   window-state, haptics, barcode-scanner, web-auth, mobile-share), calls
   platform-specific `setup`, registers ~170 `#[tauri::command]` handlers in a
   single `generate_handler!` macro, and hooks exit events to gracefully stop the
@@ -418,12 +416,12 @@ frontend by `QueryClient` (see `apps/frontend/src/App.tsx:13-24`, default
 - `#[tokio::main] async fn main()` → reads `Config::from_env()`, builds
   `AppState` via `main_lib::build_state`, warms up device-sync token
   (feature-gated), spawns the broker-sync scheduler, spawns
-  `whaleit_core::quotes::scheduler::run_periodic_sync`, serves static
-  frontend with fallback to `index.html`, and listens on `config.listen_addr`
-  (default `0.0.0.0:8080`).
+  `whaleit_core::quotes::scheduler::run_periodic_sync`, serves static frontend
+  with fallback to `index.html`, and listens on `config.listen_addr` (default
+  `0.0.0.0:8080`).
 
-**Database init:** `whaleit_storage_sqlite::db::init(&app_data_dir)` →
-ensures directory, sets pragmas, returns resolved DB path;
+**Database init:** `whaleit_storage_sqlite::db::init(&app_data_dir)` → ensures
+directory, sets pragmas, returns resolved DB path;
 `db::run_migrations(&db_path)` runs embedded migrations from
 `crates/storage-sqlite/migrations/`.
 

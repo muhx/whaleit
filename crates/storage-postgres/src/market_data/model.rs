@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use whaleit_core::quotes::{MarketDataProviderSetting, ProviderCapabilities};
 
 // Re-export QuoteDB from fx module (shared quotes table)
-pub use crate::fx::{NewQuoteDB, QuoteDB};
+pub use crate::fx::QuoteDB;
 
 #[derive(Queryable, Identifiable, Selectable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::quote_sync_state)]

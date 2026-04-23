@@ -10,7 +10,6 @@ use super::model::*;
 use crate::db::PgPool;
 use crate::errors::StoragePgError;
 use crate::schema::{asset_taxonomy_assignments, taxonomies, taxonomy_categories};
-use crate::schema::taxonomies::dsl::*;
 use whaleit_core::errors::Result;
 use whaleit_core::taxonomies::{
     AssetTaxonomyAssignment, Category, NewAssetTaxonomyAssignment, NewCategory, NewTaxonomy,
@@ -52,7 +51,7 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
 
     async fn create_taxonomy(&self, new_taxonomy: NewTaxonomy) -> Result<Taxonomy> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
-        let now = chrono::Utc::now().naive_utc();
+        let _now = chrono::Utc::now().naive_utc();
         let id_val = Uuid::now_v7().to_string();
 
         diesel::insert_into(taxonomies::table)
@@ -120,7 +119,11 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
         Ok(results.into_iter().map(Category::from).collect())
     }
 
-    async fn get_category(&self, taxonomy_id_param: &str, category_id_param: &str) -> Result<Option<Category>> {
+    async fn get_category(
+        &self,
+        taxonomy_id_param: &str,
+        category_id_param: &str,
+    ) -> Result<Option<Category>> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let result = taxonomy_categories::table
             .filter(taxonomy_categories::taxonomy_id.eq(taxonomy_id_param))
@@ -134,7 +137,7 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
 
     async fn create_category(&self, new_category: NewCategory) -> Result<Category> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
-        let now = chrono::Utc::now().naive_utc();
+        let _now = chrono::Utc::now().naive_utc();
         let id_val = Uuid::now_v7().to_string();
 
         diesel::insert_into(taxonomy_categories::table)
@@ -183,7 +186,11 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
         Ok(category)
     }
 
-    async fn delete_category(&self, taxonomy_id_param: &str, category_id_param: &str) -> Result<usize> {
+    async fn delete_category(
+        &self,
+        taxonomy_id_param: &str,
+        category_id_param: &str,
+    ) -> Result<usize> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let affected = diesel::delete(
             taxonomy_categories::table
@@ -205,17 +212,27 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
         Ok(count)
     }
 
-    async fn get_asset_assignments(&self, asset_id_param: &str) -> Result<Vec<AssetTaxonomyAssignment>> {
+    async fn get_asset_assignments(
+        &self,
+        asset_id_param: &str,
+    ) -> Result<Vec<AssetTaxonomyAssignment>> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let results = asset_taxonomy_assignments::table
             .filter(asset_taxonomy_assignments::asset_id.eq(asset_id_param))
             .load::<AssetTaxonomyAssignmentDB>(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
-        Ok(results.into_iter().map(AssetTaxonomyAssignment::from).collect())
+        Ok(results
+            .into_iter()
+            .map(AssetTaxonomyAssignment::from)
+            .collect())
     }
 
-    async fn get_category_assignments(&self, taxonomy_id_param: &str, category_id_param: &str) -> Result<Vec<AssetTaxonomyAssignment>> {
+    async fn get_category_assignments(
+        &self,
+        taxonomy_id_param: &str,
+        category_id_param: &str,
+    ) -> Result<Vec<AssetTaxonomyAssignment>> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let results = asset_taxonomy_assignments::table
             .filter(asset_taxonomy_assignments::taxonomy_id.eq(taxonomy_id_param))
@@ -223,10 +240,16 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
             .load::<AssetTaxonomyAssignmentDB>(&mut conn)
             .await
             .map_err(StoragePgError::from)?;
-        Ok(results.into_iter().map(AssetTaxonomyAssignment::from).collect())
+        Ok(results
+            .into_iter()
+            .map(AssetTaxonomyAssignment::from)
+            .collect())
     }
 
-    async fn upsert_assignment(&self, assignment: NewAssetTaxonomyAssignment) -> Result<AssetTaxonomyAssignment> {
+    async fn upsert_assignment(
+        &self,
+        assignment: NewAssetTaxonomyAssignment,
+    ) -> Result<AssetTaxonomyAssignment> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let now = chrono::Utc::now().naive_utc();
         let id_val = Uuid::now_v7().to_string();
@@ -267,7 +290,11 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
         Ok(affected)
     }
 
-    async fn delete_asset_assignments(&self, asset_id_param: &str, taxonomy_id_param: &str) -> Result<usize> {
+    async fn delete_asset_assignments(
+        &self,
+        asset_id_param: &str,
+        taxonomy_id_param: &str,
+    ) -> Result<usize> {
         let mut conn = self.pool.get().await.map_err(|e| StoragePgError::from(e))?;
         let affected = diesel::delete(
             asset_taxonomy_assignments::table
@@ -280,7 +307,10 @@ impl TaxonomyRepositoryTrait for PgTaxonomyRepository {
         Ok(affected)
     }
 
-    async fn get_taxonomy_with_categories(&self, taxonomy_id: &str) -> Result<Option<TaxonomyWithCategories>> {
+    async fn get_taxonomy_with_categories(
+        &self,
+        taxonomy_id: &str,
+    ) -> Result<Option<TaxonomyWithCategories>> {
         let taxonomy = self.get_taxonomy(taxonomy_id).await?;
         match taxonomy {
             Some(t) => {

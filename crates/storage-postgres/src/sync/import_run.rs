@@ -51,9 +51,10 @@ impl whaleit_core::activities::ImportRunRepositoryTrait for PgImportRunRepositor
             .as_ref()
             .and_then(|w| serde_json::to_string(w).ok());
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(import_runs::table)
             .values((
@@ -99,9 +100,10 @@ impl whaleit_core::activities::ImportRunRepositoryTrait for PgImportRunRepositor
             .and_then(|w| serde_json::to_string(w).ok());
         let id = import_run.id.clone();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::update(import_runs::table.find(&id))
             .set((
@@ -120,7 +122,7 @@ impl whaleit_core::activities::ImportRunRepositoryTrait for PgImportRunRepositor
 
     async fn get_by_id(
         &self,
-        id: &str,
+        _id: &str,
     ) -> whaleit_core::Result<Option<whaleit_core::activities::ImportRun>> {
         // Not yet needed in PG mode - return None
         Ok(None)
@@ -161,9 +163,10 @@ impl whaleit_connect::ImportRunRepositoryTrait for PgImportRunRepository {
             .as_ref()
             .and_then(|c| serde_json::to_string(c).ok());
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::insert_into(import_runs::table)
             .values((
@@ -201,9 +204,10 @@ impl whaleit_connect::ImportRunRepositoryTrait for PgImportRunRepository {
         let error = import_run.error.clone();
         let id = import_run.id.clone();
 
-        let mut conn = self.pool.get().await.map_err(|e| {
-            whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
-        })?;
+        let mut conn =
+            self.pool.get().await.map_err(|e| {
+                whaleit_core::errors::DatabaseError::ConnectionFailed(e.to_string())
+            })?;
 
         diesel::update(import_runs::table.find(&id))
             .set((
@@ -218,10 +222,7 @@ impl whaleit_connect::ImportRunRepositoryTrait for PgImportRunRepository {
         Ok(import_run)
     }
 
-    fn get_by_id(
-        &self,
-        _id: &str,
-    ) -> whaleit_core::Result<Option<whaleit_connect::ImportRun>> {
+    fn get_by_id(&self, _id: &str) -> whaleit_core::Result<Option<whaleit_connect::ImportRun>> {
         // Not yet needed in PG mode
         Ok(None)
     }

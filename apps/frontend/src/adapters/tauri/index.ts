@@ -1,18 +1,11 @@
-// Tauri adapter - Desktop implementation
-// This file re-exports all domain-specific modules
-
 import type { RunEnv } from "../types";
 import { RunEnvs } from "../types";
 
-// Platform constants from core
-export { isDesktop, isWeb, logger } from "./core";
+export { logger } from "./core";
+export { isDesktop, isWeb } from "./core";
 
-/**
- * Runtime environment identifier - always "desktop" for Tauri builds
- */
 export const RUN_ENV: RunEnv = RunEnvs.DESKTOP;
 
-// Re-export types and constants from ../types
 export type { EventCallback, UnlistenFn, RunEnv, Logger } from "../types";
 export { RunEnvs } from "../types";
 export type {
@@ -22,188 +15,337 @@ export type {
   AddonUpdateCheckResult,
   AddonUpdateInfo,
   AddonValidationResult,
-  ExtractedAddon,
-  FunctionPermission,
-  InstalledAddon,
-  Permission,
-  MarketDataProviderSetting,
-  ProviderCapabilities,
-  ImportRunsRequest,
-  UpdateThreadRequest,
-  UpdateToolResultRequest,
   AppInfo,
-  UpdateCheckResult,
-  UpdateCheckPayload,
-  PlatformCapabilities,
-  PlatformInfo,
-  BackendSyncStateResult,
   BackendEnableSyncResult,
-  BackendSyncEngineStatusResult,
+  BackendSyncBackgroundEngineResult,
   BackendSyncBootstrapOverwriteCheckResult,
-  BackendSyncReconcileReadyResult,
   BackendSyncBootstrapResult,
   BackendSyncCycleResult,
-  BackendSyncBackgroundEngineResult,
+  BackendSyncEngineStatusResult,
+  BackendSyncReconcileReadyResult,
   BackendSyncSnapshotUploadResult,
+  BackendSyncStateResult,
   EphemeralKeyPair,
+  ExtractedAddon,
+  FunctionPermission,
+  ImportRunsRequest,
+  InstalledAddon,
+  MarketDataProviderSetting,
+  Permission,
+  PlatformCapabilities,
+  PlatformInfo,
+  ProviderCapabilities,
+  UpdateCheckPayload,
+  UpdateCheckResult,
+  UpdateThreadRequest,
+  UpdateToolResultRequest,
 } from "../types";
 
-// Re-export AI types from features/ai-assistant
 export type {
+  AiChatMessage,
   AiChatModelConfig,
   AiSendMessageRequest,
   AiStreamEvent,
+  AiThread,
   AiToolCall,
   AiToolResult,
-  AiChatMessage,
   AiUsageStats,
-  AiThread,
-  ThreadPage,
   ListThreadsRequest,
+  ThreadPage,
 } from "@/features/ai-assistant/types";
 
-// ============================================================================
-// Shared domain modules (identical logic for both platforms)
-// ============================================================================
-
-// Account Commands
-export * from "../shared/accounts";
-
-// Activity Commands
-export * from "../shared/activities";
-export { parseCsv } from "./activities";
-
-// Portfolio Commands
-export * from "../shared/portfolio";
-
-// Market Data Commands
-export * from "../shared/market-data";
-
-// Custom Provider Commands
-export * from "../shared/custom-provider";
-
-// Goal Commands
-export * from "../shared/goals";
-
-// Taxonomy Commands
-export * from "../shared/taxonomies";
-
-// Alternative Assets Commands
-export * from "../shared/alternative-assets";
-
-// Contribution Limits Commands
-export * from "../shared/contribution-limits";
-
-// Exchange Rates Commands
-export * from "../shared/exchange-rates";
-
-// Secrets Commands
-export * from "../shared/secrets";
-
-// Connect Commands (Broker + Device Sync + Auth)
-export * from "../shared/connect";
-
-// AI Providers Commands
-export * from "../shared/ai-providers";
-
-// AI Thread Commands
-export * from "../shared/ai-threads";
-
-// Health Center Commands
-export * from "../shared/health";
-
-// ============================================================================
-// Platform-specific modules (different implementations)
-// ============================================================================
-
-// Settings Commands (contains platform-specific backupDatabase, etc.)
 export {
-  getSettings,
-  updateSettings,
-  isAutoUpdateCheckEnabled,
-  backupDatabase,
-  backupDatabaseToPath,
-  restoreDatabase,
-  getAppInfo,
-  checkForUpdates,
-  installUpdate,
-  getPlatform,
-} from "./settings";
+  createAccount,
+  deleteAccount,
+  getAccounts,
+  updateAccount,
+} from "../shared/accounts";
 
-// Addon Commands (platform-specific)
 export {
-  extractAddonZip,
-  installAddonZip,
-  installAddonFile,
-  listInstalledAddons,
-  toggleAddon,
-  uninstallAddon,
-  loadAddonForRuntime,
-  getEnabledAddonsOnStartup,
-  getInstalledAddons,
-  loadAddon,
-  extractAddon,
-  installAddon,
-  getEnabledAddons,
-  checkAddonUpdate,
-  checkAllAddonUpdates,
-  updateAddon,
-  downloadAddonForReview,
-  installFromStaging,
-  clearAddonStaging,
-  getAddonRatings,
-  submitAddonRating,
-  fetchAddonStoreListings,
-} from "./addons";
+  checkActivitiesImport,
+  checkExistingDuplicates,
+  createActivity,
+  deleteImportTemplate,
+  deleteActivity,
+  getImportTemplate,
+  getAccountImportMapping,
+  linkAccountTemplate,
+  getActivities,
+  importActivities,
+  listImportTemplates,
+  previewImportAssets,
+  saveAccountImportMapping,
+  saveImportTemplate,
+  saveActivities,
+  searchActivities,
+  updateActivity,
+} from "../shared/activities";
+export { parseCsv } from "../web/activities";
 
-// AI Streaming (Tauri Channel-based implementation)
-export { streamAiChat } from "./ai-streaming";
-
-// Event Listeners (Tauri listen() implementation)
 export {
-  listenFileDropHover,
-  listenFileDrop,
-  listenFileDropCancelled,
-  listenPortfolioUpdateStart,
-  listenPortfolioUpdateComplete,
-  listenDatabaseRestored,
-  listenPortfolioUpdateError,
-  listenMarketSyncComplete,
-  listenMarketSyncStart,
-  listenMarketSyncError,
-  listenBrokerSyncStart,
+  createGoal,
+  deleteGoal,
+  getGoals,
+  getGoalsAllocation,
+  updateGoal,
+  updateGoalsAllocations,
+} from "../shared/goals";
+
+export { deleteSecret, getSecret, setSecret } from "../shared/secrets";
+
+export {
+  assignAssetToCategory,
+  createCategory,
+  createTaxonomy,
+  deleteCategory,
+  deleteTaxonomy,
+  exportTaxonomyJson,
+  getAssetTaxonomyAssignments,
+  getMigrationStatus,
+  getTaxonomies,
+  getTaxonomy,
+  importTaxonomyJson,
+  migrateLegacyClassifications,
+  moveCategory,
+  removeAssetTaxonomyAssignment,
+  updateCategory,
+  updateTaxonomy,
+} from "../shared/taxonomies";
+
+export {
+  calculateAccountsSimplePerformance,
+  calculatePerformanceHistory,
+  calculatePerformanceSummary,
+  checkHoldingsImport,
+  deleteSnapshot,
+  getAssetHoldings,
+  getHistoricalValuations,
+  getHolding,
+  getHoldings,
+  getHoldingsByAllocation,
+  getIncomeSummary,
+  getLatestValuations,
+  getPortfolioAllocations,
+  getSnapshotByDate,
+  getSnapshots,
+  importHoldingsCsv,
+  recalculatePortfolio,
+  saveManualHoldings,
+  updatePortfolio,
+} from "../shared/portfolio";
+
+export type { HoldingInput } from "../shared/portfolio";
+
+export {
+  checkQuotesImport,
+  createAsset,
+  deleteAsset,
+  deleteQuote,
+  fetchYahooDividends,
+  getAssetProfile,
+  getAssets,
+  getExchanges,
+  getLatestQuotes,
+  getMarketDataProviders,
+  getMarketDataProviderSettings,
+  getQuoteHistory,
+  importManualQuotes,
+  resolveSymbolQuote,
+  searchTicker,
+  syncHistoryQuotes,
+  syncMarketData,
+  updateAssetProfile,
+  updateMarketDataProviderSettings,
+  updateQuote,
+  updateQuoteMode,
+} from "../shared/market-data";
+
+export {
+  getCustomProviders,
+  createCustomProvider,
+  updateCustomProvider,
+  deleteCustomProvider,
+  testCustomProviderSource,
+} from "../shared/custom-provider";
+
+export {
+  calculateDepositsForLimit,
+  createContributionLimit,
+  deleteContributionLimit,
+  getContributionLimit,
+  updateContributionLimit,
+} from "../shared/contribution-limits";
+
+export {
+  addExchangeRate,
+  deleteExchangeRate,
+  getExchangeRates,
+  updateExchangeRate,
+} from "../shared/exchange-rates";
+
+export {
+  createAlternativeAsset,
+  deleteAlternativeAsset,
+  getAlternativeHoldings,
+  getNetWorth,
+  getNetWorthHistory,
+  linkLiability,
+  unlinkLiability,
+  updateAlternativeAssetMetadata,
+  updateAlternativeAssetValuation,
+} from "../shared/alternative-assets";
+
+export {
+  approvePairing,
+  approvePairingOverwrite,
+  beginPairingConfirm,
+  cancelPairing,
+  cancelPairingFlow,
+  claimPairing,
+  clearDeviceSyncData,
+  clearSyncSession,
+  completePairing,
+  completePairingWithTransfer,
+  confirmPairing,
+  confirmPairingWithBootstrap,
+  createPairing,
+  getPairingFlowState,
+  deleteDevice,
+  deviceSyncBootstrapOverwriteCheck,
+  deviceSyncCancelSnapshotUpload,
+  deviceSyncGenerateSnapshotNow,
+  deviceSyncReconcileReadyState,
+  deviceSyncStartBackgroundEngine,
+  deviceSyncStopBackgroundEngine,
+  enableDeviceSync,
+  getBrokerSyncStates,
+  getDevice,
+  getDeviceSyncState,
+  getImportRuns,
+  getPairingSourceStatus,
+  getPairing,
+  getPairingMessages,
+  getPlatforms,
+  getSubscriptionPlans,
+  getSubscriptionPlansPublic,
+  getSyncedAccounts,
+  getSyncEngineStatus,
+  getUserInfo,
+  listBrokerAccounts,
+  listBrokerConnections,
+  listDevices,
+  reinitializeDeviceSync,
+  resetTeamSync,
+  restoreSyncSession,
+  revokeDevice,
+  storeSyncSession,
+  syncBootstrapSnapshotIfNeeded,
+  syncBrokerData,
+  syncTriggerCycle,
+  updateDevice,
+} from "../shared/connect";
+
+export type {
+  PairingFlowPhase,
+  ConfirmPairingWithBootstrapResult,
+} from "../shared/connect";
+
+export {
+  getAiProviders,
+  listAiModels,
+  setDefaultAiProvider,
+  updateAiProviderSettings,
+} from "../shared/ai-providers";
+
+export {
+  addAiThreadTag,
+  deleteAiThread,
+  getAiThread,
+  getAiThreadMessages,
+  getAiThreadTags,
+  listAiThreads,
+  removeAiThreadTag,
+  updateAiThread,
+  updateToolResult,
+} from "../shared/ai-threads";
+
+export {
+  dismissHealthIssue,
+  executeHealthFix,
+  getDismissedHealthIssues,
+  getHealthConfig,
+  getHealthStatus,
+  restoreHealthIssue,
+  runHealthChecks,
+  updateHealthConfig,
+} from "../shared/health";
+
+export { streamAiChat } from "../web/ai-streaming";
+
+export {
   listenBrokerSyncComplete,
   listenBrokerSyncError,
-  listenNavigateToRoute,
+  listenBrokerSyncStart,
+  listenDatabaseRestored,
   listenDeepLink,
-} from "./events";
+  listenFileDrop,
+  listenFileDropCancelled,
+  listenFileDropHover,
+  listenMarketSyncComplete,
+  listenMarketSyncError,
+  listenMarketSyncStart,
+  listenNavigateToRoute,
+  listenPortfolioUpdateComplete,
+  listenPortfolioUpdateError,
+  listenPortfolioUpdateStart,
+} from "../web/events";
 
-// File Dialogs (Tauri file dialogs)
 export {
   openCsvFileDialog,
-  openFolderDialog,
   openDatabaseFileDialog,
   openFileSaveDialog,
+  openFolderDialog,
   openUrlInBrowser,
-} from "./files";
+} from "../web/files";
 
-// Crypto Commands (sync crypto operations)
 export {
-  syncGenerateRootKey,
-  syncDeriveDek,
-  syncGenerateKeypair,
-  syncComputeSharedSecret,
-  syncDeriveSessionKey,
-  syncEncrypt,
-  syncDecrypt,
-  syncGeneratePairingCode,
-  syncHashPairingCode,
-  syncComputeSas,
-  syncGenerateDeviceId,
-  syncHmacSha256,
-} from "./crypto";
+  backupDatabase,
+  backupDatabaseToPath,
+  checkForUpdates,
+  getAppInfo,
+  getPlatform,
+  getSettings,
+  installUpdate,
+  isAutoUpdateCheckEnabled,
+  restoreDatabase,
+  updateSettings,
+} from "../web/settings";
 
-// FIRE Planner (desktop-only feature)
+export {
+  checkAddonUpdate,
+  checkAllAddonUpdates,
+  clearAddonStaging,
+  downloadAddonForReview,
+  extractAddon,
+  extractAddonZip,
+  fetchAddonStoreListings,
+  getAddonRatings,
+  getEnabledAddons,
+  getEnabledAddonsOnStartup,
+  getInstalledAddons,
+  installAddon,
+  installAddonFile,
+  installAddonZip,
+  installFromStaging,
+  listInstalledAddons,
+  loadAddon,
+  loadAddonForRuntime,
+  submitAddonRating,
+  toggleAddon,
+  uninstallAddon,
+  updateAddon,
+} from "../web/addons";
+
 export {
   getFireSettings,
   saveFireSettings,
@@ -213,4 +355,19 @@ export {
   runFireSorr,
   runFireSensitivity,
   runFireStrategyComparison,
-} from "./fire-planner";
+} from "../web/fire-planner";
+
+export {
+  syncComputeSas,
+  syncComputeSharedSecret,
+  syncDecrypt,
+  syncDeriveDek,
+  syncDeriveSessionKey,
+  syncEncrypt,
+  syncGenerateDeviceId,
+  syncGenerateKeypair,
+  syncGeneratePairingCode,
+  syncGenerateRootKey,
+  syncHashPairingCode,
+  syncHmacSha256,
+} from "../web/crypto";

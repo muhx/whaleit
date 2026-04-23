@@ -53,12 +53,32 @@ impl From<QuoteDB> for whaleit_core::quotes::Quote {
             id: db.id,
             asset_id: db.asset_id,
             timestamp: Utc.from_utc_datetime(&db.timestamp),
-            open: db.open.as_deref().and_then(|s| Decimal::from_str(s).ok()).unwrap_or(Decimal::ZERO),
-            high: db.high.as_deref().and_then(|s| Decimal::from_str(s).ok()).unwrap_or(Decimal::ZERO),
-            low: db.low.as_deref().and_then(|s| Decimal::from_str(s).ok()).unwrap_or(Decimal::ZERO),
+            open: db
+                .open
+                .as_deref()
+                .and_then(|s| Decimal::from_str(s).ok())
+                .unwrap_or(Decimal::ZERO),
+            high: db
+                .high
+                .as_deref()
+                .and_then(|s| Decimal::from_str(s).ok())
+                .unwrap_or(Decimal::ZERO),
+            low: db
+                .low
+                .as_deref()
+                .and_then(|s| Decimal::from_str(s).ok())
+                .unwrap_or(Decimal::ZERO),
             close: Decimal::from_str(&db.close).unwrap_or(Decimal::ZERO),
-            adjclose: db.adjclose.as_deref().and_then(|s| Decimal::from_str(s).ok()).unwrap_or(Decimal::ZERO),
-            volume: db.volume.as_deref().and_then(|s| Decimal::from_str(s).ok()).unwrap_or(Decimal::ZERO),
+            adjclose: db
+                .adjclose
+                .as_deref()
+                .and_then(|s| Decimal::from_str(s).ok())
+                .unwrap_or(Decimal::ZERO),
+            volume: db
+                .volume
+                .as_deref()
+                .and_then(|s| Decimal::from_str(s).ok())
+                .unwrap_or(Decimal::ZERO),
             currency: db.currency,
             data_source: db.source,
             created_at: Utc.from_utc_datetime(&db.created_at),

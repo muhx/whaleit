@@ -304,7 +304,11 @@ impl<E: AiEnvironment> ProviderService<E> {
 
     /// Get model capabilities for a specific provider/model combination.
     /// Checks user capability overrides first, then falls back to catalog, then defaults.
-    pub async fn get_model_capabilities(&self, provider_id: &str, model_id: &str) -> ModelCapabilities {
+    pub async fn get_model_capabilities(
+        &self,
+        provider_id: &str,
+        model_id: &str,
+    ) -> ModelCapabilities {
         // First, get base capabilities from catalog
         let catalog_capabilities = PROVIDER_CATALOG
             .providers

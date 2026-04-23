@@ -909,7 +909,8 @@ async fn get_broker_sync_profile(
     Ok(Json(
         state
             .activity_service
-            .get_broker_sync_profile(q.account_id, q.source_system).await?,
+            .get_broker_sync_profile(q.account_id, q.source_system)
+            .await?,
     ))
 }
 

@@ -158,11 +158,11 @@ import { invoke, logger } from "./platform";
 
 **Path alias quick reference:**
 
-| Alias                    | Resolves to                                | Purpose                        |
-| ------------------------ | ------------------------------------------ | ------------------------------ |
-| `@/*`                    | `apps/frontend/src/*`                      | Frontend app internals         |
-| `@/adapters`             | `src/adapters/tauri` or `src/adapters/web` | Build-target specific          |
-| `#platform`              | `src/adapters/{target}/core`               | Used by shared adapter modules |
+| Alias                | Resolves to                                | Purpose                        |
+| -------------------- | ------------------------------------------ | ------------------------------ |
+| `@/*`                | `apps/frontend/src/*`                      | Frontend app internals         |
+| `@/adapters`         | `src/adapters/tauri` or `src/adapters/web` | Build-target specific          |
+| `#platform`          | `src/adapters/{target}/core`               | Used by shared adapter modules |
 | `@whaleit/ui`        | `packages/ui/src`                          | Shared UI package              |
 | `@whaleit/addon-sdk` | `packages/addon-sdk/src`                   | Addon SDK types/runtime        |
 

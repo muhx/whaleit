@@ -1,6 +1,8 @@
-import { Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
+import { isDesktop } from "@/adapters";
+import { useAuth } from "@/context/auth-context";
 import { AppLayout } from "@/pages/layouts/app-layout";
 import { OnboardingLayout } from "@/pages/layouts/onboarding-layout";
 import SettingsLayout from "@/pages/settings/settings-layout";
@@ -28,6 +30,8 @@ import {
   ResetPasswordPage,
   VerifyEmailPage,
 } from "@/pages/auth";
+import { getConnectionConfig } from "@/lib/connection-config";
+import { ConnectSetupPage } from "@/pages/connect/connect-setup-page";
 import AccountPage from "./pages/account/account-page";
 import AiAssistantPage from "./pages/ai-assistant/ai-assistant-page";
 import AssetProfilePage from "./pages/asset/asset-profile-page";
@@ -49,21 +53,64 @@ import ConnectSettingsPage from "./pages/settings/connect/connect-settings-page"
 import FirePlannerPage from "./pages/fire-planner/fire-planner-page";
 import FirePlannerSettingsPage from "./pages/settings/fire-planner/fire-planner-settings-page";
 
+const AUTH_ROUTES = ["/login", "/register", "/register/pending", "/verify-email", "/forgot-password", "/reset-password", "/auth/callback"];
+
+function AuthGuard({ children, loginPage }: { children: ReactNode; loginPage: ReactNode }) {
+  const { isAuthenticated, statusLoading, requiresAuth } = useAuth();
+  const location = useLocation();
+  const isAuthRoute = AUTH_ROUTES.some((r) => location.pathname.startsWith(r));
+
+  if (statusLoading) {
+    return (
+      <div className="bg-background text-muted-foreground flex min-h-screen items-center justify-center">
+        Checking authentication...
+      </div>
+    );
+  }
+
+  if (!requiresAuth || isAuthRoute || isAuthenticated) {
+    return <>{children}</>;
+  }
+
+  return <>{loginPage}</>;
+}
+
+export function ProtectedAppRoutes({ isWeb, loginPage }: { isWeb: boolean; loginPage: ReactNode }) {
+  const [connectionReady, setConnectionReady] = useState(() => !isDesktop || !!getConnectionConfig());
+
+  if (isDesktop && !connectionReady) {
+    return (
+      <BrowserRouter>
+        <ConnectSetupPage onConnected={() => setConnectionReady(true)} />
+      </BrowserRouter>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      {isWeb ? (
+        <AuthGuard loginPage={loginPage}>
+          <AppRoutes />
+        </AuthGuard>
+      ) : (
+        <AppRoutes />
+      )}
+    </BrowserRouter>
+  );
+}
+
 export function AppRoutes() {
   const [dynamicRoutes, setDynamicRoutes] = useState<
     { path: string; component: React.LazyExoticComponent<React.ComponentType<unknown>> }[]
   >([]);
 
-  // Subscribe to dynamic route updates
   useEffect(() => {
     const updateRoutes = () => {
       setDynamicRoutes(getDynamicRoutes());
     };
 
-    // Initial load
     updateRoutes();
 
-    // Subscribe to updates
     const unsubscribe = subscribeToNavigationUpdates(updateRoutes);
 
     return () => {
@@ -72,81 +119,71 @@ export function AppRoutes() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* QR Scanner - No layout for fullscreen camera access */}
-        {/* <Route path="/qr-scanner" element={<QRScannerPage />} /> */}
+    <Routes>
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-        {/* Auth callback - No layout needed */}
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/register/pending" element={<RegisterPendingPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Auth pages - No layout */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/register/pending" element={<RegisterPendingPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/onboarding" element={<OnboardingLayout />}>
+        <Route index element={<OnboardingPage />} />
+      </Route>
 
-        {/* Onboarding with dedicated layout */}
-        <Route path="/onboarding" element={<OnboardingLayout />}>
-          <Route index element={<OnboardingPage />} />
+      <Route path="/" element={<AppLayout />}>
+        <Route index element={<PortfolioPage />} />
+        <Route path="dashboard" element={<PortfolioPage />} />
+        <Route path="activities" element={<ActivityPage />} />
+        <Route path="activities/manage" element={<ActivityManagerPage />} />
+        <Route path="holdings" element={<HoldingsPage />} />
+        <Route path="holdings-insights" element={<HoldingsInsightsPage />} />
+        <Route path="holdings/:assetId" element={<AssetProfilePage />} />
+        <Route path="import" element={<ActivityImportPage />} />
+        <Route path="accounts/:id" element={<AccountPage />} />
+        <Route path="income" element={<IncomePage />} />
+        <Route path="performance" element={<PerformancePage />} />
+        <Route path="insights" element={<PortfolioInsightsPage />} />
+        <Route path="health" element={<HealthPage />} />
+        <Route path="assistant" element={<AiAssistantPage />} />
+        <Route path="connect" element={<ConnectPage />} />
+        <Route path="fire-planner" element={<FirePlannerPage />} />
+        {dynamicRoutes.map(({ path, component: Component }) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <Suspense
+                fallback={<div className="flex h-64 items-center justify-center">Loading...</div>}
+              >
+                <Component />
+              </Suspense>
+            }
+          />
+        ))}
+        <Route path="settings" element={<SettingsLayout />}>
+          <Route index element={<GeneralSettingsPage />} />
+          <Route path="general" element={<GeneralSettingsPage />} />
+          <Route path="accounts" element={<SettingsAccountsPage />} />
+          <Route path="goals" element={<SettingsGoalsPage />} />
+          <Route path="appearance" element={<SettingsAppearancePage />} />
+          <Route path="about" element={<AboutSettingsPage />} />
+          <Route path="exports" element={<ExportSettingsPage />} />
+          <Route path="contribution-limits" element={<ContributionLimitPage />} />
+          <Route path="fire-planner" element={<FirePlannerSettingsPage />} />
+          <Route path="market-data" element={<MarketDataSettingsPage />} />
+          <Route path="market-data/import" element={<MarketDataImportPage />} />
+          <Route path="securities" element={<AssetsPage />} />
+          <Route path="taxonomies" element={<TaxonomiesPage />} />
+          <Route path="connect" element={<ConnectSettingsPage />} />
+          <Route path="ai-providers" element={<AiProvidersPage />} />
+          <Route path="api-keys" element={<ApiKeysPage />} />
+          <Route path="addons" element={<AddonSettingsPage />} />
         </Route>
-
-        {/* Main app with sidebar */}
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<PortfolioPage />} />
-          <Route path="dashboard" element={<PortfolioPage />} />
-          <Route path="activities" element={<ActivityPage />} />
-          <Route path="activities/manage" element={<ActivityManagerPage />} />
-          <Route path="holdings" element={<HoldingsPage />} />
-          <Route path="holdings-insights" element={<HoldingsInsightsPage />} />
-          <Route path="holdings/:assetId" element={<AssetProfilePage />} />
-          <Route path="import" element={<ActivityImportPage />} />
-          <Route path="accounts/:id" element={<AccountPage />} />
-          <Route path="income" element={<IncomePage />} />
-          <Route path="performance" element={<PerformancePage />} />
-          <Route path="insights" element={<PortfolioInsightsPage />} />
-          <Route path="health" element={<HealthPage />} />
-          <Route path="assistant" element={<AiAssistantPage />} />
-          <Route path="connect" element={<ConnectPage />} />
-          <Route path="fire-planner" element={<FirePlannerPage />} />
-          {/* Dynamic addon routes */}
-          {dynamicRoutes.map(({ path, component: Component }) => (
-            <Route
-              key={path}
-              path={path}
-              element={
-                <Suspense
-                  fallback={<div className="flex h-64 items-center justify-center">Loading...</div>}
-                >
-                  <Component />
-                </Suspense>
-              }
-            />
-          ))}
-          <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<GeneralSettingsPage />} />
-            <Route path="general" element={<GeneralSettingsPage />} />
-            <Route path="accounts" element={<SettingsAccountsPage />} />
-            <Route path="goals" element={<SettingsGoalsPage />} />
-            <Route path="appearance" element={<SettingsAppearancePage />} />
-            <Route path="about" element={<AboutSettingsPage />} />
-            <Route path="exports" element={<ExportSettingsPage />} />
-            <Route path="contribution-limits" element={<ContributionLimitPage />} />
-            <Route path="fire-planner" element={<FirePlannerSettingsPage />} />
-            <Route path="market-data" element={<MarketDataSettingsPage />} />
-            <Route path="market-data/import" element={<MarketDataImportPage />} />
-            <Route path="securities" element={<AssetsPage />} />
-            <Route path="taxonomies" element={<TaxonomiesPage />} />
-            <Route path="connect" element={<ConnectSettingsPage />} />
-            <Route path="ai-providers" element={<AiProvidersPage />} />
-            <Route path="api-keys" element={<ApiKeysPage />} />
-            <Route path="addons" element={<AddonSettingsPage />} />
-          </Route>
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }

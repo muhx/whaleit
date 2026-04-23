@@ -350,13 +350,11 @@ impl HealthService {
                     .get(&key_direct)
                     .or_else(|| fx_asset_map.get(&key_inverse));
                 let latest_quote_time = match asset_id_opt {
-                    Some(asset_id) => {
-                        quote_service
-                            .get_latest_quotes(std::slice::from_ref(asset_id))
-                            .await
-                            .ok()
-                            .and_then(|q| q.into_values().next().map(|quote| quote.timestamp))
-                    }
+                    Some(asset_id) => quote_service
+                        .get_latest_quotes(std::slice::from_ref(asset_id))
+                        .await
+                        .ok()
+                        .and_then(|q| q.into_values().next().map(|quote| quote.timestamp)),
                     None => None,
                 };
 

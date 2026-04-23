@@ -53,7 +53,10 @@ export function handleDeleteCategory(
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
   const { taxonomyId, categoryId } = payload as { taxonomyId: string; categoryId: string };
-  return { url: `${url}/${encodeURIComponent(taxonomyId)}/categories/${encodeURIComponent(categoryId)}`, body: undefined };
+  return {
+    url: `${url}/${encodeURIComponent(taxonomyId)}/categories/${encodeURIComponent(categoryId)}`,
+    body: undefined,
+  };
 }
 
 export function handleMoveCategory(

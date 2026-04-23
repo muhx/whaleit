@@ -1,34 +1,32 @@
 # WhaleIt - Development overrides
 #
 # Usage: docker compose -f compose.yml -f compose.dev.yml up
-#
-# Or with .env file:
-#   cp .env.docker.example .env.docker
-#   docker compose -f compose.yml -f compose.dev.yml --env-file .env.docker up
 
 services:
   postgres:
-    # Expose PostgreSQL port on localhost for development access
     ports:
       - "${WF_PG_PORT:-5432}:5432"
 
-  whaleit:
-    # Build from source instead of pulling from Docker Hub
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    # Publish port to host for direct browser access
+      dockerfile: Dockerfile.backend
     ports:
-      - "${WF_PORT:-8088}:8088"
+      - "${WF_BACKEND_PORT:-8088}:8088"
     expose: !reset []
-    # Relax production hardening for dev
     read_only: false
     security_opt: !reset []
     deploy: !reset {}
     environment:
       WF_LISTEN_ADDR: "0.0.0.0:8088"
-      WF_DB_PATH: "/data/whaleit.db"
+      DATABASE_URL: "postgres://whaleit:${WF_PG_PASSWORD:-password}@postgres:5432/whaleit"
       WF_SECRET_KEY: "${WF_SECRET_KEY:?Set WF_SECRET_KEY}"
+      WF_MULTI_USER_AUTH: "true"
       WF_CORS_ALLOW_ORIGINS: "http://localhost:1420,http://localhost:3000"
-      WF_AUTH_PASSWORD_HASH: ""
-      WF_AUTH_REQUIRED: "false"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "${WF_PORT:-80}:80"

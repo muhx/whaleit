@@ -9,7 +9,17 @@ use whaleit_core::constants::DECIMAL_PRECISION;
 use whaleit_core::portfolio::valuation::DailyAccountValuation;
 
 /// Database read/write model for daily_account_valuations.
-#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, Insertable, AsChangeset, PartialEq)]
+#[derive(
+    Debug,
+    Clone,
+    Queryable,
+    QueryableByName,
+    Selectable,
+    Identifiable,
+    Insertable,
+    AsChangeset,
+    PartialEq,
+)]
 #[diesel(table_name = crate::schema::daily_account_valuation)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct DailyAccountValuationDB {
@@ -43,7 +53,10 @@ impl From<DailyAccountValuation> for DailyAccountValuationDB {
                 .to_string(),
             total_value: value.total_value.round_dp(DECIMAL_PRECISION).to_string(),
             cost_basis: value.cost_basis.round_dp(DECIMAL_PRECISION).to_string(),
-            net_contribution: value.net_contribution.round_dp(DECIMAL_PRECISION).to_string(),
+            net_contribution: value
+                .net_contribution
+                .round_dp(DECIMAL_PRECISION)
+                .to_string(),
             calculated_at: value.calculated_at.naive_utc(),
         }
     }

@@ -7,28 +7,25 @@ use std::{
 use tokio::sync::Mutex;
 
 use crate::{
-    api::shared::{normalize_file_path, process_portfolio_job, PortfolioJobConfig},
+    api::shared::{process_portfolio_job, PortfolioJobConfig},
     error::ApiResult,
     main_lib::AppState,
 };
-use anyhow::Context;
 use axum::{
     extract::State,
     http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use reqwest::StatusCode as HttpStatusCode;
 use semver::Version;
 use serde::Deserialize;
-use tokio::{fs, task};
+use tokio::fs;
 use whaleit_core::{
     portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode},
     quotes::MarketSyncMode,
     settings::{Settings, SettingsServiceTrait, SettingsUpdate},
 };
-use whaleit_storage_sqlite::db;
 
 async fn get_settings(State(state): State<Arc<AppState>>) -> ApiResult<Json<Settings>> {
     let s = state.settings_service.get_settings().await?;
@@ -54,8 +51,6 @@ async fn update_settings(
 
         let state_for_job = state.clone();
         tokio::spawn(async move {
-            // Base currency change needs BackfillHistory mode to ensure FX pairs
-            // have sufficient quote coverage from earliest activity date (US-006)
             let job_config = PortfolioJobConfig {
                 account_ids: None,
                 market_sync_mode: MarketSyncMode::BackfillHistory {
@@ -106,17 +101,13 @@ const WEB_RUNTIME_TARGET: &str = "web-docker";
 #[serde(rename_all = "camelCase")]
 struct AppInfoResponse {
     version: String,
-    db_path: String,
+    database_url: String,
     logs_dir: String,
 }
 
 async fn get_app_info(State(state): State<Arc<AppState>>) -> ApiResult<Json<AppInfoResponse>> {
     let version = env!("CARGO_PKG_VERSION").to_string();
-
-    let db_path = state.db_path.clone();
-
-    // For web mode, logs typically go to the same directory or a subdirectory
-    // In production, this would typically be configured via environment variables
+    let database_url = state.database_url.clone();
     let logs_dir = std::env::var("WF_LOGS_DIR").unwrap_or_else(|_| {
         StdPath::new(&state.data_root)
             .join("logs")
@@ -127,7 +118,7 @@ async fn get_app_info(State(state): State<Arc<AppState>>) -> ApiResult<Json<AppI
 
     Ok(Json(AppInfoResponse {
         version,
-        db_path,
+        database_url,
         logs_dir,
     }))
 }
@@ -161,7 +152,7 @@ struct UpdateCheckResponse {
 
 static UPDATE_CACHE: std::sync::LazyLock<Mutex<Option<(Instant, UpdateCheckResponse)>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
-const UPDATE_CACHE_TTL: Duration = Duration::from_secs(60 * 60); // 1 hour
+const UPDATE_CACHE_TTL: Duration = Duration::from_secs(60 * 60);
 
 fn normalize_target(target: Option<String>) -> String {
     match target
@@ -201,7 +192,6 @@ async fn check_update(
     State(state): State<Arc<AppState>>,
     axum::extract::Query(query): axum::extract::Query<CheckUpdateQuery>,
 ) -> ApiResult<Json<UpdateCheckResponse>> {
-    // Return cached response if still fresh (unless force refresh requested)
     if !query.force {
         let cache = UPDATE_CACHE.lock().await;
         if let Some((cached_at, ref response)) = *cache {
@@ -267,13 +257,20 @@ async fn check_update(
         }
     };
 
-    // Cache the response
     {
         let mut cache = UPDATE_CACHE.lock().await;
         *cache = Some((Instant::now(), result.clone()));
     }
 
     Ok(Json(result))
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
+struct BackupBody {
+    #[serde(default)]
+    backup_dir: Option<String>,
 }
 
 #[derive(serde::Serialize)]
@@ -286,29 +283,42 @@ struct BackupDatabaseResponse {
 async fn backup_database_route(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<BackupDatabaseResponse>> {
-    let data_root = state.data_root.clone();
-    let backup_path = task::spawn_blocking(move || db::backup_database(&data_root))
+    let database_url = state.database_url.clone();
+    let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
+    let filename = format!("whaleit_backup_{}.sql", timestamp);
+    let backup_path = StdPath::new(&state.data_root).join(&filename);
+
+    let backup_path_str = backup_path.to_str().unwrap_or(&filename).to_string();
+    let output = tokio::process::Command::new("pg_dump")
+        .arg(&database_url)
+        .arg("--no-owner")
+        .arg("--no-acl")
+        .arg("--clean")
+        .arg("--if-exists")
+        .output()
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to execute backup task: {}", e))??;
+        .map_err(|e| anyhow::anyhow!("pg_dump failed: {}", e))?;
 
-    let filename = StdPath::new(&backup_path)
-        .file_name()
-        .and_then(|f| f.to_str())
-        .ok_or_else(|| anyhow::anyhow!("Invalid backup filename"))?
-        .to_string();
+    if !output.status.success() {
+        return Err(anyhow::anyhow!(
+            "pg_dump failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )
+        .into());
+    }
 
-    let bytes = fs::read(&backup_path)
+    fs::write(&backup_path_str, &output.stdout)
         .await
-        .with_context(|| format!("Failed to read backup file {}", backup_path))?;
+        .map_err(|e| anyhow::anyhow!("Failed to write backup file: {}", e))?;
 
-    let data_b64 = BASE64.encode(&bytes);
+    use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+    let data_b64 = BASE64.encode(&output.stdout);
     Ok(Json(BackupDatabaseResponse { filename, data_b64 }))
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BackupToPathBody {
-    #[serde(rename = "backupDir")]
     backup_dir: String,
 }
 
@@ -322,36 +332,42 @@ async fn backup_database_to_path_route(
     State(state): State<Arc<AppState>>,
     Json(body): Json<BackupToPathBody>,
 ) -> ApiResult<Json<BackupToPathResponse>> {
-    let data_root = state.data_root.clone();
-    let target_dir = body.backup_dir.clone();
+    let database_url = state.database_url.clone();
+    let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
+    let filename = format!("whaleit_backup_{}.sql", timestamp);
+    let backup_path = StdPath::new(&body.backup_dir).join(&filename);
+    let backup_path_str = backup_path
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid backup path"))?
+        .to_string();
 
-    let backup_path = task::spawn_blocking(move || -> anyhow::Result<String> {
-        let normalized_backup_dir = normalize_file_path(&target_dir);
+    let output = tokio::process::Command::new("pg_dump")
+        .arg(&database_url)
+        .arg("--no-owner")
+        .arg("--no-acl")
+        .arg("--clean")
+        .arg("--if-exists")
+        .output()
+        .await
+        .map_err(|e| anyhow::anyhow!("pg_dump failed: {}", e))?;
 
-        let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
-        let backup_filename = format!("whaleit_backup_{}.db", timestamp);
-        let backup_path = StdPath::new(&normalized_backup_dir).join(&backup_filename);
+    if !output.status.success() {
+        return Err(anyhow::anyhow!(
+            "pg_dump failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )
+        .into());
+    }
 
-        let backup_path_str = backup_path
-            .to_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid backup path"))?
-            .to_string();
-
-        db::backup_database_to_file(&data_root, &backup_path_str)
-            .with_context(|| format!("Failed to create backup file {}", backup_path_str))?;
-
-        Ok(backup_path_str)
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Failed to execute backup-to-path task: {}", e))??;
-
-    Ok(Json(BackupToPathResponse { path: backup_path }))
+    fs::write(&backup_path_str, &output.stdout)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to write backup file: {}", e))?;
+    Ok(Json(BackupToPathResponse { path: backup_path_str }))
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RestoreBody {
-    #[serde(rename = "backupFilePath")]
     backup_file_path: String,
 }
 
@@ -359,14 +375,31 @@ async fn restore_database_route(
     State(state): State<Arc<AppState>>,
     Json(body): Json<RestoreBody>,
 ) -> ApiResult<StatusCode> {
-    let data_root = state.data_root.clone();
-    task::spawn_blocking(move || {
-        let normalized_path = normalize_file_path(&body.backup_file_path);
-        db::restore_database_safe(&data_root, &normalized_path)
-            .with_context(|| format!("Failed to restore database from {}", normalized_path))
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Failed to execute restore task: {}", e))??;
+    let database_url = state.database_url.clone();
+    let sql_content = fs::read_to_string(&body.backup_file_path)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to read backup file: {}", e))?;
+
+    let output = tokio::process::Command::new("psql")
+        .arg(&database_url)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| anyhow::anyhow!("psql failed to start: {}", e))?
+        .wait_with_output()
+        .await
+        .map_err(|e| anyhow::anyhow!("psql failed: {}", e))?;
+
+    drop(sql_content);
+
+    if !output.status.success() {
+        return Err(anyhow::anyhow!(
+            "psql restore failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )
+        .into());
+    }
 
     Ok(StatusCode::NO_CONTENT)
 }

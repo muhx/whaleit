@@ -97,8 +97,8 @@ performance with detailed analytics, calendar views, and performance metrics.
 
 ## Data Privacy & Security
 
-- All preferences and selections are stored securely using Whaleit's
-  encrypted storage
+- All preferences and selections are stored securely using Whaleit's encrypted
+  storage
 - No data is transmitted outside of your Whaleit instance
 - Full privacy protection for sensitive financial information
 

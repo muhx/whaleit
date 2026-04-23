@@ -101,7 +101,11 @@ impl IncomeServiceTrait for IncomeService {
         // denominators are correct.  Falls back to portfolio-wide when no filter.
         let oldest_date = if let Some(id) = account_id {
             let ids = vec![id.to_string()];
-            match self.activity_repository.get_first_activity_date(Some(&ids)).await {
+            match self
+                .activity_repository
+                .get_first_activity_date(Some(&ids))
+                .await
+            {
                 Ok(Some(date)) => date,
                 Ok(None) => return Ok(Vec::new()),
                 Err(e) => {
@@ -110,7 +114,11 @@ impl IncomeServiceTrait for IncomeService {
                 }
             }
         } else {
-            match self.activity_repository.get_first_activity_date_overall().await {
+            match self
+                .activity_repository
+                .get_first_activity_date_overall()
+                .await
+            {
                 Ok(date) => date,
                 Err(e) => {
                     error!("Error getting first transaction date: {:?}", e);
@@ -150,11 +158,11 @@ impl IncomeServiceTrait for IncomeService {
             };
 
             // Correctly call methods on the FxService instance within the Arc
-            let converted_amount = match self.fx_service.convert_currency(
-                activity.amount,
-                &activity.currency,
-                &base_currency,
-            ).await {
+            let converted_amount = match self
+                .fx_service
+                .convert_currency(activity.amount, &activity.currency, &base_currency)
+                .await
+            {
                 Ok(amount) => amount,
                 Err(e) => {
                     error!("Error converting currency: {:?}", e);

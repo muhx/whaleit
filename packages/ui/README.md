@@ -5,8 +5,8 @@ CSS.
 
 ## Overview
 
-The `@whaleit/ui` package provides a complete design system for Whaleit
-addons, ensuring consistent styling and user experience across all extensions.
+The `@whaleit/ui` package provides a complete design system for Whaleit addons,
+ensuring consistent styling and user experience across all extensions.
 
 ## Features
 
@@ -239,5 +239,5 @@ npx shadcn@latest add accordion alert-dialog alert avatar badge button calendar 
 npm run build
 ```
 
-This strategy ensures consistent UI/UX across the entire Whaleit ecosystem
-while maintaining developer efficiency and user experience.
+This strategy ensures consistent UI/UX across the entire Whaleit ecosystem while
+maintaining developer efficiency and user experience.

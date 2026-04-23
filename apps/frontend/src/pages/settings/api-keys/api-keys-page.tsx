@@ -48,8 +48,10 @@ async function createApiKey(name: string): Promise<CreateApiKeyResponse> {
 }
 
 async function deleteApiKey(id: string): Promise<void> {
-  const res = await fetch(`/api/v1/auth/api-keys/${id}`, {
+  const res = await fetch("/api/v1/auth/api-keys", {
     method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
     credentials: "same-origin",
   });
   if (!res.ok) throw new Error("Failed to revoke API key");

@@ -1,7 +1,7 @@
 # Migration Guide: Whaleit Addons v2 to v3
 
-This guide covers all changes needed to migrate your Whaleit addon from v2
-to v3.
+This guide covers all changes needed to migrate your Whaleit addon from v2 to
+v3.
 
 ## Overview
 
@@ -160,9 +160,9 @@ In v4, custom utilities are defined using `@utility`:
 
 ### 3.5 Using @whaleit/ui
 
-Addons should use the `@whaleit/ui` package which provides pre-built
-components styled with the host app's theme. The UI package exports components
-that automatically inherit the host app's:
+Addons should use the `@whaleit/ui` package which provides pre-built components
+styled with the host app's theme. The UI package exports components that
+automatically inherit the host app's:
 
 - Color palette (semantic colors like `primary`, `secondary`, etc.)
 - Typography

@@ -143,7 +143,9 @@ impl<E: AiEnvironment + 'static> Tool for GetHoldingsTool<E> {
         let accounts = self
             .env
             .account_service()
-            .list_accounts(None, None, None).await .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
+            .list_accounts(None, None, None)
+            .await
+            .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
         let account_names: HashMap<String, String> =
             accounts.into_iter().map(|a| (a.id, a.name)).collect();
 

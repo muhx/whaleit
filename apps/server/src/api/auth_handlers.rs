@@ -6,10 +6,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
 use rand::Rng;
 use serde::Deserialize;
-use whaleit_core::users::UserRepositoryTrait;
-
 use crate::auth::{hash_password, hash_token};
-use crate::email::EmailService;
 use crate::main_lib::AppState;
 
 #[derive(Deserialize)]

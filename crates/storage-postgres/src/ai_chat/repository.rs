@@ -16,11 +16,11 @@ use whaleit_ai::{
 use whaleit_core::errors::{DatabaseError, Error as CoreError};
 
 use crate::db::PgPool;
-use crate::errors::IntoCore;
 use crate::schema::{ai_messages, ai_thread_tags, ai_threads};
 
 use super::model::{AiMessageDB, AiThreadDB, AiThreadTagDB};
 
+#[allow(dead_code)]
 fn core_to_ai_error(e: CoreError) -> AiError {
     AiError::Core(e)
 }
@@ -97,7 +97,10 @@ fn convert_json_to_content(json: &str) -> ChatRepositoryResult<ChatMessageConten
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
 
-    let parts_val = parsed.get("parts").cloned().unwrap_or(serde_json::Value::Array(Vec::new()));
+    let parts_val = parsed
+        .get("parts")
+        .cloned()
+        .unwrap_or(serde_json::Value::Array(Vec::new()));
     let parts_arr = parts_val.as_array().cloned().unwrap_or_default();
 
     let mut parts = Vec::new();
@@ -280,20 +283,21 @@ impl ChatRepositoryTrait for PgAiChatRepository {
 
                 let mut query = ai_threads::table.into_boxed();
 
-                if let Some(search_str) =
-                    search.as_deref().map(str::trim).filter(|s| !s.is_empty())
+                if let Some(search_str) = search.as_deref().map(str::trim).filter(|s| !s.is_empty())
                 {
-                    let escaped = search_str.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_");
+                    let escaped = search_str
+                        .replace('\\', "\\\\")
+                        .replace('%', "\\%")
+                        .replace('_', "\\_");
                     let search_pattern = format!("%{}%", escaped);
                     query = query.filter(ai_threads::title.like(search_pattern));
                 }
 
                 if let Some(cursor_str) = &cursor {
                     let (cursor_pinned, cursor_updated_at, cursor_id) = parse_cursor(cursor_str)?;
-                    let cursor_updated_at =
-                        cursor_updated_at.parse::<NaiveDateTime>().unwrap_or_else(|_| {
-                            chrono::Utc::now().naive_utc()
-                        });
+                    let cursor_updated_at = cursor_updated_at
+                        .parse::<NaiveDateTime>()
+                        .unwrap_or_else(|_| chrono::Utc::now().naive_utc());
 
                     query = query.filter(
                         ai_threads::is_pinned
@@ -340,9 +344,9 @@ impl ChatRepositoryTrait for PgAiChatRepository {
                 }
 
                 let next_cursor = if has_more {
-                    threads_db.last().map(|t| {
-                        encode_cursor(t.is_pinned, &t.updated_at, &t.id)
-                    })
+                    threads_db
+                        .last()
+                        .map(|t| encode_cursor(t.is_pinned, &t.updated_at, &t.id))
                 } else {
                     None
                 };

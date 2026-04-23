@@ -251,11 +251,10 @@ impl PerformanceService {
             }
         }
 
-        let full_history = self.valuation_service.get_historical_valuations(
-            account_id,
-            start_date_opt,
-            end_date_opt,
-        ).await?;
+        let full_history = self
+            .valuation_service
+            .get_historical_valuations(account_id, start_date_opt, end_date_opt)
+            .await?;
 
         if full_history.len() < 2 {
             warn!("Performance calculation for account '{}': Not enough valuation data ({} points). Returning empty response.", account_id, full_history.len());
@@ -288,11 +287,10 @@ impl PerformanceService {
             }
         }
 
-        let full_history = self.valuation_service.get_historical_valuations(
-            account_id,
-            start_date_opt,
-            end_date_opt,
-        ).await?;
+        let full_history = self
+            .valuation_service
+            .get_historical_valuations(account_id, start_date_opt, end_date_opt)
+            .await?;
 
         if full_history.len() < 2 {
             warn!(

@@ -36,6 +36,4 @@ diesel_migrations = { workspace = true }
 deadpool = { workspace = true }
 
 [dev-dependencies]
-# For parity tests
-whaleit-storage-sqlite = { workspace = true }
 tempfile = "3"

@@ -11,7 +11,9 @@ use crate::errors::StoragePgError;
 use crate::schema::contribution_limits;
 use crate::schema::contribution_limits::dsl::*;
 use whaleit_core::errors::Result;
-use whaleit_core::limits::{ContributionLimit, ContributionLimitRepositoryTrait, NewContributionLimit};
+use whaleit_core::limits::{
+    ContributionLimit, ContributionLimitRepositoryTrait, NewContributionLimit,
+};
 
 pub struct PgContributionLimitRepository {
     pool: Arc<PgPool>,

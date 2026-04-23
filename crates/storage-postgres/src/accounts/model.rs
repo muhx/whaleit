@@ -6,9 +6,7 @@ use diesel::prelude::*;
 use whaleit_core::accounts::{Account, AccountUpdate, NewAccount, TrackingMode};
 
 /// Database model for accounts
-#[derive(
-    Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::accounts)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct AccountDB {

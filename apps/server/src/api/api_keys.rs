@@ -7,8 +7,6 @@ use axum::{
     Extension, Json,
 };
 use serde::{Deserialize, Serialize};
-use whaleit_core::users::UserRepositoryTrait;
-
 use crate::auth::{generate_api_key, AuthenticatedUser};
 use crate::main_lib::AppState;
 
@@ -114,17 +112,11 @@ pub struct DeleteApiKeyRequest {
     pub id: String,
 }
 
-pub fn router() -> axum::Router<Arc<AppState>> {
-    axum::Router::new()
-        .route("/api-keys", axum::routing::get(list_api_keys))
-        .route("/api-keys", axum::routing::post(create_api_key))
-        .route("/api-keys", axum::routing::delete(delete_api_key))
-}
-
 #[derive(Debug)]
-enum ApiKeyError {
+pub enum ApiKeyError {
     NotConfigured,
     BadRequest(String),
+    #[allow(dead_code)]
     NotFound(String),
     Internal(String),
 }

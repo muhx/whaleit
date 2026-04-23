@@ -162,8 +162,8 @@ where the entire `@/adapters`, `../storage/keyring`, and `../crypto` modules are
 replaced with hoisted `vi.fn()` collections, then imports of the real service
 are placed **after** the `vi.mock` calls.
 
-**UI component stubs** — replace `@whaleit/ui/components/ui/*` with minimal
-DOM stubs to isolate logic from styling
+**UI component stubs** — replace `@whaleit/ui/components/ui/*` with minimal DOM
+stubs to isolate logic from styling
 (`apps/frontend/src/pages/activity/components/forms/__tests__/buy-form.test.tsx:61-107`):
 
 ```ts
@@ -270,8 +270,8 @@ Three conventions observed:
 
 3. **Crate-level `tests/` directory** for integration tests that use only the
    public API:
-   - `crates/core/tests/health_property_tests.rs` — uses `whaleit_core::...`
-     as an external consumer.
+   - `crates/core/tests/health_property_tests.rs` — uses `whaleit_core::...` as
+     an external consumer.
    - `apps/server/tests/auth.rs` — full Axum integration test.
 
 ### Test Structure

@@ -9,9 +9,7 @@ use diesel::prelude::*;
 use whaleit_core::activities::{Activity, ActivityStatus};
 
 /// Database model for activities
-#[derive(
-    Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::activities)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ActivityDB {
@@ -79,12 +77,27 @@ impl From<ActivityDB> for Activity {
                     .map(|dt| dt.with_timezone(&Utc))
                     .ok()
             }),
-            quantity: db.quantity.as_ref().map(|s| parse_decimal_string_tolerant(s, "quantity")),
-            unit_price: db.unit_price.as_ref().map(|s| parse_decimal_string_tolerant(s, "unit_price")),
-            amount: db.amount.as_ref().map(|s| parse_decimal_string_tolerant(s, "amount")),
-            fee: db.fee.as_ref().map(|s| parse_decimal_string_tolerant(s, "fee")),
+            quantity: db
+                .quantity
+                .as_ref()
+                .map(|s| parse_decimal_string_tolerant(s, "quantity")),
+            unit_price: db
+                .unit_price
+                .as_ref()
+                .map(|s| parse_decimal_string_tolerant(s, "unit_price")),
+            amount: db
+                .amount
+                .as_ref()
+                .map(|s| parse_decimal_string_tolerant(s, "amount")),
+            fee: db
+                .fee
+                .as_ref()
+                .map(|s| parse_decimal_string_tolerant(s, "fee")),
             currency: db.currency,
-            fx_rate: db.fx_rate.as_ref().map(|s| parse_decimal_string_tolerant(s, "fx_rate")),
+            fx_rate: db
+                .fx_rate
+                .as_ref()
+                .map(|s| parse_decimal_string_tolerant(s, "fx_rate")),
             notes: db.notes,
             metadata,
             source_system: db.source_system,
@@ -101,9 +114,7 @@ impl From<ActivityDB> for Activity {
 }
 
 /// Import account template DB
-#[derive(
-    Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::import_account_templates)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ImportAccountTemplateDB {
@@ -117,9 +128,7 @@ pub struct ImportAccountTemplateDB {
 }
 
 /// Import template DB
-#[derive(
-    Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone,
-)]
+#[derive(Queryable, Identifiable, Insertable, AsChangeset, Selectable, PartialEq, Debug, Clone)]
 #[diesel(table_name = crate::schema::import_templates)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ImportTemplateDB {

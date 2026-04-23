@@ -1,7 +1,7 @@
 # Whaleit Trademarks
 
-"Whaleit" (word mark) and the Whaleit logos (the “Trademarks”) identify
-the official Whaleit project.
+"Whaleit" (word mark) and the Whaleit logos (the “Trademarks”) identify the
+official Whaleit project.
 
 Open source licenses grant copyright permissions. Trademarks are different: this
 policy explains what you may and may not do with the Trademarks.
@@ -10,9 +10,9 @@ policy explains what you may and may not do with the Trademarks.
 
 You may, without prior written permission:
 
-1. Refer to Whaleit in a descriptive way (“whaleit-compatible”, “runs
-   Whaleit”, “based on Whaleit”) when the reference is accurate and does
-   not imply endorsement.
+1. Refer to Whaleit in a descriptive way (“whaleit-compatible”, “runs Whaleit”,
+   “based on Whaleit”) when the reference is accurate and does not imply
+   endorsement.
 2. Use the Trademarks in articles, reviews, tutorials, screenshots, and
    documentation that discuss Whaleit.
 3. Redistribute unmodified official Whaleit builds (binaries) and use the
@@ -44,8 +44,7 @@ Forks and modified builds must:
 
 ## Attribution
 
-When referencing the Trademarks, include: “Whaleit is a trademark of Teymz
-Inc.”
+When referencing the Trademarks, include: “Whaleit is a trademark of Teymz Inc.”
 
 ## Permission requests
 

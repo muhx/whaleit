@@ -153,11 +153,11 @@ pub mod test_env {
 
     #[async_trait]
     impl AccountServiceTrait for MockAccountService {
-        fn get_all_accounts(&self) -> CoreResult<Vec<Account>> {
+        async fn get_all_accounts(&self) -> CoreResult<Vec<Account>> {
             Ok(self.accounts.clone())
         }
 
-        fn get_active_accounts(&self) -> CoreResult<Vec<Account>> {
+        async fn get_active_accounts(&self) -> CoreResult<Vec<Account>> {
             Ok(self
                 .accounts
                 .iter()
@@ -166,7 +166,7 @@ pub mod test_env {
                 .collect())
         }
 
-        fn get_account(&self, id: &str) -> CoreResult<Account> {
+        async fn get_account(&self, id: &str) -> CoreResult<Account> {
             self.accounts
                 .iter()
                 .find(|a| a.id == id)
@@ -176,7 +176,7 @@ pub mod test_env {
                 })
         }
 
-        fn list_accounts(
+        async fn list_accounts(
             &self,
             is_active_filter: Option<bool>,
             _is_archived_filter: Option<bool>,
@@ -200,7 +200,7 @@ pub mod test_env {
             Ok(accounts)
         }
 
-        fn get_accounts_by_ids(&self, account_ids: &[String]) -> CoreResult<Vec<Account>> {
+        async fn get_accounts_by_ids(&self, account_ids: &[String]) -> CoreResult<Vec<Account>> {
             Ok(self
                 .accounts
                 .iter()
@@ -209,11 +209,11 @@ pub mod test_env {
                 .collect())
         }
 
-        fn get_non_archived_accounts(&self) -> CoreResult<Vec<Account>> {
+        async fn get_non_archived_accounts(&self) -> CoreResult<Vec<Account>> {
             Ok(self.accounts.clone())
         }
 
-        fn get_active_non_archived_accounts(&self) -> CoreResult<Vec<Account>> {
+        async fn get_active_non_archived_accounts(&self) -> CoreResult<Vec<Account>> {
             Ok(self
                 .accounts
                 .iter()
@@ -247,34 +247,37 @@ pub mod test_env {
 
     #[async_trait]
     impl ActivityServiceTrait for MockActivityService {
-        fn get_activity(&self, _activity_id: &str) -> CoreResult<Activity> {
+        async fn get_activity(&self, _activity_id: &str) -> CoreResult<Activity> {
             unimplemented!("MockActivityService::get_activity")
         }
 
-        fn get_activities(&self) -> CoreResult<Vec<Activity>> {
+        async fn get_activities(&self) -> CoreResult<Vec<Activity>> {
             unimplemented!("MockActivityService::get_activities")
         }
 
-        fn get_activities_by_account_id(&self, _account_id: &str) -> CoreResult<Vec<Activity>> {
+        async fn get_activities_by_account_id(
+            &self,
+            _account_id: &str,
+        ) -> CoreResult<Vec<Activity>> {
             unimplemented!("MockActivityService::get_activities_by_account_id")
         }
 
-        fn get_activities_by_account_ids(
+        async fn get_activities_by_account_ids(
             &self,
             _account_ids: &[String],
         ) -> CoreResult<Vec<Activity>> {
             unimplemented!("MockActivityService::get_activities_by_account_ids")
         }
 
-        fn get_trading_activities(&self) -> CoreResult<Vec<Activity>> {
+        async fn get_trading_activities(&self) -> CoreResult<Vec<Activity>> {
             unimplemented!("MockActivityService::get_trading_activities")
         }
 
-        fn get_income_activities(&self) -> CoreResult<Vec<Activity>> {
+        async fn get_income_activities(&self) -> CoreResult<Vec<Activity>> {
             unimplemented!("MockActivityService::get_income_activities")
         }
 
-        fn search_activities(
+        async fn search_activities(
             &self,
             _page: i64,
             _page_size: i64,
@@ -295,14 +298,14 @@ pub mod test_env {
             })
         }
 
-        fn get_first_activity_date(
+        async fn get_first_activity_date(
             &self,
             _account_ids: Option<&[String]>,
         ) -> CoreResult<Option<DateTime<Utc>>> {
             Ok(None)
         }
 
-        fn get_import_mapping(
+        async fn get_import_mapping(
             &self,
             _account_id: String,
             _import_type: String,
@@ -354,7 +357,7 @@ pub mod test_env {
             unimplemented!("MockActivityService::save_import_mapping")
         }
 
-        fn check_existing_duplicates(
+        async fn check_existing_duplicates(
             &self,
             _idempotency_keys: Vec<String>,
         ) -> CoreResult<std::collections::HashMap<String, String>> {
@@ -401,11 +404,14 @@ pub mod test_env {
             unimplemented!("MockActivityService::upsert_activities_bulk")
         }
 
-        fn list_import_templates(&self) -> CoreResult<Vec<ImportTemplateData>> {
+        async fn list_import_templates(&self) -> CoreResult<Vec<ImportTemplateData>> {
             Ok(vec![])
         }
 
-        fn get_import_template(&self, _template_id: String) -> CoreResult<ImportTemplateData> {
+        async fn get_import_template(
+            &self,
+            _template_id: String,
+        ) -> CoreResult<ImportTemplateData> {
             Ok(ImportTemplateData::default())
         }
 
@@ -436,7 +442,7 @@ pub mod test_env {
             Ok(())
         }
 
-        fn get_broker_sync_profile(
+        async fn get_broker_sync_profile(
             &self,
             _account_id: String,
             _source_system: String,
@@ -510,14 +516,14 @@ pub mod test_env {
 
     #[async_trait]
     impl ValuationServiceTrait for MockValuationService {
-        fn get_latest_valuations(
+        async fn get_latest_valuations(
             &self,
             _account_ids: &[String],
         ) -> CoreResult<Vec<DailyAccountValuation>> {
             Ok(self.valuations.clone())
         }
 
-        fn get_historical_valuations(
+        async fn get_historical_valuations(
             &self,
             _account_id: &str,
             _start_date: Option<NaiveDate>,
@@ -526,7 +532,7 @@ pub mod test_env {
             Ok(self.valuations.clone())
         }
 
-        fn get_valuations_on_date(
+        async fn get_valuations_on_date(
             &self,
             _account_ids: &[String],
             _date: NaiveDate,
@@ -534,7 +540,7 @@ pub mod test_env {
             Ok(self.valuations.clone())
         }
 
-        fn get_accounts_with_negative_balance(
+        async fn get_accounts_with_negative_balance(
             &self,
             _account_ids: &[String],
         ) -> CoreResult<Vec<NegativeBalanceInfo>> {
@@ -559,11 +565,11 @@ pub mod test_env {
 
     #[async_trait]
     impl GoalServiceTrait for MockGoalService {
-        fn get_goals(&self) -> CoreResult<Vec<Goal>> {
+        async fn get_goals(&self) -> CoreResult<Vec<Goal>> {
             Ok(self.goals.clone())
         }
 
-        fn load_goals_allocations(&self) -> CoreResult<Vec<GoalsAllocation>> {
+        async fn load_goals_allocations(&self) -> CoreResult<Vec<GoalsAllocation>> {
             Ok(self.allocations.clone())
         }
 
@@ -595,7 +601,7 @@ pub mod test_env {
 
     #[async_trait]
     impl SettingsServiceTrait for MockSettingsService {
-        fn get_settings(&self) -> CoreResult<Settings> {
+        async fn get_settings(&self) -> CoreResult<Settings> {
             Ok(Settings::default())
         }
 
@@ -603,7 +609,7 @@ pub mod test_env {
             Ok(())
         }
 
-        fn get_base_currency(&self) -> CoreResult<Option<String>> {
+        async fn get_base_currency(&self) -> CoreResult<Option<String>> {
             Ok(Some("USD".to_string()))
         }
 
@@ -611,15 +617,15 @@ pub mod test_env {
             Ok(())
         }
 
-        fn is_auto_update_check_enabled(&self) -> CoreResult<bool> {
+        async fn is_auto_update_check_enabled(&self) -> CoreResult<bool> {
             Ok(true)
         }
 
-        fn is_sync_enabled(&self) -> CoreResult<bool> {
+        async fn is_sync_enabled(&self) -> CoreResult<bool> {
             Ok(false)
         }
 
-        fn get_setting_value(&self, key: &str) -> CoreResult<Option<String>> {
+        async fn get_setting_value(&self, key: &str) -> CoreResult<Option<String>> {
             Ok(self.settings.read().unwrap().get(key).cloned())
         }
 
@@ -805,20 +811,23 @@ pub mod test_env {
 
     #[async_trait]
     impl QuoteServiceTrait for MockQuoteService {
-        fn get_latest_quote(&self, _symbol: &str) -> CoreResult<Quote> {
+        async fn get_latest_quote(&self, _symbol: &str) -> CoreResult<Quote> {
             unimplemented!("MockQuoteService::get_latest_quote")
         }
 
-        fn get_latest_quotes(&self, _symbols: &[String]) -> CoreResult<HashMap<String, Quote>> {
+        async fn get_latest_quotes(
+            &self,
+            _symbols: &[String],
+        ) -> CoreResult<HashMap<String, Quote>> {
             Ok(HashMap::new())
         }
 
-        fn get_latest_quotes_snapshot(
+        async fn get_latest_quotes_snapshot(
             &self,
             asset_ids: &[String],
         ) -> CoreResult<HashMap<String, LatestQuoteSnapshot>> {
             let today = Utc::now().date_naive();
-            let quotes = self.get_latest_quotes(asset_ids)?;
+            let quotes = self.get_latest_quotes(asset_ids).await?;
             Ok(quotes
                 .into_iter()
                 .map(|(asset_id, quote)| {
@@ -836,24 +845,24 @@ pub mod test_env {
                 .collect())
         }
 
-        fn get_latest_quotes_pair(
+        async fn get_latest_quotes_pair(
             &self,
             _symbols: &[String],
         ) -> CoreResult<HashMap<String, LatestQuotePair>> {
             Ok(HashMap::new())
         }
 
-        fn get_historical_quotes(&self, _symbol: &str) -> CoreResult<Vec<Quote>> {
+        async fn get_historical_quotes(&self, _symbol: &str) -> CoreResult<Vec<Quote>> {
             Ok(Vec::new())
         }
 
-        fn get_all_historical_quotes(
+        async fn get_all_historical_quotes(
             &self,
         ) -> CoreResult<HashMap<String, Vec<(NaiveDate, Quote)>>> {
             Ok(HashMap::new())
         }
 
-        fn get_quotes_in_range(
+        async fn get_quotes_in_range(
             &self,
             _symbols: &HashSet<String>,
             _start: NaiveDate,
@@ -862,7 +871,7 @@ pub mod test_env {
             Ok(Vec::new())
         }
 
-        fn get_quotes_in_range_filled(
+        async fn get_quotes_in_range_filled(
             &self,
             _symbols: &HashSet<String>,
             _start: NaiveDate,
@@ -947,7 +956,7 @@ pub mod test_env {
             Ok(())
         }
 
-        fn get_sync_plan(&self) -> CoreResult<Vec<SymbolSyncPlan>> {
+        async fn get_sync_plan(&self) -> CoreResult<Vec<SymbolSyncPlan>> {
             Ok(Vec::new())
         }
 
@@ -967,11 +976,11 @@ pub mod test_env {
             Ok(())
         }
 
-        fn get_symbols_needing_sync(&self) -> CoreResult<Vec<QuoteSyncState>> {
+        async fn get_symbols_needing_sync(&self) -> CoreResult<Vec<QuoteSyncState>> {
             Ok(Vec::new())
         }
 
-        fn get_sync_state(&self, _symbol: &str) -> CoreResult<Option<QuoteSyncState>> {
+        async fn get_sync_state(&self, _symbol: &str) -> CoreResult<Option<QuoteSyncState>> {
             Ok(None)
         }
 
@@ -979,7 +988,7 @@ pub mod test_env {
             Ok(())
         }
 
-        fn get_assets_needing_profile_enrichment(&self) -> CoreResult<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_profile_enrichment(&self) -> CoreResult<Vec<QuoteSyncState>> {
             Ok(Vec::new())
         }
 
@@ -990,7 +999,7 @@ pub mod test_env {
             Ok(())
         }
 
-        fn get_sync_states_with_errors(&self) -> CoreResult<Vec<QuoteSyncState>> {
+        async fn get_sync_states_with_errors(&self) -> CoreResult<Vec<QuoteSyncState>> {
             Ok(Vec::new())
         }
 
@@ -1066,8 +1075,12 @@ pub mod test_env {
     #[derive(Default)]
     pub struct MockIncomeService;
 
+    #[async_trait]
     impl IncomeServiceTrait for MockIncomeService {
-        fn get_income_summary(&self, _account_id: Option<&str>) -> CoreResult<Vec<IncomeSummary>> {
+        async fn get_income_summary(
+            &self,
+            _account_id: Option<&str>,
+        ) -> CoreResult<Vec<IncomeSummary>> {
             Ok(vec![
                 IncomeSummary::new("TOTAL", "USD".to_string()),
                 IncomeSummary::new("YTD", "USD".to_string()),
@@ -1140,7 +1153,7 @@ pub mod test_env {
             })
         }
 
-        fn calculate_accounts_simple_performance(
+        async fn calculate_accounts_simple_performance(
             &self,
             _account_ids: &[String],
         ) -> CoreResult<Vec<whaleit_core::performance::SimplePerformanceMetrics>> {

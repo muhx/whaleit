@@ -13,7 +13,7 @@ use yahoo_finance_api::YahooError;
 #[derive(Error, Debug)]
 pub enum MarketDataError {
     #[error("Database error: {0}")]
-    DatabaseError(#[from] diesel::result::Error),
+    DatabaseError(String),
 
     #[error("Database error: {0}")]
     DatabaseConnectionError(#[from] DatabaseError),

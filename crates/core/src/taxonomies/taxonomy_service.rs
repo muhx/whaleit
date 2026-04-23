@@ -264,7 +264,8 @@ impl TaxonomyServiceTrait for TaxonomyService {
         category_id: &str,
     ) -> Result<Vec<AssetTaxonomyAssignment>> {
         self.repository
-            .get_category_assignments(taxonomy_id, category_id).await
+            .get_category_assignments(taxonomy_id, category_id)
+            .await
     }
 
     async fn assign_asset_to_category(
@@ -272,7 +273,11 @@ impl TaxonomyServiceTrait for TaxonomyService {
         assignment: NewAssetTaxonomyAssignment,
     ) -> Result<AssetTaxonomyAssignment> {
         // Check if taxonomy is single-select
-        if let Some(taxonomy) = self.repository.get_taxonomy(&assignment.taxonomy_id).await? {
+        if let Some(taxonomy) = self
+            .repository
+            .get_taxonomy(&assignment.taxonomy_id)
+            .await?
+        {
             if taxonomy.is_single_select {
                 // Delete any existing assignments for this asset+taxonomy before creating new one
                 self.repository

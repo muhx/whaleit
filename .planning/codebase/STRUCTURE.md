@@ -242,8 +242,8 @@ whaleit/                              # repo root (Whaleit)
 
 - Purpose: cross-page feature modules with their own components/hooks/types.
 - Contains: `ai-assistant/` (chat UI, types, streaming hooks),
-  `whaleit-connect/` (broker cloud connect onboarding), `devices-sync/`
-  (E2EE device sync UI, crypto helpers, pairing flow).
+  `whaleit-connect/` (broker cloud connect onboarding), `devices-sync/` (E2EE
+  device sync UI, crypto helpers, pairing flow).
 
 **`apps/frontend/src/components/`:**
 
