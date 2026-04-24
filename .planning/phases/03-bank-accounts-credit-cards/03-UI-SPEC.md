@@ -87,16 +87,19 @@ Exceptions: none. The existing token stack (`--button-height`, `--input-height`,
 ## Typography
 
 Values tie to existing `globals.css` and `@whaleit/ui` patterns. Do not
-introduce new font sizes this phase.
+introduce new font sizes this phase. Exactly **two font weights** are used
+across Phase 3: `400` (regular body/label) and `600` (semibold heading/display).
+Label and chip emphasis is achieved via color (`text-muted-foreground`), size
+(12px), and letter-spacing — never via a distinct weight.
 
-| Role               | Size                             | Weight            | Line Height            | Where Used                                                                                                        |
-| ------------------ | -------------------------------- | ----------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Body               | 14px (`text-sm`)                 | 400               | 1.5                    | Default body on desktop (`--font-size-base: 0.875rem`), row secondary text ("institution · currency"), form hints |
-| Body (mobile)      | 16px (`text-base`)               | 400               | 1.5                    | Inputs and primary row text on mobile to avoid iOS zoom                                                           |
-| Label / Chip       | 12px (`text-xs`)                 | 500               | 1.4                    | "Available credit" chip, "Archived" tag, balance-updated-at caption, metric captions                              |
-| Heading (row name) | 14-16px (`text-sm md:text-base`) | 600               | 1.25 (`leading-tight`) | Account name in list row, group name header                                                                       |
-| Section title      | 16px (`text-md`)                 | 600               | 1.25                   | Section titles inside detail page ("Statement", "Rewards"), "Accounts" dashboard header                           |
-| Display (balance)  | 18-24px (`text-lg md:text-2xl`)  | 600, tabular-nums | 1.2                    | Large balance on CC detail hero, account detail hero balance                                                      |
+| Role               | Size                             | Weight            | Line Height            | Where Used                                                                                                                                                           |
+| ------------------ | -------------------------------- | ----------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Body               | 14px (`text-sm`)                 | 400               | 1.5                    | Default body on desktop (`--font-size-base: 0.875rem`), row secondary text ("institution · currency"), form hints                                                    |
+| Body (mobile)      | 16px (`text-base`)               | 400               | 1.5                    | Inputs and primary row text on mobile to avoid iOS zoom                                                                                                              |
+| Label / Chip       | 12px (`text-xs`)                 | 400               | 1.4                    | "Available credit" chip, "Archived" tag, balance-updated-at caption, metric captions — emphasis via `text-muted-foreground` + `tracking-wide`, NOT a distinct weight |
+| Heading (row name) | 14-16px (`text-sm md:text-base`) | 600               | 1.25 (`leading-tight`) | Account name in list row, group name header                                                                                                                          |
+| Section title      | 16px (`text-md`)                 | 600               | 1.25                   | Section titles inside detail page ("Statement", "Rewards"), "Accounts" dashboard header                                                                              |
+| Display (balance)  | 18-24px (`text-lg md:text-2xl`)  | 600, tabular-nums | 1.2                    | Large balance on CC detail hero, account detail hero balance                                                                                                         |
 
 Family rules:
 
@@ -106,6 +109,13 @@ Family rules:
 - Mono (`IBM Plex Mono`) only appears inside `MoneyInput` / `CurrencyInput`
   while editing — existing component behavior, do not change.
 - Merriweather serif is not used in Phase 3.
+
+Weight discipline:
+
+- Only `400` and `600` are permitted in Phase 3 components. Do not introduce
+  `font-medium` (500) or any other weight. If emphasis is needed on a small
+  label, use `text-foreground` (darker) or `tracking-wide` rather than bumping
+  weight.
 
 ---
 
