@@ -1,4 +1,4 @@
-//! Platform contracts for Wealthfolio Connect.
+//! Platform contracts for Whaleit Connect.
 
 use serde::{Deserialize, Serialize};
 

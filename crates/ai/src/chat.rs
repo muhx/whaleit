@@ -288,7 +288,7 @@ impl<E: AiEnvironment + 'static> ChatService<E> {
 
         // Get provider settings
         let provider_service = ProviderService::new(self.env.clone());
-        let settings = provider_service.get_settings()?;
+        let settings = provider_service.get_settings().await?;
 
         let provider_id = request
             .effective_provider_id()
@@ -578,8 +578,10 @@ async fn spawn_chat_stream<E: AiEnvironment + 'static>(
     // Get provider settings and model capabilities
     let provider_service = ProviderService::new(env.clone());
     let api_key = provider_service.get_api_key(&provider_id)?;
-    let provider_url = provider_service.get_provider_url(&provider_id);
-    let mut capabilities = provider_service.get_model_capabilities(&provider_id, &model_id);
+    let provider_url = provider_service.get_provider_url(&provider_id).await;
+    let mut capabilities = provider_service
+        .get_model_capabilities(&provider_id, &model_id)
+        .await;
 
     // Best-effort preflight for Ollama: if we can list models and the selected model
     // is definitely missing, fail fast with a clear actionable error.
@@ -683,7 +685,7 @@ async fn spawn_chat_stream<E: AiEnvironment + 'static>(
     let repo = env.chat_repository();
 
     // Get the tools allowlist for this provider (None = all tools allowed)
-    let tools_allowlist = provider_service.get_tools_allowlist(&provider_id);
+    let tools_allowlist = provider_service.get_tools_allowlist(&provider_id).await;
 
     // If this provider has a restricted allowlist, clarify the limitation behavior.
     if capabilities.tools {
@@ -705,7 +707,7 @@ async fn spawn_chat_stream<E: AiEnvironment + 'static>(
     // Resolve effective tuning (catalog defaults merged with user overrides) once.
     // Drives temperature, max_tokens, and provider-specific extra_options for
     // every builder path below.
-    let resolved_tuning = provider_service.get_resolved_tuning(&provider_id);
+    let resolved_tuning = provider_service.get_resolved_tuning(&provider_id).await;
 
     // Merge catalog's extra_options with per-call thinking params. The thinking
     // params are PROVIDER-SPECIFIC shapes (Anthropic's `thinking.budget_tokens`,
@@ -1359,7 +1361,7 @@ async fn stream_agent_response<M: CompletionModel + 'static, E: AiEnvironment + 
     // Attach a per-run hook that deduplicates repeated tool calls, caps the
     // total tool-call count, and aborts stuck text-token loops. Cheap to clone
     // (state is behind an Arc<Mutex<_>>).
-    let hook = crate::stream_hook::WealthfolioStreamHook::new();
+    let hook = crate::stream_hook::WhaleitStreamHook::new();
 
     // Start multi-turn streaming (up to 6 tool rounds). The hook provides the
     // finer-grained guards inside those turns.

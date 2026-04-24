@@ -33,7 +33,7 @@ use crate::errors::Result;
 use crate::fx::currency::{get_normalization_rule, normalize_currency_code};
 use crate::secrets::SecretStore;
 
-use wealthfolio_market_data::{exchanges_for_currency, mic_to_exchange_name};
+use whaleit_market_data::{exchanges_for_currency, mic_to_exchange_name};
 
 /// Provider information combining static info with settings.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -191,31 +191,31 @@ pub trait QuoteServiceTrait: Send + Sync {
     // =========================================================================
 
     /// Get the latest quote for a symbol.
-    fn get_latest_quote(&self, symbol: &str) -> Result<Quote>;
+    async fn get_latest_quote(&self, symbol: &str) -> Result<Quote>;
 
     /// Get the latest quotes for multiple symbols.
-    fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>>;
+    async fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>>;
 
     /// Get latest quotes with backend-computed staleness metadata.
-    fn get_latest_quotes_snapshot(
+    async fn get_latest_quotes_snapshot(
         &self,
         asset_ids: &[String],
     ) -> Result<HashMap<String, LatestQuoteSnapshot>>;
 
     /// Get the latest quote pairs (current + previous) for multiple symbols.
-    fn get_latest_quotes_pair(
+    async fn get_latest_quotes_pair(
         &self,
         symbols: &[String],
     ) -> Result<HashMap<String, LatestQuotePair>>;
 
     /// Get all historical quotes for a symbol.
-    fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>>;
+    async fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>>;
 
     /// Get all historical quotes grouped by symbol.
-    fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>>;
+    async fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>>;
 
     /// Get quotes for symbols within a date range.
-    fn get_quotes_in_range(
+    async fn get_quotes_in_range(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
@@ -237,7 +237,7 @@ pub trait QuoteServiceTrait: Send + Sync {
     /// * `symbols` - Set of symbols to fetch quotes for
     /// * `start` - Start date of the range
     /// * `end` - End date of the range
-    fn get_quotes_in_range_filled(
+    async fn get_quotes_in_range_filled(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
@@ -361,7 +361,7 @@ pub trait QuoteServiceTrait: Send + Sync {
     async fn refresh_sync_state(&self) -> Result<()>;
 
     /// Get the current sync plan.
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
 
     /// Handle new activity created.
     async fn handle_activity_created(&self, symbol: &str, activity_date: NaiveDate) -> Result<()>;
@@ -373,19 +373,19 @@ pub trait QuoteServiceTrait: Send + Sync {
     async fn delete_sync_state(&self, symbol: &str) -> Result<()>;
 
     /// Get symbols needing sync.
-    fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get sync state for a specific symbol.
-    fn get_sync_state(&self, symbol: &str) -> Result<Option<QuoteSyncState>>;
+    async fn get_sync_state(&self, symbol: &str) -> Result<Option<QuoteSyncState>>;
 
     /// Mark asset profile as enriched.
     async fn mark_profile_enriched(&self, symbol: &str) -> Result<()>;
 
     /// Get assets that need profile enrichment.
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Get sync states that have errors (error_count > 0).
-    fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>>;
+    async fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>>;
 
     /// Reset sync error counts for the given asset IDs, allowing retry.
     async fn reset_sync_errors(&self, asset_ids: &[String]) -> Result<()>;
@@ -512,7 +512,7 @@ where
         secret_store: Arc<dyn SecretStore>,
         custom_provider_repo: Option<Arc<dyn crate::custom_provider::CustomProviderRepository>>,
     ) -> Result<Self> {
-        let providers = provider_settings_store.get_all_providers()?;
+        let providers = provider_settings_store.get_all_providers().await?;
         let enabled: Vec<ProviderConfig> = providers
             .iter()
             .filter(|p| p.enabled)
@@ -561,8 +561,8 @@ where
     fn build_extra_providers(
         custom_provider_repo: &Option<Arc<dyn crate::custom_provider::CustomProviderRepository>>,
         secret_store: &Arc<dyn SecretStore>,
-    ) -> Vec<Arc<dyn wealthfolio_market_data::MarketDataProvider>> {
-        let mut extra: Vec<Arc<dyn wealthfolio_market_data::MarketDataProvider>> = Vec::new();
+    ) -> Vec<Arc<dyn whaleit_market_data::MarketDataProvider>> {
+        let mut extra: Vec<Arc<dyn whaleit_market_data::MarketDataProvider>> = Vec::new();
         if let Some(repo) = custom_provider_repo {
             extra.push(Arc::new(
                 super::custom_scraper_provider::CustomScraperProvider::new(
@@ -576,7 +576,7 @@ where
 
     /// Refresh the market data client (e.g., after provider settings change).
     async fn refresh_client(&self) -> Result<()> {
-        let providers = self.provider_settings_store.get_all_providers()?;
+        let providers = self.provider_settings_store.get_all_providers().await?;
         let enabled: Vec<ProviderConfig> = providers
             .iter()
             .filter(|p| p.enabled)
@@ -704,17 +704,17 @@ where
     // Quote CRUD
     // =========================================================================
 
-    fn get_latest_quote(&self, symbol: &str) -> Result<Quote> {
-        let mut quote = self.quote_store.get_latest_quote(symbol)?;
-        if let Ok(asset) = self.asset_repo.get_by_id(symbol) {
+    async fn get_latest_quote(&self, symbol: &str) -> Result<Quote> {
+        let mut quote = self.quote_store.get_latest_quote(symbol).await?;
+        if let Ok(asset) = self.asset_repo.get_by_id(symbol).await {
             reconcile_quote_currency(&mut quote, &asset);
         }
         Ok(quote)
     }
 
-    fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>> {
-        let mut quotes = self.quote_store.get_latest_quotes(symbols)?;
-        let assets = self.asset_repo.list_by_asset_ids(symbols)?;
+    async fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>> {
+        let mut quotes = self.quote_store.get_latest_quotes(symbols).await?;
+        let assets = self.asset_repo.list_by_asset_ids(symbols).await?;
         let assets_by_id: HashMap<String, Asset> = assets
             .into_iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -729,12 +729,12 @@ where
         Ok(quotes)
     }
 
-    fn get_latest_quotes_snapshot(
+    async fn get_latest_quotes_snapshot(
         &self,
         asset_ids: &[String],
     ) -> Result<HashMap<String, LatestQuoteSnapshot>> {
-        let mut quotes = self.quote_store.get_latest_quotes(asset_ids)?;
-        let assets = self.asset_repo.list_by_asset_ids(asset_ids)?;
+        let mut quotes = self.quote_store.get_latest_quotes(asset_ids).await?;
+        let assets = self.asset_repo.list_by_asset_ids(asset_ids).await?;
         let assets_by_id: HashMap<String, Asset> = assets
             .into_iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -773,12 +773,12 @@ where
         Ok(snapshots)
     }
 
-    fn get_latest_quotes_pair(
+    async fn get_latest_quotes_pair(
         &self,
         symbols: &[String],
     ) -> Result<HashMap<String, LatestQuotePair>> {
-        let mut pairs = self.quote_store.get_latest_quotes_pair(symbols)?;
-        let assets = self.asset_repo.list_by_asset_ids(symbols)?;
+        let mut pairs = self.quote_store.get_latest_quotes_pair(symbols).await?;
+        let assets = self.asset_repo.list_by_asset_ids(symbols).await?;
         let assets_by_id: HashMap<String, Asset> = assets
             .into_iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -796,9 +796,9 @@ where
         Ok(pairs)
     }
 
-    fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>> {
-        let mut quotes = self.quote_store.get_historical_quotes(symbol)?;
-        if let Ok(asset) = self.asset_repo.get_by_id(symbol) {
+    async fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>> {
+        let mut quotes = self.quote_store.get_historical_quotes(symbol).await?;
+        if let Ok(asset) = self.asset_repo.get_by_id(symbol).await {
             for quote in quotes.iter_mut() {
                 reconcile_quote_currency(quote, &asset);
             }
@@ -806,15 +806,15 @@ where
         Ok(quotes)
     }
 
-    fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
-        let mut quotes = self.quote_store.get_all_historical_quotes()?;
+    async fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
+        let mut quotes = self.quote_store.get_all_historical_quotes().await?;
         let asset_ids: Vec<String> = quotes
             .iter()
             .map(|quote| quote.asset_id.clone())
             .collect::<HashSet<_>>()
             .into_iter()
             .collect();
-        let assets = self.asset_repo.list_by_asset_ids(&asset_ids)?;
+        let assets = self.asset_repo.list_by_asset_ids(&asset_ids).await?;
         let assets_by_id: HashMap<String, Asset> = assets
             .into_iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -843,14 +843,14 @@ where
         Ok(grouped)
     }
 
-    fn get_quotes_in_range(
+    async fn get_quotes_in_range(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
         end: NaiveDate,
     ) -> Result<Vec<Quote>> {
         let ids: Vec<String> = symbols.iter().cloned().collect();
-        let assets = self.asset_repo.list_by_asset_ids(&ids)?;
+        let assets = self.asset_repo.list_by_asset_ids(&ids).await?;
         let assets_by_id: HashMap<String, Asset> = assets
             .into_iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -858,7 +858,10 @@ where
 
         let mut all_quotes = Vec::new();
         for symbol in symbols {
-            let mut quotes = self.quote_store.get_quotes_in_range(symbol, start, end)?;
+            let mut quotes = self
+                .quote_store
+                .get_quotes_in_range(symbol, start, end)
+                .await?;
             if let Some(asset) = assets_by_id.get(symbol) {
                 for quote in quotes.iter_mut() {
                     reconcile_quote_currency(quote, asset);
@@ -869,7 +872,7 @@ where
         Ok(all_quotes)
     }
 
-    fn get_quotes_in_range_filled(
+    async fn get_quotes_in_range_filled(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
@@ -885,7 +888,7 @@ where
         // Fetch quotes with lookback period
         let lookback_start = start - Duration::days(QUOTE_LOOKBACK_DAYS);
         let ids: Vec<String> = symbols.iter().cloned().collect();
-        let assets = self.asset_repo.list_by_asset_ids(&ids)?;
+        let assets = self.asset_repo.list_by_asset_ids(&ids).await?;
         let assets_by_id: HashMap<String, Asset> = assets
             .into_iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -895,7 +898,8 @@ where
         for symbol in symbols {
             let mut quotes = self
                 .quote_store
-                .get_quotes_in_range(symbol, lookback_start, end)?;
+                .get_quotes_in_range(symbol, lookback_start, end)
+                .await?;
             if let Some(asset) = assets_by_id.get(symbol) {
                 for quote in quotes.iter_mut() {
                     reconcile_quote_currency(quote, asset);
@@ -910,7 +914,8 @@ where
             start,
             &assets_by_id,
             &mut all_quotes,
-        )?;
+        )
+        .await?;
 
         // Fill missing quotes
         Ok(fill_missing_quotes(&all_quotes, symbols, start, end))
@@ -922,7 +927,7 @@ where
         start: NaiveDate,
         end: NaiveDate,
     ) -> Result<HashMap<NaiveDate, HashMap<String, Quote>>> {
-        let quotes = self.get_quotes_in_range(asset_ids, start, end)?;
+        let quotes = self.get_quotes_in_range(asset_ids, start, end).await?;
 
         let mut daily: HashMap<NaiveDate, HashMap<String, Quote>> = HashMap::new();
         for quote in quotes {
@@ -981,7 +986,11 @@ where
         account_currency: Option<&str>,
     ) -> Result<Vec<SymbolSearchResult>> {
         // 1. Search existing assets in user's database
-        let existing_assets = self.asset_repo.search_by_symbol(query).unwrap_or_default();
+        let existing_assets = self
+            .asset_repo
+            .search_by_symbol(query)
+            .await
+            .unwrap_or_default();
 
         // 2. Search provider for external results
         let provider_results = self
@@ -1005,8 +1014,16 @@ where
 
         let mut unmatched_provider_results = Vec::with_capacity(provider_results.len());
         for result in provider_results {
-            let existing_asset = instrument_key_from_search_result(&result)
-                .and_then(|key| self.asset_repo.find_by_instrument_key(&key).ok().flatten());
+            let key_opt = instrument_key_from_search_result(&result);
+            let existing_asset = match key_opt {
+                Some(key) => self
+                    .asset_repo
+                    .find_by_instrument_key(&key)
+                    .await
+                    .ok()
+                    .flatten(),
+                None => None,
+            };
 
             if let Some(asset) = existing_asset.filter(|a| a.kind != AssetKind::Fx) {
                 if existing_asset_ids.insert(asset.id.clone()) {
@@ -1128,7 +1145,7 @@ where
                 };
                 if isin.starts_with("US912") {
                     let http = reqwest::Client::new();
-                    wealthfolio_market_data::provider::us_treasury_calc::UsTreasuryCalcProvider::fetch_bond_details(&http, &isin).await
+                    whaleit_market_data::provider::us_treasury_calc::UsTreasuryCalcProvider::fetch_bond_details(&http, &isin).await
                         .map(|details| {
                             let spec = crate::assets::BondSpec {
                                 isin: Some(isin.clone()),
@@ -1225,7 +1242,7 @@ where
         start: NaiveDate,
         end: NaiveDate,
     ) -> Result<Vec<Quote>> {
-        let asset = self.asset_repo.get_by_id(asset_id)?;
+        let asset = self.asset_repo.get_by_id(asset_id).await?;
         let start_dt = Utc.from_utc_datetime(&start.and_hms_opt(0, 0, 0).unwrap());
         let end_dt = Utc.from_utc_datetime(&end.and_hms_opt(23, 59, 59).unwrap());
 
@@ -1246,7 +1263,7 @@ where
         end: NaiveDate,
     ) -> Result<Vec<Quote>> {
         // First try to find an existing asset by ID
-        if let Ok(asset) = self.asset_repo.get_by_id(asset_id) {
+        if let Ok(asset) = self.asset_repo.get_by_id(asset_id).await {
             let start_dt = Utc.from_utc_datetime(&start.and_hms_opt(0, 0, 0).unwrap());
             let end_dt = Utc.from_utc_datetime(&end.and_hms_opt(23, 59, 59).unwrap());
             return self
@@ -1298,13 +1315,9 @@ where
         sync_service.refresh_sync_state().await
     }
 
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
-        // Blocking read since this is sync
-        let rt = tokio::runtime::Handle::current();
-        rt.block_on(async {
-            let sync_service = self.get_sync_service().await?;
-            sync_service.get_sync_plan()
-        })
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+        let sync_service = self.get_sync_service().await?;
+        sync_service.get_sync_plan().await
     }
 
     async fn handle_activity_created(&self, symbol: &str, activity_date: NaiveDate) -> Result<()> {
@@ -1324,22 +1337,24 @@ where
         self.sync_state_store.delete(symbol).await
     }
 
-    fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
         self.sync_state_store
             .get_assets_needing_sync(super::constants::CLOSED_POSITION_GRACE_PERIOD_DAYS)
+            .await
     }
 
-    fn get_sync_state(&self, asset_id: &str) -> Result<Option<QuoteSyncState>> {
-        self.sync_state_store.get_by_asset_id(asset_id)
+    async fn get_sync_state(&self, asset_id: &str) -> Result<Option<QuoteSyncState>> {
+        self.sync_state_store.get_by_asset_id(asset_id).await
     }
 
     async fn mark_profile_enriched(&self, symbol: &str) -> Result<()> {
         self.sync_state_store.mark_profile_enriched(symbol).await
     }
 
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
         self.sync_state_store
             .get_assets_needing_profile_enrichment()
+            .await
     }
 
     async fn update_position_status_from_holdings(
@@ -1351,7 +1366,7 @@ where
         let today = Utc::now().date_naive();
 
         // Get all sync states to determine previous active/inactive status
-        let all_sync_states = self.sync_state_store.get_all()?;
+        let all_sync_states = self.sync_state_store.get_all().await?;
 
         let mut marked_active = 0;
         let mut marked_inactive = 0;
@@ -1362,7 +1377,7 @@ where
             // Skip FX assets - they don't have "positions" in the holdings sense.
             // FX rates are always needed for currency conversion as long as there are
             // foreign-currency activities or holdings. Their lifecycle is managed separately.
-            if let Ok(asset) = self.asset_repo.get_by_id(asset_id) {
+            if let Ok(asset) = self.asset_repo.get_by_id(asset_id).await {
                 if asset.kind == AssetKind::Fx {
                     continue;
                 }
@@ -1410,8 +1425,8 @@ where
         Ok(())
     }
 
-    fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
-        self.sync_state_store.get_with_errors()
+    async fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
+        self.sync_state_store.get_with_errors().await
     }
 
     async fn reset_sync_errors(&self, asset_ids: &[String]) -> Result<()> {
@@ -1428,15 +1443,15 @@ where
     async fn get_providers_info(&self) -> Result<Vec<ProviderInfo>> {
         use super::constants::*;
 
-        let settings = self.provider_settings_store.get_all_providers()?;
+        let settings = self.provider_settings_store.get_all_providers().await?;
 
         // Get aggregated sync stats from quote_sync_state table
-        let sync_stats = self.sync_state_store.get_provider_sync_stats()?;
+        let sync_stats = self.sync_state_store.get_provider_sync_stats().await?;
         let stats_map: HashMap<String, super::sync_state::ProviderSyncStats> = sync_stats
             .into_iter()
             .map(|s| (s.provider_id.clone(), s))
             .collect();
-        let sync_states_with_errors = self.get_sync_states_with_errors()?;
+        let sync_states_with_errors = self.get_sync_states_with_errors().await?;
 
         #[derive(Default)]
         struct ProviderErrorStats {
@@ -1542,13 +1557,15 @@ where
     ) -> Result<()> {
         use super::provider_settings::UpdateMarketDataProviderSetting;
 
-        self.provider_settings_store.update_provider(
-            provider_id,
-            UpdateMarketDataProviderSetting {
-                priority: Some(priority),
-                enabled: Some(enabled),
-            },
-        )?;
+        self.provider_settings_store
+            .update_provider(
+                provider_id,
+                UpdateMarketDataProviderSetting {
+                    priority: Some(priority),
+                    enabled: Some(enabled),
+                },
+            )
+            .await?;
 
         // Refresh client with new settings
         self.refresh_client().await?;
@@ -1672,7 +1689,7 @@ where
         info!("Parsed {} quotes from CSV, validating...", quotes.len());
 
         // Fetch all assets once for efficient lookup
-        let all_assets = self.asset_repo.list()?;
+        let all_assets = self.asset_repo.list().await?;
 
         // Build lookup maps for flexible symbol matching:
         // 1. By asset ID (e.g., "SEC:VFV:XTSE")
@@ -1779,7 +1796,8 @@ where
             if !overwrite {
                 let existing = self
                     .quote_store
-                    .find_duplicate_quotes(&quote.symbol, quote.parse_date().unwrap_or_default());
+                    .find_duplicate_quotes(&quote.symbol, quote.parse_date().unwrap_or_default())
+                    .await;
                 if existing.map(|v| !v.is_empty()).unwrap_or(false) {
                     quote.validation_status =
                         ImportValidationStatus::Warning("Quote already exists".to_string());
@@ -1904,7 +1922,7 @@ fn mic_to_yahoo_suffix(mic: &str) -> Option<&'static str> {
 // Gap Filling Helper
 // =============================================================================
 
-pub(crate) fn append_historical_seed_quotes<Q: QuoteStore>(
+pub(crate) async fn append_historical_seed_quotes<Q: QuoteStore>(
     quote_store: &Q,
     symbols: &HashSet<String>,
     start: NaiveDate,
@@ -1924,7 +1942,7 @@ pub(crate) fn append_historical_seed_quotes<Q: QuoteStore>(
             continue;
         }
 
-        let maybe_seed_quote = quote_store.get_latest_quote_before(symbol, start)?;
+        let maybe_seed_quote = quote_store.get_latest_quote_before(symbol, start).await?;
 
         if let Some(mut seed_quote) = maybe_seed_quote {
             if let Some(asset) = assets_by_id.get(symbol) {
@@ -2105,7 +2123,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn latest(
+        async fn latest(
             &self,
             _asset_id: &AssetId,
             _source: Option<&QuoteSource>,
@@ -2113,7 +2131,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn range(
+        async fn range(
             &self,
             _asset_id: &AssetId,
             _start: Day,
@@ -2123,7 +2141,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn latest_batch(
+        async fn latest_batch(
             &self,
             _asset_ids: &[AssetId],
             _source: Option<&QuoteSource>,
@@ -2131,14 +2149,14 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn latest_with_previous(
+        async fn latest_with_previous(
             &self,
             _asset_ids: &[AssetId],
         ) -> Result<HashMap<AssetId, LatestQuotePair>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_quote_bounds_for_assets(
+        async fn get_quote_bounds_for_assets(
             &self,
             _asset_ids: &[String],
             _source: &str,
@@ -2146,30 +2164,30 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_latest_quote(&self, _symbol: &str) -> Result<Quote> {
+        async fn get_latest_quote(&self, _symbol: &str) -> Result<Quote> {
             unimplemented!("unused in this test")
         }
 
-        fn get_latest_quotes(&self, _symbols: &[String]) -> Result<HashMap<String, Quote>> {
+        async fn get_latest_quotes(&self, _symbols: &[String]) -> Result<HashMap<String, Quote>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_latest_quotes_pair(
+        async fn get_latest_quotes_pair(
             &self,
             _symbols: &[String],
         ) -> Result<HashMap<String, LatestQuotePair>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_historical_quotes(&self, _symbol: &str) -> Result<Vec<Quote>> {
+        async fn get_historical_quotes(&self, _symbol: &str) -> Result<Vec<Quote>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_all_historical_quotes(&self) -> Result<Vec<Quote>> {
+        async fn get_all_historical_quotes(&self) -> Result<Vec<Quote>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_quotes_in_range(
+        async fn get_quotes_in_range(
             &self,
             _symbol: &str,
             _start: NaiveDate,
@@ -2178,7 +2196,11 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn find_duplicate_quotes(&self, _symbol: &str, _date: NaiveDate) -> Result<Vec<Quote>> {
+        async fn find_duplicate_quotes(
+            &self,
+            _symbol: &str,
+            _date: NaiveDate,
+        ) -> Result<Vec<Quote>> {
             unimplemented!("unused in this test")
         }
     }
@@ -2190,30 +2212,33 @@ mod tests {
 
     #[async_trait]
     impl crate::quotes::SyncStateStore for MockSyncStateStore {
-        fn get_provider_sync_stats(&self) -> Result<Vec<ProviderSyncStats>> {
+        async fn get_provider_sync_stats(&self) -> Result<Vec<ProviderSyncStats>> {
             Ok(self.provider_sync_stats.clone())
         }
 
-        fn get_all(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_all(&self) -> Result<Vec<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_by_asset_id(&self, _asset_id: &str) -> Result<Option<QuoteSyncState>> {
+        async fn get_by_asset_id(&self, _asset_id: &str) -> Result<Option<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_by_asset_ids(
+        async fn get_by_asset_ids(
             &self,
             _asset_ids: &[String],
         ) -> Result<HashMap<String, QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_active_assets(&self) -> Result<Vec<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_assets_needing_sync(&self, _grace_period_days: i64) -> Result<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_sync(
+            &self,
+            _grace_period_days: i64,
+        ) -> Result<Vec<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
@@ -2253,11 +2278,11 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(self.with_errors.clone())
         }
     }
@@ -2266,12 +2291,13 @@ mod tests {
         providers: Vec<MarketDataProviderSetting>,
     }
 
+    #[async_trait]
     impl ProviderSettingsStore for MockProviderSettingsStore {
-        fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>> {
+        async fn get_all_providers(&self) -> Result<Vec<MarketDataProviderSetting>> {
             Ok(self.providers.clone())
         }
 
-        fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
+        async fn get_provider(&self, id: &str) -> Result<MarketDataProviderSetting> {
             self.providers
                 .iter()
                 .find(|p| p.id == id)
@@ -2279,7 +2305,7 @@ mod tests {
                 .ok_or_else(|| crate::Error::Unexpected(format!("Provider not found: {}", id)))
         }
 
-        fn update_provider(
+        async fn update_provider(
             &self,
             _id: &str,
             _changes: crate::quotes::UpdateMarketDataProviderSetting,
@@ -2313,15 +2339,15 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_by_id(&self, _asset_id: &str) -> Result<Asset> {
+        async fn get_by_id(&self, _asset_id: &str) -> Result<Asset> {
             unimplemented!("unused in this test")
         }
 
-        fn list(&self) -> Result<Vec<Asset>> {
+        async fn list(&self) -> Result<Vec<Asset>> {
             unimplemented!("unused in this test")
         }
 
-        fn list_by_asset_ids(&self, _asset_ids: &[String]) -> Result<Vec<Asset>> {
+        async fn list_by_asset_ids(&self, _asset_ids: &[String]) -> Result<Vec<Asset>> {
             unimplemented!("unused in this test")
         }
 
@@ -2329,11 +2355,11 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn search_by_symbol(&self, _query: &str) -> Result<Vec<Asset>> {
+        async fn search_by_symbol(&self, _query: &str) -> Result<Vec<Asset>> {
             unimplemented!("unused in this test")
         }
 
-        fn find_by_instrument_key(&self, _instrument_key: &str) -> Result<Option<Asset>> {
+        async fn find_by_instrument_key(&self, _instrument_key: &str) -> Result<Option<Asset>> {
             unimplemented!("unused in this test")
         }
 
@@ -2363,31 +2389,34 @@ mod tests {
 
     #[async_trait]
     impl ActivityRepositoryTrait for NoopActivityRepository {
-        fn get_activity(&self, _activity_id: &str) -> Result<Activity> {
+        async fn get_activity(&self, _activity_id: &str) -> Result<Activity> {
             unimplemented!("unused in this test")
         }
 
-        fn get_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_activities_by_account_id(&self, _account_id: &str) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_id(&self, _account_id: &str) -> Result<Vec<Activity>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_activities_by_account_ids(&self, _account_ids: &[String]) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_ids(
+            &self,
+            _account_ids: &[String],
+        ) -> Result<Vec<Activity>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_trading_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_trading_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_income_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_income_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_contribution_activities(
+        async fn get_contribution_activities(
             &self,
             _account_ids: &[String],
             _start_date: chrono::DateTime<chrono::Utc>,
@@ -2396,7 +2425,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn search_activities(
+        async fn search_activities(
             &self,
             _page: i64,
             _page_size: i64,
@@ -2437,14 +2466,14 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_first_activity_date(
+        async fn get_first_activity_date(
             &self,
             _account_ids: Option<&[String]>,
         ) -> Result<Option<chrono::DateTime<Utc>>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_import_mapping(
+        async fn get_import_mapping(
             &self,
             _account_id: &str,
             _context_kind: &str,
@@ -2465,11 +2494,11 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn list_import_templates(&self) -> Result<Vec<crate::activities::ImportTemplate>> {
+        async fn list_import_templates(&self) -> Result<Vec<crate::activities::ImportTemplate>> {
             Ok(Vec::new())
         }
 
-        fn get_import_template(
+        async fn get_import_template(
             &self,
             _template_id: &str,
         ) -> Result<Option<crate::activities::ImportTemplate>> {
@@ -2487,7 +2516,7 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_broker_sync_profile(
+        async fn get_broker_sync_profile(
             &self,
             _account_id: &str,
             _source_system: &str,
@@ -2511,7 +2540,7 @@ mod tests {
             Ok(())
         }
 
-        fn calculate_average_cost(
+        async fn calculate_average_cost(
             &self,
             _account_id: &str,
             _asset_id: &str,
@@ -2519,22 +2548,25 @@ mod tests {
             unimplemented!("unused in this test")
         }
 
-        fn get_income_activities_data(&self, _account_id: Option<&str>) -> Result<Vec<IncomeData>> {
+        async fn get_income_activities_data(
+            &self,
+            _account_id: Option<&str>,
+        ) -> Result<Vec<IncomeData>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_first_activity_date_overall(&self) -> Result<chrono::DateTime<Utc>> {
+        async fn get_first_activity_date_overall(&self) -> Result<chrono::DateTime<Utc>> {
             unimplemented!("unused in this test")
         }
 
-        fn get_activity_bounds_for_assets(
+        async fn get_activity_bounds_for_assets(
             &self,
             _asset_ids: &[String],
         ) -> Result<HashMap<String, (Option<NaiveDate>, Option<NaiveDate>)>> {
             unimplemented!("unused in this test")
         }
 
-        fn check_existing_duplicates(
+        async fn check_existing_duplicates(
             &self,
             _idempotency_keys: &[String],
         ) -> Result<HashMap<String, String>> {

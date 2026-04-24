@@ -13,7 +13,7 @@
     ·
     <a href="https://discord.gg/WDMCY6aPWK">Discord</a>
     ·
-    <a href="https://x.com/intent/follow?screen_name=WealthfolioApp">Twitter</a>
+    <a href="https://x.com/intent/follow?screen_name=WhaleitApp">Twitter</a>
     ·
     <a href="https://github.com/muhx/whaleit/releases">Releases</a>
   </p>
@@ -32,7 +32,7 @@
     style="width: 250px; height: 55px;" width="250" height="55"
   />
 </a>
-  <a href="https://www.producthunt.com/posts/wealthfolio?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_souce=badge-wealthfolio" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=461640&amp;theme=light" alt="WhaleIt - Your Friendly Finance Companion | Product Hunt" class="h-[55px] w-[250px]" width="250" height="55"></a>
+  <a href="https://www.producthunt.com/posts/whaleit?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_souce=badge-whaleit" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=461640&amp;theme=light" alt="WhaleIt - Your Friendly Finance Companion | Product Hunt" class="h-[55px] w-[250px]" width="250" height="55"></a>
 
   <a href="https://trendshift.io/repositories/11701" target="_blank">
   <img src="https://trendshift.io/api/badge/repositories/11701" alt="muhx%2Fwhaleit | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
@@ -41,7 +41,8 @@
 
 ## Introduction
 
-**WhaleIt** is Your Friendly Finance Companion — track your entire financial life with local data storage. No Subscriptions, No Cloud.
+**WhaleIt** is Your Friendly Finance Companion — track your entire financial
+life with local data storage. No Subscriptions, No Cloud.
 
 Visit the app website at [WhaleIt](https://whaleit.app/).
 
@@ -157,7 +158,7 @@ Ensure you have the following installed on your machine:
 
    ```bash
    # Database location
-   DATABASE_URL=../db/wealthfolio.db
+   DATABASE_URL=../db/whaleit.db
    ```
 
 4. **Run in Development Mode**:
@@ -338,11 +339,11 @@ You can either pull the official Docker image or build it yourself locally.
 The latest server build is published to Docker Hub.
 
 ```bash
-docker pull afadil/whaleit:latest
+docker pull muhx/whaleit:latest
 ```
 
-After pulling, use `afadil/whaleit:latest` in the run commands below. If you
-build the image locally, swap the image name back to `whaleit`.
+After pulling, use `muhx/whaleit:latest` in the run commands below. If you build
+the image locally, swap the image name back to `whaleit`.
 
 ### Building the Image
 
@@ -377,7 +378,7 @@ You can configure the container using either:
 # Create a Docker-specific environment file
 cat > .env.docker << 'EOF'
 WF_LISTEN_ADDR=0.0.0.0:8088
-WF_DB_PATH=/data/wealthfolio.db
+WF_DB_PATH=/data/whaleit.db
 WF_SECRET_KEY=<generate-with-openssl-rand>
 WF_CORS_ALLOW_ORIGINS=https://whaleit.example.com
 WF_REQUEST_TIMEOUT_MS=30000
@@ -397,8 +398,8 @@ See examples below for inline configuration.
 
 ### Running the Container
 
-All examples below use the published image (`afadil/whaleit:latest`). If you
-built locally, substitute your local tag (e.g., `whaleit`).
+All examples below use the published image (`muhx/whaleit:latest`). If you built
+locally, substitute your local tag (e.g., `whaleit`).
 
 **Using environment file** (recommended):
 
@@ -408,7 +409,7 @@ docker run --rm -d \
   --env-file .env.docker \
   -p 8088:8088 \
   -v "$(pwd)/whaleit-data:/data" \
-  afadil/whaleit:latest
+  muhx/whaleit:latest
 ```
 
 **Basic usage** (inline environment variables):
@@ -417,10 +418,10 @@ docker run --rm -d \
 docker run --rm -d \
   --name whaleit \
   -e WF_LISTEN_ADDR=0.0.0.0:8088 \
-  -e WF_DB_PATH=/data/wealthfolio.db \
+  -e WF_DB_PATH=/data/whaleit.db \
   -p 8088:8088 \
   -v "$(pwd)/whaleit-data:/data" \
-  afadil/whaleit:latest
+  muhx/whaleit:latest
 ```
 
 **Development mode** (with CORS for local Vite dev server):
@@ -429,11 +430,11 @@ docker run --rm -d \
 docker run --rm -it \
   --name whaleit \
   -e WF_LISTEN_ADDR=0.0.0.0:8088 \
-  -e WF_DB_PATH=/data/wealthfolio.db \
+  -e WF_DB_PATH=/data/whaleit.db \
   -e WF_CORS_ALLOW_ORIGINS=http://localhost:1420 \
   -p 8088:8088 \
   -v "$(pwd)/whaleit-data:/data" \
-  afadil/whaleit:latest
+  muhx/whaleit:latest
 ```
 
 **Production with encryption** (recommended):
@@ -442,11 +443,11 @@ docker run --rm -it \
 docker run --rm -d \
   --name whaleit \
   -e WF_LISTEN_ADDR=0.0.0.0:8088 \
-  -e WF_DB_PATH=/data/wealthfolio.db \
+  -e WF_DB_PATH=/data/whaleit.db \
   -e WF_SECRET_KEY=$(openssl rand -base64 32) \
   -p 8088:8088 \
   -v "$(pwd)/whaleit-data:/data" \
-  afadil/whaleit:latest
+  muhx/whaleit:latest
 ```
 
 ### Environment Variables
@@ -456,7 +457,7 @@ The container supports all `WF_*` environment variables documented in the
 
 - `WF_LISTEN_ADDR` - Bind address (**must use `0.0.0.0:PORT` for Docker**, not
   `127.0.0.1`)
-- `WF_DB_PATH` - Database path (typically `/data/wealthfolio.db`)
+- `WF_DB_PATH` - Database path (typically `/data/whaleit.db`)
 - `WF_CORS_ALLOW_ORIGINS` - CORS origins (set for dev/frontend access)
 - `WF_SECRET_KEY` - Required 32-byte key used for secrets encryption and JWT
   signing
@@ -464,7 +465,7 @@ The container supports all `WF_*` environment variables documented in the
 ### Volumes
 
 - `/data` - Persistent storage for database and secrets
-  - Database: `/data/wealthfolio.db`
+  - Database: `/data/whaleit.db`
   - Secrets: `/data/secrets.json` (encrypted with `WF_SECRET_KEY`)
 
 ### Ports
@@ -534,7 +535,7 @@ functionality with custom features.
 1. **Create a new addon**:
 
    ```bash
-   npx @wealthfolio/addon-dev-tools create my-addon
+   npx @whaleit/addon-dev-tools create my-addon
    cd my-addon
    npm install
    ```
@@ -598,11 +599,10 @@ Check out the [addons/](addons/) directory for sample addons including:
 
 ### Addon System
 
-- **@wealthfolio/addon-sdk**: TypeScript SDK for addon development with full
-  type safety.
-- **@wealthfolio/addon-dev-tools**: CLI tools and development server for hot
-  reload.
-- **@wealthfolio/ui**: Shared UI component library for consistent styling.
+- **@whaleit/addon-sdk**: TypeScript SDK for addon development with full type
+  safety.
+- **@whaleit/addon-dev-tools**: CLI tools and development server for hot reload.
+- **@whaleit/ui**: Shared UI component library for consistent styling.
 
 ### Development Tools
 
@@ -646,7 +646,7 @@ whaleit/
 ├── packages/                    # Shared TypeScript packages
 │   ├── addon-sdk/               # Addon SDK for developers
 │   ├── addon-dev-tools/         # CLI and dev server for addons
-│   └── ui/                      # Shared UI components (@wealthfolio/ui)
+│   └── ui/                      # Shared UI components (@whaleit/ui)
 ├── docs/                        # Documentation
 │   ├── addons/                  # Addon development docs
 │   ├── activities/              # Activity types docs
@@ -711,8 +711,8 @@ Brand assets in `assets/brand/` are trademarks; see
 
 ---
 
-WhaleIt and the WhaleIt logo are trademarks of Teymz Inc. The code is
-licensed under AGPL-3.0; trademarks are not granted under that license.
+WhaleIt and the WhaleIt logo are trademarks of Teymz Inc. The code is licensed
+under AGPL-3.0; trademarks are not granted under that license.
 
 ## 🌟 Star History
 

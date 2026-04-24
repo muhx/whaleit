@@ -2,10 +2,7 @@
 // ============================
 
 // Provider and hook
-export {
-  WhaleItConnectProvider,
-  useWhaleItConnect,
-} from "./providers/connect-provider";
+export { WhaleItConnectProvider, useWhaleItConnect } from "./providers/connect-provider";
 
 // Components
 export { ConnectedView } from "./components/connected-view";

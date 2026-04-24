@@ -1,16 +1,16 @@
 [package]
-name = "wealthfolio-server"
+name = "whaleit-server"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 # Internal crates
-wealthfolio-market-data = { workspace = true }
-wealthfolio-core = { workspace = true }
-wealthfolio-connect = { workspace = true }
-wealthfolio-storage-sqlite = { workspace = true }
-wealthfolio-device-sync = { workspace = true }
-wealthfolio-ai = { workspace = true }
+whaleit-market-data = { workspace = true }
+whaleit-core = { workspace = true }
+whaleit-connect = { workspace = true }
+whaleit-storage-postgres = { workspace = true }
+whaleit-device-sync = { workspace = true }
+whaleit-ai = { workspace = true }
 
 # Web framework
 axum = { version = "0.8", features = ["json", "macros", "multipart"] }
@@ -52,6 +52,7 @@ futures = "0.3"
 futures-core = "0.3"
 semver = "1"
 hyper = { version = "0.14", features = ["full"] }
+lettre = { version = "0.11", default-features = false, features = ["tokio1-rustls-tls", "smtp-transport", "builder"] }
 
 [features]
 default = ["connect-sync", "device-sync"]

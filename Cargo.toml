@@ -26,10 +26,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # Database
-diesel = { version = "2.2", features = ["sqlite", "chrono", "r2d2", "numeric", "returning_clauses_for_sqlite_3_35"] }
-diesel_migrations = { version = "2.2", features = ["sqlite"] }
-rusqlite = { version = "0.34", features = ["bundled"] }
-r2d2 = "0.8"
+diesel = { version = "2.3", features = ["postgres", "chrono", "numeric", "uuid"] }
+diesel_migrations = { version = "2.3", features = ["postgres"] }
+diesel-async = { version = "0.8", features = ["postgres", "deadpool", "migrations"] }
+deadpool = "0.13"
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
@@ -64,9 +64,10 @@ sha2 = "0.10"
 rand = "0.8"
 
 # Internal crates
-wealthfolio-market-data = { path = "crates/market-data" }
-wealthfolio-core = { path = "crates/core" }
-wealthfolio-connect = { path = "crates/connect" }
-wealthfolio-storage-sqlite = { path = "crates/storage-sqlite" }
-wealthfolio-device-sync = { path = "crates/device-sync" }
-wealthfolio-ai = { path = "crates/ai" }
+whaleit-market-data = { path = "crates/market-data" }
+whaleit-core = { path = "crates/core" }
+whaleit-connect = { path = "crates/connect" }
+whaleit-device-sync = { path = "crates/device-sync" }
+whaleit-ai = { path = "crates/ai" }
+whaleit-storage-common = { path = "crates/storage-common" }
+whaleit-storage-postgres = { path = "crates/storage-postgres" }

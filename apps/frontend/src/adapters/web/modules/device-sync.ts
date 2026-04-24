@@ -66,7 +66,13 @@ export function handleCommitInitializeTeamKeys(
     };
   return {
     url,
-    body: JSON.stringify({ keyVersion, deviceKeyEnvelope, signature, challengeResponse, recoveryEnvelope }),
+    body: JSON.stringify({
+      keyVersion,
+      deviceKeyEnvelope,
+      signature,
+      challengeResponse,
+      recoveryEnvelope,
+    }),
   };
 }
 
@@ -96,7 +102,10 @@ export function handleCreatePairing(
   url: string,
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
-  const { codeHash, ephemeralPublicKey } = payload as { codeHash: string; ephemeralPublicKey: string };
+  const { codeHash, ephemeralPublicKey } = payload as {
+    codeHash: string;
+    ephemeralPublicKey: string;
+  };
   return { url, body: JSON.stringify({ codeHash, ephemeralPublicKey }) };
 }
 
@@ -126,7 +135,10 @@ export function handleCompletePairing(
     sasProof: string | Record<string, unknown>;
     signature: string;
   };
-  return { url: `${url}/${encodeURIComponent(pairingId)}/complete`, body: JSON.stringify({ encryptedKeyBundle, sasProof, signature }) };
+  return {
+    url: `${url}/${encodeURIComponent(pairingId)}/complete`,
+    body: JSON.stringify({ encryptedKeyBundle, sasProof, signature }),
+  };
 }
 
 export function handleCancelPairing(
@@ -163,7 +175,10 @@ export function handleConfirmPairing(
     proof?: string;
     minSnapshotCreatedAt?: string;
   };
-  return { url: `${url}/${encodeURIComponent(pairingId)}/confirm`, body: JSON.stringify({ proof, minSnapshotCreatedAt }) };
+  return {
+    url: `${url}/${encodeURIComponent(pairingId)}/confirm`,
+    body: JSON.stringify({ proof, minSnapshotCreatedAt }),
+  };
 }
 
 export function handleCompletePairingWithTransfer(

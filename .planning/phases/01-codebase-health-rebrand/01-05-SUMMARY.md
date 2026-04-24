@@ -27,8 +27,10 @@ key-files:
     - apps/frontend/src/pages/onboarding/onboarding-page.tsx
 
 key-decisions:
-  - "Tagline placed in onboarding header (always visible across all steps) rather than step1 only"
-  - "Used text-muted-foreground class for tagline to match existing subtitle styling"
+  - "Tagline placed in onboarding header (always visible across all steps)
+    rather than step1 only"
+  - "Used text-muted-foreground class for tagline to match existing subtitle
+    styling"
 
 patterns-established: []
 
@@ -41,7 +43,8 @@ completed: 2026-04-20
 
 # Phase 01 Plan 05: Rebrand Gap Closure Summary
 
-**WhaleIt rebrand completed in browser-facing surfaces (title, PWA manifest, onboarding tagline)**
+**WhaleIt rebrand completed in browser-facing surfaces (title, PWA manifest,
+onboarding tagline)**
 
 ## Performance
 
@@ -52,25 +55,35 @@ completed: 2026-04-20
 - **Files modified:** 3
 
 ## Accomplishments
-- Browser tab title changed from "Wealthfolio" to "WhaleIt"
-- PWA manifest name and short_name changed from "Wealthfolio" to "WhaleIt"
-- Onboarding welcome screen now displays "Your friendly finance companion" tagline below the logo
+
+- Browser tab title changed from "Whaleit" to "WhaleIt"
+- PWA manifest name and short_name changed from "Whaleit" to "WhaleIt"
+- Onboarding welcome screen now displays "Your friendly finance companion"
+  tagline below the logo
 
 ## Task Commits
 
 Each task was committed atomically:
 
-1. **Task 1: Fix remaining Wealthfolio renames in browser-facing files** - `ce6d0fc5` (feat)
-2. **Task 2: Add WhaleIt tagline to onboarding welcome screen** - `32a7f79d` (feat)
+1. **Task 1: Fix remaining Whaleit renames in browser-facing files** -
+   `ce6d0fc5` (feat)
+2. **Task 2: Add WhaleIt tagline to onboarding welcome screen** - `32a7f79d`
+   (feat)
 
 ## Files Created/Modified
-- `apps/frontend/index.html` - Browser tab title: Wealthfolio → WhaleIt
-- `apps/frontend/public/manifest.json` - PWA identity: name/short_name Wealthfolio → WhaleIt
-- `apps/frontend/src/pages/onboarding/onboarding-page.tsx` - Added tagline paragraph below logo
+
+- `apps/frontend/index.html` - Browser tab title: Whaleit → WhaleIt
+- `apps/frontend/public/manifest.json` - PWA identity: name/short_name Whaleit →
+  WhaleIt
+- `apps/frontend/src/pages/onboarding/onboarding-page.tsx` - Added tagline
+  paragraph below logo
 
 ## Decisions Made
-- Tagline placed in the shared header component of `onboarding-page.tsx` so it's visible across all onboarding steps (not just step 1)
-- Used `text-muted-foreground` class with responsive sizing (`text-sm sm:text-base`) consistent with existing styling patterns
+
+- Tagline placed in the shared header component of `onboarding-page.tsx` so it's
+  visible across all onboarding steps (not just step 1)
+- Used `text-muted-foreground` class with responsive sizing
+  (`text-sm sm:text-base`) consistent with existing styling patterns
 
 ## Deviations from Plan
 
@@ -85,6 +98,7 @@ None.
 None - no external service configuration required.
 
 ## Next Phase Readiness
+
 - All browser-facing rebrand gaps closed
 - Phase 01 verification criteria for brand identity now fully achievable
 - TypeScript type-check passes, frontend build succeeds
@@ -93,11 +107,11 @@ None - no external service configuration required.
 
 - All 3 modified files verified present on disk
 - Both task commits (ce6d0fc5, 32a7f79d) found in git log
-- Zero "Wealthfolio" references in index.html and manifest.json
+- Zero "Whaleit" references in index.html and manifest.json
 - Tagline "Your friendly finance companion" present in onboarding-page.tsx
 - TypeScript type-check: PASS
 - Frontend build: PASS
 
 ---
-*Phase: 01-codebase-health-rebrand*
-*Completed: 2026-04-20*
+
+_Phase: 01-codebase-health-rebrand_ _Completed: 2026-04-20_

@@ -1,6 +1,7 @@
 // Web adapter - SSE Bridge and Event Listeners
 
-import { logger, EVENTS_ENDPOINT } from "./core";
+import { logger, EVENTS_ENDPOINT, API_PREFIX } from "./core";
+import { getConnectionConfig } from "@/lib/connection-config";
 import type { EventCallback, UnlistenFn } from "../types";
 
 // ============================================================================
@@ -112,7 +113,16 @@ class ServerEventBridge {
   }
 }
 
-const portfolioEventBridge = new ServerEventBridge(EVENTS_ENDPOINT);
+function resolveEventsUrl(): string {
+  const connection = getConnectionConfig();
+  if (connection) {
+    const base = `${connection.apiHost.replace(/\/+$/, "")}${API_PREFIX}/events/stream`;
+    return `${base}?api_key=${encodeURIComponent(connection.apiKey)}`;
+  }
+  return EVENTS_ENDPOINT;
+}
+
+const portfolioEventBridge = new ServerEventBridge(resolveEventsUrl());
 
 // ============================================================================
 // Event Listeners

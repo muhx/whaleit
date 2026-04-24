@@ -1,11 +1,11 @@
-# @wealthfolio/addon-dev-tools
+# @whaleit/addon-dev-tools
 
-Development tools for Wealthfolio addons including hot reload server and CLI.
+Development tools for Whaleit addons including hot reload server and CLI.
 
 ## Installation
 
 ```bash
-npm install -g @wealthfolio/addon-dev-tools
+npm install -g @whaleit/addon-dev-tools
 ```
 
 ## CLI Commands
@@ -13,32 +13,32 @@ npm install -g @wealthfolio/addon-dev-tools
 ### Create New Addon
 
 ```bash
-wealthfolio create my-awesome-addon
+whaleit create my-awesome-addon
 ```
 
 ### Start Development Server
 
 ```bash
 # In your addon directory
-wealthfolio dev
+whaleit dev
 ```
 
 ### Build Addon
 
 ```bash
-wealthfolio build
+whaleit build
 ```
 
 ### Package for Distribution
 
 ```bash
-wealthfolio package
+whaleit package
 ```
 
 ### Test Setup
 
 ```bash
-wealthfolio test
+whaleit test
 ```
 
 ## Development Server
@@ -66,17 +66,17 @@ Add to your addon's `package.json`:
 ```json
 {
   "scripts": {
-    "dev:server": "wealthfolio dev"
+    "dev:server": "whaleit dev"
   },
   "devDependencies": {
-    "@wealthfolio/addon-dev-tools": "^1.0.0"
+    "@whaleit/addon-dev-tools": "^1.0.0"
   }
 }
 ```
 
 ## Architecture
 
-This package is separate from `@wealthfolio/addon-sdk` to:
+This package is separate from `@whaleit/addon-sdk` to:
 
 - Keep the SDK lightweight for production
 - Avoid unnecessary dependencies in addon bundles

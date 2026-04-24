@@ -2,7 +2,7 @@ use chrono::Utc;
 use log::{debug, info, warn};
 use std::sync::Arc;
 use uuid::Uuid;
-use wealthfolio_core::sync::{SyncEntity, SyncOperation};
+use whaleit_core::sync::{SyncEntity, SyncOperation};
 
 use crate::{ApiRetryClass, SyncPushEventRequest, SyncPushRequest, SyncState};
 
@@ -1141,7 +1141,7 @@ mod tests {
     use async_trait::async_trait;
     use std::sync::Arc;
     use tokio::sync::Mutex;
-    use wealthfolio_core::sync::SyncEngineStatus;
+    use whaleit_core::sync::SyncEngineStatus;
 
     #[derive(Clone)]
     struct TestPorts {
@@ -1149,7 +1149,7 @@ mod tests {
         identity: Option<SyncIdentity>,
         sync_state: Result<SyncState, String>,
         fail_mark_cycle_outcome: bool,
-        pending_outbox: Arc<Mutex<Vec<wealthfolio_core::sync::SyncOutboxEvent>>>,
+        pending_outbox: Arc<Mutex<Vec<whaleit_core::sync::SyncOutboxEvent>>>,
         dead_outbox_batches: Arc<Mutex<Vec<Vec<String>>>>,
         push_error: Option<TransportError>,
         reconcile_response: crate::ReconcileReadyStateResponse,
@@ -1185,7 +1185,7 @@ mod tests {
         async fn list_pending_outbox(
             &self,
             limit: i64,
-        ) -> Result<Vec<wealthfolio_core::sync::SyncOutboxEvent>, String> {
+        ) -> Result<Vec<whaleit_core::sync::SyncOutboxEvent>, String> {
             let pending = self.pending_outbox.lock().await.clone();
             let max = usize::try_from(limit.max(0)).unwrap_or(usize::MAX);
             Ok(pending.into_iter().take(max).collect())
@@ -1461,8 +1461,8 @@ mod tests {
         event_id: &str,
         entity_id: &str,
         payload_key_version: i32,
-    ) -> wealthfolio_core::sync::SyncOutboxEvent {
-        wealthfolio_core::sync::SyncOutboxEvent {
+    ) -> whaleit_core::sync::SyncOutboxEvent {
+        whaleit_core::sync::SyncOutboxEvent {
             event_id: event_id.to_string(),
             entity: SyncEntity::Account,
             entity_id: entity_id.to_string(),
@@ -1471,7 +1471,7 @@ mod tests {
             payload: "{}".to_string(),
             payload_key_version,
             sent: false,
-            status: wealthfolio_core::sync::SyncOutboxStatus::Pending,
+            status: whaleit_core::sync::SyncOutboxStatus::Pending,
             retry_count: 0,
             next_retry_at: None,
             last_error: None,

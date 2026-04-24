@@ -7,7 +7,7 @@ use axum::{
     Json, Router,
 };
 use chrono::Utc;
-use wealthfolio_core::portfolio::net_worth::{NetWorthHistoryPoint, NetWorthResponse};
+use whaleit_core::portfolio::net_worth::{NetWorthHistoryPoint, NetWorthResponse};
 
 use super::shared::{parse_date, parse_date_optional};
 
@@ -44,7 +44,10 @@ async fn get_net_worth_history(
     let start = parse_date(&q.start_date, "startDate")?;
     let end = parse_date(&q.end_date, "endDate")?;
 
-    let history = state.net_worth_service.get_net_worth_history(start, end)?;
+    let history = state
+        .net_worth_service
+        .get_net_worth_history(start, end)
+        .await?;
     Ok(Json(history))
 }
 

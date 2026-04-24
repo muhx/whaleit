@@ -16,7 +16,7 @@ use tracing::{debug, info, warn};
 use crate::api::device_sync_engine;
 use crate::error::{ApiError, ApiResult};
 use crate::main_lib::AppState;
-use wealthfolio_device_sync::{
+use whaleit_device_sync::{
     ClaimPairingRequest, ClaimPairingResponse, CommitInitializeKeysRequest,
     CommitInitializeKeysResponse, CommitRotateKeysRequest, CommitRotateKeysResponse,
     CompletePairingRequest, CompletePairingResponse, ConfirmPairingRequest, ConfirmPairingResponse,
@@ -631,8 +631,7 @@ async fn confirm_pairing_endpoint(
         .map_err(|e| ApiError::Internal(e.to_string()))?;
 
     if let Some(min_created_at) = body.min_snapshot_created_at.as_deref() {
-        if let Ok(parsed_min) = wealthfolio_device_sync::parse_sync_datetime_to_utc(min_created_at)
-        {
+        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at) {
             let max_allowed = chrono::Utc::now() + chrono::Duration::minutes(10);
             if parsed_min > max_allowed {
                 warn!(
@@ -640,7 +639,7 @@ async fn confirm_pairing_endpoint(
                     min_created_at
                 );
             } else {
-                match wealthfolio_device_sync::normalize_sync_datetime(min_created_at) {
+                match whaleit_device_sync::normalize_sync_datetime(min_created_at) {
                     Ok(normalized) => {
                         if let Err(err) = device_sync_engine::set_min_snapshot_created_at_in_store(
                             &device_id,
@@ -725,7 +724,7 @@ async fn confirm_pairing_with_bootstrap(
 async fn begin_pairing_confirm(
     State(state): State<Arc<AppState>>,
     Json(body): Json<BeginPairingConfirmBody>,
-) -> ApiResult<Json<wealthfolio_device_sync::engine::PairingFlowResponse>> {
+) -> ApiResult<Json<whaleit_device_sync::engine::PairingFlowResponse>> {
     let result = device_sync_engine::begin_pairing_confirm(
         state,
         body.pairing_id,
@@ -740,7 +739,7 @@ async fn begin_pairing_confirm(
 async fn get_pairing_flow_state(
     State(state): State<Arc<AppState>>,
     Json(body): Json<FlowIdBody>,
-) -> ApiResult<Json<wealthfolio_device_sync::engine::PairingFlowResponse>> {
+) -> ApiResult<Json<whaleit_device_sync::engine::PairingFlowResponse>> {
     let result = device_sync_engine::get_pairing_flow_state_handler(state, body.flow_id)
         .await
         .map_err(ApiError::Internal)?;
@@ -750,7 +749,7 @@ async fn get_pairing_flow_state(
 async fn approve_pairing_overwrite_endpoint(
     State(state): State<Arc<AppState>>,
     Json(body): Json<FlowIdBody>,
-) -> ApiResult<Json<wealthfolio_device_sync::engine::PairingFlowResponse>> {
+) -> ApiResult<Json<whaleit_device_sync::engine::PairingFlowResponse>> {
     let result = device_sync_engine::approve_pairing_overwrite_handler(state, body.flow_id)
         .await
         .map_err(ApiError::Internal)?;
@@ -760,7 +759,7 @@ async fn approve_pairing_overwrite_endpoint(
 async fn cancel_pairing_flow(
     State(state): State<Arc<AppState>>,
     Json(body): Json<FlowIdBody>,
-) -> ApiResult<Json<wealthfolio_device_sync::engine::PairingFlowResponse>> {
+) -> ApiResult<Json<whaleit_device_sync::engine::PairingFlowResponse>> {
     let result = device_sync_engine::cancel_pairing_flow_handler(state, body.flow_id)
         .await
         .map_err(ApiError::Internal)?;

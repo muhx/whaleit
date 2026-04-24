@@ -99,7 +99,7 @@ mod tests {
             unimplemented!("Not needed for tests")
         }
 
-        fn find_by_instrument_key(&self, _instrument_key: &str) -> Result<Option<Asset>> {
+        async fn find_by_instrument_key(&self, _instrument_key: &str) -> Result<Option<Asset>> {
             Ok(None)
         }
 
@@ -107,25 +107,25 @@ mod tests {
             Ok(())
         }
 
-        fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
+        async fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
             self.assets
                 .get(asset_id)
                 .cloned()
                 .ok_or_else(|| crate::Error::Repository(format!("Asset not found: {}", asset_id)))
         }
 
-        fn list(&self) -> Result<Vec<Asset>> {
+        async fn list(&self) -> Result<Vec<Asset>> {
             Ok(self.assets.values().cloned().collect())
         }
 
-        fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
+        async fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
             Ok(asset_ids
                 .iter()
                 .filter_map(|asset_id| self.assets.get(asset_id).cloned())
                 .collect())
         }
 
-        fn search_by_symbol(&self, _query: &str) -> Result<Vec<Asset>> {
+        async fn search_by_symbol(&self, _query: &str) -> Result<Vec<Asset>> {
             Ok(Vec::new())
         }
 
@@ -188,7 +188,7 @@ mod tests {
 
     #[async_trait::async_trait]
     impl FxServiceTrait for MockFxService {
-        fn initialize(&self) -> Result<()> {
+        async fn initialize(&self) -> Result<()> {
             Err(crate::errors::Error::Unexpected(
                 "MockFxService::initialize not implemented".to_string(),
             ))
@@ -198,7 +198,7 @@ mod tests {
                 "MockFxService::add_exchange_rate not implemented".to_string(),
             ))
         }
-        fn get_historical_rates(
+        async fn get_historical_rates(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -218,7 +218,7 @@ mod tests {
                 "MockFxService::update_exchange_rate not implemented".to_string(),
             ))
         }
-        fn get_latest_exchange_rate(
+        async fn get_latest_exchange_rate(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -227,7 +227,7 @@ mod tests {
                 "MockFxService::get_latest_exchange_rate not implemented".to_string(),
             ))
         }
-        fn get_exchange_rate_for_date(
+        async fn get_exchange_rate_for_date(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -237,7 +237,7 @@ mod tests {
                 "MockFxService::get_exchange_rate_for_date not implemented".to_string(),
             ))
         }
-        fn convert_currency(
+        async fn convert_currency(
             &self,
             _amount: Decimal,
             _from_currency: &str,
@@ -249,7 +249,7 @@ mod tests {
         }
 
         // This is the one actually used by HoldingsCalculator and is synchronous
-        fn convert_currency_for_date(
+        async fn convert_currency_for_date(
             &self,
             amount: Decimal,
             from_currency: &str,
@@ -279,7 +279,7 @@ mod tests {
                 )))),
             }
         }
-        fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
             Err(crate::errors::Error::Unexpected(
                 "MockFxService::get_exchange_rates not implemented".to_string(),
             ))
@@ -526,8 +526,8 @@ mod tests {
     }
 
     // --- Tests ---
-    #[test]
-    fn test_buy_activity_updates_holdings_and_cash() {
+    #[tokio::test]
+    async fn test_buy_activity_updates_holdings_and_cash() {
         let mut mock_fx_service = MockFxService::new();
         let account_currency = "CAD";
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -557,9 +557,9 @@ mod tests {
 
         let activities_today = vec![buy_activity.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
-        assert!(result.is_ok());
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         let next_state = result.unwrap().snapshot;
 
         // Check position - amounts should be converted from CAD to USD
@@ -585,8 +585,8 @@ mod tests {
         assert_eq!(next_state.net_contribution, dec!(0));
     }
 
-    #[test]
-    fn test_activity_buckets_to_user_local_day_boundary() {
+    #[tokio::test]
+    async fn test_activity_buckets_to_user_local_day_boundary() {
         let calculator = create_calculator_with_timezone(
             Arc::new(MockFxService::new()),
             Arc::new(RwLock::new("USD".to_string())),
@@ -613,16 +613,16 @@ mod tests {
                 &[buy_activity],
                 NaiveDate::from_ymd_opt(2024, 12, 31).unwrap(),
             )
+            .await
             .unwrap();
 
         assert!(result.warnings.is_empty());
         assert_eq!(result.snapshot.positions.len(), 1);
-        // Guard #596 path: buy can produce negative cash that must remain booked.
         assert_eq!(result.snapshot.cash_balances.get("USD"), Some(&dec!(-100)));
     }
 
-    #[test]
-    fn test_activity_not_processed_when_target_date_is_wrong_for_user_timezone() {
+    #[tokio::test]
+    async fn test_activity_not_processed_when_target_date_is_wrong_for_user_timezone() {
         let calculator = create_calculator_with_timezone(
             Arc::new(MockFxService::new()),
             Arc::new(RwLock::new("USD".to_string())),
@@ -649,14 +649,15 @@ mod tests {
                 &[buy_activity],
                 NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
             )
+            .await
             .unwrap();
 
         assert_eq!(result.warnings.len(), 1);
         assert!(result.snapshot.positions.is_empty());
     }
 
-    #[test]
-    fn test_sell_activity_updates_holdings_and_cash() {
+    #[tokio::test]
+    async fn test_sell_activity_updates_holdings_and_cash() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let account_currency = "CAD";
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -724,8 +725,9 @@ mod tests {
 
         let activities_today = vec![sell_activity.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -756,8 +758,8 @@ mod tests {
         ); // Sell does not change net contribution
     }
 
-    #[test]
-    fn test_buy_activity_with_fx_conversion() {
+    #[tokio::test]
+    async fn test_buy_activity_with_fx_conversion() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-03";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -787,8 +789,9 @@ mod tests {
 
         let activities_today = vec![buy_activity_usd.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -826,8 +829,8 @@ mod tests {
         ); // Buy does not change net contribution
     }
 
-    #[test]
-    fn test_deposit_activity_with_fx_conversion() {
+    #[tokio::test]
+    async fn test_deposit_activity_with_fx_conversion() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-04";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -860,8 +863,9 @@ mod tests {
 
         let activities_today = vec![deposit_usd_activity.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -901,8 +905,8 @@ mod tests {
         assert!(next_state.positions.is_empty());
     }
 
-    #[test]
-    fn test_withdrawal_with_negative_amount_from_csv_import() {
+    #[tokio::test]
+    async fn test_withdrawal_with_negative_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-03-10";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -930,8 +934,9 @@ mod tests {
 
         let activities_today = vec![withdrawal_negative_activity];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -952,8 +957,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_withdrawal_activity_with_fx_conversion() {
+    #[tokio::test]
+    async fn test_withdrawal_activity_with_fx_conversion() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-05";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -986,8 +991,9 @@ mod tests {
 
         let activities_today = vec![withdrawal_usd_activity.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1027,8 +1033,8 @@ mod tests {
         assert!(next_state.positions.is_empty());
     }
 
-    #[test]
-    fn test_deposit_with_positive_amount_from_csv_import() {
+    #[tokio::test]
+    async fn test_deposit_with_positive_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-02-13";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1056,8 +1062,9 @@ mod tests {
 
         let activities_today = vec![deposit_positive_activity];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1076,8 +1083,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_fee_with_negative_amount_from_csv_import() {
+    #[tokio::test]
+    async fn test_fee_with_negative_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-03-07";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1105,8 +1112,9 @@ mod tests {
 
         let activities_today = vec![fee_negative_activity];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1125,8 +1133,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_transfer_out_with_negative_amount_from_csv_import() {
+    #[tokio::test]
+    async fn test_transfer_out_with_negative_amount_from_csv_import() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let target_date_str = "2025-03-10";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1154,8 +1162,9 @@ mod tests {
 
         let activities_today = vec![transfer_out_negative_activity];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1174,8 +1183,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_income_activities_updates_cash_not_net_contribution() {
+    #[tokio::test]
+    async fn test_income_activities_updates_cash_not_net_contribution() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-06";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1218,8 +1227,9 @@ mod tests {
 
         let activities_today = vec![dividend_activity.clone(), interest_activity_usd.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1260,8 +1270,8 @@ mod tests {
         assert!(next_state.positions.is_empty());
     }
 
-    #[test]
-    fn test_zero_price_buy_lot_adds_quantity_without_cash_or_cost_basis_change() {
+    #[tokio::test]
+    async fn test_zero_price_buy_lot_adds_quantity_without_cash_or_cost_basis_change() {
         let mock_fx_service = Arc::new(MockFxService::new());
         let account_currency = "USD";
         let base_currency = Arc::new(RwLock::new(account_currency.to_string()));
@@ -1283,8 +1293,9 @@ mod tests {
             target_date_str,
         );
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &[zero_price_buy], target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &[zero_price_buy], target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1303,8 +1314,8 @@ mod tests {
         assert_eq!(next_state.net_contribution_base, dec!(0));
     }
 
-    #[test]
-    fn test_charge_activities_fee_and_tax() {
+    #[tokio::test]
+    async fn test_charge_activities_fee_and_tax() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-07";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1350,8 +1361,9 @@ mod tests {
         );
 
         let activities_today = vec![fee_activity.clone(), tax_activity_usd.clone()];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1387,8 +1399,8 @@ mod tests {
         assert!(next_state.positions.is_empty());
     }
 
-    #[test]
-    fn test_add_and_remove_holding_activities() {
+    #[tokio::test]
+    async fn test_add_and_remove_holding_activities() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_add_str = "2023-01-08";
         let target_date_add = NaiveDate::from_str(target_date_add_str).unwrap();
@@ -1430,11 +1442,9 @@ mod tests {
         );
 
         let activities_add = vec![add_holding_activity.clone()];
-        let result_add = calculator.calculate_next_holdings(
-            &previous_snapshot_add,
-            &activities_add,
-            target_date_add,
-        );
+        let result_add = calculator
+            .calculate_next_holdings(&previous_snapshot_add, &activities_add, target_date_add)
+            .await;
         assert!(
             result_add.is_ok(),
             "External TransferIn calculation failed: {:?}",
@@ -1497,11 +1507,9 @@ mod tests {
         );
 
         let activities_remove = vec![remove_holding_activity.clone()];
-        let result_remove = calculator.calculate_next_holdings(
-            &state_after_add,
-            &activities_remove,
-            target_date_remove,
-        );
+        let result_remove = calculator
+            .calculate_next_holdings(&state_after_add, &activities_remove, target_date_remove)
+            .await;
         assert!(
             result_remove.is_ok(),
             "External TransferOut calculation failed: {:?}",
@@ -1560,8 +1568,8 @@ mod tests {
         ); // 1563.9 CAD
     }
 
-    #[test]
-    fn test_transfer_in_out_activities() {
+    #[tokio::test]
+    async fn test_transfer_in_out_activities() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_asset_transfer_str = "2023-01-10";
         let target_date_asset_transfer =
@@ -1604,11 +1612,13 @@ mod tests {
             target_date_asset_transfer_str, // 50 shares @ 120 USD, 10 USD fee
         );
         let activities_asset_tx_in = vec![transfer_in_asset_activity.clone()];
-        let result_asset_tx_in = calculator.calculate_next_holdings(
-            &previous_snapshot_asset_tx,
-            &activities_asset_tx_in,
-            target_date_asset_transfer,
-        );
+        let result_asset_tx_in = calculator
+            .calculate_next_holdings(
+                &previous_snapshot_asset_tx,
+                &activities_asset_tx_in,
+                target_date_asset_transfer,
+            )
+            .await;
         assert!(
             result_asset_tx_in.is_ok(),
             "Asset TransferIn failed: {:?}",
@@ -1668,11 +1678,13 @@ mod tests {
             target_date_asset_transfer_str, // Price not used for FIFO; 5 USD fee
         );
         let activities_asset_tx_out = vec![transfer_out_asset_activity.clone()];
-        let result_asset_tx_out = calculator.calculate_next_holdings(
-            &state_after_asset_tx_in,
-            &activities_asset_tx_out,
-            target_date_asset_transfer,
-        );
+        let result_asset_tx_out = calculator
+            .calculate_next_holdings(
+                &state_after_asset_tx_in,
+                &activities_asset_tx_out,
+                target_date_asset_transfer,
+            )
+            .await;
         assert!(
             result_asset_tx_out.is_ok(),
             "Asset TransferOut failed: {:?}",
@@ -1738,11 +1750,13 @@ mod tests {
             target_date_cash_transfer_str, // 1000 USD, 8 USD fee
         );
         let activities_cash_tx_in = vec![transfer_in_cash_activity.clone()];
-        let result_cash_tx_in = calculator.calculate_next_holdings(
-            &state_after_asset_tx_out,
-            &activities_cash_tx_in,
-            target_date_cash_transfer,
-        );
+        let result_cash_tx_in = calculator
+            .calculate_next_holdings(
+                &state_after_asset_tx_out,
+                &activities_cash_tx_in,
+                target_date_cash_transfer,
+            )
+            .await;
         assert!(
             result_cash_tx_in.is_ok(),
             "Cash TransferIn failed: {:?}",
@@ -1800,11 +1814,13 @@ mod tests {
             target_date_cash_transfer_str, // 200 USD, 3 USD fee
         );
         let activities_cash_tx_out = vec![transfer_out_cash_activity.clone()];
-        let result_cash_tx_out = calculator.calculate_next_holdings(
-            &state_after_cash_tx_in,
-            &activities_cash_tx_out,
-            target_date_cash_transfer,
-        );
+        let result_cash_tx_out = calculator
+            .calculate_next_holdings(
+                &state_after_cash_tx_in,
+                &activities_cash_tx_out,
+                target_date_cash_transfer,
+            )
+            .await;
         assert!(
             result_cash_tx_out.is_ok(),
             "Cash TransferOut failed: {:?}",
@@ -1853,8 +1869,8 @@ mod tests {
         ); // 4687.8 CAD
     }
 
-    #[test]
-    fn test_cash_transfer_affects_net_contribution() {
+    #[tokio::test]
+    async fn test_cash_transfer_affects_net_contribution() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-10";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1878,8 +1894,9 @@ mod tests {
             target_date_str,
         );
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date)
+            .await;
         assert!(
             result.is_ok(),
             "TransferIn should succeed: {:?}",
@@ -1892,8 +1909,8 @@ mod tests {
         assert_eq!(state.net_contribution_base, dec!(1000) * usd_cad);
     }
 
-    #[test]
-    fn test_multiple_activities_on_same_day_with_fx() {
+    #[tokio::test]
+    async fn test_multiple_activities_on_same_day_with_fx() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-12";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -1940,8 +1957,9 @@ mod tests {
         // Order matters: buy first, then sell
         let activities_today = vec![buy_activity_usd.clone(), sell_activity_usd.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -1996,8 +2014,8 @@ mod tests {
         ); // 0 CAD
     }
 
-    #[test]
-    fn test_fx_conversion_failure_fallback() {
+    #[tokio::test]
+    async fn test_fx_conversion_failure_fallback() {
         // Use CAD account, EUR activity, but provide NO EUR->CAD rate
         let mut mock_fx_service = MockFxService::new();
         // DO NOT ADD EUR <-> CAD rate here
@@ -2032,8 +2050,9 @@ mod tests {
 
         let activities_today = vec![buy_activity_eur.clone()];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(
             result.is_ok(),
             "Calculation should still succeed with FX fallback: {:?}",
@@ -2083,8 +2102,8 @@ mod tests {
         ); // 0 CAD
     }
 
-    #[test]
-    fn test_cash_balances_reflects_activity_currencies() {
+    #[tokio::test]
+    async fn test_cash_balances_reflects_activity_currencies() {
         let mut mock_fx_service = MockFxService::new();
         let target_date_str = "2023-01-15";
         let target_date = NaiveDate::from_str(target_date_str).unwrap();
@@ -2159,8 +2178,9 @@ mod tests {
             deposit_eur_activity.clone(),
         ];
 
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities_today, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities_today, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
 
@@ -2244,8 +2264,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_multi_currency_same_asset_buy_activities() {
+    #[tokio::test]
+    async fn test_multi_currency_same_asset_buy_activities() {
         // This test covers the specific use case where the same asset (e.g., AMZN)
         // is bought in different currencies and should be properly
         // aggregated into a single position with currency conversion.
@@ -2255,7 +2275,8 @@ mod tests {
         test_multi_currency_scenario_usd_first();
     }
 
-    fn test_multi_currency_scenario_eur_first() {
+    #[tokio::test]
+    async fn test_multi_currency_scenario_eur_first() {
         // Scenario 1: First buy in EUR, second buy in USD
         // Position should be in EUR, USD activity should be converted to EUR
 
@@ -2306,11 +2327,9 @@ mod tests {
         let activities_day1 = vec![buy_eur_activity.clone()];
         let target_date1 = NaiveDate::from_str(date1_str).unwrap();
 
-        let result1 = calculator.calculate_next_holdings(
-            &snapshot_after_first,
-            &activities_day1,
-            target_date1,
-        );
+        let result1 = calculator
+            .calculate_next_holdings(&snapshot_after_first, &activities_day1, target_date1)
+            .await;
         assert!(
             result1.is_ok(),
             "First calculation failed: {:?}",
@@ -2371,11 +2390,9 @@ mod tests {
         let activities_day2 = vec![buy_usd_activity.clone()];
         let target_date2 = NaiveDate::from_str(date2_str).unwrap();
 
-        let result2 = calculator.calculate_next_holdings(
-            &snapshot_after_first,
-            &activities_day2,
-            target_date2,
-        );
+        let result2 = calculator
+            .calculate_next_holdings(&snapshot_after_first, &activities_day2, target_date2)
+            .await;
         assert!(
             result2.is_ok(),
             "Second calculation failed: {:?}",
@@ -2474,7 +2491,8 @@ mod tests {
         );
     }
 
-    fn test_multi_currency_scenario_usd_first() {
+    #[tokio::test]
+    async fn test_multi_currency_scenario_usd_first() {
         // Scenario 2: First buy in USD, second buy in EUR
         // Position should be in USD, EUR activity should be converted to USD
 
@@ -2525,11 +2543,9 @@ mod tests {
         let activities_day1 = vec![buy_usd_activity.clone()];
         let target_date1 = NaiveDate::from_str(date1_str).unwrap();
 
-        let result1 = calculator.calculate_next_holdings(
-            &snapshot_after_first,
-            &activities_day1,
-            target_date1,
-        );
+        let result1 = calculator
+            .calculate_next_holdings(&snapshot_after_first, &activities_day1, target_date1)
+            .await;
         assert!(
             result1.is_ok(),
             "First calculation failed: {:?}",
@@ -2575,11 +2591,9 @@ mod tests {
         let activities_day2 = vec![buy_eur_activity.clone()];
         let target_date2 = NaiveDate::from_str(date2_str).unwrap();
 
-        let result2 = calculator.calculate_next_holdings(
-            &snapshot_after_first,
-            &activities_day2,
-            target_date2,
-        );
+        let result2 = calculator
+            .calculate_next_holdings(&snapshot_after_first, &activities_day2, target_date2)
+            .await;
         assert!(
             result2.is_ok(),
             "Second calculation failed: {:?}",
@@ -2628,8 +2642,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_position_created_in_stock_listing_currency_not_activity_currency() {
+    #[tokio::test]
+    async fn test_position_created_in_stock_listing_currency_not_activity_currency() {
         // This test verifies that when the first activity for a stock is in a different currency
         // than the stock's listing currency, the position should be created in the stock's
         // listing currency, not the activity's currency.
@@ -2679,8 +2693,9 @@ mod tests {
         let activities = vec![buy_aapl_eur_activity.clone()];
         let target_date = NaiveDate::from_str(activity_date_str).unwrap();
 
-        let result =
-            calculator.calculate_next_holdings(&initial_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&initial_snapshot, &activities, target_date)
+            .await;
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let final_snapshot = result.unwrap().snapshot;
 
@@ -2829,8 +2844,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_buy_activity_uses_provided_fx_rate_instead_of_service() {
+    #[tokio::test]
+    async fn test_buy_activity_uses_provided_fx_rate_instead_of_service() {
         // When an activity has a valid fx_rate (not null, not zero), the calculator
         // should use that rate instead of calling the FxService.
         // This is critical for imported transactions where the user provides the actual rate used.
@@ -2868,8 +2883,9 @@ mod tests {
         );
 
         let activities = vec![buy_activity.clone()];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -2903,8 +2919,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_buy_activity_falls_back_to_service_when_fx_rate_is_none() {
+    #[tokio::test]
+    async fn test_buy_activity_falls_back_to_service_when_fx_rate_is_none() {
         // When activity.fx_rate is None, the calculator should use FxService as before
 
         let mut mock_fx_service = MockFxService::new();
@@ -2937,8 +2953,9 @@ mod tests {
         );
 
         let activities = vec![buy_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -2960,8 +2977,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_buy_activity_falls_back_to_service_when_fx_rate_is_zero() {
+    #[tokio::test]
+    async fn test_buy_activity_falls_back_to_service_when_fx_rate_is_zero() {
         // When activity.fx_rate is Some(0), the calculator should use FxService
         // Zero is not a valid exchange rate
 
@@ -2995,8 +3012,9 @@ mod tests {
         );
 
         let activities = vec![buy_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3018,8 +3036,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_deposit_activity_uses_provided_fx_rate() {
+    #[tokio::test]
+    async fn test_deposit_activity_uses_provided_fx_rate() {
         // Deposit activity should also use the provided fx_rate for conversion
 
         let mut mock_fx_service = MockFxService::new();
@@ -3057,8 +3075,9 @@ mod tests {
         );
 
         let activities = vec![deposit_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3095,8 +3114,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_sell_activity_uses_provided_fx_rate() {
+    #[tokio::test]
+    async fn test_sell_activity_uses_provided_fx_rate() {
         // Sell activity should use the provided fx_rate for cash proceeds conversion
 
         let mut mock_fx_service = MockFxService::new();
@@ -3173,8 +3192,9 @@ mod tests {
         );
 
         let activities = vec![sell_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3202,8 +3222,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_fx_rate_not_used_when_currencies_match() {
+    #[tokio::test]
+    async fn test_fx_rate_not_used_when_currencies_match() {
         // When activity currency matches account currency, fx_rate should be ignored
         // (no conversion needed)
 
@@ -3234,8 +3254,9 @@ mod tests {
         );
 
         let activities = vec![buy_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3250,8 +3271,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_withdrawal_activity_uses_provided_fx_rate() {
+    #[tokio::test]
+    async fn test_withdrawal_activity_uses_provided_fx_rate() {
         // Withdrawal activity should use the provided fx_rate
 
         let mut mock_fx_service = MockFxService::new();
@@ -3289,8 +3310,9 @@ mod tests {
         );
 
         let activities = vec![withdrawal_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3319,8 +3341,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_dividend_activity_uses_provided_fx_rate() {
+    #[tokio::test]
+    async fn test_dividend_activity_uses_provided_fx_rate() {
         // Dividend (income) activity should use the provided fx_rate
 
         let mut mock_fx_service = MockFxService::new();
@@ -3356,8 +3378,9 @@ mod tests {
         );
 
         let activities = vec![dividend_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3386,8 +3409,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_transfer_in_asset_uses_provided_fx_rate() {
+    #[tokio::test]
+    async fn test_transfer_in_asset_uses_provided_fx_rate() {
         // TransferIn for assets should use the provided fx_rate for fee conversion
         // and cost basis conversion
 
@@ -3428,8 +3451,9 @@ mod tests {
         );
 
         let activities = vec![transfer_in_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(result.is_ok(), "Calculation failed: {:?}", result.err());
         let next_state = result.unwrap().snapshot;
@@ -3471,8 +3495,8 @@ mod tests {
     // to position currency even when FxService doesn't have the rate available.
     // ==================================================================================
 
-    #[test]
-    fn test_transfer_in_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
+    #[tokio::test]
+    async fn test_transfer_in_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
         // Scenario: User transfers in AAPL (USD asset) in a CAD account, entering price in CAD
         // The fx_rate should be used to convert CAD -> USD for cost basis tracking
         // FxService has NO CAD/USD rate - this should NOT fail
@@ -3508,8 +3532,9 @@ mod tests {
         );
 
         let activities = vec![transfer_in_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         // This MUST succeed - the fx_rate should be used, not the FxService
         assert!(
@@ -3538,8 +3563,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_buy_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
+    #[tokio::test]
+    async fn test_buy_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
         // Scenario: User buys AAPL (USD asset) in a CAD account, entering price in CAD
         // FxService has NO CAD/USD rate - should use activity's fx_rate
 
@@ -3572,8 +3597,9 @@ mod tests {
         );
 
         let activities = vec![buy_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(
             result.is_ok(),
@@ -3605,8 +3631,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_sell_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
+    #[tokio::test]
+    async fn test_sell_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
         // Scenario: User sells AAPL (USD position) in a CAD account, entering price in CAD
 
         let mock_fx_service = MockFxService::new(); // Empty - no rates
@@ -3662,8 +3688,9 @@ mod tests {
         );
 
         let activities = vec![sell_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(
             result.is_ok(),
@@ -3680,8 +3707,8 @@ mod tests {
         assert_eq!(position.quantity, dec!(5)); // 10 - 5 = 5 remaining
     }
 
-    #[test]
-    fn test_calculation_fails_without_fx_rate_when_no_service_rate_available() {
+    #[tokio::test]
+    async fn test_calculation_fails_without_fx_rate_when_no_service_rate_available() {
         // This test verifies that without fx_rate AND without FxService rate, calculation fails
         // This is the scenario the bug fix addresses
 
@@ -3712,8 +3739,9 @@ mod tests {
         );
 
         let activities = vec![transfer_in_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         // The calculation itself doesn't fail (errors are logged), but position should have issues
         // Actually looking at the code, it logs errors but continues - let's verify the error is logged
@@ -3724,8 +3752,9 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_transfer_out_uses_fx_rate_when_activity_currency_differs_from_position_currency() {
+    #[tokio::test]
+    async fn test_transfer_out_uses_fx_rate_when_activity_currency_differs_from_position_currency()
+    {
         // Scenario: User transfers out AAPL (USD position) from a CAD account
 
         let mock_fx_service = MockFxService::new();
@@ -3780,8 +3809,9 @@ mod tests {
         );
 
         let activities = vec![transfer_out_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(
             result.is_ok(),
@@ -3797,8 +3827,8 @@ mod tests {
         assert_eq!(position.quantity, dec!(10)); // 20 - 10 = 10 remaining
     }
 
-    #[test]
-    fn test_external_transfer_in_activity_currency_equals_position_currency_with_fx_rate() {
+    #[tokio::test]
+    async fn test_external_transfer_in_activity_currency_equals_position_currency_with_fx_rate() {
         // Scenario from user bug report:
         // - Account currency: CAD
         // - Activity currency: USD (same as position currency for AAPL)
@@ -3871,8 +3901,9 @@ mod tests {
         };
 
         let activities = vec![transfer_in_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(
             result.is_ok(),
@@ -3902,8 +3933,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_buy_activity_currency_equals_position_currency_with_fx_rate() {
+    #[tokio::test]
+    async fn test_buy_activity_currency_equals_position_currency_with_fx_rate() {
         // Similar scenario for Buy activity:
         // - Account currency: CAD
         // - Activity currency: USD (same as position currency for AAPL)
@@ -3939,8 +3970,9 @@ mod tests {
         );
 
         let activities = vec![buy_activity];
-        let result =
-            calculator.calculate_next_holdings(&previous_snapshot, &activities, target_date);
+        let result = calculator
+            .calculate_next_holdings(&previous_snapshot, &activities, target_date)
+            .await;
 
         assert!(
             result.is_ok(),
@@ -3981,8 +4013,8 @@ mod tests {
     // account currency (broker already converted), not activity currency.
     // =========================================================================
 
-    #[test]
-    fn test_buy_fx_cash_booked_in_account_currency_when_fx_rate_provided() {
+    #[tokio::test]
+    async fn test_buy_fx_cash_booked_in_account_currency_when_fx_rate_provided() {
         // EUR account deposits 10,000 EUR, then buys USD asset with fx_rate.
         // The broker converted EUR→USD, so cash should be deducted in EUR.
 
@@ -4013,6 +4045,7 @@ mod tests {
         );
         let after_deposit = calculator
             .calculate_next_holdings(&prev, &[deposit], deposit_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4032,6 +4065,7 @@ mod tests {
 
         let after_buy = calculator
             .calculate_next_holdings(&after_deposit, &[buy], buy_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4058,8 +4092,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_sell_fx_cash_booked_in_account_currency_when_fx_rate_provided() {
+    #[tokio::test]
+    async fn test_sell_fx_cash_booked_in_account_currency_when_fx_rate_provided() {
         // EUR account sells a USD asset with fx_rate.
         // Broker converts proceeds to EUR, so cash should be credited in EUR.
 
@@ -4123,6 +4157,7 @@ mod tests {
 
         let after_sell = calculator
             .calculate_next_holdings(&prev, &[sell], sell_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4144,8 +4179,8 @@ mod tests {
         assert_eq!(after_sell.cash_total_account_currency, expected_cash_eur,);
     }
 
-    #[test]
-    fn test_buy_sell_roundtrip_fx_cash_uses_respective_fx_rates() {
+    #[tokio::test]
+    async fn test_buy_sell_roundtrip_fx_cash_uses_respective_fx_rates() {
         // Deposit EUR → buy USD asset → sell USD asset.
         // Each transaction uses its own fx_rate for cash booking.
         // No residual USD cash should exist.
@@ -4180,6 +4215,7 @@ mod tests {
         );
         let after_deposit = calculator
             .calculate_next_holdings(&prev, &[deposit], deposit_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4198,6 +4234,7 @@ mod tests {
         );
         let after_buy = calculator
             .calculate_next_holdings(&after_deposit, &[buy], buy_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4216,6 +4253,7 @@ mod tests {
         );
         let after_sell = calculator
             .calculate_next_holdings(&after_buy, &[sell], sell_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4233,8 +4271,8 @@ mod tests {
         assert_eq!(after_sell.cash_total_account_currency, expected_eur,);
     }
 
-    #[test]
-    fn test_buy_without_fx_rate_still_books_in_activity_currency() {
+    #[tokio::test]
+    async fn test_buy_without_fx_rate_still_books_in_activity_currency() {
         // When no fx_rate is provided, cash should still be booked in
         // activity currency (multi-currency account behavior is preserved).
 
@@ -4269,6 +4307,7 @@ mod tests {
 
         let result = calculator
             .calculate_next_holdings(&prev, &[buy], buy_date)
+            .await
             .unwrap();
         let state = result.snapshot;
 
@@ -4318,8 +4357,8 @@ mod tests {
         a
     }
 
-    #[test]
-    fn test_internal_transfer_preserves_lot_acquisition_data() {
+    #[tokio::test]
+    async fn test_internal_transfer_preserves_lot_acquisition_data() {
         // Scenario: Buy 10 AAPL @ $100, then transfer all 10 from acc_a to acc_b.
         // The lots in acc_b should have the original acquisition date and price.
         let mock_fx_service = MockFxService::new();
@@ -4350,6 +4389,7 @@ mod tests {
         };
         let result_a_buy = calculator
             .calculate_next_holdings(&prev_a, std::slice::from_ref(&buy), buy_date)
+            .await
             .unwrap();
 
         // Now transfer out
@@ -4367,6 +4407,7 @@ mod tests {
         );
         let result_a_xfer = calculator
             .calculate_next_holdings(&result_a_buy.snapshot, &[transfer_out], transfer_date)
+            .await
             .unwrap();
 
         // Account A should have no AAPL position
@@ -4392,6 +4433,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
+            .await
             .unwrap();
 
         let pos_b = result_b
@@ -4413,8 +4455,8 @@ mod tests {
         assert_eq!(lot.quantity, dec!(10));
     }
 
-    #[test]
-    fn test_internal_transfer_partial_lot_fifo() {
+    #[tokio::test]
+    async fn test_internal_transfer_partial_lot_fifo() {
         // Scenario: Buy 10 AAPL @ $100, then Buy 5 AAPL @ $200.
         // Transfer out 12 shares. FIFO removes all 10 from lot1, 2 from lot2.
         // Transfer in should recreate those exact lots.
@@ -4460,10 +4502,12 @@ mod tests {
         // Process buys
         let snap_after_buy1 = calculator
             .calculate_next_holdings(&prev_a, std::slice::from_ref(&buy1), buy1_date)
+            .await
             .unwrap()
             .snapshot;
         let snap_after_buy2 = calculator
             .calculate_next_holdings(&snap_after_buy1, std::slice::from_ref(&buy2), buy2_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4487,6 +4531,7 @@ mod tests {
         );
         let snap_after_xfer_out = calculator
             .calculate_next_holdings(&snap_after_buy2, &[transfer_out], transfer_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4510,6 +4555,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
+            .await
             .unwrap();
 
         let pos_b = result_b
@@ -4545,8 +4591,8 @@ mod tests {
         assert_eq!(pos_a_remaining.lots[0].acquisition_fees, dec!(3)); // Remaining: 5 - 2 = 3
     }
 
-    #[test]
-    fn test_external_transfer_in_uses_unit_price_fallback() {
+    #[tokio::test]
+    async fn test_external_transfer_in_uses_unit_price_fallback() {
         // Scenario: Transfer in without source_group_id (external).
         // Should use the activity's unit_price as acquisition price.
         let mock_fx_service = MockFxService::new();
@@ -4572,6 +4618,7 @@ mod tests {
 
         let result = calculator
             .calculate_next_holdings(&prev, &[transfer_in], transfer_date)
+            .await
             .unwrap();
 
         let pos = result
@@ -4586,8 +4633,8 @@ mod tests {
         assert_eq!(pos.lots[0].acquisition_price, dec!(150));
     }
 
-    #[test]
-    fn test_transfer_out_with_no_existing_position_is_graceful() {
+    #[tokio::test]
+    async fn test_transfer_out_with_no_existing_position_is_graceful() {
         // Scenario: Transfer out from an account that has no position.
         // Should not panic; fee is still applied.
         let mock_fx_service = MockFxService::new();
@@ -4612,6 +4659,7 @@ mod tests {
 
         let result = calculator
             .calculate_next_holdings(&prev, &[transfer_out], transfer_date)
+            .await
             .unwrap();
 
         // No position created, just fee deducted
@@ -4619,8 +4667,8 @@ mod tests {
         assert_eq!(result.snapshot.cash_balances.get("USD"), Some(&dec!(-2)));
     }
 
-    #[test]
-    fn test_internal_transfer_cross_currency_accounts() {
+    #[tokio::test]
+    async fn test_internal_transfer_cross_currency_accounts() {
         // Scenario: Transfer AAPL (listed in USD) from CAD account to EUR account.
         // Lots should transfer with FX conversion applied to cost basis.
         let mut mock_fx_service = MockFxService::new();
@@ -4654,6 +4702,7 @@ mod tests {
         };
         let snap_after_buy = calculator
             .calculate_next_holdings(&prev_a, &[buy], buy_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4678,6 +4727,7 @@ mod tests {
         );
         let _snap_after_xfer = calculator
             .calculate_next_holdings(&snap_after_buy, &[transfer_out], transfer_date)
+            .await
             .unwrap();
 
         // Transfer in to EUR account — lots carry over in USD (position currency)
@@ -4698,6 +4748,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
+            .await
             .unwrap();
 
         let pos_b = result_b
@@ -4712,8 +4763,8 @@ mod tests {
         assert_eq!(pos_b.total_cost_basis, dec!(750));
     }
 
-    #[test]
-    fn test_transfer_cache_consumed_only_once() {
+    #[tokio::test]
+    async fn test_transfer_cache_consumed_only_once() {
         // Scenario: Two separate transfers with different source_group_ids.
         // Each TRANSFER_IN should only consume its own cached lots.
         let mock_fx_service = MockFxService::new();
@@ -4741,6 +4792,7 @@ mod tests {
         };
         let snap = calculator
             .calculate_next_holdings(&prev_a, &[buy], buy_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4772,6 +4824,7 @@ mod tests {
         );
         let snap = calculator
             .calculate_next_holdings(&snap, &[xfer_out_1, xfer_out_2], transfer_date)
+            .await
             .unwrap()
             .snapshot;
 
@@ -4795,6 +4848,7 @@ mod tests {
         );
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[xfer_in_1], transfer_date)
+            .await
             .unwrap();
         let pos_b = result_b.snapshot.positions.get("AAPL").unwrap();
         assert_eq!(pos_b.quantity, dec!(8));
@@ -4816,14 +4870,15 @@ mod tests {
         );
         let result_c = calculator
             .calculate_next_holdings(&prev_c, &[xfer_in_2], transfer_date)
+            .await
             .unwrap();
         let pos_c = result_c.snapshot.positions.get("AAPL").unwrap();
         assert_eq!(pos_c.quantity, dec!(5));
         assert_eq!(pos_c.total_cost_basis, dec!(500)); // 5 * $100
     }
 
-    #[test]
-    fn test_transfer_in_option_applies_multiplier() {
+    #[tokio::test]
+    async fn test_transfer_in_option_applies_multiplier() {
         // External TRANSFER_IN for an option asset (no OptionSpec metadata).
         // contract_multiplier() defaults to 100 for InstrumentType::Option.
         // cost_basis should be qty * price * 100.
@@ -4855,6 +4910,7 @@ mod tests {
         let target_date = NaiveDate::from_str("2024-01-02").unwrap();
         let result = calculator
             .calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date)
+            .await
             .unwrap();
 
         let pos = result
@@ -4870,8 +4926,8 @@ mod tests {
         assert_eq!(pos.average_cost, dec!(500));
     }
 
-    #[test]
-    fn test_asset_not_in_repo_falls_back_to_multiplier_1() {
+    #[tokio::test]
+    async fn test_asset_not_in_repo_falls_back_to_multiplier_1() {
         // When an asset is NOT in the repository, the fallback uses multiplier=1.
         // The proper multiplier comes from asset metadata (OptionSpec) in the success path.
         // This degraded path logs a warning and uses safe defaults.
@@ -4903,6 +4959,7 @@ mod tests {
         let target_date = NaiveDate::from_str("2024-01-02").unwrap();
         let result = calculator
             .calculate_next_holdings(&previous_snapshot, &[transfer_in], target_date)
+            .await
             .unwrap();
 
         let pos = result
@@ -4918,8 +4975,8 @@ mod tests {
         assert_eq!(pos.contract_multiplier, dec!(1));
     }
 
-    #[test]
-    fn test_option_buy_partial_sell_cost_basis() {
+    #[tokio::test]
+    async fn test_option_buy_partial_sell_cost_basis() {
         // BUY 5 option contracts @ $3.00 premium (multiplier=100), fee=$10
         // SELL 3 contracts @ $4.00, fee=$5
         // Verify remaining position and cost basis after partial sell.
@@ -4951,6 +5008,7 @@ mod tests {
         let buy_date = NaiveDate::from_str("2025-01-02").unwrap();
         let result = calculator
             .calculate_next_holdings(&previous_snapshot, &[buy], buy_date)
+            .await
             .unwrap();
 
         let pos = result
@@ -4980,6 +5038,7 @@ mod tests {
         let sell_date = NaiveDate::from_str("2025-02-01").unwrap();
         let result2 = calculator
             .calculate_next_holdings(&result.snapshot, &[sell_3], sell_date)
+            .await
             .unwrap();
 
         let pos2 = result2
@@ -5010,6 +5069,7 @@ mod tests {
         let sell_date2 = NaiveDate::from_str("2025-03-01").unwrap();
         let result3 = calculator
             .calculate_next_holdings(&result2.snapshot, &[sell_2], sell_date2)
+            .await
             .unwrap();
 
         let pos3 = result3.snapshot.positions.get("AAPL250321C00150000");
@@ -5019,8 +5079,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_option_transfer_preserves_multiplier() {
+    #[tokio::test]
+    async fn test_option_transfer_preserves_multiplier() {
         // BUY 3 option contracts @ $2.00 in account_a, then transfer to account_b.
         // Verify that the multiplier-adjusted cost basis is preserved through the transfer.
 
@@ -5058,6 +5118,7 @@ mod tests {
 
         let result_a_buy = calculator
             .calculate_next_holdings(&prev_a, std::slice::from_ref(&buy), buy_date)
+            .await
             .unwrap();
 
         let pos_a = result_a_buy
@@ -5087,6 +5148,7 @@ mod tests {
 
         let result_a_xfer = calculator
             .calculate_next_holdings(&result_a_buy.snapshot, &[transfer_out], transfer_date)
+            .await
             .unwrap();
 
         // Account A should have no position (or zero quantity)
@@ -5117,6 +5179,7 @@ mod tests {
 
         let result_b = calculator
             .calculate_next_holdings(&prev_b, &[transfer_in], transfer_date)
+            .await
             .unwrap();
 
         let pos_b = result_b

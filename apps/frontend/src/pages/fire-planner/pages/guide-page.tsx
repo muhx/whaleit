@@ -181,18 +181,17 @@ export default function GuidePage({ country }: { country?: string }) {
         <Section title="Italian FIRE setup (fondo pensione, TFR, INPS)">
           <div className="space-y-4">
             <Term t="Investment portfolio (Golden Butterfly, All-Weather…)">
-              This is your main portfolio — the value WhaleIt tracks. Set your expected return
-              and monthly contribution here. It is the primary accumulation engine of your FIRE
-              plan.
+              This is your main portfolio — the value WhaleIt tracks. Set your expected return and
+              monthly contribution here. It is the primary accumulation engine of your FIRE plan.
             </Term>
             <Term t="Fondo pensione integrativo (supplementary pension fund)">
               Add it as an income stream and enable "Has accumulation fund". Enter the current fund
-              balance (or link the WhaleIt account and click Sync), the monthly TFR
-              contribution, and the fund's net annual return (check your fund's factsheet — 3–5%
-              after fees is common). Set the payout start age to when you plan to draw it (typically
-              65–67). The planner accumulates contributions until FIRE, then lets the fund grow
-              without new contributions until payout age. The linked account is automatically
-              included in your FIRE goal allocations.
+              balance (or link the WhaleIt account and click Sync), the monthly TFR contribution,
+              and the fund's net annual return (check your fund's factsheet — 3–5% after fees is
+              common). Set the payout start age to when you plan to draw it (typically 65–67). The
+              planner accumulates contributions until FIRE, then lets the fund grow without new
+              contributions until payout age. The linked account is automatically included in your
+              FIRE goal allocations.
             </Term>
             <Term t="Pensione INPS (state pension — previdenza obbligatoria)">
               Add it as a plain income stream (no accumulation fund). Enter your estimated monthly

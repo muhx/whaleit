@@ -88,7 +88,7 @@ impl HoldingsCalculator {
     /// The result includes both the calculated snapshot and any warnings for activities that
     /// could not be processed. This allows callers to see which activities failed without
     /// stopping the entire calculation.
-    pub fn calculate_next_holdings(
+    pub async fn calculate_next_holdings(
         &self,
         previous_snapshot: &AccountStateSnapshot,
         activities_today: &[Activity], // Assumes these are for the *target* date and already split-adjusted
@@ -129,12 +129,15 @@ impl HoldingsCalculator {
                 warnings.push(warning);
                 continue;
             }
-            match self.process_single_activity(
-                activity,
-                &mut next_state,
-                &account_currency,
-                &mut asset_cache,
-            ) {
+            match self
+                .process_single_activity(
+                    activity,
+                    &mut next_state,
+                    &account_currency,
+                    &mut asset_cache,
+                )
+                .await
+            {
                 Ok(_) => {} // Activity processed successfully
                 Err(e) => {
                     let warning = HoldingsCalculationWarning {
@@ -167,12 +170,16 @@ impl HoldingsCalculator {
                 continue;
             }
 
-            match self.fx_service.convert_currency_for_date(
-                position.total_cost_basis,
-                position_currency,
-                &account_currency,
-                target_date,
-            ) {
+            match self
+                .fx_service
+                .convert_currency_for_date(
+                    position.total_cost_basis,
+                    position_currency,
+                    &account_currency,
+                    target_date,
+                )
+                .await
+            {
                 Ok(converted_cost) => {
                     final_cost_basis_acct += converted_cost;
                 }
@@ -190,7 +197,7 @@ impl HoldingsCalculator {
         next_state.cost_basis = final_cost_basis_acct;
 
         // Compute cash totals (once at end of day per spec)
-        self.compute_cash_totals(&mut next_state, target_date);
+        self.compute_cash_totals(&mut next_state, target_date).await;
 
         next_state.id = format!(
             "{}_{}",
@@ -205,8 +212,7 @@ impl HoldingsCalculator {
 
     /// Processes a single activity, updating positions, cash, and net_deposit.
     /// Books cash in ACTIVITY currency (not account currency) per design spec.
-    /// Uses asset_cache to avoid repeated DB lookups for asset currencies and kind info.
-    fn process_single_activity(
+    async fn process_single_activity(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -220,21 +226,32 @@ impl HoldingsCalculator {
         // Dispatch to Specific Handlers
         // NOTE: Removed precomputation of amount_acct/fee_acct - handlers convert when needed
         match activity_type {
-            ActivityType::Buy => self.handle_buy(activity, state, account_currency, asset_cache),
-            ActivityType::Sell => self.handle_sell(activity, state, account_currency, asset_cache),
-            ActivityType::Deposit => self.handle_deposit(activity, state, account_currency),
-            ActivityType::Withdrawal => self.handle_withdrawal(activity, state, account_currency),
+            ActivityType::Buy => {
+                self.handle_buy(activity, state, account_currency, asset_cache)
+                    .await
+            }
+            ActivityType::Sell => {
+                self.handle_sell(activity, state, account_currency, asset_cache)
+                    .await
+            }
+            ActivityType::Deposit => self.handle_deposit(activity, state, account_currency).await,
+            ActivityType::Withdrawal => {
+                self.handle_withdrawal(activity, state, account_currency)
+                    .await
+            }
             ActivityType::Dividend | ActivityType::Interest | ActivityType::Credit => {
-                self.handle_income(activity, state, account_currency)
+                self.handle_income(activity, state, account_currency).await
             }
             ActivityType::Fee | ActivityType::Tax => {
                 self.handle_charge(activity, state, &activity_type)
             }
             ActivityType::TransferIn => {
                 self.handle_transfer_in(activity, state, account_currency, asset_cache)
+                    .await
             }
             ActivityType::TransferOut => {
                 self.handle_transfer_out(activity, state, account_currency, asset_cache)
+                    .await
             }
             // Split activities are NO-OPs here: the snapshot service retroactively
             // adjusts historical activity quantities/prices before the calculator runs.
@@ -255,7 +272,7 @@ impl HoldingsCalculator {
 
     /// Handle BUY activity.
     /// Books cash outflow in ACTIVITY currency.
-    fn handle_buy(
+    async fn handle_buy(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -265,13 +282,15 @@ impl HoldingsCalculator {
         let activity_currency = &activity.currency;
         let asset_id = activity.asset_id.as_deref().unwrap_or("");
 
-        let position = self.get_or_create_position_mut_cached(
-            state,
-            asset_id,
-            activity_currency,
-            activity.activity_date,
-            asset_cache,
-        )?;
+        let position = self
+            .get_or_create_position_mut_cached(
+                state,
+                asset_id,
+                activity_currency,
+                activity.activity_date,
+                asset_cache,
+            )
+            .await?;
 
         // Determine position currency and if conversion is needed
         let position_currency = position.currency.clone();
@@ -287,13 +306,15 @@ impl HoldingsCalculator {
         // Get values for lot, converting if needed
         // Multiply unit price by contract multiplier so lot cost basis reflects true cost
         let (unit_price_for_lot, fee_for_lot, fx_rate_used) = if needs_conversion {
-            let (converted_price, converted_fee, fx_rate) = self.convert_to_position_currency(
-                activity.price() * multiplier,
-                activity.fee_amt(),
-                activity,
-                &position_currency,
-                account_currency,
-            )?;
+            let (converted_price, converted_fee, fx_rate) = self
+                .convert_to_position_currency(
+                    activity.price() * multiplier,
+                    activity.fee_amt(),
+                    activity,
+                    &position_currency,
+                    account_currency,
+                )
+                .await?;
             (converted_price, converted_fee, fx_rate)
         } else {
             (activity.price() * multiplier, activity.fee_amt(), None)
@@ -329,7 +350,7 @@ impl HoldingsCalculator {
     /// Handle SELL activity.
     /// Books cash inflow in account currency when fx_rate is provided,
     /// otherwise in activity currency.
-    fn handle_sell(
+    async fn handle_sell(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -340,7 +361,8 @@ impl HoldingsCalculator {
         let asset_id = activity.asset_id.as_deref().unwrap_or("");
 
         // Ensure cache is populated for multiplier lookup
-        self.ensure_asset_cached(asset_id, activity_currency, asset_cache);
+        self.ensure_asset_cached(asset_id, activity_currency, asset_cache)
+            .await;
 
         // Book cash inflow (proceeds = qty * price * multiplier - fee)
         let multiplier = asset_cache
@@ -374,7 +396,7 @@ impl HoldingsCalculator {
     /// Handle DEPOSIT activity.
     /// Books cash inflow in ACTIVITY currency.
     /// Updates net_contribution in account currency.
-    fn handle_deposit(
+    async fn handle_deposit(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -389,21 +411,22 @@ impl HoldingsCalculator {
         add_cash(state, activity_currency, net_amount);
 
         // Convert for net_contribution (pre-fee amount in account currency)
-        let amount_acct = self.convert_to_account_currency(
-            activity_amount,
-            activity,
-            account_currency,
-            "Deposit Amount",
-        );
+        let amount_acct = self
+            .convert_to_account_currency(
+                activity_amount,
+                activity,
+                account_currency,
+                "Deposit Amount",
+            )
+            .await;
 
         // Convert for net_contribution_base
-        let base_ccy = self.base_currency.read().unwrap();
-        let amount_base = match self.fx_service.convert_currency_for_date(
-            activity_amount,
-            activity_currency,
-            &base_ccy,
-            activity_date,
-        ) {
+        let base_ccy = self.base_currency.read().unwrap().clone();
+        let amount_base = match self
+            .fx_service
+            .convert_currency_for_date(activity_amount, activity_currency, &base_ccy, activity_date)
+            .await
+        {
             Ok(c) => c,
             Err(e) => {
                 warn!(
@@ -422,7 +445,7 @@ impl HoldingsCalculator {
     /// Handle WITHDRAWAL activity.
     /// Books cash outflow in ACTIVITY currency.
     /// Updates net_contribution in account currency.
-    fn handle_withdrawal(
+    async fn handle_withdrawal(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -438,21 +461,22 @@ impl HoldingsCalculator {
         add_cash(state, activity_currency, net_amount);
 
         // Convert for net_contribution (pre-fee amount in account currency)
-        let amount_acct = self.convert_to_account_currency(
-            activity_amount,
-            activity,
-            account_currency,
-            "Withdrawal Amount",
-        );
+        let amount_acct = self
+            .convert_to_account_currency(
+                activity_amount,
+                activity,
+                account_currency,
+                "Withdrawal Amount",
+            )
+            .await;
 
         // Convert for net_contribution_base
-        let base_ccy = self.base_currency.read().unwrap();
-        let amount_base = match self.fx_service.convert_currency_for_date(
-            activity_amount,
-            activity_currency,
-            &base_ccy,
-            activity_date,
-        ) {
+        let base_ccy = self.base_currency.read().unwrap().clone();
+        let amount_base = match self
+            .fx_service
+            .convert_currency_for_date(activity_amount, activity_currency, &base_ccy, activity_date)
+            .await
+        {
             Ok(c) => c,
             Err(e) => {
                 warn!(
@@ -475,7 +499,7 @@ impl HoldingsCalculator {
     /// - CREDIT/BONUS: external flow (new capital), updates net_contribution like DEPOSIT
     /// - CREDIT/REBATE, CREDIT/REFUND, other: internal flow, no net_contribution change
     /// - DIVIDEND, INTEREST: no net_contribution change
-    fn handle_income(
+    async fn handle_income(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -498,21 +522,27 @@ impl HoldingsCalculator {
             let activity_date = self.activity_local_date(activity);
 
             // Convert to account currency for net_contribution
-            let amount_acct = self.convert_to_account_currency(
-                activity_amount,
-                activity,
-                account_currency,
-                "Credit Bonus",
-            );
+            let amount_acct = self
+                .convert_to_account_currency(
+                    activity_amount,
+                    activity,
+                    account_currency,
+                    "Credit Bonus",
+                )
+                .await;
 
             // Convert to base currency for net_contribution_base
-            let base_ccy = self.base_currency.read().unwrap();
-            let amount_base = match self.fx_service.convert_currency_for_date(
-                activity_amount,
-                activity_currency,
-                &base_ccy,
-                activity_date,
-            ) {
+            let base_ccy = self.base_currency.read().unwrap().clone();
+            let amount_base = match self
+                .fx_service
+                .convert_currency_for_date(
+                    activity_amount,
+                    activity_currency,
+                    &base_ccy,
+                    activity_date,
+                )
+                .await
+            {
                 Ok(c) => c,
                 Err(e) => {
                     warn!(
@@ -567,7 +597,7 @@ impl HoldingsCalculator {
     /// Handle TRANSFER_IN activity.
     /// Books cash/asset inflow in ACTIVITY currency.
     /// Transfers always affect account-level net_contribution; portfolio boundary is handled by aggregation.
-    fn handle_transfer_in(
+    async fn handle_transfer_in(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -584,20 +614,26 @@ impl HoldingsCalculator {
             add_cash(state, activity_currency, net_amount);
 
             let activity_date = self.activity_local_date(activity);
-            let amount_acct = self.convert_to_account_currency(
-                activity_amount,
-                activity,
-                account_currency,
-                "TransferIn Cash",
-            );
+            let amount_acct = self
+                .convert_to_account_currency(
+                    activity_amount,
+                    activity,
+                    account_currency,
+                    "TransferIn Cash",
+                )
+                .await;
 
-            let base_ccy = self.base_currency.read().unwrap();
-            let amount_base = match self.fx_service.convert_currency_for_date(
-                activity_amount,
-                activity_currency,
-                &base_ccy,
-                activity_date,
-            ) {
+            let base_ccy = self.base_currency.read().unwrap().clone();
+            let amount_base = match self
+                .fx_service
+                .convert_currency_for_date(
+                    activity_amount,
+                    activity_currency,
+                    &base_ccy,
+                    activity_date,
+                )
+                .await
+            {
                 Ok(c) => c,
                 Err(e) => {
                     warn!(
@@ -614,13 +650,15 @@ impl HoldingsCalculator {
             // Asset transfer
             let activity_date = self.activity_local_date(activity);
 
-            let position = self.get_or_create_position_mut_cached(
-                state,
-                asset_id,
-                activity_currency,
-                activity.activity_date,
-                asset_cache,
-            )?;
+            let position = self
+                .get_or_create_position_mut_cached(
+                    state,
+                    asset_id,
+                    activity_currency,
+                    activity.activity_date,
+                    asset_cache,
+                )
+                .await?;
 
             let position_currency = position.currency.clone();
             let needs_conversion =
@@ -662,7 +700,8 @@ impl HoldingsCalculator {
                             activity,
                             &position_currency,
                             account_currency,
-                        )?;
+                        )
+                        .await?;
                     (converted_price, converted_fee, fx_rate)
                 } else {
                     (activity.price() * multiplier, activity.fee_amt(), None)
@@ -681,21 +720,27 @@ impl HoldingsCalculator {
             // Book fee in ACTIVITY currency
             add_cash(state, activity_currency, -activity.fee_amt());
 
-            let cost_basis_acct = self.convert_position_amount_to_account_currency(
-                cost_basis_asset_curr,
-                &position_currency,
-                activity,
-                account_currency,
-                "Net Deposit TransferIn Asset",
-            );
+            let cost_basis_acct = self
+                .convert_position_amount_to_account_currency(
+                    cost_basis_asset_curr,
+                    &position_currency,
+                    activity,
+                    account_currency,
+                    "Net Deposit TransferIn Asset",
+                )
+                .await;
 
-            let base_ccy = self.base_currency.read().unwrap();
-            let cost_basis_base = match self.fx_service.convert_currency_for_date(
-                cost_basis_asset_curr,
-                &position_currency,
-                &base_ccy,
-                activity_date,
-            ) {
+            let base_ccy = self.base_currency.read().unwrap().clone();
+            let cost_basis_base = match self
+                .fx_service
+                .convert_currency_for_date(
+                    cost_basis_asset_curr,
+                    &position_currency,
+                    &base_ccy,
+                    activity_date,
+                )
+                .await
+            {
                 Ok(converted) => converted,
                 Err(e) => {
                     warn!(
@@ -715,7 +760,7 @@ impl HoldingsCalculator {
     /// Handle TRANSFER_OUT activity.
     /// Books cash/asset outflow in ACTIVITY currency.
     /// Transfers always affect account-level net_contribution; portfolio boundary is handled by aggregation.
-    fn handle_transfer_out(
+    async fn handle_transfer_out(
         &self,
         activity: &Activity,
         state: &mut AccountStateSnapshot,
@@ -733,20 +778,26 @@ impl HoldingsCalculator {
             let net_amount = activity_amount - activity.fee_amt();
             add_cash(state, activity_currency, net_amount);
 
-            let amount_acct = self.convert_to_account_currency(
-                activity_amount,
-                activity,
-                account_currency,
-                "TransferOut Cash",
-            );
+            let amount_acct = self
+                .convert_to_account_currency(
+                    activity_amount,
+                    activity,
+                    account_currency,
+                    "TransferOut Cash",
+                )
+                .await;
 
-            let base_ccy = self.base_currency.read().unwrap();
-            let amount_base = match self.fx_service.convert_currency_for_date(
-                activity_amount,
-                activity_currency,
-                &base_ccy,
-                activity_date,
-            ) {
+            let base_ccy = self.base_currency.read().unwrap().clone();
+            let amount_base = match self
+                .fx_service
+                .convert_currency_for_date(
+                    activity_amount,
+                    activity_currency,
+                    &base_ccy,
+                    activity_date,
+                )
+                .await
+            {
                 Ok(c) => c,
                 Err(e) => {
                     warn!(
@@ -788,21 +839,27 @@ impl HoldingsCalculator {
                 }
 
                 if !position_currency.is_empty() && cost_basis_removed != Decimal::ZERO {
-                    let cost_basis_removed_acct = self.convert_position_amount_to_account_currency(
-                        cost_basis_removed,
-                        &position_currency,
-                        activity,
-                        account_currency,
-                        "Net Deposit TransferOut Asset",
-                    );
+                    let cost_basis_removed_acct = self
+                        .convert_position_amount_to_account_currency(
+                            cost_basis_removed,
+                            &position_currency,
+                            activity,
+                            account_currency,
+                            "Net Deposit TransferOut Asset",
+                        )
+                        .await;
 
-                    let base_ccy = self.base_currency.read().unwrap();
-                    let cost_basis_removed_base = match self.fx_service.convert_currency_for_date(
-                        cost_basis_removed,
-                        &position_currency,
-                        &base_ccy,
-                        activity_date,
-                    ) {
+                    let base_ccy = self.base_currency.read().unwrap().clone();
+                    let cost_basis_removed_base = match self
+                        .fx_service
+                        .convert_currency_for_date(
+                            cost_basis_removed,
+                            &position_currency,
+                            &base_ccy,
+                            activity_date,
+                        )
+                        .await
+                    {
                         Ok(converted) => converted,
                         Err(e) => {
                             warn!(
@@ -868,20 +925,21 @@ impl HoldingsCalculator {
     }
 
     /// Populates the asset cache for a given asset_id if not already present.
-    fn ensure_asset_cached(
+    async fn ensure_asset_cached(
         &self,
         asset_id: &str,
         activity_currency: &str,
         cache: &mut HashMap<String, (String, bool, Decimal)>,
     ) {
         if !asset_id.is_empty() && !cache.contains_key(asset_id) {
-            let (ccy, is_alt, multiplier) = self.get_position_info(asset_id).unwrap_or_else(|_| {
-                warn!(
+            let (ccy, is_alt, multiplier) =
+                self.get_position_info(asset_id).await.unwrap_or_else(|_| {
+                    warn!(
                     "Failed to get asset info for {}, using activity currency {} and multiplier 1",
                     asset_id, activity_currency
                 );
-                (activity_currency.to_string(), false, Decimal::ONE)
-            });
+                    (activity_currency.to_string(), false, Decimal::ONE)
+                });
             cache.insert(asset_id.to_string(), (ccy, is_alt, multiplier));
         }
     }
@@ -890,7 +948,7 @@ impl HoldingsCalculator {
     /// If the activity has a valid fx_rate (Some and not zero), uses it directly.
     /// Otherwise, falls back to the FxService for conversion.
     /// The fx_rate represents the rate to convert from activity currency to account currency.
-    fn convert_to_account_currency(
+    async fn convert_to_account_currency(
         &self,
         amount: Decimal,
         activity: &Activity,
@@ -918,12 +976,11 @@ impl HoldingsCalculator {
 
         // Fall back to FxService for conversion
         let activity_date = self.activity_local_date(activity);
-        match self.fx_service.convert_currency_for_date(
-            amount,
-            activity_currency,
-            account_currency,
-            activity_date,
-        ) {
+        match self
+            .fx_service
+            .convert_currency_for_date(amount, activity_currency, account_currency, activity_date)
+            .await
+        {
             Ok(converted) => converted,
             Err(e) => {
                 warn!(
@@ -937,9 +994,9 @@ impl HoldingsCalculator {
 
     /// Determines the currency, alternative asset flag, and contract multiplier for a position.
     /// Returns (currency, is_alternative, contract_multiplier).
-    fn get_position_info(&self, asset_id: &str) -> Result<(String, bool, Decimal)> {
+    async fn get_position_info(&self, asset_id: &str) -> Result<(String, bool, Decimal)> {
         debug!("Getting position info for asset_id: {}", asset_id);
-        match self.asset_repository.get_by_id(asset_id) {
+        match self.asset_repository.get_by_id(asset_id).await {
             Ok(asset) => {
                 let is_alternative = asset.is_alternative();
                 let multiplier = asset.contract_multiplier();
@@ -959,7 +1016,7 @@ impl HoldingsCalculator {
     /// This is used for cost basis which is stored in position currency, not activity currency.
     /// When activity currency == position currency, uses activity's fx_rate if available.
     /// Otherwise, falls back to FxService with position currency.
-    fn convert_position_amount_to_account_currency(
+    async fn convert_position_amount_to_account_currency(
         &self,
         amount: Decimal,
         position_currency: &str,
@@ -987,12 +1044,11 @@ impl HoldingsCalculator {
 
         // Fall back to FxService for conversion
         let activity_date = self.activity_local_date(activity);
-        match self.fx_service.convert_currency_for_date(
-            amount,
-            position_currency,
-            account_currency,
-            activity_date,
-        ) {
+        match self
+            .fx_service
+            .convert_currency_for_date(amount, position_currency, account_currency, activity_date)
+            .await
+        {
             Ok(converted) => converted,
             Err(e) => {
                 warn!(
@@ -1007,7 +1063,7 @@ impl HoldingsCalculator {
     /// Helper method to get/create position with asset currency caching.
     /// Uses cache to avoid repeated DB lookups for the same asset.
     /// Cache stores (currency, is_alternative, contract_multiplier) tuple for each asset.
-    fn get_or_create_position_mut_cached<'a>(
+    async fn get_or_create_position_mut_cached<'a>(
         &self,
         state: &'a mut AccountStateSnapshot,
         asset_id: &str,
@@ -1022,7 +1078,8 @@ impl HoldingsCalculator {
             )));
         }
 
-        self.ensure_asset_cached(asset_id, activity_currency, cache);
+        self.ensure_asset_cached(asset_id, activity_currency, cache)
+            .await;
 
         let (ref position_currency, is_alternative, multiplier) = cache[asset_id];
 
@@ -1043,7 +1100,7 @@ impl HoldingsCalculator {
 
     /// Converts unit_price and fee to position currency.
     /// Returns (converted_price, converted_fee, fx_rate_used).
-    fn convert_to_position_currency(
+    async fn convert_to_position_currency(
         &self,
         unit_price: Decimal,
         fee: Decimal,
@@ -1076,6 +1133,7 @@ impl HoldingsCalculator {
                 position_currency,
                 activity_date,
             )
+            .await
             .map_err(|e| {
                 CalculatorError::CurrencyConversion(format!(
                     "Failed to convert unit_price from {} to {}: {}",
@@ -1086,6 +1144,7 @@ impl HoldingsCalculator {
         let converted_fee = self
             .fx_service
             .convert_currency_for_date(fee, &activity.currency, position_currency, activity_date)
+            .await
             .map_err(|e| {
                 CalculatorError::CurrencyConversion(format!(
                     "Failed to convert fee from {} to {}: {}",
@@ -1105,9 +1164,9 @@ impl HoldingsCalculator {
 
     /// Computes cash totals in account and base currencies.
     /// Called once at end of daily calculation per spec.
-    fn compute_cash_totals(&self, state: &mut AccountStateSnapshot, target_date: NaiveDate) {
+    async fn compute_cash_totals(&self, state: &mut AccountStateSnapshot, target_date: NaiveDate) {
         let account_currency = &state.currency;
-        let base_ccy = self.base_currency.read().unwrap();
+        let base_ccy = self.base_currency.read().unwrap().clone().clone();
 
         let mut total_acct = Decimal::ZERO;
         let mut total_base = Decimal::ZERO;
@@ -1117,12 +1176,11 @@ impl HoldingsCalculator {
             if currency == account_currency {
                 total_acct += amount;
             } else {
-                match self.fx_service.convert_currency_for_date(
-                    amount,
-                    currency,
-                    account_currency,
-                    target_date,
-                ) {
+                match self
+                    .fx_service
+                    .convert_currency_for_date(amount, currency, account_currency, target_date)
+                    .await
+                {
                     Ok(converted) => total_acct += converted,
                     Err(e) => {
                         warn!(
@@ -1138,12 +1196,11 @@ impl HoldingsCalculator {
             if currency == base_ccy.as_str() {
                 total_base += amount;
             } else {
-                match self.fx_service.convert_currency_for_date(
-                    amount,
-                    currency,
-                    &base_ccy,
-                    target_date,
-                ) {
+                match self
+                    .fx_service
+                    .convert_currency_for_date(amount, currency, &base_ccy, target_date)
+                    .await
+                {
                     Ok(converted) => total_base += converted,
                     Err(e) => {
                         warn!(

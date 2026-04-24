@@ -5,7 +5,7 @@
 
 use proptest::prelude::*;
 use std::collections::HashSet;
-use wealthfolio_core::health::{HealthCategory, HealthIssue, HealthStatus, Severity};
+use whaleit_core::health::{HealthCategory, HealthIssue, HealthStatus, Severity};
 
 // =============================================================================
 // Generators

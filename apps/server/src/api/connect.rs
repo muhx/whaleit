@@ -20,7 +20,7 @@ use crate::events::{
 };
 use crate::main_lib::AppState;
 use axum::http::StatusCode;
-use wealthfolio_connect::{
+use whaleit_connect::{
     broker::{
         BrokerApiClient, PlansResponse, SyncAccountsResponse, SyncActivitiesResponse,
         SyncConnectionsResponse, UserInfo,
@@ -29,8 +29,8 @@ use wealthfolio_connect::{
     SyncOrchestrator, SyncProgressPayload, SyncProgressReporter, SyncResult, TokenLifecycleConfig,
     TokenLifecycleError, CLOUD_ACCESS_TOKEN_KEY, CLOUD_REFRESH_TOKEN_KEY,
 };
-use wealthfolio_core::accounts::TrackingMode;
-use wealthfolio_device_sync::{EnableSyncResult, SyncState, SyncStateResult};
+use whaleit_core::accounts::TrackingMode;
+use whaleit_device_sync::{EnableSyncResult, SyncState, SyncStateResult};
 
 const DEVICE_ID_KEY: &str = "sync_device_id";
 
@@ -553,6 +553,7 @@ async fn perform_broker_activities_only_sync(
     let synced_accounts = state
         .connect_sync_service
         .get_synced_accounts()
+        .await
         .map_err(|e| e.to_string())?;
 
     let mut summary = SyncActivitiesResponse::default();
@@ -764,7 +765,7 @@ async fn get_user_info(State(state): State<Arc<AppState>>) -> ApiResult<Json<Use
 
 async fn list_broker_connections(
     State(state): State<Arc<AppState>>,
-) -> ApiResult<Json<Vec<wealthfolio_connect::broker::BrokerConnection>>> {
+) -> ApiResult<Json<Vec<whaleit_connect::broker::BrokerConnection>>> {
     ensure_connect_sync_enabled()?;
     info!("[Connect] Listing broker connections from cloud...");
 
@@ -781,7 +782,7 @@ async fn list_broker_connections(
 
 async fn list_broker_accounts(
     State(state): State<Arc<AppState>>,
-) -> ApiResult<Json<Vec<wealthfolio_connect::broker::BrokerAccount>>> {
+) -> ApiResult<Json<Vec<whaleit_connect::broker::BrokerAccount>>> {
     ensure_connect_sync_enabled()?;
     info!("[Connect] Listing broker accounts from cloud...");
 
@@ -812,7 +813,7 @@ pub struct GetImportRunsQuery {
 /// Get all synced accounts (accounts with provider_account_id set)
 async fn get_synced_accounts(
     State(state): State<Arc<AppState>>,
-) -> ApiResult<Json<Vec<wealthfolio_core::accounts::Account>>> {
+) -> ApiResult<Json<Vec<whaleit_core::accounts::Account>>> {
     if !crate::features::connect_sync_enabled() {
         return Ok(Json(vec![]));
     }
@@ -822,6 +823,7 @@ async fn get_synced_accounts(
     let accounts = state
         .connect_sync_service
         .get_synced_accounts()
+        .await
         .map_err(|e| ApiError::Internal(e.to_string()))?;
 
     info!("[Connect] Found {} synced accounts", accounts.len());
@@ -831,7 +833,7 @@ async fn get_synced_accounts(
 /// Get all platforms from local database
 async fn get_platforms(
     State(state): State<Arc<AppState>>,
-) -> ApiResult<Json<Vec<wealthfolio_connect::Platform>>> {
+) -> ApiResult<Json<Vec<whaleit_connect::Platform>>> {
     if !crate::features::connect_sync_enabled() {
         return Ok(Json(vec![]));
     }
@@ -850,7 +852,7 @@ async fn get_platforms(
 /// Get all broker sync states from local database
 async fn get_broker_sync_states(
     State(state): State<Arc<AppState>>,
-) -> ApiResult<Json<Vec<wealthfolio_connect::BrokerSyncState>>> {
+) -> ApiResult<Json<Vec<whaleit_connect::BrokerSyncState>>> {
     if !crate::features::connect_sync_enabled() {
         return Ok(Json(vec![]));
     }
@@ -869,7 +871,7 @@ async fn get_broker_sync_states(
 async fn get_import_runs(
     State(state): State<Arc<AppState>>,
     Query(query): Query<GetImportRunsQuery>,
-) -> ApiResult<Json<Vec<wealthfolio_connect::ImportRun>>> {
+) -> ApiResult<Json<Vec<whaleit_connect::ImportRun>>> {
     if !crate::features::connect_sync_enabled() {
         return Ok(Json(vec![]));
     }
@@ -903,18 +905,19 @@ struct BrokerSyncProfileQuery {
 async fn get_broker_sync_profile(
     State(state): State<Arc<AppState>>,
     Query(q): Query<BrokerSyncProfileQuery>,
-) -> ApiResult<Json<wealthfolio_core::activities::BrokerSyncProfileData>> {
+) -> ApiResult<Json<whaleit_core::activities::BrokerSyncProfileData>> {
     Ok(Json(
         state
             .activity_service
-            .get_broker_sync_profile(q.account_id, q.source_system)?,
+            .get_broker_sync_profile(q.account_id, q.source_system)
+            .await?,
     ))
 }
 
 async fn save_broker_sync_profile_rules(
     State(state): State<Arc<AppState>>,
-    Json(request): Json<wealthfolio_core::activities::SaveBrokerSyncProfileRulesRequest>,
-) -> ApiResult<Json<wealthfolio_core::activities::BrokerSyncProfileData>> {
+    Json(request): Json<whaleit_core::activities::SaveBrokerSyncProfileRulesRequest>,
+) -> ApiResult<Json<whaleit_core::activities::BrokerSyncProfileData>> {
     Ok(Json(
         state
             .activity_service

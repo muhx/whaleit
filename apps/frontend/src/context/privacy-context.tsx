@@ -1,8 +1,5 @@
 import { createContext } from "react";
-import {
-  useBalancePrivacy as useBalancePrivacyHook,
-  type BalancePrivacyHook,
-} from "@whaleit/ui";
+import { useBalancePrivacy as useBalancePrivacyHook, type BalancePrivacyHook } from "@whaleit/ui";
 
 type PrivacyContextType = BalancePrivacyHook;
 

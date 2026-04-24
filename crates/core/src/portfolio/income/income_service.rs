@@ -4,6 +4,7 @@ use crate::{
     activities::{ActivityError, ActivityRepositoryTrait, IncomeData},
     Error, Result,
 };
+use async_trait::async_trait;
 use chrono::{Datelike, NaiveDate};
 
 use super::IncomeSummary;
@@ -13,8 +14,9 @@ use num_traits::Zero;
 use rust_decimal::Decimal;
 use std::sync::{Arc, RwLock};
 // Define the trait for the income service
+#[async_trait]
 pub trait IncomeServiceTrait: Send + Sync {
-    fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>>;
+    async fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>>;
 }
 
 pub struct IncomeService {
@@ -67,13 +69,15 @@ impl IncomeService {
 }
 
 // Implement the trait for IncomeService
+#[async_trait]
 impl IncomeServiceTrait for IncomeService {
-    fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>> {
+    async fn get_income_summary(&self, account_id: Option<&str>) -> Result<Vec<IncomeSummary>> {
         debug!("Getting income summary...");
 
         let activities = match self
             .activity_repository
             .get_income_activities_data(account_id)
+            .await
         {
             Ok(activity) => activity,
             Err(e) => {
@@ -97,7 +101,11 @@ impl IncomeServiceTrait for IncomeService {
         // denominators are correct.  Falls back to portfolio-wide when no filter.
         let oldest_date = if let Some(id) = account_id {
             let ids = vec![id.to_string()];
-            match self.activity_repository.get_first_activity_date(Some(&ids)) {
+            match self
+                .activity_repository
+                .get_first_activity_date(Some(&ids))
+                .await
+            {
                 Ok(Some(date)) => date,
                 Ok(None) => return Ok(Vec::new()),
                 Err(e) => {
@@ -106,7 +114,11 @@ impl IncomeServiceTrait for IncomeService {
                 }
             }
         } else {
-            match self.activity_repository.get_first_activity_date_overall() {
+            match self
+                .activity_repository
+                .get_first_activity_date_overall()
+                .await
+            {
                 Ok(date) => date,
                 Err(e) => {
                     error!("Error getting first transaction date: {:?}", e);
@@ -146,11 +158,11 @@ impl IncomeServiceTrait for IncomeService {
             };
 
             // Correctly call methods on the FxService instance within the Arc
-            let converted_amount = match self.fx_service.convert_currency(
-                activity.amount,
-                &activity.currency,
-                &base_currency,
-            ) {
+            let converted_amount = match self
+                .fx_service
+                .convert_currency(activity.amount, &activity.currency, &base_currency)
+                .await
+            {
                 Ok(amount) => amount,
                 Err(e) => {
                     error!("Error converting currency: {:?}", e);

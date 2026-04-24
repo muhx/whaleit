@@ -48,13 +48,13 @@ mod tests {
 
     #[async_trait]
     impl FxServiceTrait for MockFxService {
-        fn initialize(&self) -> AppResult<()> {
+        async fn initialize(&self) -> AppResult<()> {
             Ok(())
         }
         async fn add_exchange_rate(&self, _new_rate: NewExchangeRate) -> AppResult<ExchangeRate> {
             unimplemented!()
         }
-        fn get_historical_rates(
+        async fn get_historical_rates(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -70,14 +70,14 @@ mod tests {
         ) -> AppResult<ExchangeRate> {
             unimplemented!()
         }
-        fn get_latest_exchange_rate(
+        async fn get_latest_exchange_rate(
             &self,
             _from_currency: &str,
             _to_currency: &str,
         ) -> AppResult<Decimal> {
             unimplemented!()
         }
-        fn get_exchange_rate_for_date(
+        async fn get_exchange_rate_for_date(
             &self,
             from_currency: &str,
             to_currency: &str,
@@ -96,7 +96,7 @@ mod tests {
                     )))
                 })
         }
-        fn convert_currency(
+        async fn convert_currency(
             &self,
             amount: Decimal,
             from_currency: &str,
@@ -105,10 +105,12 @@ mod tests {
             if from_currency == to_currency {
                 return Ok(amount);
             }
-            let rate = self.get_latest_exchange_rate(from_currency, to_currency)?;
+            let rate = self
+                .get_latest_exchange_rate(from_currency, to_currency)
+                .await?;
             Ok(amount * rate)
         }
-        fn convert_currency_for_date(
+        async fn convert_currency_for_date(
             &self,
             amount: Decimal,
             from_currency: &str,
@@ -118,10 +120,12 @@ mod tests {
             if from_currency == to_currency {
                 return Ok(amount);
             }
-            let rate = self.get_exchange_rate_for_date(from_currency, to_currency, date)?;
+            let rate = self
+                .get_exchange_rate_for_date(from_currency, to_currency, date)
+                .await?;
             Ok(amount * rate)
         }
-        fn get_latest_exchange_rates(&self) -> AppResult<Vec<ExchangeRate>> {
+        async fn get_latest_exchange_rates(&self) -> AppResult<Vec<ExchangeRate>> {
             unimplemented!()
         }
         async fn delete_exchange_rate(&self, _rate_id: &str) -> AppResult<()> {
@@ -213,7 +217,7 @@ mod tests {
             unimplemented!("update_quote_mode not implemented for MockAssetRepository")
         }
 
-        fn find_by_instrument_key(&self, _instrument_key: &str) -> AppResult<Option<Asset>> {
+        async fn find_by_instrument_key(&self, _instrument_key: &str) -> AppResult<Option<Asset>> {
             Ok(None)
         }
 
@@ -221,18 +225,18 @@ mod tests {
             Ok(())
         }
 
-        fn get_by_id(&self, asset_id: &str) -> AppResult<Asset> {
+        async fn get_by_id(&self, asset_id: &str) -> AppResult<Asset> {
             self.assets
                 .get(asset_id)
                 .cloned()
                 .ok_or_else(|| Error::Asset(format!("Asset not found: {}", asset_id)))
         }
 
-        fn list(&self) -> AppResult<Vec<Asset>> {
+        async fn list(&self) -> AppResult<Vec<Asset>> {
             Ok(self.assets.values().cloned().collect())
         }
 
-        fn list_by_asset_ids(&self, asset_ids: &[String]) -> AppResult<Vec<Asset>> {
+        async fn list_by_asset_ids(&self, asset_ids: &[String]) -> AppResult<Vec<Asset>> {
             Ok(self
                 .assets
                 .values()
@@ -241,7 +245,7 @@ mod tests {
                 .collect())
         }
 
-        fn search_by_symbol(&self, _query: &str) -> AppResult<Vec<Asset>> {
+        async fn search_by_symbol(&self, _query: &str) -> AppResult<Vec<Asset>> {
             Ok(Vec::new())
         }
 
@@ -286,7 +290,7 @@ mod tests {
     }
     #[async_trait]
     impl AccountRepositoryTrait for MockAccountRepository {
-        fn get_by_id(&self, id: &str) -> AppResult<Account> {
+        async fn get_by_id(&self, id: &str) -> AppResult<Account> {
             self.accounts
                 .read()
                 .unwrap()
@@ -294,7 +298,7 @@ mod tests {
                 .cloned()
                 .ok_or(Error::Repository(format!("Account {} not found", id)))
         }
-        fn list(
+        async fn list(
             &self,
             active_only: Option<bool>,
             is_archived_filter: Option<bool>,
@@ -335,28 +339,31 @@ mod tests {
     }
     #[async_trait]
     impl ActivityRepositoryTrait for MockActivityRepository {
-        fn get_activity(&self, _activity_id: &str) -> AppResult<Activity> {
+        async fn get_activity(&self, _activity_id: &str) -> AppResult<Activity> {
             unimplemented!()
         }
-        fn get_activities(&self) -> AppResult<Vec<Activity>> {
+        async fn get_activities(&self) -> AppResult<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_activities_by_account_id(&self, _account_id: &str) -> AppResult<Vec<Activity>> {
+        async fn get_activities_by_account_id(
+            &self,
+            _account_id: &str,
+        ) -> AppResult<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_activities_by_account_ids(
+        async fn get_activities_by_account_ids(
             &self,
             _account_ids: &[String],
         ) -> AppResult<Vec<Activity>> {
             Ok(Vec::new())
         }
-        fn get_trading_activities(&self) -> AppResult<Vec<Activity>> {
+        async fn get_trading_activities(&self) -> AppResult<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_income_activities(&self) -> AppResult<Vec<Activity>> {
+        async fn get_income_activities(&self) -> AppResult<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_contribution_activities(
+        async fn get_contribution_activities(
             &self,
             _account_ids: &[String],
             _start_date: DateTime<Utc>,
@@ -364,7 +371,7 @@ mod tests {
         ) -> AppResult<Vec<crate::limits::ContributionActivity>> {
             unimplemented!()
         }
-        fn search_activities(
+        async fn search_activities(
             &self,
             _page: i64,
             _page_size: i64,
@@ -399,13 +406,13 @@ mod tests {
         async fn create_activities(&self, _activities: Vec<NewActivity>) -> AppResult<usize> {
             unimplemented!()
         }
-        fn get_first_activity_date(
+        async fn get_first_activity_date(
             &self,
             _account_ids: Option<&[String]>,
         ) -> AppResult<Option<DateTime<Utc>>> {
             unimplemented!()
         }
-        fn get_import_mapping(
+        async fn get_import_mapping(
             &self,
             _account_id: &str,
             _context_kind: &str,
@@ -423,10 +430,10 @@ mod tests {
         ) -> AppResult<()> {
             unimplemented!()
         }
-        fn list_import_templates(&self) -> AppResult<Vec<crate::activities::ImportTemplate>> {
+        async fn list_import_templates(&self) -> AppResult<Vec<crate::activities::ImportTemplate>> {
             Ok(Vec::new())
         }
-        fn get_import_template(
+        async fn get_import_template(
             &self,
             _template_id: &str,
         ) -> AppResult<Option<crate::activities::ImportTemplate>> {
@@ -441,7 +448,7 @@ mod tests {
         async fn delete_import_template(&self, _template_id: &str) -> AppResult<()> {
             unimplemented!()
         }
-        fn get_broker_sync_profile(
+        async fn get_broker_sync_profile(
             &self,
             _account_id: &str,
             _source_system: &str,
@@ -462,20 +469,24 @@ mod tests {
         ) -> AppResult<()> {
             Ok(())
         }
-        fn calculate_average_cost(&self, _account_id: &str, _asset_id: &str) -> AppResult<Decimal> {
+        async fn calculate_average_cost(
+            &self,
+            _account_id: &str,
+            _asset_id: &str,
+        ) -> AppResult<Decimal> {
             unimplemented!()
         }
-        fn get_income_activities_data(
+        async fn get_income_activities_data(
             &self,
             _account_id: Option<&str>,
         ) -> AppResult<Vec<ActivityIncomeData>> {
             unimplemented!()
         }
-        fn get_first_activity_date_overall(&self) -> AppResult<DateTime<Utc>> {
+        async fn get_first_activity_date_overall(&self) -> AppResult<DateTime<Utc>> {
             unimplemented!()
         }
 
-        fn get_activity_bounds_for_assets(
+        async fn get_activity_bounds_for_assets(
             &self,
             _asset_ids: &[String],
         ) -> AppResult<
@@ -487,7 +498,7 @@ mod tests {
             Ok(std::collections::HashMap::new())
         }
 
-        fn check_existing_duplicates(
+        async fn check_existing_duplicates(
             &self,
             _idempotency_keys: &[String],
         ) -> AppResult<std::collections::HashMap<String, String>> {
@@ -524,17 +535,17 @@ mod tests {
     }
     #[async_trait]
     impl ActivityRepositoryTrait for MockActivityRepositoryWithData {
-        fn get_activity(&self, activity_id: &str) -> AppResult<Activity> {
+        async fn get_activity(&self, activity_id: &str) -> AppResult<Activity> {
             self.activities
                 .iter()
                 .find(|a| a.id == activity_id)
                 .cloned()
                 .ok_or_else(|| Error::Repository(format!("Activity {} not found", activity_id)))
         }
-        fn get_activities(&self) -> AppResult<Vec<Activity>> {
+        async fn get_activities(&self) -> AppResult<Vec<Activity>> {
             Ok(self.activities.clone())
         }
-        fn get_activities_by_account_id(&self, account_id: &str) -> AppResult<Vec<Activity>> {
+        async fn get_activities_by_account_id(&self, account_id: &str) -> AppResult<Vec<Activity>> {
             Ok(self
                 .activities
                 .iter()
@@ -542,7 +553,7 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn get_activities_by_account_ids(
+        async fn get_activities_by_account_ids(
             &self,
             account_ids: &[String],
         ) -> AppResult<Vec<Activity>> {
@@ -553,13 +564,13 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn get_trading_activities(&self) -> AppResult<Vec<Activity>> {
+        async fn get_trading_activities(&self) -> AppResult<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_income_activities(&self) -> AppResult<Vec<Activity>> {
+        async fn get_income_activities(&self) -> AppResult<Vec<Activity>> {
             unimplemented!()
         }
-        fn get_contribution_activities(
+        async fn get_contribution_activities(
             &self,
             _ids: &[String],
             _s: DateTime<Utc>,
@@ -567,7 +578,7 @@ mod tests {
         ) -> AppResult<Vec<crate::limits::ContributionActivity>> {
             unimplemented!()
         }
-        fn search_activities(
+        async fn search_activities(
             &self,
             _page: i64,
             _size: i64,
@@ -602,13 +613,13 @@ mod tests {
         async fn create_activities(&self, _a: Vec<NewActivity>) -> AppResult<usize> {
             unimplemented!()
         }
-        fn get_first_activity_date(
+        async fn get_first_activity_date(
             &self,
             _ids: Option<&[String]>,
         ) -> AppResult<Option<DateTime<Utc>>> {
             Ok(None)
         }
-        fn get_import_mapping(
+        async fn get_import_mapping(
             &self,
             _id: &str,
             _context_kind: &str,
@@ -626,10 +637,10 @@ mod tests {
         ) -> AppResult<()> {
             Ok(())
         }
-        fn list_import_templates(&self) -> AppResult<Vec<crate::activities::ImportTemplate>> {
+        async fn list_import_templates(&self) -> AppResult<Vec<crate::activities::ImportTemplate>> {
             Ok(Vec::new())
         }
-        fn get_import_template(
+        async fn get_import_template(
             &self,
             _template_id: &str,
         ) -> AppResult<Option<crate::activities::ImportTemplate>> {
@@ -644,7 +655,7 @@ mod tests {
         async fn delete_import_template(&self, _template_id: &str) -> AppResult<()> {
             Ok(())
         }
-        fn get_broker_sync_profile(
+        async fn get_broker_sync_profile(
             &self,
             _account_id: &str,
             _source_system: &str,
@@ -665,20 +676,20 @@ mod tests {
         ) -> AppResult<()> {
             Ok(())
         }
-        fn calculate_average_cost(&self, _acc: &str, _asset: &str) -> AppResult<Decimal> {
+        async fn calculate_average_cost(&self, _acc: &str, _asset: &str) -> AppResult<Decimal> {
             unimplemented!()
         }
-        fn get_income_activities_data(
+        async fn get_income_activities_data(
             &self,
             _account_id: Option<&str>,
         ) -> AppResult<Vec<ActivityIncomeData>> {
             unimplemented!()
         }
-        fn get_first_activity_date_overall(&self) -> AppResult<DateTime<Utc>> {
+        async fn get_first_activity_date_overall(&self) -> AppResult<DateTime<Utc>> {
             unimplemented!()
         }
 
-        fn get_activity_bounds_for_assets(
+        async fn get_activity_bounds_for_assets(
             &self,
             _asset_ids: &[String],
         ) -> AppResult<
@@ -690,7 +701,7 @@ mod tests {
             Ok(std::collections::HashMap::new())
         }
 
-        fn check_existing_duplicates(
+        async fn check_existing_duplicates(
             &self,
             _idempotency_keys: &[String],
         ) -> AppResult<std::collections::HashMap<String, String>> {
@@ -769,7 +780,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_snapshots_by_account(
+        async fn get_snapshots_by_account(
             &self,
             account_id: &str,
             start_date: Option<NaiveDate>,
@@ -791,7 +802,7 @@ mod tests {
             }
         }
 
-        fn get_latest_snapshot_before_date(
+        async fn get_latest_snapshot_before_date(
             &self,
             _account_id: &str,
             _date: NaiveDate,
@@ -809,7 +820,7 @@ mod tests {
             Ok(None)
         }
 
-        fn get_latest_snapshots_before_date(
+        async fn get_latest_snapshots_before_date(
             &self,
             _account_ids: &[String],
             _date: NaiveDate,
@@ -817,7 +828,7 @@ mod tests {
             unimplemented!("get_latest_snapshots_before_date mock")
         }
 
-        fn get_all_latest_snapshots(
+        async fn get_all_latest_snapshots(
             &self,
             _account_ids: &[String],
         ) -> AppResult<HashMap<String, AccountStateSnapshot>> {
@@ -860,15 +871,16 @@ mod tests {
             unimplemented!("delete_snapshots_for_account_in_range mock - was this expected for TOTAL calculation?")
         }
 
-        fn get_total_portfolio_snapshots(
+        async fn get_total_portfolio_snapshots(
             &self,
             start_date: Option<NaiveDate>,
             end_date: Option<NaiveDate>,
         ) -> AppResult<Vec<AccountStateSnapshot>> {
             self.get_snapshots_by_account(PORTFOLIO_TOTAL_ACCOUNT_ID, start_date, end_date)
+                .await
         }
 
-        fn get_all_non_archived_account_snapshots(
+        async fn get_all_non_archived_account_snapshots(
             &self,
             start_date: Option<NaiveDate>,
             end_date: Option<NaiveDate>,
@@ -895,7 +907,10 @@ mod tests {
             Ok(all_snapshots)
         }
 
-        fn get_earliest_snapshot_date(&self, account_id: &str) -> AppResult<Option<NaiveDate>> {
+        async fn get_earliest_snapshot_date(
+            &self,
+            account_id: &str,
+        ) -> AppResult<Option<NaiveDate>> {
             let store = self.snapshots.read().unwrap();
             if let Some(account_snapshots) = store.get(account_id) {
                 return Ok(account_snapshots.iter().map(|s| s.snapshot_date).min());
@@ -968,7 +983,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_non_calculated_snapshot_count(&self, account_id: &str) -> AppResult<usize> {
+        async fn get_non_calculated_snapshot_count(&self, account_id: &str) -> AppResult<usize> {
             let store = self.snapshots.read().unwrap();
             if let Some(account_snapshots) = store.get(account_id) {
                 let count = account_snapshots
@@ -980,7 +995,7 @@ mod tests {
             Ok(0)
         }
 
-        fn get_earliest_non_calculated_snapshot(
+        async fn get_earliest_non_calculated_snapshot(
             &self,
             account_id: &str,
         ) -> AppResult<Option<AccountStateSnapshot>> {
@@ -2834,9 +2849,11 @@ mod tests {
         // the mock clears saved_snapshots on each save operation
         let acc1_frames = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         let acc2_frames = snapshot_repo
             .get_snapshots_by_account("acc2", None, None)
+            .await
             .unwrap();
 
         // Each account should have its own snapshot
@@ -2998,6 +3015,7 @@ mod tests {
         // Now get daily snapshots with gap filling
         let daily = svc
             .get_daily_holdings_snapshots(&acc.id, Some(d1), Some(d2))
+            .await
             .unwrap();
 
         // Should have 6 days (Jan 10-15 inclusive)
@@ -3081,6 +3099,7 @@ mod tests {
         // Get keyframes only (no gap filling)
         let keyframes = svc
             .get_holdings_keyframes(&acc.id, Some(d1), Some(d2))
+            .await
             .unwrap();
 
         // Should have exactly 2 keyframes (activity days only)
@@ -3308,7 +3327,7 @@ mod tests {
             .await
             .unwrap();
 
-        let latest = svc.get_latest_holdings_snapshot(&acc.id).unwrap();
+        let latest = svc.get_latest_holdings_snapshot(&acc.id).await.unwrap();
         assert!(latest.is_some());
 
         let snapshot = latest.unwrap();
@@ -3372,7 +3391,11 @@ mod tests {
             .await
             .unwrap();
 
-        let latest = svc.get_latest_holdings_snapshot(&acc.id).unwrap().unwrap();
+        let latest = svc
+            .get_latest_holdings_snapshot(&acc.id)
+            .await
+            .unwrap()
+            .unwrap();
         assert!(latest.snapshot_date < d_future);
         assert_eq!(latest.cash_balances.get("USD"), Some(&dec!(5000)));
     }
@@ -3773,6 +3796,7 @@ mod tests {
 
         let frames = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         let mut sorted = frames.clone();
         sorted.sort_by_key(|s| s.snapshot_date);
@@ -3834,6 +3858,7 @@ mod tests {
         // Verify snapshots were saved (manual + synthetic for performance history)
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(
             saved.len(),
@@ -3916,6 +3941,7 @@ mod tests {
         // After update on same date, still 2 total (synthetic + updated manual).
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(
             saved.len(),
@@ -3984,6 +4010,7 @@ mod tests {
         // Verify two snapshots exist
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(saved.len(), 2, "Should have two snapshots");
 
@@ -4039,6 +4066,7 @@ mod tests {
         // Verify: CsvImport snapshot + synthetic for holdings history
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(
             saved.len(),
@@ -4101,6 +4129,7 @@ mod tests {
         // Should have 3 snapshots total, no synthetic created
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(
             saved.len(),
@@ -4174,6 +4203,7 @@ mod tests {
         // Verify synthetic was created with same holdings data
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         let synthetic = saved
             .iter()
@@ -4233,6 +4263,7 @@ mod tests {
         // Should have 2 snapshots: broker + synthetic
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(saved.len(), 2);
 
@@ -4288,6 +4319,7 @@ mod tests {
         // Should have: 2 calculated + 1 manual + 1 synthetic = 4 total
         let saved = snapshot_repo
             .get_snapshots_by_account("acc1", None, None)
+            .await
             .unwrap();
         assert_eq!(saved.len(), 4);
 
@@ -4360,7 +4392,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_snapshots_by_account(
+        async fn get_snapshots_by_account(
             &self,
             account_id: &str,
             start_date: Option<NaiveDate>,
@@ -4382,7 +4414,7 @@ mod tests {
             }
         }
 
-        fn get_latest_snapshot_before_date(
+        async fn get_latest_snapshot_before_date(
             &self,
             account_id: &str,
             date: NaiveDate,
@@ -4398,7 +4430,7 @@ mod tests {
             Ok(None)
         }
 
-        fn get_latest_snapshots_before_date(
+        async fn get_latest_snapshots_before_date(
             &self,
             _account_ids: &[String],
             _date: NaiveDate,
@@ -4406,7 +4438,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_all_latest_snapshots(
+        async fn get_all_latest_snapshots(
             &self,
             _account_ids: &[String],
         ) -> AppResult<HashMap<String, AccountStateSnapshot>> {
@@ -4444,15 +4476,16 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_total_portfolio_snapshots(
+        async fn get_total_portfolio_snapshots(
             &self,
             start_date: Option<NaiveDate>,
             end_date: Option<NaiveDate>,
         ) -> AppResult<Vec<AccountStateSnapshot>> {
             self.get_snapshots_by_account(PORTFOLIO_TOTAL_ACCOUNT_ID, start_date, end_date)
+                .await
         }
 
-        fn get_all_non_archived_account_snapshots(
+        async fn get_all_non_archived_account_snapshots(
             &self,
             start_date: Option<NaiveDate>,
             end_date: Option<NaiveDate>,
@@ -4462,11 +4495,9 @@ mod tests {
             let mut all_snapshots = Vec::new();
 
             for (account_id, account_snapshots) in store.iter() {
-                // Skip TOTAL snapshots
                 if account_id == PORTFOLIO_TOTAL_ACCOUNT_ID {
                     continue;
                 }
-                // Only include snapshots for non-archived accounts
                 if !non_archived_ids.contains(account_id) {
                     continue;
                 }
@@ -4484,7 +4515,10 @@ mod tests {
             Ok(all_snapshots)
         }
 
-        fn get_earliest_snapshot_date(&self, account_id: &str) -> AppResult<Option<NaiveDate>> {
+        async fn get_earliest_snapshot_date(
+            &self,
+            account_id: &str,
+        ) -> AppResult<Option<NaiveDate>> {
             let store = self.snapshots.read().unwrap();
             if let Some(account_snapshots) = store.get(account_id) {
                 return Ok(account_snapshots.iter().map(|s| s.snapshot_date).min());
@@ -4542,7 +4576,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_non_calculated_snapshot_count(&self, account_id: &str) -> AppResult<usize> {
+        async fn get_non_calculated_snapshot_count(&self, account_id: &str) -> AppResult<usize> {
             let store = self.snapshots.read().unwrap();
             if let Some(account_snapshots) = store.get(account_id) {
                 let count = account_snapshots
@@ -4554,7 +4588,7 @@ mod tests {
             Ok(0)
         }
 
-        fn get_earliest_non_calculated_snapshot(
+        async fn get_earliest_non_calculated_snapshot(
             &self,
             account_id: &str,
         ) -> AppResult<Option<AccountStateSnapshot>> {
@@ -5152,6 +5186,7 @@ mod tests {
         // Find Account B's final snapshot (latest date)
         let acc_b_snaps = snapshot_repo
             .get_snapshots_by_account("acc_b", None, None)
+            .await
             .unwrap();
         let acc_b_snap = acc_b_snaps
             .iter()
@@ -5175,6 +5210,7 @@ mod tests {
         // Account A should have no position
         let acc_a_snaps = snapshot_repo
             .get_snapshots_by_account("acc_a", None, None)
+            .await
             .unwrap();
         let acc_a_snap = acc_a_snaps
             .iter()
@@ -5294,6 +5330,7 @@ mod tests {
         // Account C should end up with the original cost basis
         let acc_c_snaps = snapshot_repo
             .get_snapshots_by_account("acc_c", None, None)
+            .await
             .unwrap();
         let acc_c_snap = acc_c_snaps
             .iter()

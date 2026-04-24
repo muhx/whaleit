@@ -5,7 +5,7 @@
 ## Directory Layout
 
 ```
-whaleit/                              # repo root (Wealthfolio)
+whaleit/                              # repo root (Whaleit)
 ├── apps/
 │   ├── frontend/                     # React + Vite SPA (pnpm workspace)
 │   │   ├── index.html                # Vite entry HTML
@@ -40,7 +40,7 @@ whaleit/                              # repo root (Wealthfolio)
 │   │       ├── features/             # Feature modules
 │   │       │   ├── ai-assistant/
 │   │       │   ├── devices-sync/
-│   │       │   └── wealthfolio-connect/
+│   │       │   └── whaleit-connect/
 │   │       ├── hooks/                # Reusable React hooks
 │   │       ├── lib/                  # Utilities, schemas, types, constants
 │   │       │   └── types/            # Ambient TS types
@@ -109,7 +109,7 @@ whaleit/                              # repo root (Wealthfolio)
 │           └── api.rs                # Router composition
 │
 ├── crates/                           # Rust library crates (Cargo workspace)
-│   ├── ai/                           # wealthfolio-ai (LLM orchestration)
+│   ├── ai/                           # whaleit-ai (LLM orchestration)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -121,9 +121,9 @@ whaleit/                              # repo root (Wealthfolio)
 │   │       ├── ai_providers.json    # Compiled-in catalog
 │   │       ├── tools/                # Tool implementations
 │   │       └── eval/                 # Behavioral test harness
-│   ├── connect/                      # wealthfolio-connect (cloud broker sync)
+│   ├── connect/                      # whaleit-connect (cloud broker sync)
 │   │   └── src/{lib.rs, client.rs, token_lifecycle.rs, broker/, broker_ingest/, platform/}
-│   ├── core/                         # wealthfolio-core (domain logic, traits)
+│   ├── core/                         # whaleit-core (domain logic, traits)
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── constants.rs, errors.rs
@@ -134,11 +134,11 @@ whaleit/                              # repo root (Wealthfolio)
 │   │       │                         # net_worth, performance, snapshot, valuation
 │   │       ├── quotes/               # QuoteService, providers wrapper
 │   │       ├── secrets/, settings/, sync/, taxonomies/, utils/
-│   ├── device-sync/                  # wealthfolio-device-sync (E2EE)
+│   ├── device-sync/                  # whaleit-device-sync (E2EE)
 │   │   └── src/{lib.rs, client.rs, crypto.rs, engine/, enroll_service.rs, types.rs, time.rs}
-│   ├── market-data/                  # wealthfolio-market-data
+│   ├── market-data/                  # whaleit-market-data
 │   │   └── src/{lib.rs, models/, provider/, registry/, resolver/, errors/}
-│   └── storage-sqlite/               # wealthfolio-storage-sqlite (Diesel)
+│   └── storage-sqlite/               # whaleit-storage-sqlite (Diesel)
 │       ├── Cargo.toml
 │       ├── diesel.toml
 │       ├── migrations/               # Diesel migrations (embedded via macro)
@@ -153,13 +153,13 @@ whaleit/                              # repo root (Wealthfolio)
 │                settings,sync,taxonomies}/
 │
 ├── packages/                         # Shared TS packages (pnpm workspace)
-│   ├── addon-sdk/                    # Public addon SDK (@wealthfolio/addon-sdk)
+│   ├── addon-sdk/                    # Public addon SDK (@whaleit/addon-sdk)
 │   │   ├── package.json
 │   │   ├── tsup.config.ts
 │   │   └── src/{index.ts, host-api.ts, manifest.ts, permissions.ts,
 │   │              data-types.ts, goal-progress.ts, query-keys.ts,
 │   │              types.ts, utils.ts, version.ts}
-│   ├── ui/                           # Reusable components (@wealthfolio/ui)
+│   ├── ui/                           # Reusable components (@whaleit/ui)
 │   │   ├── package.json
 │   │   ├── tsup.config.ts
 │   │   └── src/{index.ts, components/, hooks/, lib/, styles.css}
@@ -242,8 +242,8 @@ whaleit/                              # repo root (Wealthfolio)
 
 - Purpose: cross-page feature modules with their own components/hooks/types.
 - Contains: `ai-assistant/` (chat UI, types, streaming hooks),
-  `wealthfolio-connect/` (broker cloud connect onboarding), `devices-sync/`
-  (E2EE device sync UI, crypto helpers, pairing flow).
+  `whaleit-connect/` (broker cloud connect onboarding), `devices-sync/` (E2EE
+  device sync UI, crypto helpers, pairing flow).
 
 **`apps/frontend/src/components/`:**
 
@@ -314,7 +314,7 @@ whaleit/                              # repo root (Wealthfolio)
 **`apps/tauri/src/services/`:**
 
 - Purpose: host-only services that don't belong to a crate.
-- Files: `connect_service.rs` (Wealthfolio Connect cloud bridge +
+- Files: `connect_service.rs` (Whaleit Connect cloud bridge +
   `cloud_api_base_url`), `mod.rs`.
 
 **`apps/server/`:**
@@ -350,7 +350,7 @@ whaleit/                              # repo root (Wealthfolio)
 **`crates/storage-sqlite/`:**
 
 - Purpose: the only place Diesel is used. Implements repository traits from
-  `wealthfolio-core`.
+  `whaleit-core`.
 - Contains: `db/` (pool + write actor + migrations harness), `schema.rs`, one
   folder per entity with `model.rs` + `repository.rs`, `migrations/` (dated
   directories, embedded at build time).

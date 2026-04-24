@@ -102,8 +102,8 @@
 - `@tanstack/react-virtual` 3.13 — virtualized lists
 - `@tauri-apps/api` 2.10 — IPC bridge to Rust
   (`apps/frontend/src/adapters/tauri/core.ts`)
-- `@supabase/supabase-js` 2.95 — Supabase auth client for Wealthfolio Connect
-  (`apps/frontend/src/features/wealthfolio-connect/providers/wealthfolio-connect-provider.tsx`)
+- `@supabase/supabase-js` 2.95 — Supabase auth client for Whaleit Connect
+  (`apps/frontend/src/features/whaleit-connect/providers/whaleit-connect-provider.tsx`)
 - `@assistant-ui/react` 0.11 + `@assistant-ui/react-markdown` — AI assistant UI
 - `react-hook-form` 7.71 + `@hookform/resolvers` + `zod` 3.25 — forms + schema
   validation
@@ -172,14 +172,14 @@
 
 **Shared TypeScript packages (`packages/`):**
 
-- `@wealthfolio/addon-sdk` (`packages/addon-sdk/`) — typed SDK for third-party
+- `@whaleit/addon-sdk` (`packages/addon-sdk/`) — typed SDK for third-party
   addons
-- `@wealthfolio/ui` (`packages/ui/`) — shadcn/ui-based component library built
-  on Radix UI primitives (`@radix-ui/react-*`), `react-aria-components 1.15`,
+- `@whaleit/ui` (`packages/ui/`) — shadcn/ui-based component library built on
+  Radix UI primitives (`@radix-ui/react-*`), `react-aria-components 1.15`,
   `react-day-picker 9.13`, `embla-carousel-react 8.6`, `input-otp 1.4`,
   `react-dropzone 14.4`, `react-number-format 5.4`
-- `@wealthfolio/addon-dev-tools` (`packages/addon-dev-tools/`) — CLI and dev
-  server for addon authors
+- `@whaleit/addon-dev-tools` (`packages/addon-dev-tools/`) — CLI and dev server
+  for addon authors
 
 ## Configuration
 
@@ -205,15 +205,14 @@
 
 **Build:**
 
-- `apps/frontend/vite.config.ts` — path aliases `@`, `@wealthfolio/addon-sdk`,
-  `@wealthfolio/ui`, `@/adapters`, `#platform`; build target switched via
+- `apps/frontend/vite.config.ts` — path aliases `@`, `@whaleit/addon-sdk`,
+  `@whaleit/ui`, `@/adapters`, `#platform`; build target switched via
   `BUILD_TARGET=tauri|web`; dev port 1420 (fixed, strictPort)
 - `tsconfig.base.json`, `tsconfig.json`, `tsconfig.node.json`,
   `tsconfig.test.json` at root
-- `apps/tauri/tauri.conf.json` — bundle config (identifier
-  `com.teymz.wealthfolio`, iOS team `DYDJ2RNL5H`, macOS signing, auto-updater
-  endpoint `https://wealthfolio.app/releases/...`, deep-link schemes
-  `wealthfolio://`)
+- `apps/tauri/tauri.conf.json` — bundle config (identifier `com.teymz.whaleit`,
+  iOS team `DYDJ2RNL5H`, macOS signing, auto-updater endpoint
+  `https://whaleit.app/releases/...`, deep-link schemes `whaleit://`)
 - `apps/tauri/capabilities/desktop.json`, `mobile.json`, `ios.json` — Tauri
   permission capabilities (fs scope limited to `$APPDATA/**`)
 - `crates/storage-sqlite/diesel.toml` — Diesel schema config
@@ -245,10 +244,10 @@
 - Mobile: iOS (Apple dev team `DYDJ2RNL5H`, `Info.ios.plist`, signed
   `Apple Distribution: Teymz Inc`), Android (Tauri mobile targets)
 - Web/server: Alpine Linux container (`alpine:3.19`) exposing port 8088; data
-  volume `/data`, `WF_DB_PATH=/data/wealthfolio.db`; `afadil/wealthfolio:latest`
-  image on Docker Hub per `compose.yml`
+  volume `/data`, `WF_DB_PATH=/data/whaleit.db`; `muhx/whaleit:latest` image on
+  Docker Hub per `compose.yml`
 - Auto-updater endpoint:
-  `https://wealthfolio.app/releases/{{target}}/{{arch}}/{{current_version}}`
+  `https://whaleit.app/releases/{{target}}/{{arch}}/{{current_version}}`
   (`apps/tauri/tauri.conf.json:40`)
 
 ---

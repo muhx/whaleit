@@ -1,1 +1,0 @@
-DROP TABLE IF EXISTS activity_import_profiles;

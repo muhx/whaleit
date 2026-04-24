@@ -9,12 +9,12 @@ use axum::{
     routing::{get, put},
     Json, Router,
 };
-use wealthfolio_core::limits::{ContributionLimit, DepositsCalculation, NewContributionLimit};
+use whaleit_core::limits::{ContributionLimit, DepositsCalculation, NewContributionLimit};
 
 async fn get_contribution_limits(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<ContributionLimit>>> {
-    let limits = state.limits_service.get_contribution_limits()?;
+    let limits = state.limits_service.get_contribution_limits().await?;
     Ok(Json(limits))
 }
 
@@ -59,7 +59,8 @@ async fn calculate_deposits_for_contribution_limit(
     let base = state.base_currency.read().unwrap().clone();
     let calc = state
         .limits_service
-        .calculate_deposits_for_contribution_limit(&id, &base)?;
+        .calculate_deposits_for_contribution_limit(&id, &base)
+        .await?;
     Ok(Json(calc))
 }
 

@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use log::{info, warn};
 
-use wealthfolio_core::errors::Result;
+use whaleit_core::errors::Result;
 
 use crate::prompt_template::{
     ChatRunConfig, DetailLevel, PromptTemplate, PromptTemplateCatalog,
@@ -102,8 +102,8 @@ impl PromptTemplateServiceTrait for PromptTemplateService {
             .or_else(|| self.get_template(&config.template_id))
             .or_else(|| self.get_default_template())
             .ok_or_else(|| {
-                wealthfolio_core::errors::Error::Validation(
-                    wealthfolio_core::errors::ValidationError::InvalidInput(format!(
+                whaleit_core::errors::Error::Validation(
+                    whaleit_core::errors::ValidationError::InvalidInput(format!(
                         "Template not found: {}@{}",
                         config.template_id, config.template_version
                     )),
@@ -131,7 +131,7 @@ pub fn build_run_config_from_context(
     detail_level: Option<&str>,
 ) -> ChatRunConfig {
     ChatRunConfig {
-        template_id: "wealthfolio-assistant-v1".to_string(),
+        template_id: "whaleit-assistant-v1".to_string(),
         template_version: "1.0.0".to_string(),
         locale: locale.map(|s| s.to_string()),
         detail_level: detail_level
@@ -147,14 +147,14 @@ mod tests {
     const TEST_CATALOG_JSON: &str = r#"{
         "schemaVersion": 1,
         "templates": {
-            "wealthfolio-assistant-v1": {
-                "id": "wealthfolio-assistant-v1",
+            "whaleit-assistant-v1": {
+                "id": "whaleit-assistant-v1",
                 "version": "1.0.0",
-                "name": "Wealthfolio Assistant",
+                "name": "Whaleit Assistant",
                 "description": "Default assistant",
                 "isDefault": true,
                 "sections": {
-                    "system": { "content": "You are Wealthfolio Assistant." },
+                    "system": { "content": "You are Whaleit Assistant." },
                     "portfolioDomain": { "content": "Portfolio data access." },
                     "toolUsage": { "content": "Use tools wisely." },
                     "adviceGuardrails": { "content": "Not financial advice." }
@@ -183,7 +183,7 @@ mod tests {
     fn test_get_default_template() {
         let service = PromptTemplateService::new(TEST_CATALOG_JSON).unwrap();
         let template = service.get_default_template().unwrap();
-        assert_eq!(template.id, "wealthfolio-assistant-v1");
+        assert_eq!(template.id, "whaleit-assistant-v1");
     }
 
     #[test]
@@ -192,7 +192,7 @@ mod tests {
         let config = ChatRunConfig::default();
         let prompt = service.build_system_prompt(&config).unwrap();
 
-        assert!(prompt.contains("Wealthfolio Assistant"));
+        assert!(prompt.contains("Whaleit Assistant"));
         assert!(prompt.contains("Portfolio data access"));
         assert!(prompt.contains("Use tools wisely"));
         assert!(prompt.contains("Not financial advice"));
@@ -216,6 +216,6 @@ mod tests {
 
         // Should fall back to default template
         let prompt = service.build_system_prompt(&config).unwrap();
-        assert!(prompt.contains("Wealthfolio Assistant"));
+        assert!(prompt.contains("Whaleit Assistant"));
     }
 }

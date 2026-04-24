@@ -140,6 +140,7 @@ impl<E: AiEnvironment + 'static> Tool for GetValuationHistoryTool<E> {
                 .env
                 .account_service()
                 .get_active_accounts()
+                .await
                 .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
             let mut aggregated: HashMap<NaiveDate, (f64, f64)> = HashMap::new();
@@ -149,6 +150,7 @@ impl<E: AiEnvironment + 'static> Tool for GetValuationHistoryTool<E> {
                     .env
                     .valuation_service()
                     .get_historical_valuations(&account.id, Some(start_date), Some(end_date))
+                    .await
                     .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
                 for v in account_valuations {
@@ -183,6 +185,7 @@ impl<E: AiEnvironment + 'static> Tool for GetValuationHistoryTool<E> {
                 .env
                 .valuation_service()
                 .get_historical_valuations(account_id, Some(start_date), Some(end_date))
+                .await
                 .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
             account_valuations

@@ -23,9 +23,9 @@ const ROOT_KEY_SIZE: usize = 32;
 const NONCE_SIZE: usize = 24; // XChaCha20 uses 24-byte nonce
 
 /// HKDF info strings
-const DEK_INFO: &[u8] = b"wealthfolio-dek";
-const SESSION_INFO: &[u8] = b"wealthfolio-session";
-const SAS_INFO: &[u8] = b"wealthfolio-sas";
+const DEK_INFO: &[u8] = b"whaleit-dek";
+const SESSION_INFO: &[u8] = b"whaleit-session";
+const SAS_INFO: &[u8] = b"whaleit-sas";
 
 /// Generate a cryptographically secure root key (32 bytes)
 pub fn generate_root_key() -> String {

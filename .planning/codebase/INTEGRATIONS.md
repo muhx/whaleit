@@ -55,7 +55,7 @@
 - Ollama — local LLM (default URL `http://localhost:11434`)
 - SDK/Client: `rig` (`rig-core 0.30`) via `crates/ai/src/providers.rs` +
   `crates/ai/src/provider_service.rs`
-- Auth: per-provider API key stored through `wealthfolio_core::secrets`
+- Auth: per-provider API key stored through `whaleit_core::secrets`
   (`SecretStore` trait), env keys per provider listed in
   `crates/ai/src/ai_providers.json` (`OLLAMA_API_KEY`, `GROQ_API_KEY`, etc. —
   stored encrypted, not read from shell env at runtime)
@@ -64,10 +64,10 @@
   (`apps/frontend/src/adapters/web/ai-streaming.ts`, endpoint
   `/api/v1/ai/chat/stream`)
 
-**Wealthfolio Connect (first-party cloud — optional feature):**
+**Whaleit Connect (first-party cloud — optional feature):**
 
 - Connect API (subscription, broker-sync orchestration, device-sync transport)
-  - Default base URL: `https://api.wealthfolio.app`
+  - Default base URL: `https://api.whaleit.app`
     (`crates/connect/src/client.rs:25`)
   - Client: `ConnectApiClient` in `crates/connect/src/client.rs`
   - Feature-gated by `connect-sync` and `device-sync` Cargo features
@@ -75,14 +75,14 @@
 - Supabase (auth provider behind Connect)
   - SDK: `@supabase/supabase-js 2.95`
   - File:
-    `apps/frontend/src/features/wealthfolio-connect/providers/wealthfolio-connect-provider.tsx`
-  - Default URL: `https://auth.wealthfolio.app`
+    `apps/frontend/src/features/whaleit-connect/providers/whaleit-connect-provider.tsx`
+  - Default URL: `https://auth.whaleit.app`
   - Methods used: `signInWithPassword`, `signUp`, `signInWithOAuth`,
     `signInWithOtp`, `verifyOtp`, `exchangeCodeForSession`, `setSession`,
     `signOut`, `onAuthStateChange`
-- Connect hosted OAuth callback — `https://connect.wealthfolio.app/deeplink`
-  (redirects back to `wealthfolio://auth/callback` on desktop/mobile)
-- Connect portal (user UI): `https://connect.wealthfolio.app`
+- Connect hosted OAuth callback — `https://connect.whaleit.app/deeplink`
+  (redirects back to `whaleit://auth/callback` on desktop/mobile)
+- Connect portal (user UI): `https://connect.whaleit.app`
   (`apps/frontend/src/lib/constants.ts:8`)
 
 **Broker integrations (via Connect):**
@@ -92,8 +92,8 @@
 - Entrypoints: `apps/server/src/api/brokers_sync.rs`,
   `apps/tauri/src/commands/brokers_sync.rs`
 - Ingest models: `crates/connect/src/broker_ingest/models.rs`
-- Downstream broker services are brokered through `api.wealthfolio.app` — no
-  direct broker SDK dependencies in the workspace
+- Downstream broker services are brokered through `api.whaleit.app` — no direct
+  broker SDK dependencies in the workspace
 
 ## Data Storage
 
@@ -101,7 +101,7 @@
 
 - SQLite (local-first)
   - Connection: Tauri → `<app_data_dir>/app.db`; server → `WF_DB_PATH` (default
-    `./db/app.db`, Docker `/data/wealthfolio.db`)
+    `./db/app.db`, Docker `/data/whaleit.db`)
   - ORM: Diesel 2.2 (sqlite feature) via workspace `Cargo.toml`; raw driver
     `rusqlite 0.34` (bundled)
   - Pool: `r2d2 0.8`
@@ -132,15 +132,15 @@
 **Desktop / Tauri:**
 
 - OS keychain via `keyring 2.0` (`apps/tauri/src/secret_store.rs`, struct
-  `KeyringSecretStore`). Secret service ID prefix `wealthfolio_`.
-- Wealthfolio Connect auth: Supabase session managed by
-  `apps/frontend/src/features/wealthfolio-connect/providers/wealthfolio-connect-provider.tsx`
-  - Desktop uses deep-link callback scheme `wealthfolio://auth/callback`
+  `KeyringSecretStore`). Secret service ID prefix `whaleit_`.
+- Whaleit Connect auth: Supabase session managed by
+  `apps/frontend/src/features/whaleit-connect/providers/whaleit-connect-provider.tsx`
+  - Desktop uses deep-link callback scheme `whaleit://auth/callback`
     (`apps/tauri/tauri.conf.json:52`)
   - iOS uses `tauri-plugin-web-auth` (`ASWebAuthenticationSession`) — required
     for Google OAuth (`apps/tauri/src/lib.rs:146`)
 - Refresh token stored under keyring key `sync_refresh_token`
-  (`apps/tauri/src/commands/wealthfolio_connect.rs:21`)
+  (`apps/tauri/src/commands/whaleit_connect.rs:21`)
 
 **Web server (Axum):**
 
@@ -200,20 +200,20 @@
 **Hosting:**
 
 - Desktop/mobile binaries distributed via auto-updater endpoint
-  `https://wealthfolio.app/releases/{{target}}/{{arch}}/{{current_version}}`
+  `https://whaleit.app/releases/{{target}}/{{arch}}/{{current_version}}`
   (minisign-signed, pubkey embedded in `apps/tauri/tauri.conf.json:39`)
 - Windows install mode: `passive`
 - iOS: App Store (`appstore` Cargo feature flag in `apps/tauri/Cargo.toml:64`,
   signing `Apple Distribution: Teymz Inc (DYDJ2RNL5H)`)
-- Web/server: Docker image `afadil/wealthfolio:latest` on Docker Hub,
-  self-hostable via `compose.yml`
+- Web/server: Docker image `muhx/whaleit:latest` on Docker Hub, self-hostable
+  via `compose.yml`
 
 **CI Pipeline (GitHub Actions):**
 
 - `.github/workflows/pr-check.yml` — on PR to `main`, `develop`, `feature/**`:
   frontend check (pnpm install, build:types, format:check, lint, type-check,
   test, build) + rust check (fmt --check, clippy -D warnings, cargo test
-  --workspace, cargo check -p wealthfolio-server --release)
+  --workspace, cargo check -p whaleit-server --release)
 - `.github/workflows/release.yml` — release builds
 - `.github/workflows/docker-publish.yml` — Docker image publish
 - Rust caching: `Swatinem/rust-cache@v2`; rust toolchain:
@@ -223,8 +223,8 @@
 
 - `Dockerfile` — stage 1 `node:24-alpine` builds frontend with
   `BUILD_TARGET=web`; stage 2 `rust:1.91-alpine` + `tonistiigi/xx`
-  cross-compiles `wealthfolio-server`; final `alpine:3.19` runtime exposes port
-  8080, CMD `/usr/local/bin/wealthfolio-server`
+  cross-compiles `whaleit-server`; final `alpine:3.19` runtime exposes port
+  8080, CMD `/usr/local/bin/whaleit-server`
 - Build args: `CONNECT_AUTH_URL`, `CONNECT_AUTH_PUBLISHABLE_KEY`,
   `CONNECT_API_URL` (baked into JS bundle and server binary)
 - Runtime container is read-only with `/tmp` tmpfs (64M) and `no-new-privileges`
@@ -274,13 +274,13 @@
 **Incoming:**
 
 - Auto-updater manifest pulls from
-  `https://wealthfolio.app/releases/{{target}}/{{arch}}/{{current_version}}`
+  `https://whaleit.app/releases/{{target}}/{{arch}}/{{current_version}}`
   (`apps/tauri/tauri.conf.json:40`) — outbound poll, not a true webhook
-- Deep links (desktop): custom URL scheme `wealthfolio://` →
-  `wealthfolio://auth/callback` handled by `tauri-plugin-deep-link`
+- Deep links (desktop): custom URL scheme `whaleit://` →
+  `whaleit://auth/callback` handled by `tauri-plugin-deep-link`
   (`apps/tauri/src/lib.rs:256`, event name `deep-link-received`)
-- Deep links (mobile): universal links on hosts `connect.wealthfolio.app` and
-  `connect-staging.wealthfolio.app` with path prefix `/deeplink`
+- Deep links (mobile): universal links on hosts `connect.whaleit.app` and
+  `connect-staging.whaleit.app` with path prefix `/deeplink`
   (`apps/tauri/tauri.conf.json:45`)
 - Server-Sent Events stream: `GET /api/v1/events/stream`
   (`apps/server/src/api/portfolio.rs:90`) — the frontend's web adapter
@@ -292,10 +292,10 @@
 **Outgoing:**
 
 - Market-data HTTPS calls listed under `## APIs & External Services`
-- Connect API calls: `POST`/`GET` against `https://api.wealthfolio.app` via
+- Connect API calls: `POST`/`GET` against `https://api.whaleit.app` via
   `crates/connect/src/client.rs`
 - Supabase auth calls from browser (SDK-managed OAuth/OTP redirects)
-- OAuth callback bridge: `https://connect.wealthfolio.app/deeplink` redirects
+- OAuth callback bridge: `https://connect.whaleit.app/deeplink` redirects
   browsers back into the desktop/mobile app via deep link
 
 ## IPC Bridges
@@ -309,7 +309,7 @@
   (account, activity, addon, ai_chat, ai_providers, alternative_assets, asset,
   brokers_sync, custom_provider, device_enroll_service, device_sync, fire, goal,
   health, limits, market_data, platform, portfolio, providers_settings, secrets,
-  settings, sync_crypto, taxonomy, utilities, wealthfolio_connect)
+  settings, sync_crypto, taxonomy, utilities, whaleit_connect)
 - Event emission: `tauri::Emitter` → frontend `@tauri-apps/api/event.listen`
   (`apps/frontend/src/adapters/tauri/events.ts:6`). Event names:
   `tauri://file-drop*`, `portfolio:update-*`, `database-restored`,

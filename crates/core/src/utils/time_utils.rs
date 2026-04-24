@@ -1,7 +1,7 @@
 use crate::errors::{Error, Result, ValidationError};
 use chrono::{DateTime, Datelike, Duration, LocalResult, NaiveDate, TimeZone, Utc, Weekday};
 use chrono_tz::Tz;
-use wealthfolio_market_data::resolver::exchange_metadata;
+use whaleit_market_data::resolver::exchange_metadata;
 
 /// Default timezone for valuation dates.
 /// This is used as a runtime fallback when user timezone is missing.

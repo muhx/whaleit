@@ -7,12 +7,12 @@ use axum::{
     routing::{delete, get, put},
     Json, Router,
 };
-use wealthfolio_core::fx::{ExchangeRate, NewExchangeRate};
+use whaleit_core::fx::{ExchangeRate, NewExchangeRate};
 
 async fn get_latest_exchange_rates(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<ExchangeRate>>> {
-    let rates = state.fx_service.get_latest_exchange_rates()?;
+    let rates = state.fx_service.get_latest_exchange_rates().await?;
     Ok(Json(rates))
 }
 

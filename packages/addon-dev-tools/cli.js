@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Wealthfolio Addon CLI
+ * Whaleit Addon CLI
  *
  * Command-line tool for developing, building, and managing addons
  */
@@ -78,7 +78,7 @@ async function createAddon(name, options) {
       const rl = readline.createInterface({ input: stdin, output: stdout });
       try {
         if (!config.description) {
-          const defaultDesc = `A Wealthfolio addon for ${name}`;
+          const defaultDesc = `A Whaleit addon for ${name}`;
           const answer = (await rl.question(`Description [${defaultDesc}]: `)).trim();
           config.description = answer.length > 0 ? answer : defaultDesc;
         }
@@ -94,7 +94,7 @@ async function createAddon(name, options) {
 
     // Set defaults for non-interactive mode
     if (!config.description) {
-      config.description = `A Wealthfolio addon for ${name}`;
+      config.description = `A Whaleit addon for ${name}`;
     }
     if (!config.author) {
       config.author = "Anonymous";

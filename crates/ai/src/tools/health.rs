@@ -140,7 +140,7 @@ impl<E: AiEnvironment + 'static> Tool for GetHealthStatusTool<E> {
 mod tests {
     use super::*;
     use crate::env::test_env::{MockEnvironment, MockHealthService};
-    use wealthfolio_core::health::{HealthCategory, HealthIssue, HealthStatus, Severity};
+    use whaleit_core::health::{HealthCategory, HealthIssue, HealthStatus, Severity};
 
     fn env_with_status(status: Option<HealthStatus>) -> MockEnvironment {
         let mut env = MockEnvironment::new();

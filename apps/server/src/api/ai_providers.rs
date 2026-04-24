@@ -6,7 +6,7 @@ use axum::{
     routing::{get, post, put},
     Json, Router,
 };
-use wealthfolio_ai::{
+use whaleit_ai::{
     AiProvidersResponse, ListModelsResponse, SetDefaultProviderRequest,
     UpdateProviderSettingsRequest,
 };
@@ -14,7 +14,7 @@ use wealthfolio_ai::{
 async fn get_ai_providers(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<AiProvidersResponse>> {
-    let response = state.ai_provider_service.get_ai_providers()?;
+    let response = state.ai_provider_service.get_ai_providers().await?;
     Ok(Json(response))
 }
 

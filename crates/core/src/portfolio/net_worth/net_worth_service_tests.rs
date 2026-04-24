@@ -53,7 +53,7 @@ impl AccountRepositoryTrait for MockAccountRepository {
         unimplemented!()
     }
 
-    fn get_by_id(&self, account_id: &str) -> Result<Account> {
+    async fn get_by_id(&self, account_id: &str) -> Result<Account> {
         self.accounts
             .iter()
             .find(|a| a.id == account_id)
@@ -63,7 +63,7 @@ impl AccountRepositoryTrait for MockAccountRepository {
             })
     }
 
-    fn list(
+    async fn list(
         &self,
         is_active_filter: Option<bool>,
         is_archived_filter: Option<bool>,
@@ -108,11 +108,11 @@ impl AssetRepositoryTrait for MockAssetRepository {
         unimplemented!()
     }
 
-    fn find_by_instrument_key(&self, _instrument_key: &str) -> Result<Option<Asset>> {
+    async fn find_by_instrument_key(&self, _instrument_key: &str) -> Result<Option<Asset>> {
         Ok(None)
     }
 
-    fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
+    async fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
         self.assets
             .iter()
             .find(|a| a.id == asset_id)
@@ -122,11 +122,11 @@ impl AssetRepositoryTrait for MockAssetRepository {
             })
     }
 
-    fn list(&self) -> Result<Vec<Asset>> {
+    async fn list(&self) -> Result<Vec<Asset>> {
         Ok(self.assets.clone())
     }
 
-    fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
+    async fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
         Ok(self
             .assets
             .iter()
@@ -139,7 +139,7 @@ impl AssetRepositoryTrait for MockAssetRepository {
         unimplemented!()
     }
 
-    fn search_by_symbol(&self, _query: &str) -> Result<Vec<Asset>> {
+    async fn search_by_symbol(&self, _query: &str) -> Result<Vec<Asset>> {
         Ok(Vec::new())
     }
 
@@ -184,7 +184,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         unimplemented!()
     }
 
-    fn get_snapshots_by_account(
+    async fn get_snapshots_by_account(
         &self,
         _account_id: &str,
         _start_date: Option<NaiveDate>,
@@ -193,7 +193,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         unimplemented!()
     }
 
-    fn get_latest_snapshot_before_date(
+    async fn get_latest_snapshot_before_date(
         &self,
         account_id: &str,
         _date: NaiveDate,
@@ -201,7 +201,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         Ok(self.snapshots.get(account_id).cloned())
     }
 
-    fn get_latest_snapshots_before_date(
+    async fn get_latest_snapshots_before_date(
         &self,
         account_ids: &[String],
         _date: NaiveDate,
@@ -213,7 +213,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         Ok(result)
     }
 
-    fn get_all_latest_snapshots(
+    async fn get_all_latest_snapshots(
         &self,
         account_ids: &[String],
     ) -> Result<HashMap<String, AccountStateSnapshot>> {
@@ -262,7 +262,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         unimplemented!()
     }
 
-    fn get_total_portfolio_snapshots(
+    async fn get_total_portfolio_snapshots(
         &self,
         _start_date: Option<NaiveDate>,
         _end_date: Option<NaiveDate>,
@@ -270,7 +270,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         unimplemented!()
     }
 
-    fn get_all_non_archived_account_snapshots(
+    async fn get_all_non_archived_account_snapshots(
         &self,
         _start_date: Option<NaiveDate>,
         _end_date: Option<NaiveDate>,
@@ -278,7 +278,7 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         unimplemented!()
     }
 
-    fn get_earliest_snapshot_date(&self, _account_id: &str) -> Result<Option<NaiveDate>> {
+    async fn get_earliest_snapshot_date(&self, _account_id: &str) -> Result<Option<NaiveDate>> {
         unimplemented!()
     }
 
@@ -298,11 +298,11 @@ impl SnapshotRepositoryTrait for MockSnapshotRepository {
         unimplemented!()
     }
 
-    fn get_non_calculated_snapshot_count(&self, _account_id: &str) -> Result<usize> {
+    async fn get_non_calculated_snapshot_count(&self, _account_id: &str) -> Result<usize> {
         Ok(0)
     }
 
-    fn get_earliest_non_calculated_snapshot(
+    async fn get_earliest_non_calculated_snapshot(
         &self,
         _account_id: &str,
     ) -> Result<Option<AccountStateSnapshot>> {
@@ -326,7 +326,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
     // Quote CRUD Operations
     // =========================================================================
 
-    fn get_latest_quote(&self, symbol: &str) -> Result<Quote> {
+    async fn get_latest_quote(&self, symbol: &str) -> Result<Quote> {
         self.quotes
             .iter()
             .filter(|q| q.asset_id == symbol)
@@ -337,7 +337,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
             })
     }
 
-    fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>> {
+    async fn get_latest_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>> {
         let mut result = HashMap::new();
         for symbol in symbols {
             if let Some(quote) = self
@@ -352,12 +352,12 @@ impl QuoteServiceTrait for MockMarketDataRepository {
         Ok(result)
     }
 
-    fn get_latest_quotes_snapshot(
+    async fn get_latest_quotes_snapshot(
         &self,
         asset_ids: &[String],
     ) -> Result<HashMap<String, LatestQuoteSnapshot>> {
         let today = Utc::now().date_naive();
-        let quotes = self.get_latest_quotes(asset_ids)?;
+        let quotes = self.get_latest_quotes(asset_ids).await?;
         Ok(quotes
             .into_iter()
             .map(|(asset_id, quote)| {
@@ -375,14 +375,14 @@ impl QuoteServiceTrait for MockMarketDataRepository {
             .collect())
     }
 
-    fn get_latest_quotes_pair(
+    async fn get_latest_quotes_pair(
         &self,
         _symbols: &[String],
     ) -> Result<HashMap<String, LatestQuotePair>> {
         unimplemented!()
     }
 
-    fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>> {
+    async fn get_historical_quotes(&self, symbol: &str) -> Result<Vec<Quote>> {
         Ok(self
             .quotes
             .iter()
@@ -391,7 +391,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
             .collect())
     }
 
-    fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
+    async fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
         let mut result: HashMap<String, Vec<(NaiveDate, Quote)>> = HashMap::new();
         for quote in &self.quotes {
             let date = quote.timestamp.date_naive();
@@ -403,7 +403,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
         Ok(result)
     }
 
-    fn get_quotes_in_range(
+    async fn get_quotes_in_range(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
@@ -420,15 +420,13 @@ impl QuoteServiceTrait for MockMarketDataRepository {
             .collect())
     }
 
-    fn get_quotes_in_range_filled(
+    async fn get_quotes_in_range_filled(
         &self,
         symbols: &HashSet<String>,
         start: NaiveDate,
         end: NaiveDate,
     ) -> Result<Vec<Quote>> {
-        // For testing, just return the raw quotes in range
-        // The actual implementation would fill gaps
-        self.get_quotes_in_range(symbols, start, end)
+        self.get_quotes_in_range(symbols, start, end).await
     }
 
     async fn get_daily_quotes(
@@ -515,7 +513,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
         Ok(())
     }
 
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
         Ok(Vec::new())
     }
 
@@ -535,11 +533,11 @@ impl QuoteServiceTrait for MockMarketDataRepository {
         Ok(())
     }
 
-    fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
         Ok(Vec::new())
     }
 
-    fn get_sync_state(&self, _symbol: &str) -> Result<Option<QuoteSyncState>> {
+    async fn get_sync_state(&self, _symbol: &str) -> Result<Option<QuoteSyncState>> {
         Ok(None)
     }
 
@@ -547,7 +545,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
         Ok(())
     }
 
-    fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
         Ok(Vec::new())
     }
 
@@ -558,7 +556,7 @@ impl QuoteServiceTrait for MockMarketDataRepository {
         Ok(())
     }
 
-    fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
+    async fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
         Ok(Vec::new())
     }
 
@@ -619,11 +617,11 @@ impl MockFxService {
 
 #[async_trait]
 impl FxServiceTrait for MockFxService {
-    fn initialize(&self) -> Result<()> {
+    async fn initialize(&self) -> Result<()> {
         Ok(())
     }
 
-    fn get_historical_rates(
+    async fn get_historical_rates(
         &self,
         _from_currency: &str,
         _to_currency: &str,
@@ -632,7 +630,7 @@ impl FxServiceTrait for MockFxService {
         Ok(vec![])
     }
 
-    fn get_latest_exchange_rate(
+    async fn get_latest_exchange_rate(
         &self,
         _from_currency: &str,
         _to_currency: &str,
@@ -640,7 +638,7 @@ impl FxServiceTrait for MockFxService {
         Ok(dec!(1.0))
     }
 
-    fn get_exchange_rate_for_date(
+    async fn get_exchange_rate_for_date(
         &self,
         _from_currency: &str,
         _to_currency: &str,
@@ -649,7 +647,7 @@ impl FxServiceTrait for MockFxService {
         Ok(dec!(1.0))
     }
 
-    fn convert_currency(
+    async fn convert_currency(
         &self,
         amount: Decimal,
         from_currency: &str,
@@ -658,11 +656,10 @@ impl FxServiceTrait for MockFxService {
         if from_currency == to_currency {
             return Ok(amount);
         }
-        // For testing, use 1:1 conversion
         Ok(amount)
     }
 
-    fn convert_currency_for_date(
+    async fn convert_currency_for_date(
         &self,
         amount: Decimal,
         from_currency: &str,
@@ -672,11 +669,10 @@ impl FxServiceTrait for MockFxService {
         if from_currency == to_currency {
             return Ok(amount);
         }
-        // For testing, use 1:1 conversion
         Ok(amount)
     }
 
-    fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+    async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
         Ok(vec![])
     }
 
@@ -730,7 +726,7 @@ impl ValuationRepositoryTrait for MockValuationRepository {
         Ok(())
     }
 
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         account_id: &str,
         start_date: Option<NaiveDate>,
@@ -747,7 +743,7 @@ impl ValuationRepositoryTrait for MockValuationRepository {
         Ok(filtered)
     }
 
-    fn load_latest_valuation_date(&self, account_id: &str) -> Result<Option<NaiveDate>> {
+    async fn load_latest_valuation_date(&self, account_id: &str) -> Result<Option<NaiveDate>> {
         let latest = self
             .valuations
             .iter()
@@ -765,7 +761,10 @@ impl ValuationRepositoryTrait for MockValuationRepository {
         Ok(())
     }
 
-    fn get_latest_valuations(&self, account_ids: &[String]) -> Result<Vec<DailyAccountValuation>> {
+    async fn get_latest_valuations(
+        &self,
+        account_ids: &[String],
+    ) -> Result<Vec<DailyAccountValuation>> {
         let mut result = vec![];
         for account_id in account_ids {
             if let Some(val) = self
@@ -780,7 +779,7 @@ impl ValuationRepositoryTrait for MockValuationRepository {
         Ok(result)
     }
 
-    fn get_valuations_on_date(
+    async fn get_valuations_on_date(
         &self,
         account_ids: &[String],
         date: NaiveDate,
@@ -794,7 +793,7 @@ impl ValuationRepositoryTrait for MockValuationRepository {
         Ok(filtered)
     }
 
-    fn get_accounts_with_negative_balance(
+    async fn get_accounts_with_negative_balance(
         &self,
         _account_ids: &[String],
     ) -> Result<Vec<NegativeBalanceInfo>> {
@@ -1291,8 +1290,8 @@ async fn test_no_quote_falls_back_to_cost_basis() {
 // Net Worth History Tests
 // ============================================================================
 
-#[test]
-fn test_history_basic_portfolio_with_alt_assets() {
+#[tokio::test]
+async fn test_history_basic_portfolio_with_alt_assets() {
     // Setup: Portfolio + Property + Liability over 5 days
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 2).unwrap();
@@ -1333,7 +1332,7 @@ fn test_history_basic_portfolio_with_alt_assets() {
         valuations,
     );
 
-    let history = service.get_net_worth_history(d1, d5).unwrap();
+    let history = service.get_net_worth_history(d1, d5).await.unwrap();
 
     assert_eq!(history.len(), 5, "Should have 5 data points");
 
@@ -1368,8 +1367,8 @@ fn test_history_basic_portfolio_with_alt_assets() {
     assert_eq!(total_gain, dec!(10000));
 }
 
-#[test]
-fn test_history_portfolio_only_no_alt_assets() {
+#[tokio::test]
+async fn test_history_portfolio_only_no_alt_assets() {
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 2).unwrap();
     let d3 = NaiveDate::from_ymd_opt(2024, 1, 3).unwrap();
@@ -1388,7 +1387,7 @@ fn test_history_portfolio_only_no_alt_assets() {
         valuations,
     );
 
-    let history = service.get_net_worth_history(d1, d3).unwrap();
+    let history = service.get_net_worth_history(d1, d3).await.unwrap();
 
     assert_eq!(history.len(), 3);
     assert_eq!(history[0].portfolio_value, dec!(50000));
@@ -1399,8 +1398,8 @@ fn test_history_portfolio_only_no_alt_assets() {
     assert_eq!(history[2].net_worth, dec!(52000));
 }
 
-#[test]
-fn test_history_alt_assets_only_no_portfolio() {
+#[tokio::test]
+async fn test_history_alt_assets_only_no_portfolio() {
     // Edge case: user only has alternative assets, no portfolio
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 2).unwrap();
@@ -1419,7 +1418,7 @@ fn test_history_alt_assets_only_no_portfolio() {
         vec![], // No portfolio valuations
     );
 
-    let history = service.get_net_worth_history(d1, d2).unwrap();
+    let history = service.get_net_worth_history(d1, d2).await.unwrap();
 
     assert_eq!(history.len(), 2);
     assert_eq!(history[0].portfolio_value, Decimal::ZERO);
@@ -1431,8 +1430,8 @@ fn test_history_alt_assets_only_no_portfolio() {
     assert_eq!(history[1].net_worth, dec!(410000));
 }
 
-#[test]
-fn test_history_forward_fill_alt_assets() {
+#[tokio::test]
+async fn test_history_forward_fill_alt_assets() {
     // Alt asset has quote on day 1 and day 5 only
     // Days 2-4 should forward-fill from day 1
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
@@ -1465,7 +1464,7 @@ fn test_history_forward_fill_alt_assets() {
         valuations,
     );
 
-    let history = service.get_net_worth_history(d1, d5).unwrap();
+    let history = service.get_net_worth_history(d1, d5).await.unwrap();
 
     assert_eq!(history.len(), 5);
 
@@ -1478,8 +1477,8 @@ fn test_history_forward_fill_alt_assets() {
     assert_eq!(history[4].alternative_assets_value, dec!(210000));
 }
 
-#[test]
-fn test_history_starts_from_first_portfolio_date() {
+#[tokio::test]
+async fn test_history_starts_from_first_portfolio_date() {
     // Alt assets have data before portfolio starts
     // History should only start from first portfolio date
     let d_before = NaiveDate::from_ymd_opt(2023, 12, 1).unwrap();
@@ -1508,7 +1507,7 @@ fn test_history_starts_from_first_portfolio_date() {
     );
 
     // Query includes d_before, but history should start from d1
-    let history = service.get_net_worth_history(d_before, d2).unwrap();
+    let history = service.get_net_worth_history(d_before, d2).await.unwrap();
 
     // Should only have 2 points (d1 and d2), not 3
     assert_eq!(history.len(), 2);
@@ -1520,8 +1519,8 @@ fn test_history_starts_from_first_portfolio_date() {
     assert_eq!(history[0].net_worth, dec!(350000));
 }
 
-#[test]
-fn test_history_empty_range() {
+#[tokio::test]
+async fn test_history_empty_range() {
     // Query range before any data exists
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 5).unwrap();
@@ -1533,13 +1532,13 @@ fn test_history_empty_range() {
         create_net_worth_service_with_valuations(vec![], vec![], vec![], vec![], valuations);
 
     // Query before any data
-    let history = service.get_net_worth_history(d1, d2).unwrap();
+    let history = service.get_net_worth_history(d1, d2).await.unwrap();
 
     assert!(history.is_empty(), "Should return empty history");
 }
 
-#[test]
-fn test_history_single_day() {
+#[tokio::test]
+async fn test_history_single_day() {
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
 
     let valuations = vec![create_total_valuation(d1, dec!(100000), dec!(90000))];
@@ -1555,7 +1554,7 @@ fn test_history_single_day() {
         valuations,
     );
 
-    let history = service.get_net_worth_history(d1, d1).unwrap();
+    let history = service.get_net_worth_history(d1, d1).await.unwrap();
 
     assert_eq!(history.len(), 1);
     assert_eq!(history[0].date, d1);
@@ -1565,8 +1564,8 @@ fn test_history_single_day() {
     assert_eq!(history[0].net_contribution, dec!(90000));
 }
 
-#[test]
-fn test_history_liability_reduction_is_positive_gain() {
+#[tokio::test]
+async fn test_history_liability_reduction_is_positive_gain() {
     // Test that paying down debt shows as positive contribution to net worth
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 31).unwrap();
@@ -1590,7 +1589,7 @@ fn test_history_liability_reduction_is_positive_gain() {
         valuations,
     );
 
-    let history = service.get_net_worth_history(d1, d2).unwrap();
+    let history = service.get_net_worth_history(d1, d2).await.unwrap();
 
     assert_eq!(history.len(), 2);
 
@@ -1605,8 +1604,8 @@ fn test_history_liability_reduction_is_positive_gain() {
     assert_eq!(liability_reduction, dec!(5000));
 }
 
-#[test]
-fn test_history_contribution_adjusted_gain() {
+#[tokio::test]
+async fn test_history_contribution_adjusted_gain() {
     // Verify that deposits don't count as gain
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
@@ -1622,7 +1621,7 @@ fn test_history_contribution_adjusted_gain() {
     let service =
         create_net_worth_service_with_valuations(vec![], vec![], vec![], vec![], valuations);
 
-    let history = service.get_net_worth_history(d1, d2).unwrap();
+    let history = service.get_net_worth_history(d1, d2).await.unwrap();
 
     assert_eq!(history.len(), 2);
 
@@ -1639,8 +1638,8 @@ fn test_history_contribution_adjusted_gain() {
     assert_eq!(portfolio_gain, dec!(5000));
 }
 
-#[test]
-fn test_history_multiple_alt_assets() {
+#[tokio::test]
+async fn test_history_multiple_alt_assets() {
     // Multiple alternative assets, each with different update schedules
     let d1 = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
     let d2 = NaiveDate::from_ymd_opt(2024, 1, 2).unwrap();
@@ -1675,7 +1674,7 @@ fn test_history_multiple_alt_assets() {
         valuations,
     );
 
-    let history = service.get_net_worth_history(d1, d3).unwrap();
+    let history = service.get_net_worth_history(d1, d3).await.unwrap();
 
     assert_eq!(history.len(), 3);
 

@@ -331,3 +331,34 @@ export const newContributionLimitSchema = z.object({
   startDate: z.union([z.date(), z.string().datetime(), z.null()]).optional(),
   endDate: z.union([z.date(), z.string().datetime(), z.null()]).optional(),
 });
+
+export const registerSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+    displayName: z.union([z.string().min(1).max(50), z.literal("")]).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string(),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export const createApiKeySchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+});

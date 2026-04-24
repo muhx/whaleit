@@ -54,7 +54,7 @@ pub trait ValuationServiceTrait: Send + Sync {
     ///
     /// Returns:
     ///     A `Result` containing a vector of `DailyAccountValuation` or an error.
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -70,19 +70,19 @@ pub trait ValuationServiceTrait: Send + Sync {
     ///     A `Result` containing a `HashMap` mapping account IDs to their
     ///     latest `DailyAccountValuation` (if found), or `None` if no history exists.
     ///     latest `DailyAccountValuation` for each account that has one.
-    fn get_latest_valuations(
+    async fn get_latest_valuations(
         &self,
         account_ids: &[String],
     ) -> CoreResult<Vec<DailyAccountValuation>>;
 
-    fn get_valuations_on_date(
+    async fn get_valuations_on_date(
         &self,
         account_ids: &[String],
         date: NaiveDate,
     ) -> CoreResult<Vec<DailyAccountValuation>>;
 
     /// Returns info about accounts that have at least one negative total_value in their history.
-    fn get_accounts_with_negative_balance(
+    async fn get_accounts_with_negative_balance(
         &self,
         account_ids: &[String],
     ) -> CoreResult<Vec<NegativeBalanceInfo>>;
@@ -133,6 +133,7 @@ impl ValuationService {
                 match self
                     .fx_service
                     .get_exchange_rate_for_date(from_curr, to_curr, current_date)
+                    .await
                 {
                     Ok(rate) => {
                         daily_map.insert((from_curr.clone(), to_curr.clone()), rate);
@@ -184,7 +185,8 @@ impl ValuationServiceTrait for ValuationService {
             ValuationRecalcMode::IncrementalFromLast => {
                 let last_saved_date_opt = self
                     .valuation_repository
-                    .load_latest_valuation_date(account_id)?;
+                    .load_latest_valuation_date(account_id)
+                    .await?;
 
                 if let Some(last_saved) = last_saved_date_opt {
                     calculation_start_date = Some(last_saved);
@@ -195,6 +197,7 @@ impl ValuationServiceTrait for ValuationService {
         let snapshots_to_process = self
             .snapshot_service
             .get_daily_holdings_snapshots(account_id, calculation_start_date, None)
+            .await
             .map_err(|e| {
                 CoreError::Calculation(CalculatorError::Calculation(format!(
                     "Failed snapshot fetch for account {}: {}",
@@ -247,11 +250,14 @@ impl ValuationServiceTrait for ValuationService {
         let account_curr = normalized_account_currency.unwrap_or_else(|| base_curr.clone());
 
         // Fetch quotes with single call
-        let quotes_vec = self.quote_service.get_quotes_in_range_filled(
-            &required_asset_ids,
-            actual_calculation_start_date,
-            calculation_end_date,
-        )?;
+        let quotes_vec = self
+            .quote_service
+            .get_quotes_in_range_filled(
+                &required_asset_ids,
+                actual_calculation_start_date,
+                calculation_end_date,
+            )
+            .await?;
 
         for quote in &quotes_vec {
             let normalized_quote_currency = normalize_currency_code(&quote.currency);
@@ -380,7 +386,7 @@ impl ValuationServiceTrait for ValuationService {
         Ok(())
     }
 
-    fn get_historical_valuations(
+    async fn get_historical_valuations(
         &self,
         account_id: &str,
         start_date_opt: Option<NaiveDate>,
@@ -390,22 +396,22 @@ impl ValuationServiceTrait for ValuationService {
             "Loading historical valuations for account '{}' from {:?} to {:?}",
             account_id, start_date_opt, end_date_opt
         );
-        self.valuation_repository.get_historical_valuations(
-            account_id,
-            start_date_opt,
-            end_date_opt,
-        )
+        self.valuation_repository
+            .get_historical_valuations(account_id, start_date_opt, end_date_opt)
+            .await
     }
 
-    fn get_latest_valuations(
+    async fn get_latest_valuations(
         &self,
         account_ids: &[String],
     ) -> CoreResult<Vec<DailyAccountValuation>> {
         debug!("Loading latest valuations for accounts: {:?}", account_ids);
-        self.valuation_repository.get_latest_valuations(account_ids)
+        self.valuation_repository
+            .get_latest_valuations(account_ids)
+            .await
     }
 
-    fn get_valuations_on_date(
+    async fn get_valuations_on_date(
         &self,
         account_ids: &[String],
         date: NaiveDate,
@@ -416,13 +422,15 @@ impl ValuationServiceTrait for ValuationService {
         );
         self.valuation_repository
             .get_valuations_on_date(account_ids, date)
+            .await
     }
 
-    fn get_accounts_with_negative_balance(
+    async fn get_accounts_with_negative_balance(
         &self,
         account_ids: &[String],
     ) -> CoreResult<Vec<NegativeBalanceInfo>> {
         self.valuation_repository
             .get_accounts_with_negative_balance(account_ids)
+            .await
     }
 }

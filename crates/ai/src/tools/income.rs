@@ -107,6 +107,7 @@ impl<E: AiEnvironment + 'static> Tool for GetIncomeTool<E> {
             .env
             .income_service()
             .get_income_summary(None)
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         // Determine which period to return

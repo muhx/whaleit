@@ -8,11 +8,14 @@ use rust_decimal::Decimal;
 /// Trait defining the contract for FX repository operations.
 #[async_trait]
 pub trait FxRepositoryTrait: Send + Sync {
-    fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
-    fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
-    fn get_latest_exchange_rate(&self, from: &str, to: &str) -> Result<Option<ExchangeRate>>;
-    fn get_latest_exchange_rate_by_symbol(&self, symbol: &str) -> Result<Option<ExchangeRate>>;
-    fn get_historical_quotes(
+    async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
+    async fn get_historical_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
+    async fn get_latest_exchange_rate(&self, from: &str, to: &str) -> Result<Option<ExchangeRate>>;
+    async fn get_latest_exchange_rate_by_symbol(
+        &self,
+        symbol: &str,
+    ) -> Result<Option<ExchangeRate>>;
+    async fn get_historical_quotes(
         &self,
         symbol: &str,
         start_date: NaiveDateTime,
@@ -39,35 +42,39 @@ pub trait FxRepositoryTrait: Send + Sync {
 /// Trait defining the contract for FX service operations.
 #[async_trait]
 pub trait FxServiceTrait: Send + Sync {
-    fn initialize(&self) -> Result<()>;
+    async fn initialize(&self) -> Result<()>;
 
-    fn get_historical_rates(
+    async fn get_historical_rates(
         &self,
         from_currency: &str,
         to_currency: &str,
         days: i64,
     ) -> Result<Vec<ExchangeRate>>;
-    fn get_latest_exchange_rate(&self, from_currency: &str, to_currency: &str) -> Result<Decimal>;
-    fn get_exchange_rate_for_date(
+    async fn get_latest_exchange_rate(
+        &self,
+        from_currency: &str,
+        to_currency: &str,
+    ) -> Result<Decimal>;
+    async fn get_exchange_rate_for_date(
         &self,
         from_currency: &str,
         to_currency: &str,
         date: NaiveDate,
     ) -> Result<Decimal>;
-    fn convert_currency(
+    async fn convert_currency(
         &self,
         amount: Decimal,
         from_currency: &str,
         to_currency: &str,
     ) -> Result<Decimal>;
-    fn convert_currency_for_date(
+    async fn convert_currency_for_date(
         &self,
         amount: Decimal,
         from_currency: &str,
         to_currency: &str,
         date: NaiveDate,
     ) -> Result<Decimal>;
-    fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
+    async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>>;
     async fn add_exchange_rate(&self, new_rate: NewExchangeRate) -> Result<ExchangeRate>;
     async fn update_exchange_rate(
         &self,

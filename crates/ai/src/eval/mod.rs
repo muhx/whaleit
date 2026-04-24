@@ -9,7 +9,7 @@
 //! # Running evals
 //!
 //! ```bash
-//! cargo test -p wealthfolio-ai eval:: -- --nocapture
+//! cargo test -p whaleit-ai eval:: -- --nocapture
 //! ```
 
 mod harness;

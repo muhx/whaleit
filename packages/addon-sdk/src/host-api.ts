@@ -1,11 +1,11 @@
 /**
  * Host API interface for addon development
- * Provides comprehensive access to Wealthfolio functionality organized by domain
+ * Provides comprehensive access to Whaleit functionality organized by domain
  */
 
-import type { EventCallback, UnlistenFn } from './types';
 import type {
   Account,
+  AccountValuation,
   Activity,
   ActivityBulkMutationRequest,
   ActivityBulkMutationResult,
@@ -14,16 +14,15 @@ import type {
   ActivityImport,
   ActivitySearchResponse,
   ActivityUpdate,
-  AccountValuation,
-  CheckSnapshotImportResult,
-  ImportActivitiesResult,
   Asset,
+  CheckSnapshotImportResult,
   ContributionLimit,
   DepositsCalculation,
   ExchangeRate,
   Goal,
   GoalAllocation,
   Holding,
+  ImportActivitiesResult,
   ImportMappingData,
   IncomeSummary,
   MarketDataProviderInfo,
@@ -39,6 +38,7 @@ import type {
   SymbolSearchResult,
   UpdateAssetProfile,
 } from './data-types';
+import type { EventCallback, UnlistenFn } from './types';
 
 export interface ActivitySearchFilters {
   accountIds?: string | string[];
@@ -718,7 +718,7 @@ export interface SnapshotsAPI {
 }
 
 /**
- * Comprehensive Host API interface providing access to all Wealthfolio functionality
+ * Comprehensive Host API interface providing access to all Whaleit functionality
  * Organized by functional domains for better discoverability and maintainability
  */
 export interface HostAPI {

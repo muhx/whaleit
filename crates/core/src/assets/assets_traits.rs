@@ -7,8 +7,8 @@ use crate::errors::Result;
 /// Trait defining the contract for Asset service operations.
 #[async_trait::async_trait]
 pub trait AssetServiceTrait: Send + Sync {
-    fn get_assets(&self) -> Result<Vec<Asset>>;
-    fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset>;
+    async fn get_assets(&self) -> Result<Vec<Asset>>;
+    async fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset>;
     async fn delete_asset(&self, asset_id: &str) -> Result<()>;
     async fn update_asset_profile(
         &self,
@@ -78,7 +78,7 @@ pub trait AssetServiceTrait: Send + Sync {
 
     /// Finds an existing asset quote currency by market identity.
     /// Uses symbol + optional MIC/type and returns normalized quote currency when found.
-    fn existing_quote_ccy_by_symbol(
+    async fn existing_quote_ccy_by_symbol(
         &self,
         symbol: &str,
         exchange_mic: Option<&str>,
@@ -94,7 +94,7 @@ pub trait AssetServiceTrait: Send + Sync {
             .filter(|mic| !mic.is_empty())
             .map(str::to_uppercase);
 
-        self.get_assets().ok()?.into_iter().find_map(|asset| {
+        self.get_assets().await.ok()?.into_iter().find_map(|asset| {
             let asset_symbol = asset.instrument_symbol.as_deref()?.trim().to_uppercase();
             if asset_symbol != upper_symbol {
                 return None;
@@ -121,7 +121,7 @@ pub trait AssetServiceTrait: Send + Sync {
     }
 
     /// Validates symbol metadata required for persistence-only user save flows.
-    fn validate_persisted_symbol_metadata(
+    async fn validate_persisted_symbol_metadata(
         &self,
         symbol: &str,
         symbol_id: Option<&str>,
@@ -139,10 +139,19 @@ pub trait AssetServiceTrait: Send + Sync {
         let has_explicit_requested_quote_ccy =
             normalize_quote_ccy_code(requested_quote_ccy).is_some();
 
-        let existing_quote_ccy = symbol_id
-            .and_then(|id| self.get_asset_by_id(id).ok())
-            .and_then(|asset| normalize_quote_ccy_code(Some(asset.quote_ccy.as_str())))
-            .or_else(|| self.existing_quote_ccy_by_symbol(symbol, exchange_mic, instrument_type));
+        let mut existing_quote_ccy: Option<String> = None;
+
+        if let Some(id) = symbol_id {
+            if let Ok(asset) = self.get_asset_by_id(id).await {
+                existing_quote_ccy = normalize_quote_ccy_code(Some(asset.quote_ccy.as_str()));
+            }
+        }
+
+        if existing_quote_ccy.is_none() {
+            existing_quote_ccy = self
+                .existing_quote_ccy_by_symbol(symbol, exchange_mic, instrument_type)
+                .await;
+        }
 
         if !is_non_security
             && !is_manual
@@ -167,18 +176,18 @@ pub trait AssetRepositoryTrait: Send + Sync {
     async fn create_batch(&self, new_assets: Vec<NewAsset>) -> Result<Vec<Asset>>;
     async fn update_profile(&self, asset_id: &str, payload: UpdateAssetProfile) -> Result<Asset>;
     async fn update_quote_mode(&self, asset_id: &str, quote_mode: &str) -> Result<Asset>;
-    fn get_by_id(&self, asset_id: &str) -> Result<Asset>;
-    fn list(&self) -> Result<Vec<Asset>>;
-    fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>>;
+    async fn get_by_id(&self, asset_id: &str) -> Result<Asset>;
+    async fn list(&self) -> Result<Vec<Asset>>;
+    async fn list_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>>;
     async fn delete(&self, asset_id: &str) -> Result<()>;
 
     /// Search for assets by symbol (case-insensitive partial match).
     /// Used for merging existing assets into search results.
-    fn search_by_symbol(&self, query: &str) -> Result<Vec<Asset>>;
+    async fn search_by_symbol(&self, query: &str) -> Result<Vec<Asset>>;
 
     /// Find an asset by its instrument_key (e.g., "FX:EUR/USD", "EQUITY:AAPL@XNAS").
     /// Returns None if not found.
-    fn find_by_instrument_key(&self, instrument_key: &str) -> Result<Option<Asset>>;
+    async fn find_by_instrument_key(&self, instrument_key: &str) -> Result<Option<Asset>>;
 
     /// Removes the $.legacy structure from asset metadata.
     /// Preserves $.identifiers if present.
@@ -210,11 +219,11 @@ mod tests {
 
     #[async_trait::async_trait]
     impl AssetServiceTrait for TestAssetService {
-        fn get_assets(&self) -> Result<Vec<Asset>> {
+        async fn get_assets(&self) -> Result<Vec<Asset>> {
             Ok(Vec::new())
         }
 
-        fn get_asset_by_id(&self, _asset_id: &str) -> Result<Asset> {
+        async fn get_asset_by_id(&self, _asset_id: &str) -> Result<Asset> {
             Err(Error::Unexpected("Asset not found".to_string()))
         }
 
@@ -286,14 +295,18 @@ mod tests {
     fn validate_persisted_symbol_metadata_allows_manual_mode_without_quote_currency() {
         let service = TestAssetService;
 
-        let result = service.validate_persisted_symbol_metadata(
-            "NFLX",
-            None,
-            Some("XNAS"),
-            Some(&InstrumentType::Equity),
-            Some(QuoteMode::Manual),
-            None,
-        );
+        let result = tokio::task::block_in_place(|| {
+            tokio::runtime::Runtime::new().unwrap().block_on(
+                service.validate_persisted_symbol_metadata(
+                    "NFLX",
+                    None,
+                    Some("XNAS"),
+                    Some(&InstrumentType::Equity),
+                    Some(QuoteMode::Manual),
+                    None,
+                ),
+            )
+        });
 
         assert!(result.is_ok());
     }
@@ -302,14 +315,18 @@ mod tests {
     fn validate_persisted_symbol_metadata_rejects_market_mode_without_quote_currency() {
         let service = TestAssetService;
 
-        let result = service.validate_persisted_symbol_metadata(
-            "NFLX",
-            None,
-            Some("XNAS"),
-            Some(&InstrumentType::Equity),
-            Some(QuoteMode::Market),
-            None,
-        );
+        let result = tokio::task::block_in_place(|| {
+            tokio::runtime::Runtime::new().unwrap().block_on(
+                service.validate_persisted_symbol_metadata(
+                    "NFLX",
+                    None,
+                    Some("XNAS"),
+                    Some(&InstrumentType::Equity),
+                    Some(QuoteMode::Market),
+                    None,
+                ),
+            )
+        });
 
         assert!(result.is_err());
         assert!(result

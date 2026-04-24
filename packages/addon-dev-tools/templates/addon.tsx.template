@@ -1,6 +1,6 @@
 import React from 'react';
-import type { AddonContext } from '@wealthfolio/addon-sdk';
-import { Card, CardContent, Icons } from '@wealthfolio/ui';
+import type { AddonContext } from '@whaleit/addon-sdk';
+import { Card, CardContent, Icons } from '@whaleit/ui';
 
 function AddonExample({ ctx }: { ctx: AddonContext }) {
   return (
@@ -9,7 +9,7 @@ function AddonExample({ ctx }: { ctx: AddonContext }) {
         <CardContent className="p-6">
           <h1 className="text-2xl font-semibold mb-2">{{addonName}}</h1>
           <p className="text-muted-foreground">
-            Welcome to your new Wealthfolio addon! Start building amazing features.
+            Welcome to your new Whaleit addon! Start building amazing features.
           </p>
         </CardContent>
       </Card>

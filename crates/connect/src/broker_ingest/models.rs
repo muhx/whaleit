@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use wealthfolio_core::errors::Result;
+use whaleit_core::errors::Result;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -262,16 +262,16 @@ pub trait BrokerSyncStateRepositoryTrait: Send + Sync {
     fn get_all(&self) -> Result<Vec<BrokerSyncState>>;
 }
 
-impl From<wealthfolio_core::activities::ImportRunType> for ImportRunType {
-    fn from(value: wealthfolio_core::activities::ImportRunType) -> Self {
+impl From<whaleit_core::activities::ImportRunType> for ImportRunType {
+    fn from(value: whaleit_core::activities::ImportRunType) -> Self {
         match value {
-            wealthfolio_core::activities::ImportRunType::Sync => Self::Sync,
-            wealthfolio_core::activities::ImportRunType::Import => Self::Import,
+            whaleit_core::activities::ImportRunType::Sync => Self::Sync,
+            whaleit_core::activities::ImportRunType::Import => Self::Import,
         }
     }
 }
 
-impl From<ImportRunType> for wealthfolio_core::activities::ImportRunType {
+impl From<ImportRunType> for whaleit_core::activities::ImportRunType {
     fn from(value: ImportRunType) -> Self {
         match value {
             ImportRunType::Sync => Self::Sync,
@@ -280,18 +280,18 @@ impl From<ImportRunType> for wealthfolio_core::activities::ImportRunType {
     }
 }
 
-impl From<wealthfolio_core::activities::ImportRunMode> for ImportRunMode {
-    fn from(value: wealthfolio_core::activities::ImportRunMode) -> Self {
+impl From<whaleit_core::activities::ImportRunMode> for ImportRunMode {
+    fn from(value: whaleit_core::activities::ImportRunMode) -> Self {
         match value {
-            wealthfolio_core::activities::ImportRunMode::Initial => Self::Initial,
-            wealthfolio_core::activities::ImportRunMode::Incremental => Self::Incremental,
-            wealthfolio_core::activities::ImportRunMode::Backfill => Self::Backfill,
-            wealthfolio_core::activities::ImportRunMode::Repair => Self::Repair,
+            whaleit_core::activities::ImportRunMode::Initial => Self::Initial,
+            whaleit_core::activities::ImportRunMode::Incremental => Self::Incremental,
+            whaleit_core::activities::ImportRunMode::Backfill => Self::Backfill,
+            whaleit_core::activities::ImportRunMode::Repair => Self::Repair,
         }
     }
 }
 
-impl From<ImportRunMode> for wealthfolio_core::activities::ImportRunMode {
+impl From<ImportRunMode> for whaleit_core::activities::ImportRunMode {
     fn from(value: ImportRunMode) -> Self {
         match value {
             ImportRunMode::Initial => Self::Initial,
@@ -302,19 +302,19 @@ impl From<ImportRunMode> for wealthfolio_core::activities::ImportRunMode {
     }
 }
 
-impl From<wealthfolio_core::activities::ImportRunStatus> for ImportRunStatus {
-    fn from(value: wealthfolio_core::activities::ImportRunStatus) -> Self {
+impl From<whaleit_core::activities::ImportRunStatus> for ImportRunStatus {
+    fn from(value: whaleit_core::activities::ImportRunStatus) -> Self {
         match value {
-            wealthfolio_core::activities::ImportRunStatus::Running => Self::Running,
-            wealthfolio_core::activities::ImportRunStatus::Applied => Self::Applied,
-            wealthfolio_core::activities::ImportRunStatus::NeedsReview => Self::NeedsReview,
-            wealthfolio_core::activities::ImportRunStatus::Failed => Self::Failed,
-            wealthfolio_core::activities::ImportRunStatus::Cancelled => Self::Cancelled,
+            whaleit_core::activities::ImportRunStatus::Running => Self::Running,
+            whaleit_core::activities::ImportRunStatus::Applied => Self::Applied,
+            whaleit_core::activities::ImportRunStatus::NeedsReview => Self::NeedsReview,
+            whaleit_core::activities::ImportRunStatus::Failed => Self::Failed,
+            whaleit_core::activities::ImportRunStatus::Cancelled => Self::Cancelled,
         }
     }
 }
 
-impl From<ImportRunStatus> for wealthfolio_core::activities::ImportRunStatus {
+impl From<ImportRunStatus> for whaleit_core::activities::ImportRunStatus {
     fn from(value: ImportRunStatus) -> Self {
         match value {
             ImportRunStatus::Running => Self::Running,
@@ -326,17 +326,17 @@ impl From<ImportRunStatus> for wealthfolio_core::activities::ImportRunStatus {
     }
 }
 
-impl From<wealthfolio_core::activities::ReviewMode> for ReviewMode {
-    fn from(value: wealthfolio_core::activities::ReviewMode) -> Self {
+impl From<whaleit_core::activities::ReviewMode> for ReviewMode {
+    fn from(value: whaleit_core::activities::ReviewMode) -> Self {
         match value {
-            wealthfolio_core::activities::ReviewMode::Never => Self::Never,
-            wealthfolio_core::activities::ReviewMode::Always => Self::Always,
-            wealthfolio_core::activities::ReviewMode::IfWarnings => Self::IfWarnings,
+            whaleit_core::activities::ReviewMode::Never => Self::Never,
+            whaleit_core::activities::ReviewMode::Always => Self::Always,
+            whaleit_core::activities::ReviewMode::IfWarnings => Self::IfWarnings,
         }
     }
 }
 
-impl From<ReviewMode> for wealthfolio_core::activities::ReviewMode {
+impl From<ReviewMode> for whaleit_core::activities::ReviewMode {
     fn from(value: ReviewMode) -> Self {
         match value {
             ReviewMode::Never => Self::Never,
@@ -346,8 +346,8 @@ impl From<ReviewMode> for wealthfolio_core::activities::ReviewMode {
     }
 }
 
-impl From<wealthfolio_core::activities::ImportRunSummary> for ImportRunSummary {
-    fn from(value: wealthfolio_core::activities::ImportRunSummary) -> Self {
+impl From<whaleit_core::activities::ImportRunSummary> for ImportRunSummary {
+    fn from(value: whaleit_core::activities::ImportRunSummary) -> Self {
         Self {
             fetched: value.fetched,
             inserted: value.inserted,
@@ -361,7 +361,7 @@ impl From<wealthfolio_core::activities::ImportRunSummary> for ImportRunSummary {
     }
 }
 
-impl From<ImportRunSummary> for wealthfolio_core::activities::ImportRunSummary {
+impl From<ImportRunSummary> for whaleit_core::activities::ImportRunSummary {
     fn from(value: ImportRunSummary) -> Self {
         Self {
             fetched: value.fetched,
@@ -376,8 +376,8 @@ impl From<ImportRunSummary> for wealthfolio_core::activities::ImportRunSummary {
     }
 }
 
-impl From<wealthfolio_core::activities::ImportRun> for ImportRun {
-    fn from(value: wealthfolio_core::activities::ImportRun) -> Self {
+impl From<whaleit_core::activities::ImportRun> for ImportRun {
+    fn from(value: whaleit_core::activities::ImportRun) -> Self {
         Self {
             id: value.id,
             account_id: value.account_id,
@@ -400,7 +400,7 @@ impl From<wealthfolio_core::activities::ImportRun> for ImportRun {
     }
 }
 
-impl From<ImportRun> for wealthfolio_core::activities::ImportRun {
+impl From<ImportRun> for whaleit_core::activities::ImportRun {
     fn from(value: ImportRun) -> Self {
         Self {
             id: value.id,

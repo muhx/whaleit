@@ -19,8 +19,8 @@ use crate::custom_provider::CustomProviderSource;
 use crate::quotes::constants::DATA_SOURCE_CUSTOM_SCRAPER;
 use crate::secrets::SecretStore;
 
-use wealthfolio_market_data::errors::MarketDataError;
-use wealthfolio_market_data::{
+use whaleit_market_data::errors::MarketDataError;
+use whaleit_market_data::{
     Coverage, InstrumentKind, MarketDataProvider, ProviderCapabilities, ProviderInstrument,
     Quote as MarketQuote, QuoteContext, RateLimit,
 };
@@ -62,12 +62,12 @@ impl CustomScraperProvider {
         to: Option<&str>,
     ) -> String {
         let isin_owned: Option<String> = context.and_then(|ctx| match &ctx.instrument {
-            wealthfolio_market_data::InstrumentId::Bond { isin } => Some(isin.as_ref().to_string()),
+            whaleit_market_data::InstrumentId::Bond { isin } => Some(isin.as_ref().to_string()),
             _ => None,
         });
 
         let mic_owned: Option<String> = context.and_then(|ctx| match &ctx.instrument {
-            wealthfolio_market_data::InstrumentId::Equity { mic, .. } => {
+            whaleit_market_data::InstrumentId::Equity { mic, .. } => {
                 mic.as_ref().map(|m| m.as_ref().to_string())
             }
             _ => None,

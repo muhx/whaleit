@@ -7,7 +7,7 @@ use std::sync::Arc;
 use super::constants::{DEFAULT_PAGE_SIZE, MAX_ACTIVITIES_ROWS};
 use crate::env::AiEnvironment;
 use crate::error::AiError;
-use wealthfolio_core::activities::Sort;
+use whaleit_core::activities::Sort;
 
 // ============================================================================
 // Tool Arguments and Output
@@ -167,6 +167,7 @@ impl<E: AiEnvironment + 'static> Tool for SearchActivitiesTool<E> {
                 .env
                 .account_service()
                 .get_active_accounts()
+                .await
                 .unwrap_or_default();
             let is_known_id = accounts.iter().any(|a| a.id == *raw);
             if is_known_id {
@@ -230,6 +231,7 @@ impl<E: AiEnvironment + 'static> Tool for SearchActivitiesTool<E> {
                 date_to,
                 None, // instrument_type_filter
             )
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         let total_row_count = response.meta.total_row_count as usize;

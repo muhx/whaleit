@@ -5,7 +5,7 @@
 //!
 //! 1. **Tool-call storms** — the model re-emits the same tool call dozens of
 //!    times per turn. Detected via a per-`(tool, args)` counter in
-//!    [`WealthfolioStreamHook::on_tool_call`]. Repeated calls are short-circuited
+//!    [`WhaleitStreamHook::on_tool_call`]. Repeated calls are short-circuited
 //!    with `ToolCallHookAction::Skip { reason }` — which rig feeds back to the
 //!    model as the tool result, so the model sees the cached data it already
 //!    received and a nudge to stop re-calling.
@@ -17,7 +17,7 @@
 //! 3. **Token-level repetition loops** — the model streams
 //!    `"get_performance, get_performance, ..."` indefinitely without ever
 //!    emitting a well-formed tool call (qwen thinking mode). Detected in
-//!    [`WealthfolioStreamHook::on_text_delta`] by looking for a short suffix
+//!    [`WhaleitStreamHook::on_text_delta`] by looking for a short suffix
 //!    that already appears many times in the trailing buffer, or by the
 //!    stream exceeding [`MAX_STREAM_CHARS`].
 //!
@@ -70,11 +70,11 @@ struct HookState {
 }
 
 #[derive(Default, Clone)]
-pub struct WealthfolioStreamHook {
+pub struct WhaleitStreamHook {
     state: Arc<Mutex<HookState>>,
 }
 
-impl WealthfolioStreamHook {
+impl WhaleitStreamHook {
     pub fn new() -> Self {
         Self::default()
     }
@@ -84,7 +84,7 @@ impl WealthfolioStreamHook {
     }
 }
 
-impl<M: CompletionModel> StreamingPromptHook<M> for WealthfolioStreamHook {
+impl<M: CompletionModel> StreamingPromptHook<M> for WhaleitStreamHook {
     fn on_tool_call(
         &self,
         tool_name: &str,

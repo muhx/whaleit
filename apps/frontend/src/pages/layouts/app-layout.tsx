@@ -7,6 +7,7 @@ import useNavigationEventListener from "@/hooks/use-navigation-event-listener";
 import { useIsMobileViewport, usePlatform } from "@/hooks/use-platform";
 import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import { isDesktop } from "@/adapters";
 import { MobileNavigationContainer } from "@/pages/layouts/mobile-navigation-container";
 import useGlobalEventListener from "@/use-global-event-listener";
 import { ApplicationShell, ErrorBoundary, PageScrollContainer } from "@whaleit/ui";
@@ -48,7 +49,7 @@ const AppLayoutContent = () => {
     );
   }
 
-  if (!settings?.onboardingCompleted && location.pathname !== "/onboarding") {
+  if (!settings?.onboardingCompleted && !isDesktop && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" />;
   }
 

@@ -1,19 +1,18 @@
-# Wealthfolio Addon Architecture
+# Whaleit Addon Architecture
 
-A straightforward explanation of how Wealthfolio's addon system works.
+A straightforward explanation of how Whaleit's addon system works.
 
-## What Are Wealthfolio Addons?
+## What Are Whaleit Addons?
 
-Addons are TypeScript modules that extend Wealthfolio's functionality. Each
-addon is a JavaScript function that receives an `AddonContext` object and can
-register UI components, add navigation items, and access financial data through
-APIs.
+Addons are TypeScript modules that extend Whaleit's functionality. Each addon is
+a JavaScript function that receives an `AddonContext` object and can register UI
+components, add navigation items, and access financial data through APIs.
 
 ## Basic Structure
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Wealthfolio Host Application                 │
+│                    Whaleit Host Application                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
 │  │  Addon Runtime  │  │  Permission     │  │   API Bridge    │  │
@@ -275,7 +274,7 @@ Development addons run from local servers:
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────┐              ┌─────────────────┐           │
-│  │ Wealthfolio App │◀─ discover ─▶│ Dev Server      │           │
+│  │ Whaleit App │◀─ discover ─▶│ Dev Server      │           │
 │  │                 │              │ localhost:3001  │           │
 │  │ • Auto-discover │              │                 │           │
 │  │ • Load addons   │              │ /health    ✓    │           │

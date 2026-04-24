@@ -107,16 +107,16 @@ impl TaxonomyService {
 
 #[async_trait]
 impl TaxonomyServiceTrait for TaxonomyService {
-    fn get_taxonomies(&self) -> Result<Vec<Taxonomy>> {
-        self.repository.get_taxonomies()
+    async fn get_taxonomies(&self) -> Result<Vec<Taxonomy>> {
+        self.repository.get_taxonomies().await
     }
 
-    fn get_taxonomy(&self, id: &str) -> Result<Option<TaxonomyWithCategories>> {
-        self.repository.get_taxonomy_with_categories(id)
+    async fn get_taxonomy(&self, id: &str) -> Result<Option<TaxonomyWithCategories>> {
+        self.repository.get_taxonomy_with_categories(id).await
     }
 
-    fn get_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>> {
-        self.repository.get_all_taxonomies_with_categories()
+    async fn get_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>> {
+        self.repository.get_all_taxonomies_with_categories().await
     }
 
     async fn create_taxonomy(&self, taxonomy: NewTaxonomy) -> Result<Taxonomy> {
@@ -129,7 +129,7 @@ impl TaxonomyServiceTrait for TaxonomyService {
 
     async fn delete_taxonomy(&self, id: &str) -> Result<usize> {
         // Check if taxonomy is a system taxonomy
-        if let Some(taxonomy) = self.repository.get_taxonomy(id)? {
+        if let Some(taxonomy) = self.repository.get_taxonomy(id).await? {
             if taxonomy.is_system {
                 return Err(ValidationError::InvalidInput(
                     "Cannot delete system taxonomy".to_string(),
@@ -150,7 +150,7 @@ impl TaxonomyServiceTrait for TaxonomyService {
 
     async fn delete_category(&self, taxonomy_id: &str, category_id: &str) -> Result<usize> {
         // Check for child categories
-        let categories = self.repository.get_categories(taxonomy_id)?;
+        let categories = self.repository.get_categories(taxonomy_id).await?;
         let has_children = categories
             .iter()
             .any(|c| c.parent_id.as_deref() == Some(category_id));
@@ -164,7 +164,8 @@ impl TaxonomyServiceTrait for TaxonomyService {
         // Check for assignments
         let assignments = self
             .repository
-            .get_category_assignments(taxonomy_id, category_id)?;
+            .get_category_assignments(taxonomy_id, category_id)
+            .await?;
         if !assignments.is_empty() {
             return Err(ValidationError::InvalidInput(format!(
                 "Cannot delete category with {} asset assignments",
@@ -187,7 +188,8 @@ impl TaxonomyServiceTrait for TaxonomyService {
     ) -> Result<Category> {
         let category = self
             .repository
-            .get_category(taxonomy_id, category_id)?
+            .get_category(taxonomy_id, category_id)
+            .await?
             .ok_or_else(|| DatabaseError::NotFound("Category not found".to_string()))?;
 
         let updated = Category {
@@ -233,10 +235,11 @@ impl TaxonomyServiceTrait for TaxonomyService {
         Ok(taxonomy)
     }
 
-    fn export_taxonomy_json(&self, id: &str) -> Result<String> {
+    async fn export_taxonomy_json(&self, id: &str) -> Result<String> {
         let taxonomy_with_cats = self
             .repository
-            .get_taxonomy_with_categories(id)?
+            .get_taxonomy_with_categories(id)
+            .await?
             .ok_or_else(|| DatabaseError::NotFound("Taxonomy not found".to_string()))?;
 
         let json = TaxonomyJson {
@@ -251,17 +254,18 @@ impl TaxonomyServiceTrait for TaxonomyService {
             .map_err(Into::into)
     }
 
-    fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>> {
-        self.repository.get_asset_assignments(asset_id)
+    async fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>> {
+        self.repository.get_asset_assignments(asset_id).await
     }
 
-    fn get_category_assignments(
+    async fn get_category_assignments(
         &self,
         taxonomy_id: &str,
         category_id: &str,
     ) -> Result<Vec<AssetTaxonomyAssignment>> {
         self.repository
             .get_category_assignments(taxonomy_id, category_id)
+            .await
     }
 
     async fn assign_asset_to_category(
@@ -269,7 +273,11 @@ impl TaxonomyServiceTrait for TaxonomyService {
         assignment: NewAssetTaxonomyAssignment,
     ) -> Result<AssetTaxonomyAssignment> {
         // Check if taxonomy is single-select
-        if let Some(taxonomy) = self.repository.get_taxonomy(&assignment.taxonomy_id)? {
+        if let Some(taxonomy) = self
+            .repository
+            .get_taxonomy(&assignment.taxonomy_id)
+            .await?
+        {
             if taxonomy.is_single_select {
                 // Delete any existing assignments for this asset+taxonomy before creating new one
                 self.repository

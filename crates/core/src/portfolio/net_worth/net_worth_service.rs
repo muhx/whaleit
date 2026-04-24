@@ -84,13 +84,17 @@ impl NetWorthService {
 
     /// Get the latest quote for an asset on or before the given date.
     /// Returns (close_price, quote_currency, valuation_date) if found.
-    fn get_latest_quote_as_of(
+    async fn get_latest_quote_as_of(
         &self,
         asset_id: &str,
         date: NaiveDate,
     ) -> Option<(Decimal, String, NaiveDate)> {
         // Get all quotes for this symbol and find the latest one <= date
-        let quotes = self.quote_service.get_historical_quotes(asset_id).ok()?;
+        let quotes = self
+            .quote_service
+            .get_historical_quotes(asset_id)
+            .await
+            .ok()?;
 
         quotes
             .iter()
@@ -100,7 +104,7 @@ impl NetWorthService {
     }
 
     /// Calculate market value for a position, converting to base currency.
-    fn calculate_market_value(
+    async fn calculate_market_value(
         &self,
         quantity: Decimal,
         price: Decimal,
@@ -116,12 +120,10 @@ impl NetWorthService {
         }
 
         // Convert to base currency
-        let converted = self.fx_service.convert_currency_for_date(
-            local_value,
-            asset_currency,
-            base_currency,
-            date,
-        )?;
+        let converted = self
+            .fx_service
+            .convert_currency_for_date(local_value, asset_currency, base_currency, date)
+            .await?;
 
         Ok(converted.round_dp(DECIMAL_PRECISION))
     }
@@ -253,7 +255,10 @@ impl NetWorthServiceTrait for NetWorthService {
         debug!("Calculating net worth as of {} in {}", date, base_currency);
 
         // Get all non-archived accounts (includes closed accounts for historical net worth)
-        let accounts = self.account_repository.list(None, Some(false), None)?;
+        let accounts = self
+            .account_repository
+            .list(None, Some(false), None)
+            .await?;
 
         if accounts.is_empty() {
             debug!("No non-archived accounts found. Returning empty net worth.");
@@ -266,13 +271,14 @@ impl NetWorthServiceTrait for NetWorthService {
         // Get latest snapshots for all accounts as of the target date
         let snapshots = self
             .snapshot_repository
-            .get_latest_snapshots_before_date(&account_ids, date)?;
+            .get_latest_snapshots_before_date(&account_ids, date)
+            .await?;
 
         // Build a map of account_id -> account for easy lookup
         let account_map: HashMap<String, _> = accounts.iter().map(|a| (a.id.clone(), a)).collect();
 
         // Get all assets for lookup
-        let all_assets = self.asset_repository.list()?;
+        let all_assets = self.asset_repository.list().await?;
         let asset_map: HashMap<String, _> = all_assets.iter().map(|a| (a.id.clone(), a)).collect();
 
         let mut valuations: Vec<ValuationInfo> = Vec::new();
@@ -313,7 +319,7 @@ impl NetWorthServiceTrait for NetWorthService {
 
                 // Get the latest quote for this asset as of the date
                 let (price, quote_currency, valuation_date) =
-                    match self.get_latest_quote_as_of(asset_id, date) {
+                    match self.get_latest_quote_as_of(asset_id, date).await {
                         Some((p, c, d)) => (p, c, d),
                         None => {
                             // No quote found, use cost basis as fallback
@@ -340,14 +346,17 @@ impl NetWorthServiceTrait for NetWorthService {
                     normalize_amount(price, &quote_currency);
 
                 // Calculate market value in base currency
-                let market_value_base = match self.calculate_market_value(
-                    position.quantity,
-                    normalized_price,
-                    position.contract_multiplier,
-                    normalized_currency,
-                    &base_currency,
-                    date,
-                ) {
+                let market_value_base = match self
+                    .calculate_market_value(
+                        position.quantity,
+                        normalized_price,
+                        position.contract_multiplier,
+                        normalized_currency,
+                        &base_currency,
+                        date,
+                    )
+                    .await
+                {
                     Ok(v) => v,
                     Err(e) => {
                         warn!(
@@ -377,12 +386,11 @@ impl NetWorthServiceTrait for NetWorthService {
                 let cash_base = if currency == &base_currency {
                     amount
                 } else {
-                    match self.fx_service.convert_currency_for_date(
-                        amount,
-                        currency,
-                        &base_currency,
-                        date,
-                    ) {
+                    match self
+                        .fx_service
+                        .convert_currency_for_date(amount, currency, &base_currency, date)
+                        .await
+                    {
                         Ok(v) => v,
                         Err(e) => {
                             warn!(
@@ -422,7 +430,7 @@ impl NetWorthServiceTrait for NetWorthService {
 
             // Get the latest quote for this alternative asset
             let (price, quote_currency, valuation_date) =
-                match self.get_latest_quote_as_of(&asset.id, date) {
+                match self.get_latest_quote_as_of(&asset.id, date).await {
                     Some((p, c, d)) => (p, c, d),
                     None => {
                         debug!(
@@ -440,14 +448,17 @@ impl NetWorthServiceTrait for NetWorthService {
             let (normalized_price, normalized_currency) = normalize_amount(price, &quote_currency);
 
             // Calculate market value in base currency
-            let market_value_base = match self.calculate_market_value(
-                quantity,
-                normalized_price,
-                Decimal::ONE,
-                normalized_currency,
-                &base_currency,
-                date,
-            ) {
+            let market_value_base = match self
+                .calculate_market_value(
+                    quantity,
+                    normalized_price,
+                    Decimal::ONE,
+                    normalized_currency,
+                    &base_currency,
+                    date,
+                )
+                .await
+            {
                 Ok(v) => v,
                 Err(e) => {
                     warn!(
@@ -499,7 +510,7 @@ impl NetWorthServiceTrait for NetWorthService {
         })
     }
 
-    fn get_net_worth_history(
+    async fn get_net_worth_history(
         &self,
         start_date: NaiveDate,
         end_date: NaiveDate,
@@ -516,11 +527,10 @@ impl NetWorthServiceTrait for NetWorthService {
         // =====================================================================
         // The TOTAL account has aggregated values already converted to base currency.
         // Fields: total_value, net_contribution, fx_rate_to_base (always 1 for TOTAL)
-        let total_valuations = self.valuation_repository.get_historical_valuations(
-            "TOTAL",
-            Some(start_date),
-            Some(end_date),
-        )?;
+        let total_valuations = self
+            .valuation_repository
+            .get_historical_valuations("TOTAL", Some(start_date), Some(end_date))
+            .await?;
 
         // Build portfolio lookup by date
         #[derive(Clone)]
@@ -544,7 +554,7 @@ impl NetWorthServiceTrait for NetWorthService {
         // =====================================================================
         // 2. Load alternative assets and organize by type
         // =====================================================================
-        let all_assets = self.asset_repository.list()?;
+        let all_assets = self.asset_repository.list().await?;
         let alternative_assets: Vec<_> = all_assets
             .iter()
             .filter(|a| a.kind.is_alternative())
@@ -576,11 +586,10 @@ impl NetWorthServiceTrait for NetWorthService {
             alternative_assets.iter().map(|a| a.id.clone()).collect();
 
         // Get quotes in the date range
-        let quotes_vec = self.quote_service.get_quotes_in_range_filled(
-            &all_alt_symbols,
-            start_date,
-            end_date,
-        )?;
+        let quotes_vec = self
+            .quote_service
+            .get_quotes_in_range_filled(&all_alt_symbols, start_date, end_date)
+            .await?;
 
         // Organize quotes by date -> asset_id -> value (converted to base currency)
         let mut quotes_by_date: BTreeMap<NaiveDate, HashMap<String, Decimal>> = BTreeMap::new();
@@ -597,6 +606,7 @@ impl NetWorthServiceTrait for NetWorthService {
             } else {
                 self.fx_service
                     .convert_currency_for_date(quote.close, &asset_currency, &base_currency, date)
+                    .await
                     .unwrap_or(quote.close)
             };
 
@@ -613,7 +623,7 @@ impl NetWorthServiceTrait for NetWorthService {
 
         for asset in &alternative_assets {
             if let Some((price, quote_currency, _)) =
-                self.get_latest_quote_as_of(&asset.id, start_date)
+                self.get_latest_quote_as_of(&asset.id, start_date).await
             {
                 let (normalized_price, normalized_currency) =
                     normalize_amount(price, &quote_currency);
@@ -627,6 +637,7 @@ impl NetWorthServiceTrait for NetWorthService {
                             &base_currency,
                             start_date,
                         )
+                        .await
                         .unwrap_or(normalized_price)
                 };
                 initial_asset_values.insert(asset.id.clone(), value_base);

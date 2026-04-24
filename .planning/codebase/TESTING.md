@@ -162,12 +162,12 @@ where the entire `@/adapters`, `../storage/keyring`, and `../crypto` modules are
 replaced with hoisted `vi.fn()` collections, then imports of the real service
 are placed **after** the `vi.mock` calls.
 
-**UI component stubs** — replace `@wealthfolio/ui/components/ui/*` with minimal
-DOM stubs to isolate logic from styling
+**UI component stubs** — replace `@whaleit/ui/components/ui/*` with minimal DOM
+stubs to isolate logic from styling
 (`apps/frontend/src/pages/activity/components/forms/__tests__/buy-form.test.tsx:61-107`):
 
 ```ts
-vi.mock("@wealthfolio/ui/components/ui/button", () => ({
+vi.mock("@whaleit/ui/components/ui/button", () => ({
   Button: ({ children, type, onClick, disabled }) => (
     <button type={type} onClick={onClick} disabled={disabled}>{children}</button>
   ),
@@ -242,7 +242,7 @@ block.
 ```bash
 cargo test                       # All workspace tests
 cargo test --workspace           # Explicit workspace flag (used in CI)
-cargo test -p wealthfolio-core   # Single crate
+cargo test -p whaleit-core   # Single crate
 cargo test activities_service    # Filter by test name substring
 ```
 
@@ -270,8 +270,8 @@ Three conventions observed:
 
 3. **Crate-level `tests/` directory** for integration tests that use only the
    public API:
-   - `crates/core/tests/health_property_tests.rs` — uses `wealthfolio_core::...`
-     as an external consumer.
+   - `crates/core/tests/health_property_tests.rs` — uses `whaleit_core::...` as
+     an external consumer.
    - `apps/server/tests/auth.rs` — full Axum integration test.
 
 ### Test Structure
@@ -450,7 +450,7 @@ pnpm test:e2e:ui         # adds --ui for Playwright inspector
 
 ```bash
 node scripts/prep-e2e.mjs                    # fresh DB
-pnpm run dev:web > /tmp/wealthfolio-dev2.log 2>&1 &
+pnpm run dev:web > /tmp/whaleit-dev2.log 2>&1 &
 ./scripts/wait-for-both-servers-to-be-ready.sh
 npx playwright test e2e/<spec>.spec.ts [--headed|--debug]
 ```
@@ -544,7 +544,7 @@ Standard Playwright `expect`:
 
 ```yaml
 - pnpm install --frozen-lockfile
-- pnpm run build:types # Build @wealthfolio/ui + addon-sdk
+- pnpm run build:types # Build @whaleit/ui + addon-sdk
 - pnpm format:check # Prettier
 - pnpm lint # ESLint
 - pnpm type-check # tsc --noEmit
@@ -559,7 +559,7 @@ Standard Playwright `expect`:
 - cargo clippy --workspace --all-targets --all-features -- -D warnings
 - cargo test --workspace
   env: { CONNECT_API_URL: http://test.local }
-- cargo check -p wealthfolio-server --release
+- cargo check -p whaleit-server --release
 ```
 
 ### `build-status` job

@@ -1,6 +1,6 @@
 ## Project Overview
 
-Wealthfolio - Desktop investment tracker with local-first data. React + Vite
+Whaleit - Desktop investment tracker with local-first data. React + Vite
 frontend, Tauri/Rust backend, SQLite storage.
 
 Key directories:

@@ -19,14 +19,10 @@ use axum::{
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::main_lib::AppState;
 
-/// Controls when the `Secure` attribute is set on session cookies.
-///
-/// - `Auto`: set `Secure` only when `X-Forwarded-Proto: https` is present (default).
-/// - `Always`: always set `Secure` (use when TLS is guaranteed but the header is absent).
-/// - `Never`: never set `Secure` (plain HTTP without a reverse proxy).
 #[derive(Clone, Debug)]
 pub enum CookieSecurePolicy {
     Auto,
@@ -46,14 +42,12 @@ impl std::fmt::Display for CookieSecurePolicy {
 
 #[derive(Clone)]
 pub struct AuthConfig {
-    pub password_hash: String,
     pub jwt_secret: Vec<u8>,
     pub access_token_ttl: Duration,
     pub cookie_secure: CookieSecurePolicy,
 }
 
 pub struct AuthManager {
-    password_hash: String,
     encoding_key: EncodingKey,
     decoding_key: DecodingKey,
     validation: Validation,
@@ -65,8 +59,21 @@ pub struct AuthManager {
 pub enum AuthError {
     Unauthorized,
     InvalidCredentials,
+    EmailNotVerified,
     NotConfigured,
     Internal(String),
+}
+
+impl std::fmt::Display for AuthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AuthError::Unauthorized => write!(f, "Unauthorized"),
+            AuthError::InvalidCredentials => write!(f, "Invalid email or password"),
+            AuthError::EmailNotVerified => write!(f, "Email verification required"),
+            AuthError::NotConfigured => write!(f, "Authentication not configured"),
+            AuthError::Internal(msg) => write!(f, "{msg}"),
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -78,13 +85,16 @@ struct AuthErrorBody {
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Claims {
     sub: String,
+    email: String,
     exp: usize,
     iat: usize,
 }
 
-#[derive(Deserialize)]
-pub struct LoginRequest {
-    pub password: String,
+#[derive(Clone)]
+pub struct AuthenticatedUser {
+    pub user_id: String,
+    #[allow(dead_code)]
+    pub email: String,
 }
 
 #[derive(Serialize)]
@@ -98,24 +108,16 @@ pub struct LoginResponse {
 #[serde(rename_all = "camelCase")]
 pub struct AuthStatusResponse {
     pub requires_password: bool,
+    pub multi_user: bool,
 }
 
 impl AuthManager {
     pub fn new(config: &AuthConfig) -> anyhow::Result<Self> {
-        PasswordHash::new(&config.password_hash).map_err(|e| {
-            anyhow::anyhow!(
-                "Failed to parse WF_AUTH_PASSWORD_HASH: {e}. \
-                 The hash must be a valid Argon2id PHC string starting with '$argon2id$'. \
-                 If using Docker Compose YAML, double every '$' (e.g. '$$argon2id$$v=19$$...'). \
-                 If using a .env file, no escaping is needed."
-            )
-        })?;
         let encoding_key = EncodingKey::from_secret(&config.jwt_secret);
         let decoding_key = DecodingKey::from_secret(&config.jwt_secret);
         let mut validation = Validation::new(Algorithm::HS256);
         validation.validate_exp = true;
         Ok(Self {
-            password_hash: config.password_hash.clone(),
             encoding_key,
             decoding_key,
             validation,
@@ -124,25 +126,14 @@ impl AuthManager {
         })
     }
 
-    pub fn verify_password(&self, candidate: &str) -> Result<(), AuthError> {
-        let parsed = PasswordHash::new(&self.password_hash).map_err(|e| {
-            AuthError::Internal(format!("Invalid password hash configuration: {e}"))
-        })?;
-        Argon2::default()
-            .verify_password(candidate.as_bytes(), &parsed)
-            .map_err(|err| match err {
-                PasswordHashError::Password => AuthError::InvalidCredentials,
-                other => AuthError::Internal(format!("Password verification failed: {other}")),
-            })
-    }
-
-    pub fn issue_token(&self) -> Result<String, AuthError> {
+    pub fn issue_token(&self, user_id: &str, email: &str) -> Result<String, AuthError> {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_err(|_| AuthError::Internal("System clock is before UNIX_EPOCH".into()))?;
         let exp = now + self.token_ttl;
         let claims = Claims {
-            sub: "wealthfolio-web".to_string(),
+            sub: user_id.to_string(),
+            email: email.to_string(),
             iat: now.as_secs() as usize,
             exp: exp.as_secs() as usize,
         };
@@ -164,7 +155,6 @@ impl AuthManager {
             })
     }
 
-    /// Returns `true` if the token is past 50% of its TTL and should be refreshed.
     pub(crate) fn should_refresh(&self, claims: &Claims) -> bool {
         let Ok(now) = SystemTime::now().duration_since(UNIX_EPOCH) else {
             return false;
@@ -177,7 +167,6 @@ impl AuthManager {
         self.token_ttl
     }
 
-    /// Resolve whether the `Secure` cookie attribute should be set for this request.
     pub fn should_secure_cookie(&self, headers: &HeaderMap) -> bool {
         match &self.cookie_secure {
             CookieSecurePolicy::Always => true,
@@ -196,26 +185,38 @@ impl AuthManager {
 
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
-        let (status, message) = match self {
+        let (status, message) = match &self {
             AuthError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()),
-            AuthError::InvalidCredentials => {
-                (StatusCode::UNAUTHORIZED, "Invalid password".to_string())
-            }
+            AuthError::InvalidCredentials => (
+                StatusCode::UNAUTHORIZED,
+                "Invalid email or password".to_string(),
+            ),
+            AuthError::EmailNotVerified => (
+                StatusCode::FORBIDDEN,
+                "Email verification required".to_string(),
+            ),
             AuthError::NotConfigured => (
                 StatusCode::NOT_FOUND,
                 "Authentication is not configured for this server".to_string(),
             ),
-            AuthError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
+            AuthError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.clone()),
         };
         let body = Json(AuthErrorBody {
             code: status.as_u16(),
             message,
         });
-        (status, body).into_response()
+        let mut response = (status, body).into_response();
+        if matches!(self, AuthError::EmailNotVerified) {
+            if let Ok(val) = HeaderValue::from_str("true") {
+                response
+                    .headers_mut()
+                    .insert("X-Verification-Required", val);
+            }
+        }
+        response
     }
 }
 
-/// Derives separate JWT signing and secrets-encryption keys from a master key using HKDF-SHA256.
 pub fn derive_keys(master: &[u8]) -> ([u8; 32], [u8; 32]) {
     use hkdf::Hkdf;
     use sha2::Sha256;
@@ -259,14 +260,82 @@ fn build_session_cookie(token: &str, max_age_secs: u64, secure: bool) -> String 
     )
 }
 
+pub fn verify_password_hash(password: &str, hash: &str) -> Result<(), AuthError> {
+    let parsed = PasswordHash::new(hash)
+        .map_err(|e| AuthError::Internal(format!("Invalid password hash: {e}")))?;
+    Argon2::default()
+        .verify_password(password.as_bytes(), &parsed)
+        .map_err(|err| match err {
+            PasswordHashError::Password => AuthError::InvalidCredentials,
+            other => AuthError::Internal(format!("Password verification failed: {other}")),
+        })
+}
+
+pub fn hash_password(password: &str) -> Result<String, AuthError> {
+    use argon2::password_hash::{PasswordHasher, SaltString};
+    use rand::rngs::OsRng;
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map(|h| h.to_string())
+        .map_err(|e| AuthError::Internal(format!("Failed to hash password: {e}")))
+}
+
+pub fn hash_token(token: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+pub fn generate_api_key() -> (String, String) {
+    use rand::Rng;
+    let random_bytes: [u8; 32] = rand::thread_rng().gen();
+    let encoded = BASE64.encode(&random_bytes);
+    let key = format!("wfk_live_{encoded}");
+    let hash = hash_token(&key);
+    (key, hash)
+}
+
 pub async fn login(
     axum::extract::State(state): axum::extract::State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(payload): Json<LoginRequest>,
+    Json(payload): Json<serde_json::Value>,
 ) -> Result<Response, AuthError> {
     let auth = state.auth.as_ref().ok_or(AuthError::NotConfigured)?.clone();
-    auth.verify_password(&payload.password)?;
-    let token = auth.issue_token()?;
+    let user_repo = state.user_repo.as_ref().ok_or(AuthError::NotConfigured)?;
+
+    // Support both old { password } and new { email, password } payloads
+    let (email, password) = if let Some(obj) = payload.as_object() {
+        if obj.contains_key("email") {
+            let e = obj.get("email").and_then(|v| v.as_str()).unwrap_or("");
+            let p = obj.get("password").and_then(|v| v.as_str()).unwrap_or("");
+            (e.to_string(), p.to_string())
+        } else {
+            let p = obj.get("password").and_then(|v| v.as_str()).unwrap_or("");
+            (String::new(), p.to_string())
+        }
+    } else {
+        return Err(AuthError::InvalidCredentials);
+    };
+
+    if email.is_empty() {
+        // Legacy single-password mode not supported in multi-user
+        return Err(AuthError::InvalidCredentials);
+    }
+
+    let user = user_repo
+        .find_by_email(&email)
+        .await
+        .map_err(|e| AuthError::Internal(e.to_string()))?
+        .ok_or(AuthError::InvalidCredentials)?;
+
+    verify_password_hash(&password, &user.password_hash)?;
+
+    if !user.email_verified {
+        return Err(AuthError::EmailNotVerified);
+    }
+
+    let token = auth.issue_token(&user.id, &user.email)?;
     let ttl_secs = auth.expires_in().as_secs();
     let cookie_value = build_session_cookie(&token, ttl_secs, auth.should_secure_cookie(&headers));
 
@@ -305,8 +374,24 @@ pub async fn auth_me(
         return Ok(Json(serde_json::json!({"authenticated": true})));
     };
     let token = extract_token(&request)?;
-    auth.validate_token(&token).map(|_| ())?;
-    Ok(Json(serde_json::json!({"authenticated": true})))
+    let claims = auth.validate_token(&token)?;
+
+    let mut response = serde_json::json!({
+        "authenticated": true,
+        "user": {
+            "id": claims.sub,
+            "email": claims.email,
+        }
+    });
+
+    if let Some(user_repo) = &state.user_repo {
+        if let Ok(Some(user)) = user_repo.find_by_id(&claims.sub).await {
+            response["user"]["displayName"] = serde_json::json!(user.display_name);
+            response["user"]["emailVerified"] = serde_json::json!(user.email_verified);
+        }
+    }
+
+    Ok(Json(response))
 }
 
 pub async fn auth_status(
@@ -314,6 +399,7 @@ pub async fn auth_status(
 ) -> Json<AuthStatusResponse> {
     Json(AuthStatusResponse {
         requires_password: state.auth.is_some(),
+        multi_user: state.user_repo.is_some(),
     })
 }
 
@@ -329,7 +415,72 @@ pub async fn require_jwt(
     };
 
     let token = extract_token(&request)?;
+
+    // Check for API key prefix
+    if token.starts_with("wfk_") {
+        let key_hash = hash_token(&token);
+        let user_repo = state.user_repo.as_ref().ok_or(AuthError::Unauthorized)?;
+
+        let api_key = user_repo
+            .find_api_key_by_hash(&key_hash)
+            .await
+            .map_err(|e| AuthError::Internal(e.to_string()))?
+            .ok_or(AuthError::Unauthorized)?;
+
+        // Check expiry
+        if let Some(expires) = api_key.expires_at {
+            let now = chrono::Utc::now().naive_utc();
+            if expires < now {
+                return Err(AuthError::Unauthorized);
+            }
+        }
+
+        // Load user
+        let user = user_repo
+            .find_by_id(&api_key.user_id)
+            .await
+            .map_err(|e| AuthError::Internal(e.to_string()))?
+            .ok_or(AuthError::Unauthorized)?;
+
+        if !user.email_verified {
+            return Err(AuthError::EmailNotVerified);
+        }
+
+        // Update last used (fire and forget)
+        let repo = state.user_repo.clone();
+        let key_id = api_key.id.clone();
+        tokio::spawn(async move {
+            if let Some(r) = repo {
+                let _ = r.update_api_key_last_used(&key_id).await;
+            }
+        });
+
+        // Create synthetic claims for the API key user
+        let authenticated_user = AuthenticatedUser {
+            user_id: user.id.clone(),
+            email: user.email.clone(),
+        };
+        request.extensions_mut().insert(authenticated_user);
+
+        return Ok(next.run(request).await);
+    }
+
     let claims = auth.validate_token(&token)?;
+
+    // Check email verified
+    if let Some(user_repo) = &state.user_repo {
+        if let Ok(Some(user)) = user_repo.find_by_id(&claims.sub).await {
+            if !user.email_verified {
+                return Err(AuthError::EmailNotVerified);
+            }
+        }
+    }
+
+    let authenticated_user = AuthenticatedUser {
+        user_id: claims.sub.clone(),
+        email: claims.email.clone(),
+    };
+    request.extensions_mut().insert(authenticated_user);
 
     // Sliding session: refresh the cookie when past 50% of TTL
     let needs_refresh = auth.should_refresh(&claims);
@@ -338,7 +489,7 @@ pub async fn require_jwt(
     let mut response = next.run(request).await;
 
     if needs_refresh {
-        if let Ok(new_token) = auth.issue_token() {
+        if let Ok(new_token) = auth.issue_token(&claims.sub, &claims.email) {
             let ttl_secs = auth.expires_in().as_secs();
             let cookie = build_session_cookie(&new_token, ttl_secs, secure.unwrap_or(false));
             if let Ok(val) = HeaderValue::from_str(&cookie) {
@@ -351,7 +502,7 @@ pub async fn require_jwt(
 }
 
 fn extract_token(request: &Request<Body>) -> Result<String, AuthError> {
-    // 1. Authorization header (Bearer token)
+    // 1. Authorization header (Bearer token or API key)
     if let Some(header_value) = request
         .headers()
         .get(AUTHORIZATION)
@@ -397,7 +548,6 @@ mod tests {
 
     fn make_manager(policy: CookieSecurePolicy) -> AuthManager {
         let config = AuthConfig {
-            password_hash: "$argon2i$v=19$m=16,t=2,p=1$MTIzMjMyMzIz$/5nvsvwbwLNOxDtDae5XMQ".into(),
             jwt_secret: vec![0u8; 32],
             access_token_ttl: Duration::from_secs(3600),
             cookie_secure: policy,
@@ -469,5 +619,28 @@ mod tests {
     fn never_with_https_header() {
         let mgr = make_manager(CookieSecurePolicy::Never);
         assert!(!mgr.should_secure_cookie(&headers_with_proto("https")));
+    }
+
+    #[test]
+    fn issue_token_contains_user_id() {
+        let mgr = make_manager(CookieSecurePolicy::Auto);
+        let token = mgr.issue_token("user-123", "test@example.com").unwrap();
+        let claims = mgr.validate_token(&token).unwrap();
+        assert_eq!(claims.sub, "user-123");
+        assert_eq!(claims.email, "test@example.com");
+    }
+
+    #[test]
+    fn hash_token_deterministic() {
+        let h1 = hash_token("test-token");
+        let h2 = hash_token("test-token");
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn generate_api_key_has_prefix() {
+        let (key, hash) = generate_api_key();
+        assert!(key.starts_with("wfk_live_"));
+        assert!(!hash.starts_with("wfk_"));
     }
 }

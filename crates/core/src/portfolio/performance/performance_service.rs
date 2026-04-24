@@ -42,7 +42,7 @@ pub trait PerformanceServiceTrait: Send + Sync {
     /// Calculates simple performance metrics (daily returns, cumulative returns, portfolio weights) for multiple accounts.
     /// This method efficiently fetches the latest and previous day's valuations in bulk to minimize database queries.
     /// Can be used for a single account by passing a slice with one ID.
-    fn calculate_accounts_simple_performance(
+    async fn calculate_accounts_simple_performance(
         &self,
         account_ids: &[String],
     ) -> Result<Vec<SimplePerformanceMetrics>>;
@@ -251,11 +251,10 @@ impl PerformanceService {
             }
         }
 
-        let full_history = self.valuation_service.get_historical_valuations(
-            account_id,
-            start_date_opt,
-            end_date_opt,
-        )?;
+        let full_history = self
+            .valuation_service
+            .get_historical_valuations(account_id, start_date_opt, end_date_opt)
+            .await?;
 
         if full_history.len() < 2 {
             warn!("Performance calculation for account '{}': Not enough valuation data ({} points). Returning empty response.", account_id, full_history.len());
@@ -288,11 +287,10 @@ impl PerformanceService {
             }
         }
 
-        let full_history = self.valuation_service.get_historical_valuations(
-            account_id,
-            start_date_opt,
-            end_date_opt,
-        )?;
+        let full_history = self
+            .valuation_service
+            .get_historical_valuations(account_id, start_date_opt, end_date_opt)
+            .await?;
 
         if full_history.len() < 2 {
             warn!(
@@ -857,7 +855,7 @@ impl PerformanceServiceTrait for PerformanceService {
         }
     }
 
-    fn calculate_accounts_simple_performance(
+    async fn calculate_accounts_simple_performance(
         &self,
         account_ids: &[String],
     ) -> Result<Vec<SimplePerformanceMetrics>> {
@@ -874,7 +872,8 @@ impl PerformanceServiceTrait for PerformanceService {
         // 1. Fetch the *absolute* latest record for each account
         let latest_daily_valuations = self
             .valuation_service
-            .get_latest_valuations(&ids_to_fetch)?;
+            .get_latest_valuations(&ids_to_fetch)
+            .await?;
 
         let latest_daily_map: HashMap<String, DailyAccountValuation> = latest_daily_valuations
             .into_iter()
@@ -901,6 +900,7 @@ impl PerformanceServiceTrait for PerformanceService {
             match self
                 .valuation_service
                 .get_valuations_on_date(&ids, prev_date)
+                .await
             {
                 Ok(records) => {
                     for record in records {

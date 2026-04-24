@@ -11,11 +11,11 @@ use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
-use wealthfolio_core::portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode};
-use wealthfolio_core::quotes::{
+use whaleit_core::portfolio::{snapshot::SnapshotRecalcMode, valuation::ValuationRecalcMode};
+use whaleit_core::quotes::{
     LatestQuoteSnapshot, MarketSyncMode, ProviderInfo, Quote, QuoteImport, SymbolSearchResult,
 };
-use wealthfolio_market_data::ExchangeInfo;
+use whaleit_market_data::ExchangeInfo;
 
 async fn get_market_data_providers(
     State(state): State<Arc<AppState>>,
@@ -72,7 +72,7 @@ async fn get_quote_history(
     State(state): State<Arc<AppState>>,
     Query(q): Query<QuoteHistoryQuery>,
 ) -> ApiResult<Json<Vec<Quote>>> {
-    let res = state.quote_service.get_historical_quotes(&q.symbol)?;
+    let res = state.quote_service.get_historical_quotes(&q.symbol).await?;
     Ok(Json(res))
 }
 
@@ -233,7 +233,8 @@ async fn get_latest_quotes(
 ) -> ApiResult<Json<std::collections::HashMap<String, LatestQuoteSnapshot>>> {
     let quotes = state
         .quote_service
-        .get_latest_quotes_snapshot(&body.asset_ids)?;
+        .get_latest_quotes_snapshot(&body.asset_ids)
+        .await?;
     Ok(Json(quotes))
 }
 
@@ -250,11 +251,11 @@ struct ResolveSymbolQuoteQuery {
 async fn resolve_symbol_quote(
     State(state): State<Arc<AppState>>,
     Query(q): Query<ResolveSymbolQuoteQuery>,
-) -> ApiResult<Json<wealthfolio_core::quotes::ResolvedQuote>> {
+) -> ApiResult<Json<whaleit_core::quotes::ResolvedQuote>> {
     let inst_type = q
         .instrument_type
         .as_deref()
-        .and_then(wealthfolio_core::assets::InstrumentType::from_db_str);
+        .and_then(whaleit_core::assets::InstrumentType::from_db_str);
     let res = state
         .quote_service
         .resolve_symbol_quote(
@@ -269,7 +270,7 @@ async fn resolve_symbol_quote(
 }
 
 async fn get_exchanges() -> Json<Vec<ExchangeInfo>> {
-    Json(wealthfolio_market_data::get_exchange_list())
+    Json(whaleit_market_data::get_exchange_list())
 }
 
 pub fn router() -> Router<Arc<AppState>> {

@@ -3,7 +3,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
 use tokio::sync::{Mutex, RwLock};
-use wealthfolio_core::secrets::SecretStore;
+use whaleit_core::secrets::SecretStore;
 
 pub const CLOUD_REFRESH_TOKEN_KEY: &str = "sync_refresh_token";
 pub const CLOUD_ACCESS_TOKEN_KEY: &str = "sync_access_token";

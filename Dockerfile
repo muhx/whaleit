@@ -44,7 +44,7 @@ RUN apk add --no-cache clang lld build-base git file pkgconfig
 
 # Install TARGET dependencies
 # xx-apk installs into /$(xx-info triple)/...
-RUN xx-apk add --no-cache musl-dev gcc openssl-dev openssl-libs-static sqlite-dev
+RUN xx-apk add --no-cache musl-dev gcc openssl-dev openssl-libs-static postgresql-dev
 
 # Install rust target
 RUN rustup target add $(xx-cargo --print-target-triple)
@@ -65,21 +65,18 @@ COPY crates ./crates
 COPY apps/server ./apps/server
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 ENV OPENSSL_STATIC=1
-# Build using xx-cargo which handles target flags
 RUN xx-cargo build --release --manifest-path apps/server/Cargo.toml && \
     # Move the binary to a predictable location because the target dir changes with --target
-    cp target/$(xx-cargo --print-target-triple)/release/wealthfolio-server /whaleit-server
+    cp target/$(xx-cargo --print-target-triple)/release/whaleit-server /whaleit-server
 
 # Final stage
 FROM alpine:3.19
+RUN apk add --no-cache libpq
 WORKDIR /app
-# Copy from backend (which is now build platform, but binary is target platform)
 COPY --from=backend /whaleit-server /usr/local/bin/whaleit-server
 COPY --from=frontend /web-dist ./dist
-ENV WF_DB_PATH=/data/wealthfolio.db
 # WhaleIt Connect API URL (can be overridden at runtime via -e or docker-compose)
 ARG CONNECT_API_URL=
 ENV CONNECT_API_URL=${CONNECT_API_URL}
-VOLUME ["/data"]
-EXPOSE 8080
+EXPOSE 8088
 CMD ["/usr/local/bin/whaleit-server"]

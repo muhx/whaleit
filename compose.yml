@@ -1,47 +1,73 @@
 # WhaleIt - Production Docker Compose
 #
-# Usage: docker compose up -d
-# Dev overlay: docker compose -f compose.yml -f compose.dev.yml up
+# All-in-one (backend serves frontend):
+#   docker compose up -d
 #
-# Works with any reverse proxy (Coolify, Nginx, Caddy, Traefik).
-# Uses expose (not ports) — the proxy handles external traffic.
+# Separate containers (frontend via nginx, backend API-only):
+#   docker compose -f compose.yml -f compose.separate.yml up -d
+#
+# Dev overlay:
+#   docker compose -f compose.yml -f compose.dev.yml up
 
 services:
-  whaleit:
-    image: afadil/whaleit:latest
-    container_name: whaleit
+  postgres:
+    image: postgres:17-alpine
+    container_name: whaleit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: whaleit
+      POSTGRES_USER: whaleit
+      POSTGRES_PASSWORD: "${WF_PG_PASSWORD:?Set WF_PG_PASSWORD}"
+    env_file:
+      - .env
+    volumes:
+      - whaleit-pgdata:/var/lib/postgresql/data
+    ports:
+      - "${WF_PG_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whaleit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: muhx/whaleit-backend:latest
+    container_name: whaleit-backend
     restart: unless-stopped
     expose:
       - "8088"
-    volumes:
-      - whaleit-data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       WF_LISTEN_ADDR: "0.0.0.0:8088"
-      WF_DB_PATH: "/data/wealthfolio.db"
-      # Required — generate with: openssl rand -base64 32
+      DATABASE_URL: "postgres://whaleit:${WF_PG_PASSWORD}@postgres:5432/whaleit"
+      WF_PG_POOL_SIZE: "${WF_PG_POOL_SIZE:-8}"
       WF_SECRET_KEY: "${WF_SECRET_KEY:?Set WF_SECRET_KEY}"
 
-      # ── Authentication ────────────────────────────────────────────────
-      # Required when listening on 0.0.0.0 (the default for Docker).
-      # Provide an Argon2id PHC hash of your password.
-      #
-      # IMPORTANT — the hash contains "$" signs that need escaping:
-      #   .env file  → WF_AUTH_PASSWORD_HASH=$argon2id$v=19$...  (no quotes, no escaping)
-      #   YAML inline → WF_AUTH_PASSWORD_HASH: '$$argon2id$$v=19$$...'  (double every $)
-      #
-      # Generate a hash:
-      #   printf 'your-password' | argon2 yoursalt16chars! -id -e
-      #
-      # If a reverse proxy handles auth instead, set WF_AUTH_REQUIRED: "false"
-      # and leave WF_AUTH_PASSWORD_HASH empty.
+      # ── Multi-user Authentication ────────────────────────────────────
+      WF_MULTI_USER_AUTH: "${WF_MULTI_USER_AUTH:-true}"
+
+      # ── SMTP (required for email verification / password reset) ──────
+      WF_SMTP_HOST: "${WF_SMTP_HOST:-}"
+      WF_SMTP_PORT: "${WF_SMTP_PORT:-465}"
+      WF_SMTP_USERNAME: "${WF_SMTP_USERNAME:-}"
+      WF_SMTP_PASSWORD: "${WF_SMTP_PASSWORD:-}"
+      WF_SMTP_FROM: "${WF_SMTP_FROM:-}"
+      WF_APP_URL: "${WF_APP_URL:-}"
+
+      # ── Legacy single-password auth (ignored when WF_MULTI_USER_AUTH=true) ──
       WF_AUTH_PASSWORD_HASH: "${WF_AUTH_PASSWORD_HASH:-}"
       WF_AUTH_TOKEN_TTL_MINUTES: "${WF_AUTH_TOKEN_TTL_MINUTES:-60}"
-      # Set to "false" to skip the auth requirement (e.g. reverse proxy handles auth)
-      # WF_AUTH_REQUIRED: "true"
 
-      # Required when auth is enabled — set to your app's origin, e.g. https://whaleit.example.com
       WF_CORS_ALLOW_ORIGINS: "${WF_CORS_ALLOW_ORIGINS}"
       WF_REQUEST_TIMEOUT_MS: "${WF_REQUEST_TIMEOUT_MS:-30000}"
+
+      # Persist secrets.json and installed addons under the writable /data volume
+      WF_ADDONS_DIR: "/data/addons"
     healthcheck:
       test:
         ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8088/api/v1/healthz"]
@@ -60,7 +86,24 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64M
+    volumes:
+      - whaleit-data:/data
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: muhx/whaleit-frontend:latest
+    container_name: whaleit-frontend
+    restart: unless-stopped
+    ports:
+      - "${WF_PORT:-8088}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
+  whaleit-pgdata:
+    driver: local
   whaleit-data:
     driver: local

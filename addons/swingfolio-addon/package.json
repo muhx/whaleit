@@ -4,11 +4,11 @@
   "description": "A simple swing stock trading tracker with performance analytics and calendar views",
   "type": "module",
   "main": "dist/addon.js",
-  "author": "Wealthfolio",
+  "author": "Whaleit",
   "license": "MIT",
-  "homepage": "https://github.com/afadil/wealthfolio",
+  "homepage": "https://github.com/muhx/whaleit",
   "keywords": [
-    "wealthfolio",
+    "whaleit",
     "addon",
     "swing-trading",
     "performance",
@@ -19,7 +19,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
-    "dev:server": "wealthfolio dev",
+    "dev:server": "whaleit dev",
     "clean": "rm -rf dist",
     "package": "mkdir -p dist && zip -r dist/$npm_package_name-$npm_package_version.zip manifest.json dist/ assets/ README.md",
     "bundle": "pnpm clean && pnpm build && pnpm package",

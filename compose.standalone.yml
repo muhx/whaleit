@@ -1,0 +1,74 @@
+# WhaleIt - All-in-one deployment (backend serves frontend static files)
+#
+# Usage: docker compose -f compose.standalone.yml up -d
+#
+# This uses the monolithic Dockerfile that bundles frontend into the backend image.
+# For separate frontend/backend containers, use compose.yml instead.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: whaleit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: whaleit
+      POSTGRES_USER: whaleit
+      POSTGRES_PASSWORD: "${WF_PG_PASSWORD:?Set WF_PG_PASSWORD}"
+    volumes:
+      - whaleit-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whaleit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  whaleit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: muhx/whaleit:latest
+    container_name: whaleit
+    restart: unless-stopped
+    ports:
+      - "${WF_PORT:-8088}:8088"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      WF_LISTEN_ADDR: "0.0.0.0:8088"
+      DATABASE_URL: "postgres://whaleit:${WF_PG_PASSWORD}@postgres:5432/whaleit"
+      WF_PG_POOL_SIZE: "${WF_PG_POOL_SIZE:-8}"
+      WF_SECRET_KEY: "${WF_SECRET_KEY:?Set WF_SECRET_KEY}"
+      WF_MULTI_USER_AUTH: "${WF_MULTI_USER_AUTH:-true}"
+      WF_SMTP_HOST: "${WF_SMTP_HOST:-}"
+      WF_SMTP_PORT: "${WF_SMTP_PORT:-465}"
+      WF_SMTP_USERNAME: "${WF_SMTP_USERNAME:-}"
+      WF_SMTP_PASSWORD: "${WF_SMTP_PASSWORD:-}"
+      WF_SMTP_FROM: "${WF_SMTP_FROM:-}"
+      WF_APP_URL: "${WF_APP_URL:-}"
+      WF_AUTH_PASSWORD_HASH: "${WF_AUTH_PASSWORD_HASH:-}"
+      WF_AUTH_TOKEN_TTL_MINUTES: "${WF_AUTH_TOKEN_TTL_MINUTES:-60}"
+      WF_CORS_ALLOW_ORIGINS: "${WF_CORS_ALLOW_ORIGINS}"
+      WF_REQUEST_TIMEOUT_MS: "${WF_REQUEST_TIMEOUT_MS:-30000}"
+    healthcheck:
+      test:
+        ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8088/api/v1/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+
+volumes:
+  whaleit-pgdata:
+    driver: local

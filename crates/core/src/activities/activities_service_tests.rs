@@ -54,7 +54,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_account(&self, account_id: &str) -> Result<Account> {
+        async fn get_account(&self, account_id: &str) -> Result<Account> {
             let accounts = self.accounts.lock().unwrap();
             accounts
                 .iter()
@@ -63,7 +63,7 @@ mod tests {
                 .ok_or_else(|| crate::errors::Error::Unexpected("Account not found".to_string()))
         }
 
-        fn list_accounts(
+        async fn list_accounts(
             &self,
             _active_only: Option<bool>,
             _is_archived_filter: Option<bool>,
@@ -72,23 +72,23 @@ mod tests {
             Ok(self.accounts.lock().unwrap().clone())
         }
 
-        fn get_all_accounts(&self) -> Result<Vec<Account>> {
+        async fn get_all_accounts(&self) -> Result<Vec<Account>> {
             Ok(self.accounts.lock().unwrap().clone())
         }
 
-        fn get_active_accounts(&self) -> Result<Vec<Account>> {
+        async fn get_active_accounts(&self) -> Result<Vec<Account>> {
             Ok(self.accounts.lock().unwrap().clone())
         }
 
-        fn get_accounts_by_ids(&self, _account_ids: &[String]) -> Result<Vec<Account>> {
+        async fn get_accounts_by_ids(&self, _account_ids: &[String]) -> Result<Vec<Account>> {
             unimplemented!()
         }
 
-        fn get_non_archived_accounts(&self) -> Result<Vec<Account>> {
+        async fn get_non_archived_accounts(&self) -> Result<Vec<Account>> {
             Ok(self.accounts.lock().unwrap().clone())
         }
 
-        fn get_active_non_archived_accounts(&self) -> Result<Vec<Account>> {
+        async fn get_active_non_archived_accounts(&self) -> Result<Vec<Account>> {
             Ok(self.accounts.lock().unwrap().clone())
         }
 
@@ -117,11 +117,11 @@ mod tests {
 
     #[async_trait]
     impl AssetServiceTrait for MockAssetService {
-        fn get_assets(&self) -> Result<Vec<Asset>> {
+        async fn get_assets(&self) -> Result<Vec<Asset>> {
             Ok(self.assets.lock().unwrap().clone())
         }
 
-        fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset> {
+        async fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset> {
             let assets = self.assets.lock().unwrap();
             assets
                 .iter()
@@ -162,7 +162,7 @@ mod tests {
             _metadata: Option<crate::assets::AssetMetadata>,
             _quote_mode: Option<String>,
         ) -> Result<Asset> {
-            self.get_asset_by_id(asset_id)
+            self.get_asset_by_id(asset_id).await
         }
 
         async fn enrich_asset_profile(&self, _asset_id: &str) -> Result<Asset> {
@@ -227,7 +227,7 @@ mod tests {
 
     #[async_trait]
     impl FxServiceTrait for MockFxService {
-        fn initialize(&self) -> Result<()> {
+        async fn initialize(&self) -> Result<()> {
             Ok(())
         }
 
@@ -235,7 +235,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_historical_rates(
+        async fn get_historical_rates(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -253,7 +253,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_latest_exchange_rate(
+        async fn get_latest_exchange_rate(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -261,7 +261,7 @@ mod tests {
             Ok(Decimal::ONE)
         }
 
-        fn get_exchange_rate_for_date(
+        async fn get_exchange_rate_for_date(
             &self,
             _from_currency: &str,
             _to_currency: &str,
@@ -270,7 +270,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn convert_currency(
+        async fn convert_currency(
             &self,
             _amount: Decimal,
             _from_currency: &str,
@@ -279,7 +279,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn convert_currency_for_date(
+        async fn convert_currency_for_date(
             &self,
             _amount: Decimal,
             _from_currency: &str,
@@ -289,7 +289,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
+        async fn get_latest_exchange_rates(&self) -> Result<Vec<ExchangeRate>> {
             unimplemented!()
         }
 
@@ -330,20 +330,20 @@ mod tests {
 
     #[async_trait]
     impl QuoteServiceTrait for MockQuoteService {
-        fn get_latest_quote(&self, _symbol: &str) -> Result<Quote> {
+        async fn get_latest_quote(&self, _symbol: &str) -> Result<Quote> {
             unimplemented!()
         }
 
-        fn get_latest_quotes(&self, _symbols: &[String]) -> Result<HashMap<String, Quote>> {
+        async fn get_latest_quotes(&self, _symbols: &[String]) -> Result<HashMap<String, Quote>> {
             unimplemented!()
         }
 
-        fn get_latest_quotes_snapshot(
+        async fn get_latest_quotes_snapshot(
             &self,
             asset_ids: &[String],
         ) -> Result<HashMap<String, LatestQuoteSnapshot>> {
             let today = Utc::now().date_naive();
-            let quotes = self.get_latest_quotes(asset_ids)?;
+            let quotes = self.get_latest_quotes(asset_ids).await?;
             Ok(quotes
                 .into_iter()
                 .map(|(asset_id, quote)| {
@@ -361,22 +361,24 @@ mod tests {
                 .collect())
         }
 
-        fn get_latest_quotes_pair(
+        async fn get_latest_quotes_pair(
             &self,
             _symbols: &[String],
         ) -> Result<HashMap<String, LatestQuotePair>> {
             unimplemented!()
         }
 
-        fn get_historical_quotes(&self, _symbol: &str) -> Result<Vec<Quote>> {
+        async fn get_historical_quotes(&self, _symbol: &str) -> Result<Vec<Quote>> {
             unimplemented!()
         }
 
-        fn get_all_historical_quotes(&self) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
+        async fn get_all_historical_quotes(
+            &self,
+        ) -> Result<HashMap<String, Vec<(NaiveDate, Quote)>>> {
             unimplemented!()
         }
 
-        fn get_quotes_in_range(
+        async fn get_quotes_in_range(
             &self,
             _symbols: &HashSet<String>,
             _start: NaiveDate,
@@ -385,7 +387,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_quotes_in_range_filled(
+        async fn get_quotes_in_range_filled(
             &self,
             _symbols: &HashSet<String>,
             _start: NaiveDate,
@@ -512,7 +514,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+        async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
             unimplemented!()
         }
 
@@ -532,11 +534,11 @@ mod tests {
             Ok(())
         }
 
-        fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_symbols_needing_sync(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(vec![])
         }
 
-        fn get_sync_state(&self, _symbol: &str) -> Result<Option<QuoteSyncState>> {
+        async fn get_sync_state(&self, _symbol: &str) -> Result<Option<QuoteSyncState>> {
             Ok(None)
         }
 
@@ -544,7 +546,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_assets_needing_profile_enrichment(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(vec![])
         }
 
@@ -555,7 +557,7 @@ mod tests {
             Ok(())
         }
 
-        fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
+        async fn get_sync_states_with_errors(&self) -> Result<Vec<QuoteSyncState>> {
             Ok(vec![])
         }
 
@@ -609,31 +611,34 @@ mod tests {
 
     #[async_trait]
     impl ActivityRepositoryTrait for MockActivityRepository {
-        fn get_activity(&self, _activity_id: &str) -> Result<Activity> {
+        async fn get_activity(&self, _activity_id: &str) -> Result<Activity> {
             unimplemented!()
         }
 
-        fn get_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_activities(&self) -> Result<Vec<Activity>> {
             Ok(self.activities.lock().unwrap().clone())
         }
 
-        fn get_activities_by_account_id(&self, _account_id: &str) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_id(&self, _account_id: &str) -> Result<Vec<Activity>> {
             unimplemented!()
         }
 
-        fn get_activities_by_account_ids(&self, _account_ids: &[String]) -> Result<Vec<Activity>> {
+        async fn get_activities_by_account_ids(
+            &self,
+            _account_ids: &[String],
+        ) -> Result<Vec<Activity>> {
             unimplemented!()
         }
 
-        fn get_trading_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_trading_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!()
         }
 
-        fn get_income_activities(&self) -> Result<Vec<Activity>> {
+        async fn get_income_activities(&self) -> Result<Vec<Activity>> {
             unimplemented!()
         }
 
-        fn get_contribution_activities(
+        async fn get_contribution_activities(
             &self,
             _account_ids: &[String],
             _start_date: chrono::DateTime<chrono::Utc>,
@@ -642,7 +647,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn search_activities(
+        async fn search_activities(
             &self,
             _page: i64,
             _page_size: i64,
@@ -764,14 +769,14 @@ mod tests {
             Ok(count)
         }
 
-        fn get_first_activity_date(
+        async fn get_first_activity_date(
             &self,
             _account_ids: Option<&[String]>,
         ) -> Result<Option<DateTime<Utc>>> {
             unimplemented!()
         }
 
-        fn get_import_mapping(
+        async fn get_import_mapping(
             &self,
             _account_id: &str,
             _context_kind: &str,
@@ -792,11 +797,11 @@ mod tests {
             unimplemented!()
         }
 
-        fn list_import_templates(&self) -> Result<Vec<ImportTemplate>> {
+        async fn list_import_templates(&self) -> Result<Vec<ImportTemplate>> {
             Ok(Vec::new())
         }
 
-        fn get_import_template(&self, _template_id: &str) -> Result<Option<ImportTemplate>> {
+        async fn get_import_template(&self, _template_id: &str) -> Result<Option<ImportTemplate>> {
             Ok(None)
         }
 
@@ -808,7 +813,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn get_broker_sync_profile(
+        async fn get_broker_sync_profile(
             &self,
             _account_id: &str,
             _source_system: &str,
@@ -829,19 +834,26 @@ mod tests {
             Ok(())
         }
 
-        fn calculate_average_cost(&self, _account_id: &str, _asset_id: &str) -> Result<Decimal> {
+        async fn calculate_average_cost(
+            &self,
+            _account_id: &str,
+            _asset_id: &str,
+        ) -> Result<Decimal> {
             unimplemented!()
         }
 
-        fn get_income_activities_data(&self, _account_id: Option<&str>) -> Result<Vec<IncomeData>> {
+        async fn get_income_activities_data(
+            &self,
+            _account_id: Option<&str>,
+        ) -> Result<Vec<IncomeData>> {
             unimplemented!()
         }
 
-        fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>> {
+        async fn get_first_activity_date_overall(&self) -> Result<DateTime<Utc>> {
             unimplemented!()
         }
 
-        fn get_activity_bounds_for_assets(
+        async fn get_activity_bounds_for_assets(
             &self,
             _asset_ids: &[String],
         ) -> Result<
@@ -853,7 +865,7 @@ mod tests {
             Ok(std::collections::HashMap::new())
         }
 
-        fn check_existing_duplicates(
+        async fn check_existing_duplicates(
             &self,
             idempotency_keys: &[String],
         ) -> Result<std::collections::HashMap<String, String>> {
@@ -3381,6 +3393,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(stored.len(), 1);
         assert_eq!(stored[0].activity_type, "DIVIDEND");
@@ -3526,6 +3539,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(stored.len(), 1);
         assert!(
@@ -3760,6 +3774,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(stored.len(), 2);
 
@@ -3898,6 +3913,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(stored.len(), 1, "duplicate row should not be inserted");
     }
@@ -3972,6 +3988,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(
             stored.len(),
@@ -4103,6 +4120,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(
             stored.len(),
@@ -4196,6 +4214,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(stored.len(), 2, "both rows should exist in the store");
 
@@ -4278,6 +4297,7 @@ mod tests {
 
         let stored = activity_repository
             .get_activities()
+            .await
             .expect("stored activities should be readable");
         assert_eq!(stored.len(), 1);
         assert!(

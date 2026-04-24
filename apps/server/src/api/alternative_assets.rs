@@ -23,7 +23,7 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use wealthfolio_core::{
+use whaleit_core::{
     assets::{
         AssetKind, CreateAlternativeAssetRequest as CoreCreateRequest,
         LinkLiabilityRequest as CoreLinkRequest,
@@ -343,7 +343,10 @@ async fn unlink_liability(
 async fn get_alternative_holdings(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<AlternativeHoldingResponse>>> {
-    let holdings = state.alternative_asset_service.get_alternative_holdings()?;
+    let holdings = state
+        .alternative_asset_service
+        .get_alternative_holdings()
+        .await?;
 
     // Convert core holdings to response format
     let response: Vec<AlternativeHoldingResponse> = holdings

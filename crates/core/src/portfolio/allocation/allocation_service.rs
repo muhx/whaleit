@@ -319,7 +319,10 @@ impl AllocationServiceTrait for AllocationService {
         let total_with_cash: Decimal = holdings.iter().map(|h| h.market_value.base).sum();
 
         // 3. Get all taxonomies with categories
-        let taxonomies = self.taxonomy_service.get_taxonomies_with_categories()?;
+        let taxonomies = self
+            .taxonomy_service
+            .get_taxonomies_with_categories()
+            .await?;
 
         // 4. Collect all asset IDs from holdings
         let asset_ids: Vec<String> = holdings
@@ -331,7 +334,10 @@ impl AllocationServiceTrait for AllocationService {
         let mut assignments_by_asset: HashMap<String, Vec<(String, String, i32)>> = HashMap::new();
 
         for asset_id in &asset_ids {
-            let assignments = self.taxonomy_service.get_asset_assignments(asset_id)?;
+            let assignments = self
+                .taxonomy_service
+                .get_asset_assignments(asset_id)
+                .await?;
             let entries: Vec<(String, String, i32)> = assignments
                 .into_iter()
                 .map(|a| (a.taxonomy_id, a.category_id, a.weight))
@@ -463,7 +469,7 @@ impl AllocationServiceTrait for AllocationService {
         );
 
         // Get taxonomy with categories for hierarchy lookup and metadata
-        let taxonomy_with_cats = self.taxonomy_service.get_taxonomy(taxonomy_id)?;
+        let taxonomy_with_cats = self.taxonomy_service.get_taxonomy(taxonomy_id).await?;
         let empty_categories: Vec<Category> = Vec::new();
 
         // Extract taxonomy metadata
@@ -538,6 +544,7 @@ impl AllocationServiceTrait for AllocationService {
             if let Ok(assignments) = self
                 .taxonomy_service
                 .get_category_assignments(taxonomy_id, cat_id)
+                .await
             {
                 for assignment in assignments {
                     *asset_to_weight
@@ -573,6 +580,7 @@ impl AllocationServiceTrait for AllocationService {
                 let has_assignment = self
                     .taxonomy_service
                     .get_asset_assignments(asset_id)
+                    .await
                     .map(|assignments| assignments.iter().any(|a| a.taxonomy_id == taxonomy_id))
                     .unwrap_or(false);
 

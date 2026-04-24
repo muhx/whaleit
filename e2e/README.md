@@ -1,8 +1,8 @@
 # E2E Tests
 
-Wealthfolio E2E tests use [Playwright](https://playwright.dev/) and run against
-the **web app** (not the Tauri desktop app). There are **no mocks** — both
-frontend and backend must be running against a fresh database.
+Whaleit E2E tests use [Playwright](https://playwright.dev/) and run against the
+**web app** (not the Tauri desktop app). There are **no mocks** — both frontend
+and backend must be running against a fresh database.
 
 ---
 
@@ -45,9 +45,9 @@ restarting the server on every run.
 node scripts/prep-e2e.mjs
 ```
 
-This creates a new timestamped SQLite database (e.g.
-`db/app-testing-20260411T120000Z.db`) and writes its path to `.env.web`. **Run
-this every time** before starting the server — it ensures test isolation.
+This creates a new timestamped PostgreSQL database (via `prep-e2e.mjs`) and
+writes the connection URL to `.env.web`. **Run this every time** before starting
+the server — it ensures test isolation.
 
 #### Step 2 — Start the web app
 
@@ -63,7 +63,7 @@ then move on to Step 3 in a separate terminal.
 **Option B — redirect output to a log file and use the wait script:**
 
 ```bash
-pnpm run dev:web > /tmp/wealthfolio-dev2.log 2>&1 &
+pnpm run dev:web > /tmp/whaleit-dev2.log 2>&1 &
 ./scripts/wait-for-both-servers-to-be-ready.sh
 ```
 
@@ -113,6 +113,7 @@ npx playwright test && npx playwright show-report
 
 | File                                   | What it tests                                                        |
 | -------------------------------------- | -------------------------------------------------------------------- |
+| `00-auth-flow.spec.ts`                 | Multi-user auth: register, verify, login, API keys, forgot password  |
 | `01-happy-path.spec.ts`                | Onboarding, accounts, deposits, trades                               |
 | `02-activities.spec.ts`                | All activity types                                                   |
 | `03-fx-cash-balance.spec.ts`           | FX cash balances                                                     |

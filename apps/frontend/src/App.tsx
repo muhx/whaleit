@@ -1,5 +1,5 @@
 import { isWeb } from "@/adapters";
-import { AuthGate, AuthProvider } from "@/context/auth-context";
+import { AuthProvider } from "@/context/auth-context";
 import { WhaleItConnectProvider } from "@/features/connect";
 import { SettingsProvider } from "@/lib/settings-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import { TooltipProvider } from "@whaleit/ui";
 import { useState } from "react";
 import { PrivacyProvider } from "./context/privacy-context";
 import { LoginPage } from "./pages/auth/login-page";
-import { AppRoutes } from "./routes";
+import { ProtectedAppRoutes } from "./routes";
 
 function App() {
   const [queryClient] = useState(
@@ -25,16 +25,13 @@ function App() {
 
   const isWebEnv = isWeb;
 
-  // Make QueryClient available globally for addons
-  window.__wealthfolio_query_client__ = queryClient;
-
-  const routedContent = isWebEnv ? (
-    <AuthGate fallback={<LoginPage />}>
-      <AppRoutes />
-    </AuthGate>
-  ) : (
-    <AppRoutes />
-  );
+  const queryClientGlobals = window as Window &
+    typeof globalThis & {
+      __whaleit_query_client__?: QueryClient;
+      __whaleitQueryClient?: QueryClient;
+    };
+  queryClientGlobals.__whaleit_query_client__ = queryClient;
+  queryClientGlobals.__whaleitQueryClient = queryClient;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -42,7 +39,9 @@ function App() {
         <WhaleItConnectProvider>
           <PrivacyProvider>
             <SettingsProvider>
-              <TooltipProvider>{routedContent}</TooltipProvider>
+              <TooltipProvider>
+                <ProtectedAppRoutes isWeb={isWebEnv} loginPage={<LoginPage />} />
+              </TooltipProvider>
             </SettingsProvider>
           </PrivacyProvider>
         </WhaleItConnectProvider>

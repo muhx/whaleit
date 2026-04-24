@@ -25,12 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@whaleit/ui/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@whaleit/ui/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@whaleit/ui/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +55,7 @@ import { E2EESetupCard } from "./e2ee-setup-card";
 import { PairingFlow, WaitingState } from "./pairing-flow";
 import { RecoveryDialog } from "./recovery-dialog";
 
-const PORTAL_DEVICES_URL = "https://connect.wealthfolio.app/settings/devices";
+const PORTAL_DEVICES_URL = "https://connect.whaleit.app/settings/devices";
 
 const platformIcons: Record<string, typeof Icons.Monitor> = {
   macos: Icons.Monitor,

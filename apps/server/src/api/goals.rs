@@ -9,10 +9,10 @@ use axum::{
     routing::{delete, get},
     Json, Router,
 };
-use wealthfolio_core::goals::{Goal, GoalsAllocation, NewGoal};
+use whaleit_core::goals::{Goal, GoalsAllocation, NewGoal};
 
 async fn get_goals(State(state): State<Arc<AppState>>) -> ApiResult<Json<Vec<Goal>>> {
-    let goals = state.goal_service.get_goals()?;
+    let goals = state.goal_service.get_goals().await?;
     Ok(Json(goals))
 }
 
@@ -46,7 +46,7 @@ async fn delete_goal(
 async fn load_goals_allocations(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<Vec<GoalsAllocation>>> {
-    let allocs = state.goal_service.load_goals_allocations()?;
+    let allocs = state.goal_service.load_goals_allocations().await?;
     Ok(Json(allocs))
 }
 

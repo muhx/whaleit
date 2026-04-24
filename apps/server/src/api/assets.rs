@@ -7,7 +7,7 @@ use axum::{
     routing::{delete, get, put},
     Json, Router,
 };
-use wealthfolio_core::assets::{Asset as CoreAsset, NewAsset, UpdateAssetProfile};
+use whaleit_core::assets::{Asset as CoreAsset, NewAsset, UpdateAssetProfile};
 
 #[derive(serde::Deserialize)]
 struct AssetQuery {
@@ -19,12 +19,12 @@ async fn get_asset_profile(
     State(state): State<Arc<AppState>>,
     Query(q): Query<AssetQuery>,
 ) -> ApiResult<Json<CoreAsset>> {
-    let asset = state.asset_service.get_asset_by_id(&q.asset_id)?;
+    let asset = state.asset_service.get_asset_by_id(&q.asset_id).await?;
     Ok(Json(asset))
 }
 
 async fn list_assets(State(state): State<Arc<AppState>>) -> ApiResult<Json<Vec<CoreAsset>>> {
-    let assets = state.asset_service.get_assets()?;
+    let assets = state.asset_service.get_assets().await?;
     Ok(Json(assets))
 }
 

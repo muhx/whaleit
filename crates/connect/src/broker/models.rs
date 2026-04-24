@@ -1,5 +1,5 @@
 //! Models representing broker data from the cloud API.
-//! These models mirror Wealthfolio Connect API response structures.
+//! These models mirror Whaleit Connect API response structures.
 
 use serde::{Deserialize, Serialize};
 
@@ -610,7 +610,7 @@ pub struct HoldingsDiff {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewAccountInfo {
-    /// Local account ID in wealthfolio
+    /// Local account ID in whaleit
     pub local_account_id: String,
     /// Provider's account ID (e.g., from SnapTrade)
     pub provider_account_id: String,

@@ -9,10 +9,10 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use tokio::sync::mpsc;
-use wealthfolio_connect::{
+use whaleit_connect::{
     ensure_valid_access_token, BrokerSyncServiceTrait, TokenLifecycleConfig, TokenLifecycleState,
 };
-use wealthfolio_core::{assets::AssetServiceTrait, events::DomainEvent, secrets::SecretStore};
+use whaleit_core::{assets::AssetServiceTrait, events::DomainEvent, secrets::SecretStore};
 
 use super::planner::{plan_asset_enrichment, plan_broker_sync, plan_portfolio_job};
 use crate::events::EventBus;
@@ -25,18 +25,18 @@ pub struct QueueWorkerDeps {
     pub asset_service: Arc<dyn AssetServiceTrait + Send + Sync>,
     pub connect_sync_service: Arc<dyn BrokerSyncServiceTrait + Send + Sync>,
     pub event_bus: EventBus,
-    pub health_service: Arc<dyn wealthfolio_core::health::HealthServiceTrait + Send + Sync>,
+    pub health_service: Arc<dyn whaleit_core::health::HealthServiceTrait + Send + Sync>,
     // We need a way to enqueue portfolio jobs. Since AppState is not easily cloneable,
     // we pass what we need for enqueue_portfolio_job (which spawns its own async task).
     // The shared.rs enqueue_portfolio_job needs Arc<AppState>, so we'll need to pass
     // a callback or restructure slightly. For now, we'll store what we need.
     pub snapshot_service:
-        Arc<dyn wealthfolio_core::portfolio::snapshot::SnapshotServiceTrait + Send + Sync>,
-    pub quote_service: Arc<dyn wealthfolio_core::quotes::QuoteServiceTrait + Send + Sync>,
+        Arc<dyn whaleit_core::portfolio::snapshot::SnapshotServiceTrait + Send + Sync>,
+    pub quote_service: Arc<dyn whaleit_core::quotes::QuoteServiceTrait + Send + Sync>,
     pub valuation_service:
-        Arc<dyn wealthfolio_core::portfolio::valuation::ValuationServiceTrait + Send + Sync>,
-    pub account_service: Arc<wealthfolio_core::accounts::AccountService>,
-    pub fx_service: Arc<dyn wealthfolio_core::fx::FxServiceTrait + Send + Sync>,
+        Arc<dyn whaleit_core::portfolio::valuation::ValuationServiceTrait + Send + Sync>,
+    pub account_service: Arc<whaleit_core::accounts::AccountService>,
+    pub fx_service: Arc<dyn whaleit_core::fx::FxServiceTrait + Send + Sync>,
     pub timezone: Arc<RwLock<String>>,
     /// Secret store for accessing credentials (e.g., refresh tokens for broker sync)
     pub secret_store: Arc<dyn SecretStore>,
@@ -264,8 +264,8 @@ async fn run_portfolio_job(
         PORTFOLIO_UPDATE_COMPLETE, PORTFOLIO_UPDATE_ERROR, PORTFOLIO_UPDATE_START,
     };
     use serde_json::json;
-    use wealthfolio_core::accounts::AccountServiceTrait;
-    use wealthfolio_core::constants::PORTFOLIO_TOTAL_ACCOUNT_ID;
+    use whaleit_core::accounts::AccountServiceTrait;
+    use whaleit_core::constants::PORTFOLIO_TOTAL_ACCOUNT_ID;
 
     let event_bus = deps.event_bus.clone();
 
@@ -280,7 +280,7 @@ async fn run_portfolio_job(
             Some(sync_mode) => deps.quote_service.sync(sync_mode, asset_ids).await,
             None => {
                 tracing::warn!("MarketSyncMode requires sync but returned None for SyncMode");
-                Ok(wealthfolio_core::quotes::SyncResult::default())
+                Ok(whaleit_core::quotes::SyncResult::default())
             }
         };
 
@@ -292,7 +292,7 @@ async fn run_portfolio_job(
                 ));
                 tracing::info!("Market data sync completed in {:?}", sync_start.elapsed());
                 deps.health_service.clear_cache().await;
-                if let Err(err) = deps.fx_service.initialize() {
+                if let Err(err) = deps.fx_service.initialize().await {
                     tracing::warn!(
                         "Failed to initialize FxService after market data sync: {}",
                         err
@@ -313,7 +313,7 @@ async fn run_portfolio_job(
     event_bus.publish(ServerEvent::new(PORTFOLIO_UPDATE_START));
 
     // For TOTAL portfolio calculation, use non-archived accounts (ignores is_active)
-    let accounts_for_total = match deps.account_service.get_non_archived_accounts() {
+    let accounts_for_total = match deps.account_service.get_non_archived_accounts().await {
         Ok(accounts) => accounts,
         Err(err) => {
             let err_msg = format!("Failed to list non-archived accounts: {}", err);
@@ -374,12 +374,18 @@ async fn run_portfolio_job(
     if let Ok(Some(total_snapshot)) = deps
         .snapshot_service
         .get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID)
+        .await
     {
         let current_holdings: std::collections::HashMap<String, rust_decimal::Decimal> =
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position)| (asset_id.clone(), position.quantity))
+                .map(
+                    |(asset_id, position): (
+                        &String,
+                        &whaleit_core::portfolio::snapshot::Position,
+                    )| (asset_id.clone(), position.quantity),
+                )
                 .collect();
 
         if let Err(e) = deps
@@ -461,8 +467,8 @@ impl EventBusProgressReporter {
     }
 }
 
-impl wealthfolio_connect::SyncProgressReporter for EventBusProgressReporter {
-    fn report_progress(&self, payload: wealthfolio_connect::SyncProgressPayload) {
+impl whaleit_connect::SyncProgressReporter for EventBusProgressReporter {
+    fn report_progress(&self, payload: whaleit_connect::SyncProgressPayload) {
         use crate::events::ServerEvent;
         self.event_bus.publish(ServerEvent::with_payload(
             "sync-progress",
@@ -475,7 +481,7 @@ impl wealthfolio_connect::SyncProgressReporter for EventBusProgressReporter {
         self.event_bus.publish(ServerEvent::new(BROKER_SYNC_START));
     }
 
-    fn report_sync_complete(&self, result: &wealthfolio_connect::SyncResult) {
+    fn report_sync_complete(&self, result: &whaleit_connect::SyncResult) {
         use crate::events::{ServerEvent, BROKER_SYNC_COMPLETE, BROKER_SYNC_ERROR};
         if result.success {
             self.event_bus.publish(ServerEvent::with_payload(
@@ -510,8 +516,8 @@ async fn perform_broker_sync(
     event_bus: EventBus,
     secret_store: Arc<dyn SecretStore>,
     token_lifecycle: Arc<TokenLifecycleState>,
-) -> Result<wealthfolio_connect::SyncResult, String> {
-    use wealthfolio_connect::{ConnectApiClient, SyncConfig, SyncOrchestrator};
+) -> Result<whaleit_connect::SyncResult, String> {
+    use whaleit_connect::{ConnectApiClient, SyncConfig, SyncOrchestrator};
 
     if !crate::features::connect_sync_enabled() {
         return Err("Connect sync feature is disabled in this build.".to_string());

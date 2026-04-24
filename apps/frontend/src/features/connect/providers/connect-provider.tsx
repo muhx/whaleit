@@ -27,17 +27,17 @@ import type { UserInfo } from "../types";
 
 // Auth configuration - these are public/publishable keys (safe for client-side)
 // Can be overridden via environment variables: CONNECT_AUTH_URL and CONNECT_AUTH_PUBLISHABLE_KEY
-const AUTH_URL = (import.meta.env.CONNECT_AUTH_URL as string) || "https://auth.wealthfolio.app";
+const AUTH_URL = (import.meta.env.CONNECT_AUTH_URL as string) || "https://auth.whaleit.app";
 const AUTH_PUBLISHABLE_KEY =
   (import.meta.env.CONNECT_AUTH_PUBLISHABLE_KEY as string) ||
   "sb_publishable_ZSZbXNtWtnh9i2nqJ2UL4A_NV8ZVutd";
 
 // Key for storing refresh token in keyring/localStorage (for session restoration)
-// Note: For keyring (Tauri), the "wealthfolio_" prefix is added automatically by SecretStore
+// Note: For keyring (Tauri), the "whaleit_" prefix is added automatically by SecretStore
 const REFRESH_TOKEN_KEY = "sync_refresh_token";
 
 // Deep-link URL for desktop callbacks (custom URL scheme)
-const DESKTOP_DEEP_LINK_URL = "wealthfolio://auth/callback";
+const DESKTOP_DEEP_LINK_URL = "whaleit://auth/callback";
 
 // Web redirect URL for OAuth and magic link
 const getWebRedirectUrl = () => {
@@ -48,8 +48,7 @@ const getWebRedirectUrl = () => {
 // This is necessary because browsers block direct navigation to custom URL schemes
 // Uses env variable in dev, falls back to production URL for bundled builds
 const HOSTED_OAUTH_CALLBACK_URL =
-  (import.meta.env.CONNECT_OAUTH_CALLBACK_URL as string) ||
-  "https://connect.wealthfolio.app/deeplink";
+  (import.meta.env.CONNECT_OAUTH_CALLBACK_URL as string) || "https://connect.whaleit.app/deeplink";
 
 type AuthCallbackPayload = { type: "code"; code: string } | { type: "error"; message: string };
 
@@ -109,9 +108,7 @@ interface WhaleItConnectContextValue {
   refetchUserInfo: () => Promise<void>;
 }
 
-const WhaleItConnectContext = createContext<WhaleItConnectContextValue | undefined>(
-  undefined,
-);
+const WhaleItConnectContext = createContext<WhaleItConnectContextValue | undefined>(undefined);
 
 // Disabled context value - used when CONNECT_ENABLED is false
 // All methods are no-ops that return resolved promises
@@ -511,7 +508,7 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
         const redirectUrl = useASWebAuth
           ? DESKTOP_DEEP_LINK_URL // iOS: direct custom scheme, captured by ASWebAuth
           : isTauri && import.meta.env.PROD
-            ? HOSTED_OAUTH_CALLBACK_URL // Desktop & Android: bounce page → wealthfolio://
+            ? HOSTED_OAUTH_CALLBACK_URL // Desktop & Android: bounce page → whaleit://
             : getWebRedirectUrl(); // Web or dev mode
 
         const useSystemBrowser = isTauri && import.meta.env.PROD && !useASWebAuth;
@@ -542,7 +539,7 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
           try {
             const result = await authenticateWithASWebAuth({
               url: data.url,
-              callbackScheme: "wealthfolio",
+              callbackScheme: "whaleit",
             });
 
             // The plugin returns the full callback URL with the auth code
@@ -593,8 +590,8 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
         const redirectUrl =
           isTauri && import.meta.env.PROD
             ? isMobile
-              ? HOSTED_OAUTH_CALLBACK_URL // Mobile: bounce page → wealthfolio://
-              : DESKTOP_DEEP_LINK_URL // Desktop: direct wealthfolio:// from email client
+              ? HOSTED_OAUTH_CALLBACK_URL // Mobile: bounce page → whaleit://
+              : DESKTOP_DEEP_LINK_URL // Desktop: direct whaleit:// from email client
             : getWebRedirectUrl();
 
         const { error: otpError } = await supabase.auth.signInWithOtp({
@@ -765,11 +762,7 @@ function EnabledWhaleItConnectProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return (
-    <WhaleItConnectContext.Provider value={value}>
-      {children}
-    </WhaleItConnectContext.Provider>
-  );
+  return <WhaleItConnectContext.Provider value={value}>{children}</WhaleItConnectContext.Provider>;
 }
 
 // Main provider that chooses enabled/disabled path based on configuration

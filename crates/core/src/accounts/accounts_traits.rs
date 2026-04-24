@@ -29,7 +29,7 @@ pub trait AccountRepositoryTrait: Send + Sync {
     async fn delete(&self, account_id: &str) -> Result<usize>;
 
     /// Retrieves an account by its ID.
-    fn get_by_id(&self, account_id: &str) -> Result<Account>;
+    async fn get_by_id(&self, account_id: &str) -> Result<Account>;
 
     /// Lists accounts with optional filters.
     ///
@@ -37,7 +37,7 @@ pub trait AccountRepositoryTrait: Send + Sync {
     /// * `is_active_filter` - If Some, filter by active status
     /// * `is_archived_filter` - If Some, filter by archived status
     /// * `account_ids` - If Some, filter to only these account IDs
-    fn list(
+    async fn list(
         &self,
         is_active_filter: Option<bool>,
         is_archived_filter: Option<bool>,
@@ -61,10 +61,10 @@ pub trait AccountServiceTrait: Send + Sync {
     async fn delete_account(&self, account_id: &str) -> Result<()>;
 
     /// Retrieves an account by ID.
-    fn get_account(&self, account_id: &str) -> Result<Account>;
+    async fn get_account(&self, account_id: &str) -> Result<Account>;
 
     /// Lists accounts with optional filters.
-    fn list_accounts(
+    async fn list_accounts(
         &self,
         is_active_filter: Option<bool>,
         is_archived_filter: Option<bool>,
@@ -72,19 +72,19 @@ pub trait AccountServiceTrait: Send + Sync {
     ) -> Result<Vec<Account>>;
 
     /// Gets all accounts regardless of status.
-    fn get_all_accounts(&self) -> Result<Vec<Account>>;
+    async fn get_all_accounts(&self) -> Result<Vec<Account>>;
 
     /// Gets only active accounts.
-    fn get_active_accounts(&self) -> Result<Vec<Account>>;
+    async fn get_active_accounts(&self) -> Result<Vec<Account>>;
 
     /// Gets accounts by a list of IDs.
-    fn get_accounts_by_ids(&self, account_ids: &[String]) -> Result<Vec<Account>>;
+    async fn get_accounts_by_ids(&self, account_ids: &[String]) -> Result<Vec<Account>>;
 
     /// Returns all non-archived accounts (for aggregates/history)
-    fn get_non_archived_accounts(&self) -> Result<Vec<Account>>;
+    async fn get_non_archived_accounts(&self) -> Result<Vec<Account>>;
 
     /// Returns active, non-archived accounts (for UI selectors)
-    fn get_active_non_archived_accounts(&self) -> Result<Vec<Account>>;
+    async fn get_active_non_archived_accounts(&self) -> Result<Vec<Account>>;
 
     /// Returns the configured base currency if available.
     fn get_base_currency(&self) -> Option<String>;

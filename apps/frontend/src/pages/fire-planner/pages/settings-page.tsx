@@ -615,9 +615,7 @@ export default function SettingsPage({
         </CardHeader>
         <CardContent className="space-y-2">
           {accounts.filter((a) => a.isActive && !a.isArchived).length === 0 ? (
-            <p className="text-muted-foreground text-xs">
-              No active accounts found in WhaleIt.
-            </p>
+            <p className="text-muted-foreground text-xs">No active accounts found in WhaleIt.</p>
           ) : (
             accounts
               .filter((a) => a.isActive && !a.isArchived)

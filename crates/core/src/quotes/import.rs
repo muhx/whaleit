@@ -453,7 +453,7 @@ impl QuoteImportService {
         let mut validations = Vec::with_capacity(imports.len());
 
         for import in imports {
-            let validation = self.validate_single(&import)?;
+            let validation = self.validate_single(&import).await?;
             validations.push(validation);
         }
 
@@ -461,7 +461,7 @@ impl QuoteImportService {
     }
 
     /// Validate a single import row.
-    fn validate_single(&self, import: &QuoteImport) -> Result<ImportValidation> {
+    async fn validate_single(&self, import: &QuoteImport) -> Result<ImportValidation> {
         let asset_id = AssetId::new(&import.symbol);
         let currency = Currency::new(&import.currency);
 
@@ -517,7 +517,8 @@ impl QuoteImportService {
         // Check for existing quote (duplicate detection)
         let existing = self
             .quote_store
-            .latest(&asset_id, Some(&QuoteSource::Manual))?;
+            .latest(&asset_id, Some(&QuoteSource::Manual))
+            .await?;
         if let Some(existing_quote) = existing {
             let existing_day = Day::new(existing_quote.timestamp.date_naive());
             if existing_day == day {
@@ -531,9 +532,10 @@ impl QuoteImportService {
         }
 
         // Also check by range for more thorough duplicate detection
-        let quotes_on_day =
-            self.quote_store
-                .range(&asset_id, day, day, Some(&QuoteSource::Manual))?;
+        let quotes_on_day = self
+            .quote_store
+            .range(&asset_id, day, day, Some(&QuoteSource::Manual))
+            .await?;
         if !quotes_on_day.is_empty() {
             return Ok(ImportValidation::duplicate(
                 asset_id,
@@ -663,7 +665,7 @@ impl QuoteImportService {
     /// # Returns
     ///
     /// A vector of `QuoteExport` records suitable for CSV output
-    pub fn export(
+    pub async fn export(
         &self,
         asset_id: &AssetId,
         start: Option<Day>,
@@ -672,7 +674,10 @@ impl QuoteImportService {
         let start_day = start.unwrap_or_else(|| Day::from_ymd(1900, 1, 1).unwrap());
         let end_day = end.unwrap_or_else(Day::today);
 
-        let quotes = self.quote_store.range(asset_id, start_day, end_day, None)?;
+        let quotes = self
+            .quote_store
+            .range(asset_id, start_day, end_day, None)
+            .await?;
 
         Ok(quotes.iter().map(QuoteExport::from_quote).collect())
     }

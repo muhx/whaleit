@@ -118,6 +118,7 @@ impl<E: AiEnvironment + 'static> Tool for GetCashBalancesTool<E> {
             .env
             .account_service()
             .get_active_accounts()
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         let account_map: HashMap<String, (String, String)> = accounts
@@ -135,6 +136,7 @@ impl<E: AiEnvironment + 'static> Tool for GetCashBalancesTool<E> {
             .env
             .valuation_service()
             .get_latest_valuations(&target_ids)
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?
             .into_iter()
             .map(|valuation| (valuation.account_id.clone(), valuation))
@@ -153,7 +155,7 @@ impl<E: AiEnvironment + 'static> Tool for GetCashBalancesTool<E> {
 
             let cash_holdings: Vec<_> = holdings
                 .into_iter()
-                .filter(|h| h.holding_type == wealthfolio_core::holdings::HoldingType::Cash)
+                .filter(|h| h.holding_type == whaleit_core::holdings::HoldingType::Cash)
                 .collect();
 
             if cash_holdings.is_empty() {
@@ -213,7 +215,7 @@ impl<E: AiEnvironment + 'static> Tool for GetCashBalancesTool<E> {
 
             grand_total_base += effective_base;
             summaries.push(AccountCashSummary {
-                account_id: account_id.clone(),
+                account_id: account_id.to_string(),
                 account_name,
                 account_currency,
                 balances,
@@ -238,7 +240,7 @@ mod tests {
     };
     use chrono::{NaiveDate, Utc};
     use rust_decimal::Decimal;
-    use wealthfolio_core::{
+    use whaleit_core::{
         accounts::Account,
         holdings::{Holding, HoldingType, Instrument, MonetaryValue},
         valuation::DailyAccountValuation,

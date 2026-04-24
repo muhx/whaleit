@@ -13,23 +13,23 @@ use super::{
 #[async_trait]
 pub trait TaxonomyRepositoryTrait: Send + Sync {
     // Taxonomy operations
-    fn get_taxonomies(&self) -> Result<Vec<Taxonomy>>;
-    fn get_taxonomy(&self, id: &str) -> Result<Option<Taxonomy>>;
+    async fn get_taxonomies(&self) -> Result<Vec<Taxonomy>>;
+    async fn get_taxonomy(&self, id: &str) -> Result<Option<Taxonomy>>;
     async fn create_taxonomy(&self, taxonomy: NewTaxonomy) -> Result<Taxonomy>;
     async fn update_taxonomy(&self, taxonomy: Taxonomy) -> Result<Taxonomy>;
     async fn delete_taxonomy(&self, id: &str) -> Result<usize>;
 
     // Category operations
-    fn get_categories(&self, taxonomy_id: &str) -> Result<Vec<Category>>;
-    fn get_category(&self, taxonomy_id: &str, category_id: &str) -> Result<Option<Category>>;
+    async fn get_categories(&self, taxonomy_id: &str) -> Result<Vec<Category>>;
+    async fn get_category(&self, taxonomy_id: &str, category_id: &str) -> Result<Option<Category>>;
     async fn create_category(&self, category: NewCategory) -> Result<Category>;
     async fn update_category(&self, category: Category) -> Result<Category>;
     async fn delete_category(&self, taxonomy_id: &str, category_id: &str) -> Result<usize>;
     async fn bulk_create_categories(&self, categories: Vec<NewCategory>) -> Result<usize>;
 
     // Assignment operations
-    fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>>;
-    fn get_category_assignments(
+    async fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>>;
+    async fn get_category_assignments(
         &self,
         taxonomy_id: &str,
         category_id: &str,
@@ -42,17 +42,20 @@ pub trait TaxonomyRepositoryTrait: Send + Sync {
     async fn delete_asset_assignments(&self, asset_id: &str, taxonomy_id: &str) -> Result<usize>;
 
     // Bulk operations
-    fn get_taxonomy_with_categories(&self, id: &str) -> Result<Option<TaxonomyWithCategories>>;
-    fn get_all_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>>;
+    async fn get_taxonomy_with_categories(
+        &self,
+        id: &str,
+    ) -> Result<Option<TaxonomyWithCategories>>;
+    async fn get_all_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>>;
 }
 
 /// Service trait for taxonomy business logic.
 #[async_trait]
 pub trait TaxonomyServiceTrait: Send + Sync {
     // Taxonomy operations
-    fn get_taxonomies(&self) -> Result<Vec<Taxonomy>>;
-    fn get_taxonomy(&self, id: &str) -> Result<Option<TaxonomyWithCategories>>;
-    fn get_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>>;
+    async fn get_taxonomies(&self) -> Result<Vec<Taxonomy>>;
+    async fn get_taxonomy(&self, id: &str) -> Result<Option<TaxonomyWithCategories>>;
+    async fn get_taxonomies_with_categories(&self) -> Result<Vec<TaxonomyWithCategories>>;
     async fn create_taxonomy(&self, taxonomy: NewTaxonomy) -> Result<Taxonomy>;
     async fn update_taxonomy(&self, taxonomy: Taxonomy) -> Result<Taxonomy>;
     async fn delete_taxonomy(&self, id: &str) -> Result<usize>;
@@ -71,11 +74,11 @@ pub trait TaxonomyServiceTrait: Send + Sync {
 
     // Import/Export
     async fn import_taxonomy_json(&self, json_str: &str) -> Result<Taxonomy>;
-    fn export_taxonomy_json(&self, id: &str) -> Result<String>;
+    async fn export_taxonomy_json(&self, id: &str) -> Result<String>;
 
     // Assignment operations
-    fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>>;
-    fn get_category_assignments(
+    async fn get_asset_assignments(&self, asset_id: &str) -> Result<Vec<AssetTaxonomyAssignment>>;
+    async fn get_category_assignments(
         &self,
         taxonomy_id: &str,
         category_id: &str,

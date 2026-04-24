@@ -18,7 +18,7 @@ use super::auto_classification::{AutoClassificationService, ClassificationInput}
 use crate::errors::{DatabaseError, Error, Result};
 
 // Import mic_to_currency for resolving exchange trading currencies
-use wealthfolio_market_data::mic_to_currency;
+use whaleit_market_data::mic_to_currency;
 
 /// Converts a provider's asset_type string to our InstrumentType enum.
 /// Provider data uses various naming conventions (e.g., "CRYPTOCURRENCY", "ETF", "Equity").
@@ -291,15 +291,16 @@ impl AssetService {
 #[async_trait::async_trait]
 impl AssetServiceTrait for AssetService {
     /// Lists all assets with enriched fields (e.g., exchange_name)
-    fn get_assets(&self) -> Result<Vec<Asset>> {
-        let assets = self.asset_repository.list()?;
+    async fn get_assets(&self) -> Result<Vec<Asset>> {
+        let assets = self.asset_repository.list().await?;
         Ok(assets.into_iter().map(|a| a.enrich()).collect())
     }
 
     /// Retrieves an asset by its ID with enriched fields
-    fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset> {
+    async fn get_asset_by_id(&self, asset_id: &str) -> Result<Asset> {
         self.asset_repository
             .get_by_id(asset_id)
+            .await
             .map(|a| a.enrich())
     }
 
@@ -318,7 +319,7 @@ impl AssetServiceTrait for AssetService {
         asset_id: &str,
         mut payload: UpdateAssetProfile,
     ) -> Result<Asset> {
-        let existing_asset = self.asset_repository.get_by_id(asset_id)?;
+        let existing_asset = self.asset_repository.get_by_id(asset_id).await?;
         let effective_quote_mode = payload.quote_mode.unwrap_or(existing_asset.quote_mode);
 
         if let Some(raw_mic) = payload.instrument_exchange_mic.as_ref() {
@@ -438,7 +439,7 @@ impl AssetServiceTrait for AssetService {
             metadata: None,
         };
         if let Some(key) = key_spec.instrument_key() {
-            if let Ok(Some(existing)) = self.asset_repository.find_by_instrument_key(&key) {
+            if let Ok(Some(existing)) = self.asset_repository.find_by_instrument_key(&key).await {
                 return Ok(existing);
             }
         }
@@ -485,7 +486,7 @@ impl AssetServiceTrait for AssetService {
         };
 
         // Try to get existing asset first
-        match self.asset_repository.get_by_id(asset_id) {
+        match self.asset_repository.get_by_id(asset_id).await {
             Ok(mut existing_asset) => {
                 // Reactivate if previously deactivated (e.g., after account deletion)
                 if !existing_asset.is_active {
@@ -545,7 +546,7 @@ impl AssetServiceTrait for AssetService {
                     };
                     if let Some(key) = spec.instrument_key() {
                         if let Ok(Some(existing)) =
-                            self.asset_repository.find_by_instrument_key(&key)
+                            self.asset_repository.find_by_instrument_key(&key).await
                         {
                             if !existing.is_active {
                                 self.asset_repository.reactivate(&existing.id).await?;
@@ -692,14 +693,14 @@ impl AssetServiceTrait for AssetService {
     }
 
     async fn get_assets_by_asset_ids(&self, asset_ids: &[String]) -> Result<Vec<Asset>> {
-        self.asset_repository.list_by_asset_ids(asset_ids)
+        self.asset_repository.list_by_asset_ids(asset_ids).await
     }
 
     /// Enriches an existing asset's profile with data from market data provider.
     /// Updates the profile JSON (sectors, countries, website) and notes fields.
     async fn enrich_asset_profile(&self, asset_id: &str) -> Result<Asset> {
         // Get the existing asset
-        let existing_asset = self.asset_repository.get_by_id(asset_id)?;
+        let existing_asset = self.asset_repository.get_by_id(asset_id).await?;
 
         // Skip enrichment for assets that don't need market data
         if existing_asset.quote_mode != QuoteMode::Market {
@@ -818,7 +819,7 @@ impl AssetServiceTrait for AssetService {
                 if let Some(isin) = existing_asset.instrument_symbol.as_deref() {
                     if isin.starts_with("US912") {
                         let http = reqwest::Client::new();
-                        match wealthfolio_market_data::provider::us_treasury_calc::UsTreasuryCalcProvider::fetch_bond_details(&http, isin).await {
+                        match whaleit_market_data::provider::us_treasury_calc::UsTreasuryCalcProvider::fetch_bond_details(&http, isin).await {
                             Some(details) => {
                                 let spec = super::assets_model::BondSpec {
                                     isin: Some(isin.to_string()),
@@ -943,20 +944,19 @@ impl AssetServiceTrait for AssetService {
         let unique_ids_len = unique_ids.len();
 
         // Filter to only assets that need enrichment
-        let ids_to_enrich: Vec<String> = unique_ids
-            .into_iter()
-            .filter(|asset_id| {
-                let needs = match self.quote_service.get_sync_state(asset_id) {
-                    Ok(Some(state)) => state.needs_profile_enrichment(),
-                    Ok(None) => true,
-                    Err(_) => true,
-                };
-                if !needs {
-                    debug!("Skipping enrichment for {} - already enriched", asset_id);
-                }
-                needs
-            })
-            .collect();
+        let mut ids_to_enrich = Vec::new();
+        for asset_id in unique_ids {
+            let needs = match self.quote_service.get_sync_state(&asset_id).await {
+                Ok(Some(state)) => state.needs_profile_enrichment(),
+                Ok(None) => true,
+                Err(_) => true,
+            };
+            if !needs {
+                debug!("Skipping enrichment for {} - already enriched", asset_id);
+            } else {
+                ids_to_enrich.push(asset_id);
+            }
+        }
 
         let skipped_count = unique_ids_len - ids_to_enrich.len();
 
@@ -1113,7 +1113,9 @@ impl AssetServiceTrait for AssetService {
         for mut spec in unique_specs {
             if spec.id.is_none() {
                 if let Some(key) = spec.instrument_key() {
-                    if let Ok(Some(existing)) = self.asset_repository.find_by_instrument_key(&key) {
+                    if let Ok(Some(existing)) =
+                        self.asset_repository.find_by_instrument_key(&key).await
+                    {
                         preexisting_keys.insert(key);
                         spec.id = Some(existing.id);
                     }
@@ -1128,7 +1130,8 @@ impl AssetServiceTrait for AssetService {
         // 1. Pre-read existing assets by requested IDs.
         let existing_ids: HashSet<String> = if !ids.is_empty() {
             self.asset_repository
-                .list_by_asset_ids(&ids)?
+                .list_by_asset_ids(&ids)
+                .await?
                 .into_iter()
                 .map(|a| a.id)
                 .collect()
@@ -1260,7 +1263,7 @@ impl AssetServiceTrait for AssetService {
         self.asset_repository.create_batch(new_assets).await?;
 
         // Reactivate any pre-existing assets that were deactivated
-        for asset in self.asset_repository.list_by_asset_ids(&ids)? {
+        for asset in self.asset_repository.list_by_asset_ids(&ids).await? {
             if !asset.is_active && existing_ids.contains(&asset.id) {
                 info!("Reactivating previously deactivated asset: {}", asset.id);
                 self.asset_repository.reactivate(&asset.id).await?;
@@ -1270,7 +1273,8 @@ impl AssetServiceTrait for AssetService {
         // 3. Fetch all requested assets (by ID + by instrument_key for specs without IDs)
         let mut assets_map: HashMap<String, Asset> = if !ids.is_empty() {
             self.asset_repository
-                .list_by_asset_ids(&ids)?
+                .list_by_asset_ids(&ids)
+                .await?
                 .into_iter()
                 .map(|a| (a.id.clone(), a))
                 .collect()
@@ -1282,7 +1286,9 @@ impl AssetServiceTrait for AssetService {
         for spec in &resolved_specs {
             if spec.id.is_none() {
                 if let Some(key) = spec.instrument_key() {
-                    if let Ok(Some(asset)) = self.asset_repository.find_by_instrument_key(&key) {
+                    if let Ok(Some(asset)) =
+                        self.asset_repository.find_by_instrument_key(&key).await
+                    {
                         assets_map.insert(asset.id.clone(), asset);
                     }
                 }

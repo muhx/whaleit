@@ -179,6 +179,7 @@ impl<E: AiEnvironment + 'static> Tool for RecordActivitiesTool<E> {
             .env
             .account_service()
             .get_active_accounts()
+            .await
             .map_err(|e| AiError::ToolExecutionFailed(e.to_string()))?;
 
         let available_accounts: Vec<AccountOption> = accounts
@@ -291,8 +292,8 @@ mod tests {
     use crate::env::test_env::{MockAccountService, MockEnvironment, MockQuoteService};
     use chrono::Utc;
     use std::sync::RwLock;
-    use wealthfolio_core::accounts::Account;
-    use wealthfolio_core::quotes::SymbolSearchResult;
+    use whaleit_core::accounts::Account;
+    use whaleit_core::quotes::SymbolSearchResult;
 
     fn account(id: &str, name: &str, currency: &str) -> Account {
         Account {

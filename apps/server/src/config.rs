@@ -4,14 +4,13 @@ use crate::auth::{decode_secret_key, derive_keys, AuthConfig, CookieSecurePolicy
 
 pub struct Config {
     pub listen_addr: SocketAddr,
-    pub db_path: String,
+    pub database_url: Option<String>,
+    pub pg_pool_size: usize,
     pub cors_allow: Vec<String>,
     pub request_timeout: Duration,
     pub static_dir: String,
     pub addons_root: String,
-    /// Raw master key (used only for secret-store migration from old raw key)
     pub raw_secret_key: Vec<u8>,
-    /// HKDF-derived key for secrets encryption
     pub secrets_encryption_key: [u8; 32],
     pub auth: Option<AuthConfig>,
 }
@@ -23,7 +22,11 @@ impl Config {
             .unwrap_or_else(|_| "0.0.0.0:8088".to_string())
             .parse()
             .expect("Invalid WF_LISTEN_ADDR");
-        let db_path = std::env::var("WF_DB_PATH").unwrap_or_else(|_| "./db/app.db".into());
+        let database_url = std::env::var("DATABASE_URL").ok().filter(|s| !s.is_empty());
+        let pg_pool_size: usize = std::env::var("WF_PG_POOL_SIZE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(8);
         let cors_allow: Vec<String> = std::env::var("WF_CORS_ALLOW_ORIGINS")
             .ok()
             .filter(|s| !s.is_empty())
@@ -47,41 +50,68 @@ impl Config {
         let raw_secret_key = decode_secret_key(&secret_key)
             .unwrap_or_else(|e| panic!("Failed to decode WF_SECRET_KEY: {e}"));
         let (jwt_key, secrets_encryption_key) = derive_keys(&raw_secret_key);
-        let addons_root = std::env::var("WF_ADDONS_DIR").unwrap_or_else(|_| {
-            std::path::Path::new(&db_path)
-                .parent()
-                .unwrap_or_else(|| std::path::Path::new("."))
-                .to_string_lossy()
-                .into_owned()
-        });
-        let auth = std::env::var("WF_AUTH_PASSWORD_HASH")
+        let addons_root = std::env::var("WF_ADDONS_DIR").unwrap_or_else(|_| "./addons".into());
+
+        // Multi-user auth is enabled when WF_MULTI_USER_AUTH is true (default when DB is present)
+        // Legacy single-password mode is activated when WF_AUTH_PASSWORD_HASH is set AND WF_MULTI_USER_AUTH is not set
+        let multi_user = std::env::var("WF_MULTI_USER_AUTH")
+            .map(|v| v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+
+        let legacy_password_hash = std::env::var("WF_AUTH_PASSWORD_HASH")
             .ok()
             .map(|hash| hash.trim().to_string())
-            .filter(|hash| !hash.is_empty())
-            .map(|password_hash| {
-                let ttl_minutes = std::env::var("WF_AUTH_TOKEN_TTL_MINUTES")
-                    .ok()
-                    .and_then(|value| value.parse::<u64>().ok())
-                    .filter(|value| *value > 0)
-                    .unwrap_or(60);
-                let cookie_secure_raw =
-                    std::env::var("WF_COOKIE_SECURE").unwrap_or_else(|_| "auto".into());
-                let cookie_secure = match cookie_secure_raw.trim().to_ascii_lowercase().as_str() {
-                    "auto" => CookieSecurePolicy::Auto,
-                    "true" | "1" | "yes" => CookieSecurePolicy::Always,
-                    "false" | "0" | "no" => CookieSecurePolicy::Never,
-                    other => panic!(
-                        "Invalid WF_COOKIE_SECURE value: \"{other}\". \
-                         Expected one of: auto, true, false"
-                    ),
-                };
-                AuthConfig {
-                    password_hash,
-                    jwt_secret: jwt_key.to_vec(),
-                    access_token_ttl: Duration::from_secs(ttl_minutes.saturating_mul(60)),
-                    cookie_secure,
-                }
-            });
+            .filter(|hash| !hash.is_empty());
+
+        let auth = if multi_user || legacy_password_hash.is_none() {
+            // Multi-user mode: always active, JWT secret from WF_SECRET_KEY
+            let ttl_minutes = std::env::var("WF_AUTH_TOKEN_TTL_MINUTES")
+                .ok()
+                .and_then(|value| value.parse::<u64>().ok())
+                .filter(|value| *value > 0)
+                .unwrap_or(60);
+            let cookie_secure_raw =
+                std::env::var("WF_COOKIE_SECURE").unwrap_or_else(|_| "auto".into());
+            let cookie_secure = match cookie_secure_raw.trim().to_ascii_lowercase().as_str() {
+                "auto" => CookieSecurePolicy::Auto,
+                "true" | "1" | "yes" => CookieSecurePolicy::Always,
+                "false" | "0" | "no" => CookieSecurePolicy::Never,
+                other => panic!(
+                    "Invalid WF_COOKIE_SECURE value: \"{other}\". \
+                     Expected one of: auto, true, false"
+                ),
+            };
+            Some(AuthConfig {
+                jwt_secret: jwt_key.to_vec(),
+                access_token_ttl: Duration::from_secs(ttl_minutes.saturating_mul(60)),
+                cookie_secure,
+            })
+        } else {
+            // Legacy single-password mode
+            let ttl_minutes = std::env::var("WF_AUTH_TOKEN_TTL_MINUTES")
+                .ok()
+                .and_then(|value| value.parse::<u64>().ok())
+                .filter(|value| *value > 0)
+                .unwrap_or(60);
+            let cookie_secure_raw =
+                std::env::var("WF_COOKIE_SECURE").unwrap_or_else(|_| "auto".into());
+            let cookie_secure = match cookie_secure_raw.trim().to_ascii_lowercase().as_str() {
+                "auto" => CookieSecurePolicy::Auto,
+                "true" | "1" | "yes" => CookieSecurePolicy::Always,
+                "false" | "0" | "no" => CookieSecurePolicy::Never,
+                other => panic!(
+                    "Invalid WF_COOKIE_SECURE value: \"{other}\". \
+                     Expected one of: auto, true, false"
+                ),
+            };
+            // In legacy mode we don't verify the hash format upfront
+            Some(AuthConfig {
+                jwt_secret: jwt_key.to_vec(),
+                access_token_ttl: Duration::from_secs(ttl_minutes.saturating_mul(60)),
+                cookie_secure,
+            })
+        };
+
         // When auth is enabled, wildcard CORS is incompatible with credentials
         if auth.is_some() && cors_allow.iter().any(|o| o == "*") {
             panic!(
@@ -103,19 +133,21 @@ impl Config {
                      \n\
                      To fix this, do one of the following:\n\
                      \n\
-                     1. Set WF_AUTH_PASSWORD_HASH to an Argon2id hash of your password.\n\
+                     1. Set WF_MULTI_USER_AUTH=true to enable multi-user authentication.\n\
+                     2. Set WF_AUTH_PASSWORD_HASH to an Argon2id hash of your password.\n\
                         Generate one with: printf 'your-password' | argon2 yoursalt16chars! -id -e\n\
                         In a .env file, no escaping is needed.\n\
                         In Docker Compose YAML, double every $ sign: '$$argon2id$$v=19$$...'\n\
                      \n\
-                     2. Set WF_AUTH_REQUIRED=false if a reverse proxy handles authentication."
+                     3. Set WF_AUTH_REQUIRED=false if a reverse proxy handles authentication."
                 );
             }
         }
 
         Self {
             listen_addr,
-            db_path,
+            database_url,
+            pg_pool_size,
             cors_allow,
             request_timeout: Duration::from_millis(timeout_ms),
             static_dir,

@@ -1,8 +1,9 @@
 # Architecture Research
 
-**Domain:** Personal finance management application (expanding investment portfolio tracker)
-**Researched:** 2026-04-20
-**Confidence:** HIGH (existing architecture well-documented; new component patterns verified against official docs)
+**Domain:** Personal finance management application (expanding investment
+portfolio tracker) **Researched:** 2026-04-20 **Confidence:** HIGH (existing
+architecture well-documented; new component patterns verified against official
+docs)
 
 ## Recommended Architecture
 
@@ -81,18 +82,18 @@
 
 ### Component Responsibilities
 
-| Component | Responsibility | Implementation Notes |
-|-----------|----------------|---------------------|
-| `crates/core/bank_accounts/` | Bank account domain models, service traits, validation | Mirrors `accounts/` pattern — `BankAccountServiceTrait`, `NewBankAccount`, `BankAccountUpdate` |
-| `crates/core/credit_cards/` | Credit card models, balance tracking, rewards, statement cycles | `CreditCardServiceTrait`, `CreditCardBalance`, `RewardPoints` |
-| `crates/core/transactions/` | Daily transactions with categories, auto-categorization rules | `TransactionServiceTrait`, `TransactionCategory`, `TransactionRule` |
-| `crates/core/budgets/` | Envelope budgets, percentage-based rules, period tracking | `BudgetServiceTrait`, `EnvelopeBudget`, `PercentageRule` |
-| `crates/core/subscriptions/` | Subscription/bill tracking, renewal reminders, detection | `SubscriptionServiceTrait`, `Subscription`, `BillReminder` |
-| `crates/core/recommendations/` | AI-generated financial insights, multi-period scheduling | `RecommendationServiceTrait`, `Recommendation`, `InsightPeriod` |
-| `crates/storage-postgres/` | PostgreSQL implementations of all repository traits | `diesel-async` + `deadpool`, same trait implementations as `storage-sqlite` |
-| `crates/gmail/` | Gmail OAuth flow, email scanning, invoice extraction | `reqwest` + Gmail API v1, token storage via `SecretStore` trait |
-| `crates/mcp-server/` | MCP protocol endpoint for external AI tools | `rust-mcp-sdk` hyper_server, wraps core service traits as MCP tools |
-| `crates/ai/tools/` (expanded) | New AI tools for transactions, budgets, subscriptions, OCR | Extend existing `ToolSet` + `AiEnvironment` pattern |
+| Component                      | Responsibility                                                  | Implementation Notes                                                                           |
+| ------------------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `crates/core/bank_accounts/`   | Bank account domain models, service traits, validation          | Mirrors `accounts/` pattern — `BankAccountServiceTrait`, `NewBankAccount`, `BankAccountUpdate` |
+| `crates/core/credit_cards/`    | Credit card models, balance tracking, rewards, statement cycles | `CreditCardServiceTrait`, `CreditCardBalance`, `RewardPoints`                                  |
+| `crates/core/transactions/`    | Daily transactions with categories, auto-categorization rules   | `TransactionServiceTrait`, `TransactionCategory`, `TransactionRule`                            |
+| `crates/core/budgets/`         | Envelope budgets, percentage-based rules, period tracking       | `BudgetServiceTrait`, `EnvelopeBudget`, `PercentageRule`                                       |
+| `crates/core/subscriptions/`   | Subscription/bill tracking, renewal reminders, detection        | `SubscriptionServiceTrait`, `Subscription`, `BillReminder`                                     |
+| `crates/core/recommendations/` | AI-generated financial insights, multi-period scheduling        | `RecommendationServiceTrait`, `Recommendation`, `InsightPeriod`                                |
+| `crates/storage-postgres/`     | PostgreSQL implementations of all repository traits             | `diesel-async` + `deadpool`, same trait implementations as `storage-sqlite`                    |
+| `crates/gmail/`                | Gmail OAuth flow, email scanning, invoice extraction            | `reqwest` + Gmail API v1, token storage via `SecretStore` trait                                |
+| `crates/mcp-server/`           | MCP protocol endpoint for external AI tools                     | `rust-mcp-sdk` hyper_server, wraps core service traits as MCP tools                            |
+| `crates/ai/tools/` (expanded)  | New AI tools for transactions, budgets, subscriptions, OCR      | Extend existing `ToolSet` + `AiEnvironment` pattern                                            |
 
 ## Recommended Crate Structure
 
@@ -226,18 +227,25 @@ apps/frontend/src/
 
 ### Pattern 1: Dual Database Engine via Repository Traits
 
-**What:** Use the existing repository trait pattern to abstract over SQLite and PostgreSQL. `crates/core/` defines service traits; `crates/storage-sqlite/` and `crates/storage-postgres/` each implement them. Runtime selects the appropriate implementation at startup.
+**What:** Use the existing repository trait pattern to abstract over SQLite and
+PostgreSQL. `crates/core/` defines service traits; `crates/storage-sqlite/` and
+`crates/storage-postgres/` each implement them. Runtime selects the appropriate
+implementation at startup.
 
 **When to use:** Every new domain module that needs persistence.
 
 **Trade-offs:**
+
 - (+) Core business logic stays database-agnostic
-- (+) Testing with mock implementations is trivial (proven by existing MockEnvironment pattern)
-- (+) Each backend can optimize independently (SQLite uses write actor, PG uses async pool)
+- (+) Testing with mock implementations is trivial (proven by existing
+  MockEnvironment pattern)
+- (+) Each backend can optimize independently (SQLite uses write actor, PG uses
+  async pool)
 - (-) Two sets of migrations to maintain
 - (-) Some SQL dialect differences require conditional compilation
 
 **Example:**
+
 ```rust
 // crates/core/bank_accounts/mod.rs — trait definition
 #[async_trait]
@@ -288,16 +296,21 @@ impl BankAccountServiceTrait for PgBankAccountRepository {
 
 ### Pattern 2: Extended Domain Events for Finance Features
 
-**What:** Extend the existing `DomainEvent` enum with new variants for bank account, transaction, budget, and subscription changes. New event handlers process side effects.
+**What:** Extend the existing `DomainEvent` enum with new variants for bank
+account, transaction, budget, and subscription changes. New event handlers
+process side effects.
 
-**When to use:** Every mutation that triggers downstream processing (budget recalculation, recommendation generation, notification dispatch).
+**When to use:** Every mutation that triggers downstream processing (budget
+recalculation, recommendation generation, notification dispatch).
 
 **Trade-offs:**
+
 - (+) Side-effect-free core logic (proven pattern in existing codebase)
 - (+) Easy to add new event consumers without modifying producers
 - (-) Event proliferation needs careful naming to stay manageable
 
 **Example:**
+
 ```rust
 // crates/core/events/domain_event.rs — additions
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -337,16 +350,21 @@ pub enum DomainEvent {
 
 ### Pattern 3: MCP Server as a Thin Wrapper
 
-**What:** The MCP server (`crates/mcp-server/`) wraps existing `crates/core/` service traits as MCP tools. It does NOT duplicate business logic — it calls the same trait implementations that Tauri and Axum use.
+**What:** The MCP server (`crates/mcp-server/`) wraps existing `crates/core/`
+service traits as MCP tools. It does NOT duplicate business logic — it calls the
+same trait implementations that Tauri and Axum use.
 
-**When to use:** Exposing financial data to external AI tools (Claude Desktop, Cursor, etc.)
+**When to use:** Exposing financial data to external AI tools (Claude Desktop,
+Cursor, etc.)
 
 **Trade-offs:**
+
 - (+) Zero duplication — same service traits, same validation, same data
 - (+) Auth/security handled once at the MCP transport layer
 - (-) MCP tools must map to trait method signatures (some impedance mismatch)
 
 **Example:**
+
 ```rust
 // crates/mcp-server/handler.rs
 use rust_mcp_sdk::mcp_server::ServerHandler;
@@ -381,22 +399,30 @@ impl<E: McpEnvironment + 'static> ServerHandler for WhaleItMcpHandler<E> {
 
 ### Pattern 4: Gmail Integration via Connect Crate Pattern
 
-**What:** Follow the `crates/connect/` pattern for Gmail OAuth — feature-gated crate with OAuth lifecycle, token storage via existing `SecretStore`, and ingestion pipeline.
+**What:** Follow the `crates/connect/` pattern for Gmail OAuth — feature-gated
+crate with OAuth lifecycle, token storage via existing `SecretStore`, and
+ingestion pipeline.
 
-**When to use:** Gmail integration for subscription discovery from email receipts/invoices.
+**When to use:** Gmail integration for subscription discovery from email
+receipts/invoices.
 
 **Trade-offs:**
+
 - (+) Consistent with existing broker sync architecture
 - (+) Feature-gated means users who don't need Gmail don't pay the cost
 - (-) Gmail API has rate limits; must implement backoff and caching
 
 ### Pattern 5: OCR via Existing AI Multimodal Pipeline
 
-**What:** Leverage the existing AI chat infrastructure (image/PDF attachment support already in `chat.rs` via `build_user_prompt`) + a new `ProcessReceiptTool` that extracts structured transaction data from receipt images.
+**What:** Leverage the existing AI chat infrastructure (image/PDF attachment
+support already in `chat.rs` via `build_user_prompt`) + a new
+`ProcessReceiptTool` that extracts structured transaction data from receipt
+images.
 
 **When to use:** Receipt scanning for transaction creation.
 
 **Trade-offs:**
+
 - (+) No new OCR crate needed — uses LLM vision capabilities already supported
 - (+) Users control the model choice (cheaper vs. more capable)
 - (-) Requires vision-capable model (user must configure)
@@ -557,50 +583,63 @@ Web (Axum):
 
 ## Internal Boundaries
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| Frontend ↔ Adapter Layer | Typed function calls | Shared modules call `invoke()` (tauri/web) — Vite alias swaps implementation |
-| Adapter ↔ Tauri IPC | `invoke("command", payload)` | JSON-serialized, 120s timeout |
-| Adapter ↔ Axum HTTP | `fetch("/api/v1/...", opts)` | REST API, same command names as IPC |
-| Tauri/Axum ↔ Core Services | `Arc<dyn ServiceTrait>` | Dependency injection via ServiceContext/AppState |
-| Core Services ↔ Storage | Repository trait methods | Database-agnostic — SQLite or PG implementation |
-| Core Services ↔ Domain Events | `event_sink.emit(event)` | Async, non-blocking, best-effort |
-| AI Tools ↔ Core Services | `AiEnvironment` trait | Same service traits, injected into tool constructors |
-| MCP Server ↔ Core Services | `McpEnvironment` trait | Same pattern as AiEnvironment, wraps service traits |
-| Gmail ↔ SecretStore | `SecretStore` trait | OAuth tokens stored via existing secret abstraction |
-| Recommendations ↔ AI | Via existing ChatService | Recommendations use the same LLM infrastructure |
+| Boundary                      | Communication                | Notes                                                                        |
+| ----------------------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| Frontend ↔ Adapter Layer      | Typed function calls         | Shared modules call `invoke()` (tauri/web) — Vite alias swaps implementation |
+| Adapter ↔ Tauri IPC           | `invoke("command", payload)` | JSON-serialized, 120s timeout                                                |
+| Adapter ↔ Axum HTTP           | `fetch("/api/v1/...", opts)` | REST API, same command names as IPC                                          |
+| Tauri/Axum ↔ Core Services    | `Arc<dyn ServiceTrait>`      | Dependency injection via ServiceContext/AppState                             |
+| Core Services ↔ Storage       | Repository trait methods     | Database-agnostic — SQLite or PG implementation                              |
+| Core Services ↔ Domain Events | `event_sink.emit(event)`     | Async, non-blocking, best-effort                                             |
+| AI Tools ↔ Core Services      | `AiEnvironment` trait        | Same service traits, injected into tool constructors                         |
+| MCP Server ↔ Core Services    | `McpEnvironment` trait       | Same pattern as AiEnvironment, wraps service traits                          |
+| Gmail ↔ SecretStore           | `SecretStore` trait          | OAuth tokens stored via existing secret abstraction                          |
+| Recommendations ↔ AI          | Via existing ChatService     | Recommendations use the same LLM infrastructure                              |
 
 ## Anti-Patterns
 
 ### Anti-Pattern 1: Database-Specific Logic in Core Crate
 
-**What people do:** Put SQL query logic or Diesel schema references directly in `crates/core/`
-**Why it's wrong:** Core crate must remain database-agnostic. It defines traits, not implementations.
-**Do this instead:** Keep `crates/core/` pure trait + model definitions. All Diesel queries, schema references, and migration code go in `crates/storage-sqlite/` or `crates/storage-postgres/`. The existing codebase already follows this pattern perfectly — new domains must too.
+**What people do:** Put SQL query logic or Diesel schema references directly in
+`crates/core/` **Why it's wrong:** Core crate must remain database-agnostic. It
+defines traits, not implementations. **Do this instead:** Keep `crates/core/`
+pure trait + model definitions. All Diesel queries, schema references, and
+migration code go in `crates/storage-sqlite/` or `crates/storage-postgres/`. The
+existing codebase already follows this pattern perfectly — new domains must too.
 
 ### Anti-Pattern 2: Duplicating Business Logic in MCP Server
 
-**What people do:** Implement data access and business rules directly in MCP tool handlers
-**Why it's wrong:** MCP server is a transport layer, not a business layer. Logic would diverge from Tauri/Axum paths.
-**Do this instead:** MCP tools delegate to existing service traits. The MCP handler is ~5 lines per tool: parse params → call service trait → format result.
+**What people do:** Implement data access and business rules directly in MCP
+tool handlers **Why it's wrong:** MCP server is a transport layer, not a
+business layer. Logic would diverge from Tauri/Axum paths. **Do this instead:**
+MCP tools delegate to existing service traits. The MCP handler is ~5 lines per
+tool: parse params → call service trait → format result.
 
 ### Anti-Pattern 3: Synchronous Gmail API Calls
 
-**What people do:** Make Gmail API calls synchronously in request handlers
-**Why it's wrong:** Gmail API has high latency and rate limits. Blocking an async runtime thread is catastrophic.
-**Do this instead:** Gmail scanning runs in background tasks (like the existing `scheduler::run_periodic_sync()`). Results are persisted to DB, frontend is notified via domain events / SSE.
+**What people do:** Make Gmail API calls synchronously in request handlers **Why
+it's wrong:** Gmail API has high latency and rate limits. Blocking an async
+runtime thread is catastrophic. **Do this instead:** Gmail scanning runs in
+background tasks (like the existing `scheduler::run_periodic_sync()`). Results
+are persisted to DB, frontend is notified via domain events / SSE.
 
 ### Anti-Pattern 4: Tight-Coupling Budget Engine to Transaction Service
 
-**What people do:** Budget service directly calls transaction service to calculate spending
-**Why it's wrong:** Creates circular dependencies. Budget shouldn't know about transaction internals.
-**Do this instead:** Budget service receives `TransactionsChanged` events and recalculates independently. Or budget queries use a shared read-only repository — budget reads transaction data, doesn't call transaction service.
+**What people do:** Budget service directly calls transaction service to
+calculate spending **Why it's wrong:** Creates circular dependencies. Budget
+shouldn't know about transaction internals. **Do this instead:** Budget service
+receives `TransactionsChanged` events and recalculates independently. Or budget
+queries use a shared read-only repository — budget reads transaction data,
+doesn't call transaction service.
 
 ### Anti-Pattern 5: Separate Schema for PostgreSQL
 
-**What people do:** Maintain completely independent Diesel schemas for SQLite and PostgreSQL
-**Why it's wrong:** Tables drift apart. Queries written for one don't work on the other.
-**Do this instead:** Use the same `table!` macro definitions for both. Diesel's schema macros are backend-agnostic. Only the connection type and migration SQL differ. Define schema once (in `crates/core/` or a shared `crates/storage-schema/`), import in both storage crates.
+**What people do:** Maintain completely independent Diesel schemas for SQLite
+and PostgreSQL **Why it's wrong:** Tables drift apart. Queries written for one
+don't work on the other. **Do this instead:** Use the same `table!` macro
+definitions for both. Diesel's schema macros are backend-agnostic. Only the
+connection type and migration SQL differ. Define schema once (in `crates/core/`
+or a shared `crates/storage-schema/`), import in both storage crates.
 
 ## Build Order (Dependencies Between Components)
 
@@ -654,51 +693,63 @@ Phase 9: AI-Powered Features
 
 ## Scaling Considerations
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Single user (desktop) | SQLite + write actor is perfect. No changes needed. |
+| Scale                           | Architecture Adjustments                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Single user (desktop)           | SQLite + write actor is perfect. No changes needed.                                              |
 | Family/small team (self-hosted) | PostgreSQL mode. Current architecture handles this — Axum + PG pool. Add connection pool tuning. |
-| Multi-tenant SaaS (future) | Would require schema isolation or tenant IDs. NOT in scope for v1 — single-user per instance. |
+| Multi-tenant SaaS (future)      | Would require schema isolation or tenant IDs. NOT in scope for v1 — single-user per instance.    |
 
 ### Scaling Priorities
 
-1. **First bottleneck (PostgreSQL mode):** Connection pool exhaustion under heavy concurrent usage. Mitigate with `deadpool` pool size tuning and query optimization. Diesel-async handles this well.
+1. **First bottleneck (PostgreSQL mode):** Connection pool exhaustion under
+   heavy concurrent usage. Mitigate with `deadpool` pool size tuning and query
+   optimization. Diesel-async handles this well.
 
-2. **Second bottleneck (Gmail scanning):** Gmail API rate limits (~250 quota units/user/sec). Mitigate with exponential backoff, batched processing, and caching parsed results.
+2. **Second bottleneck (Gmail scanning):** Gmail API rate limits (~250 quota
+   units/user/sec). Mitigate with exponential backoff, batched processing, and
+   caching parsed results.
 
-3. **Third bottleneck (MCP server):** Long-running MCP sessions holding service trait references. Mitigate with `Arc<>` clones (cheap) and stateless tool execution.
+3. **Third bottleneck (MCP server):** Long-running MCP sessions holding service
+   trait references. Mitigate with `Arc<>` clones (cheap) and stateless tool
+   execution.
 
 ## Integration Points
 
 ### External Services
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Gmail API v1 | OAuth2 + REST via `reqwest` | Token refresh handled by `gmail::oauth`, stored in `SecretStore` |
-| LLM Providers (OpenAI, Anthropic, etc.) | Existing `crates/ai/providers.rs` | No changes needed — just new tools |
-| MCP Clients (Claude Desktop) | `rust-mcp-sdk` Streamable HTTP + SSE | Runs as Axum sub-router or standalone service |
-| Vision Models | Existing multimodal support in `chat.rs` | `build_user_prompt()` already handles images/PDFs |
+| Service                                 | Integration Pattern                      | Notes                                                            |
+| --------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
+| Gmail API v1                            | OAuth2 + REST via `reqwest`              | Token refresh handled by `gmail::oauth`, stored in `SecretStore` |
+| LLM Providers (OpenAI, Anthropic, etc.) | Existing `crates/ai/providers.rs`        | No changes needed — just new tools                               |
+| MCP Clients (Claude Desktop)            | `rust-mcp-sdk` Streamable HTTP + SSE     | Runs as Axum sub-router or standalone service                    |
+| Vision Models                           | Existing multimodal support in `chat.rs` | `build_user_prompt()` already handles images/PDFs                |
 
 ### Key Design Decisions for New Components
 
-| Decision | Rationale |
-|----------|-----------|
-| `crates/storage-postgres/` as separate crate | Clean separation — PG needs `diesel-async`, `deadpool`, different features. SQLite needs `rusqlite`, write actor. Mixing in one crate creates feature flag explosion. |
-| `crates/gmail/` as separate crate (not inside `crates/connect/`) | Gmail is fundamentally different from broker sync — it's user-facing OAuth, not server-to-server. Separation keeps concerns clear. |
-| `crates/mcp-server/` as separate crate | MCP protocol is a distinct transport layer. Separating it means the MCP dependency tree doesn't bloat the core app binary. |
-| OCR via existing AI multimodal pipeline | No additional dependencies. Users already have vision models available. Accuracy is sufficient for receipt data extraction. |
-| Recommendations via LLM (not rule engine) | Rule engines are rigid and require constant tuning. LLM generates natural-language insights that adapt to spending patterns. |
-| `McpEnvironment` trait (mirrors `AiEnvironment`) | Proven DI pattern. MCP tools need the same services as AI tools — use same abstraction. |
+| Decision                                                         | Rationale                                                                                                                                                             |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crates/storage-postgres/` as separate crate                     | Clean separation — PG needs `diesel-async`, `deadpool`, different features. SQLite needs `rusqlite`, write actor. Mixing in one crate creates feature flag explosion. |
+| `crates/gmail/` as separate crate (not inside `crates/connect/`) | Gmail is fundamentally different from broker sync — it's user-facing OAuth, not server-to-server. Separation keeps concerns clear.                                    |
+| `crates/mcp-server/` as separate crate                           | MCP protocol is a distinct transport layer. Separating it means the MCP dependency tree doesn't bloat the core app binary.                                            |
+| OCR via existing AI multimodal pipeline                          | No additional dependencies. Users already have vision models available. Accuracy is sufficient for receipt data extraction.                                           |
+| Recommendations via LLM (not rule engine)                        | Rule engines are rigid and require constant tuning. LLM generates natural-language insights that adapt to spending patterns.                                          |
+| `McpEnvironment` trait (mirrors `AiEnvironment`)                 | Proven DI pattern. MCP tools need the same services as AI tools — use same abstraction.                                                                               |
 
 ## Sources
 
-- Existing codebase analysis: `.planning/codebase/ARCHITECTURE.md`, `crates/core/`, `crates/ai/`, `crates/storage-sqlite/`
-- rust-mcp-sdk: Context7 (`/rust-mcp-stack/rust-mcp-sdk`) — ServerHandler trait, tool_box! macro, hyper_server transport
-- Diesel dual backend: Context7 (`/diesel-rs/diesel`) — SQLite + PostgreSQL connection types, feature flags
-- diesel-async: Context7 (`/weiznich/diesel_async`) — AsyncPgConnection, deadpool pooling
-- rig-core: Context7 (`/0xplaygrounds/rig`) — Agent builder, tool trait, streaming (already in use)
+- Existing codebase analysis: `.planning/codebase/ARCHITECTURE.md`,
+  `crates/core/`, `crates/ai/`, `crates/storage-sqlite/`
+- rust-mcp-sdk: Context7 (`/rust-mcp-stack/rust-mcp-sdk`) — ServerHandler trait,
+  tool_box! macro, hyper_server transport
+- Diesel dual backend: Context7 (`/diesel-rs/diesel`) — SQLite + PostgreSQL
+  connection types, feature flags
+- diesel-async: Context7 (`/weiznich/diesel_async`) — AsyncPgConnection,
+  deadpool pooling
+- rig-core: Context7 (`/0xplaygrounds/rig`) — Agent builder, tool trait,
+  streaming (already in use)
 - Gmail API v1: Official docs (https://developers.google.com/gmail/api)
 
 ---
-*Architecture research for: WhaleIt personal finance expansion*
-*Researched: 2026-04-20*
+
+_Architecture research for: WhaleIt personal finance expansion_ _Researched:
+2026-04-20_

@@ -1,4 +1,3 @@
-use diesel::result::Error as DieselError;
 use thiserror::Error;
 
 /// Custom error type for activity-related operations
@@ -16,28 +15,8 @@ pub enum ActivityError {
     CurrencyExchangeError(String),
 }
 
-impl From<DieselError> for ActivityError {
-    fn from(err: DieselError) -> Self {
-        match err {
-            DieselError::NotFound => ActivityError::NotFound("Record not found".to_string()),
-            _ => ActivityError::DatabaseError(err.to_string()),
-        }
-    }
-}
-
 impl From<ActivityError> for String {
     fn from(error: ActivityError) -> Self {
         error.to_string()
-    }
-}
-
-impl From<ActivityError> for diesel::result::Error {
-    fn from(err: ActivityError) -> Self {
-        // Convert ActivityError to a diesel error
-        // Using DatabaseError as it's the most appropriate for general errors
-        diesel::result::Error::DatabaseError(
-            diesel::result::DatabaseErrorKind::SerializationFailure,
-            Box::new(format!("{}", err)),
-        )
     }
 }

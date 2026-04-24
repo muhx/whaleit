@@ -1,6 +1,6 @@
-//! Wealthfolio Connect - Cloud sync functionality for Wealthfolio.
+//! Whaleit Connect - Cloud sync functionality for Whaleit.
 //!
-//! This crate provides integration with Wealthfolio Connect cloud services
+//! This crate provides integration with Whaleit Connect cloud services
 //! for syncing broker accounts and activities.
 
 #[cfg(feature = "broker")]

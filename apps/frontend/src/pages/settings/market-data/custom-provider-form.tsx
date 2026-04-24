@@ -15,13 +15,7 @@ import {
 import { Icons } from "@whaleit/ui/components/ui/icons";
 import { Input } from "@whaleit/ui/components/ui/input";
 import { Textarea } from "@whaleit/ui/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@whaleit/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@whaleit/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@whaleit/ui/components/ui/tabs";
 import {
   Collapsible,

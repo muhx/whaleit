@@ -3,18 +3,18 @@ use std::sync::{Arc, RwLock};
 
 use crate::{
     ai_environment::ServerAiEnvironment, auth::AuthManager, config::Config,
-    domain_events::WebDomainEventSink, events::EventBus, secrets::build_secret_store,
+    domain_events::WebDomainEventSink, email::EmailService, events::EventBus,
+    secrets::build_secret_store,
 };
-use tracing::error;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, EnvFilter};
-use wealthfolio_ai::{AiProviderService, AiProviderServiceTrait, ChatConfig, ChatService};
-use wealthfolio_connect::{
+use whaleit_ai::{AiProviderService, AiProviderServiceTrait, ChatConfig, ChatService};
+use whaleit_connect::{
     BrokerSyncService, BrokerSyncServiceTrait, CoreImportRunRepositoryAdapter,
     ImportRunRepositoryTrait, TokenLifecycleState,
 };
-use wealthfolio_core::addons::{AddonService, AddonServiceTrait};
-use wealthfolio_core::{
+use whaleit_core::addons::{AddonService, AddonServiceTrait};
+use whaleit_core::{
     accounts::AccountService,
     activities::{ActivityService as CoreActivityService, ActivityServiceTrait},
     assets::{
@@ -41,29 +41,33 @@ use wealthfolio_core::{
     secrets::SecretStore,
     settings::{SettingsRepositoryTrait, SettingsService, SettingsServiceTrait},
     taxonomies::{TaxonomyService, TaxonomyServiceTrait},
+    users::UserRepositoryTrait,
 };
-use wealthfolio_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
-use wealthfolio_storage_sqlite::{
-    accounts::AccountRepository,
-    activities::ActivityRepository,
-    ai_chat::AiChatRepository,
-    assets::{AlternativeAssetRepository, AssetRepository},
-    db::{self, write_actor},
-    fx::FxRepository,
-    goals::GoalRepository,
-    health::HealthDismissalRepository,
-    limits::ContributionLimitRepository,
-    market_data::{MarketDataRepository, QuoteSyncStateRepository},
-    portfolio::{snapshot::SnapshotRepository, valuation::ValuationRepository},
-    settings::SettingsRepository,
-    sync::{AppSyncRepository, BrokerSyncStateRepository, ImportRunRepository, PlatformRepository},
-    taxonomies::TaxonomyRepository,
+use whaleit_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
+use whaleit_storage_postgres::{
+    accounts::PgAccountRepository,
+    activities::PgActivityRepository,
+    ai_chat::PgAiChatRepository,
+    assets::{PgAlternativeAssetRepository, PgAssetRepository},
+    custom_provider::PgCustomProviderRepository,
+    db::{self},
+    fx::PgFxRepository,
+    goals::PgGoalRepository,
+    health::PgHealthDismissalRepository,
+    limits::PgContributionLimitRepository,
+    market_data::{PgMarketDataRepository, PgQuoteSyncStateRepository},
+    portfolio::{PgSnapshotRepository, PgValuationRepository},
+    settings::PgSettingsRepository,
+    sync::{
+        PgAppSyncRepository, PgBrokerSyncStateRepository, PgImportRunRepository,
+        PgPlatformRepository,
+    },
+    taxonomies::PgTaxonomyRepository,
+    users::PgUserRepository,
+    AppSyncRepository, SnapshotRepository,
 };
 
 pub struct AppState {
-    /// Domain event sink for emitting events after mutations.
-    /// Note: The sink is used by services injected at construction time; this field
-    /// is kept for documentation and possible future access patterns.
     #[allow(dead_code)]
     pub domain_event_sink: Arc<dyn DomainEventSink>,
     pub account_service: Arc<AccountService>,
@@ -77,7 +81,7 @@ pub struct AppState {
     pub snapshot_service: Arc<dyn SnapshotServiceTrait + Send + Sync>,
     pub snapshot_repository: Arc<SnapshotRepository>,
     pub performance_service:
-        Arc<dyn wealthfolio_core::portfolio::performance::PerformanceServiceTrait + Send + Sync>,
+        Arc<dyn whaleit_core::portfolio::performance::PerformanceServiceTrait + Send + Sync>,
     pub income_service: Arc<dyn IncomeServiceTrait + Send + Sync>,
     pub goal_service: Arc<dyn GoalServiceTrait + Send + Sync>,
     pub limits_service: Arc<dyn ContributionLimitServiceTrait + Send + Sync>,
@@ -92,17 +96,19 @@ pub struct AppState {
     pub ai_provider_service: Arc<dyn AiProviderServiceTrait + Send + Sync>,
     pub ai_chat_service: Arc<ChatService<ServerAiEnvironment>>,
     pub data_root: String,
-    pub db_path: String,
+    pub database_url: String,
     pub instance_id: String,
     pub secret_store: Arc<dyn SecretStore>,
     pub event_bus: EventBus,
     pub auth: Option<Arc<AuthManager>>,
+    pub user_repo: Option<Arc<dyn UserRepositoryTrait>>,
+    pub email: Option<Arc<EmailService>>,
     pub device_enroll_service: Arc<DeviceEnrollService>,
     pub app_sync_repository: Arc<AppSyncRepository>,
     pub device_sync_runtime: Arc<DeviceSyncRuntimeState>,
     pub health_service: Arc<dyn HealthServiceTrait + Send + Sync>,
     pub token_lifecycle: Arc<TokenLifecycleState>,
-    pub custom_provider_service: Arc<wealthfolio_core::custom_provider::CustomProviderService>,
+    pub custom_provider_service: Arc<whaleit_core::custom_provider::CustomProviderService>,
 }
 
 pub fn init_tracing() {
@@ -122,14 +128,23 @@ pub fn init_tracing() {
 }
 
 pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
-    // Ensure DATABASE_URL aligns with WF_DB_PATH so core picks the right file
-    std::env::set_var("DATABASE_URL", &config.db_path);
-    let db_path = db::init(&config.db_path)?;
-    tracing::info!("Database path in use: {}", db_path);
-    let data_root_path = std::path::Path::new(&db_path)
-        .parent()
-        .unwrap_or_else(|| std::path::Path::new("."))
-        .to_path_buf();
+    let database_url = config
+        .database_url
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("DATABASE_URL is required"))?;
+    build_state_postgres(config, database_url).await
+}
+
+async fn build_state_postgres(
+    config: &Config,
+    database_url: &str,
+) -> anyhow::Result<Arc<AppState>> {
+    db::init(database_url).await?;
+    tracing::info!("PostgreSQL database connected");
+
+    let data_root_path = std::path::Path::new("./data");
+    std::fs::create_dir_all(&data_root_path)
+        .map_err(|e| anyhow::anyhow!("Failed to create data root directory: {}", e))?;
 
     let resolved_secret_path = std::env::var("WF_SECRET_FILE")
         .ok()
@@ -147,41 +162,33 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         resolved_secret_path.to_string_lossy().to_string(),
     );
 
-    db::run_migrations(&db_path)?;
+    db::run_migrations(database_url).await?;
 
-    let pool = db::create_pool(&db_path)?;
-    let writer = write_actor::spawn_writer((*pool).clone()).map_err(|e| {
-        error!("Failed to initialize writer actor: {}", e);
-        e
-    })?;
+    let pool = db::create_pool(database_url, config.pg_pool_size)?;
 
-    // Domain event sink - two-phase initialization to handle circular dependencies
-    // Phase 1: Create the sink (can receive events immediately, buffers until worker starts)
     let domain_event_sink = Arc::new(WebDomainEventSink::new());
 
-    let fx_repo = Arc::new(FxRepository::new(pool.clone(), writer.clone()));
+    let fx_repo = Arc::new(PgFxRepository::new(pool.clone()));
     let fx_service = Arc::new(FxService::new(fx_repo).with_event_sink(domain_event_sink.clone()));
-    fx_service.initialize()?;
+    fx_service.initialize().await?;
 
-    let settings_repo = Arc::new(SettingsRepository::new(pool.clone(), writer.clone()));
+    let settings_repo = Arc::new(PgSettingsRepository::new(pool.clone()));
     let settings_service = Arc::new(SettingsService::new(
         settings_repo.clone(),
         fx_service.clone(),
     ));
-    let settings = settings_service.get_settings()?;
+    let settings = settings_service.get_settings().await?;
     let base_currency = Arc::new(RwLock::new(settings.base_currency));
     let timezone = Arc::new(RwLock::new(settings.timezone.clone()));
 
-    let account_repo = Arc::new(AccountRepository::new(pool.clone(), writer.clone()));
+    let account_repo = Arc::new(PgAccountRepository::new(pool.clone()));
 
-    // Additional repositories/services for web API
-    let asset_repository = Arc::new(AssetRepository::new(pool.clone(), writer.clone()));
-    let market_data_repository = Arc::new(MarketDataRepository::new(pool.clone(), writer.clone()));
-    let activity_repository = Arc::new(ActivityRepository::new(pool.clone(), writer.clone()));
-    let snapshot_repository = Arc::new(SnapshotRepository::new(pool.clone(), writer.clone()));
-    let app_sync_repository = Arc::new(AppSyncRepository::new(pool.clone(), writer.clone()));
-    let quote_sync_state_repository =
-        Arc::new(QuoteSyncStateRepository::new(pool.clone(), writer.clone()));
+    let asset_repository = Arc::new(PgAssetRepository::new(pool.clone()));
+    let market_data_repository = Arc::new(PgMarketDataRepository::new(pool.clone()));
+    let activity_repository = Arc::new(PgActivityRepository::new(pool.clone()));
+    let snapshot_repository = Arc::new(PgSnapshotRepository::new(pool.clone()));
+    let app_sync_repository = Arc::new(PgAppSyncRepository::new(pool.clone()));
+    let quote_sync_state_repository = Arc::new(PgQuoteSyncStateRepository::new(pool.clone()));
 
     let account_service = Arc::new(AccountService::new(
         account_repo.clone(),
@@ -191,33 +198,26 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         asset_repository.clone(),
         quote_sync_state_repository.clone(),
     ));
-    let custom_provider_repository = Arc::new(
-        wealthfolio_storage_sqlite::custom_provider::CustomProviderSqliteRepository::new(
-            pool.clone(),
-            writer.clone(),
-        ),
-    );
+    let custom_provider_repository = Arc::new(PgCustomProviderRepository::new(pool.clone()));
     let quote_service: Arc<dyn QuoteServiceTrait + Send + Sync> = Arc::new(
         QuoteService::new_with_custom_provider(
-            market_data_repository.clone(),      // QuoteStore
-            quote_sync_state_repository.clone(), // SyncStateStore
-            market_data_repository.clone(),      // ProviderSettingsStore
-            asset_repository.clone(),            // AssetRepositoryTrait
-            activity_repository.clone(),         // ActivityRepositoryTrait
+            market_data_repository.clone(),
+            quote_sync_state_repository.clone(),
+            market_data_repository.clone(),
+            asset_repository.clone(),
+            activity_repository.clone(),
             secret_store.clone(),
             Some(custom_provider_repository.clone()),
         )
         .await?,
     );
-    let custom_provider_service = Arc::new(
-        wealthfolio_core::custom_provider::CustomProviderService::new(
+    let custom_provider_service =
+        Arc::new(whaleit_core::custom_provider::CustomProviderService::new(
             custom_provider_repository.clone(),
             secret_store.clone(),
-        ),
-    );
+        ));
 
-    // Create taxonomy service for auto-classification
-    let taxonomy_repository = Arc::new(TaxonomyRepository::new(pool.clone(), writer.clone()));
+    let taxonomy_repository = Arc::new(PgTaxonomyRepository::new(pool.clone()));
     let taxonomy_service = Arc::new(TaxonomyService::new(taxonomy_repository));
 
     let asset_service = Arc::new(
@@ -241,7 +241,7 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         .with_event_sink(domain_event_sink.clone()),
     );
 
-    let valuation_repository = Arc::new(ValuationRepository::new(pool.clone(), writer.clone()));
+    let valuation_repository = Arc::new(PgValuationRepository::new(pool.clone()));
     let valuation_service = Arc::new(ValuationService::new(
         base_currency.clone(),
         valuation_repository.clone(),
@@ -281,7 +281,7 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     );
 
     let performance_service = Arc::new(
-        wealthfolio_core::portfolio::performance::PerformanceService::new_with_timezone(
+        whaleit_core::portfolio::performance::PerformanceService::new_with_timezone(
             valuation_service.clone(),
             quote_service.clone(),
             timezone.clone(),
@@ -295,13 +295,10 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         timezone.clone(),
     ));
 
-    let goal_repository = Arc::new(GoalRepository::new(pool.clone(), writer.clone()));
+    let goal_repository = Arc::new(PgGoalRepository::new(pool.clone()));
     let goal_service = Arc::new(GoalService::new(goal_repository));
 
-    let limits_repository = Arc::new(ContributionLimitRepository::new(
-        pool.clone(),
-        writer.clone(),
-    ));
+    let limits_repository = Arc::new(PgContributionLimitRepository::new(pool.clone()));
     let limits_service: Arc<dyn ContributionLimitServiceTrait + Send + Sync> =
         Arc::new(ContributionLimitService::new_with_timezone(
             fx_service.clone(),
@@ -310,14 +307,12 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
             timezone.clone(),
         ));
 
-    // Import run repository for tracking CSV imports
     let import_run_repository: Arc<dyn ImportRunRepositoryTrait> =
-        Arc::new(ImportRunRepository::new(pool.clone(), writer.clone()));
+        Arc::new(PgImportRunRepository::new(pool.clone()));
     let core_import_run_repository = Arc::new(CoreImportRunRepositoryAdapter::new(
         import_run_repository.clone(),
     ));
-    let broker_sync_state_repository =
-        Arc::new(BrokerSyncStateRepository::new(pool.clone(), writer.clone()));
+    let broker_sync_state_repository = Arc::new(PgBrokerSyncStateRepository::new(pool.clone()));
 
     let activity_service: Arc<dyn ActivityServiceTrait + Send + Sync> = Arc::new(
         CoreActivityService::with_import_run_repository(
@@ -331,14 +326,9 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         .with_event_sink(domain_event_sink.clone()),
     );
 
-    // Alternative asset repository for alternative assets operations
     let alternative_asset_repository: Arc<dyn AlternativeAssetRepositoryTrait + Send + Sync> =
-        Arc::new(AlternativeAssetRepository::new(
-            pool.clone(),
-            writer.clone(),
-        ));
+        Arc::new(PgAlternativeAssetRepository::new(pool.clone()));
 
-    // Alternative asset service (delegates to core service)
     let alternative_asset_service: Arc<dyn AlternativeAssetServiceTrait + Send + Sync> = Arc::new(
         AlternativeAssetService::new(
             alternative_asset_repository.clone(),
@@ -348,8 +338,7 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         .with_event_sink(domain_event_sink.clone()),
     );
 
-    // Connect sync service for broker data synchronization
-    let platform_repository = Arc::new(PlatformRepository::new(pool.clone(), writer.clone()));
+    let platform_repository = Arc::new(PgPlatformRepository::new(pool.clone()));
     let connect_sync_service: Arc<dyn BrokerSyncServiceTrait + Send + Sync> = Arc::new(
         BrokerSyncService::new(
             account_service.clone(),
@@ -366,10 +355,8 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         .with_quote_store(market_data_repository.clone()),
     );
 
-    // Determine data root directory (parent of DB path)
     let data_root = data_root_path.to_string_lossy().to_string();
 
-    // AI provider service - catalog is embedded at compile time
     let ai_catalog_json = include_str!("../../../crates/ai/src/ai_providers.json");
     let ai_provider_service: Arc<dyn AiProviderServiceTrait + Send + Sync> =
         Arc::new(AiProviderService::new(
@@ -378,16 +365,12 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
             ai_catalog_json,
         )?);
 
-    // Health service for portfolio health diagnostics
-    let health_dismissal_repository =
-        Arc::new(HealthDismissalRepository::new(pool.clone(), writer.clone()));
+    let health_dismissal_repository = Arc::new(PgHealthDismissalRepository::new(pool.clone()));
     let health_service: Arc<dyn HealthServiceTrait + Send + Sync> =
         Arc::new(HealthService::new(health_dismissal_repository));
 
-    // AI chat repository for thread/message persistence
-    let ai_chat_repository = Arc::new(AiChatRepository::new(pool.clone(), writer.clone()));
+    let ai_chat_repository = Arc::new(PgAiChatRepository::new(pool.clone()));
 
-    // Create the AI environment and chat service using the new wealthfolio-ai crate
     let ai_environment = Arc::new(ServerAiEnvironment::new(
         base_currency.clone(),
         account_service.clone(),
@@ -406,7 +389,6 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     ));
     let ai_chat_service = Arc::new(ChatService::new(ai_environment, ChatConfig::default()));
 
-    // Device enroll service for E2EE sync
     let cloud_api_url = crate::features::cloud_api_base_url().unwrap_or_default();
     let device_display_name = "WhaleIt Server".to_string();
     let app_version = Some(env!("CARGO_PKG_VERSION").to_string());
@@ -421,7 +403,6 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     let device_sync_runtime = Arc::new(DeviceSyncRuntimeState::new());
     let token_lifecycle = Arc::new(TokenLifecycleState::new());
 
-    // Domain event sink - Phase 2: Start the worker now that all services are ready
     domain_event_sink.start_worker(
         asset_service.clone(),
         connect_sync_service.clone(),
@@ -449,6 +430,10 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         .transpose()?
         .map(Arc::new);
 
+    let user_repo: Option<Arc<dyn UserRepositoryTrait>> =
+        Some(Arc::new(PgUserRepository::new(pool.clone())));
+    let email_service = user_repo.as_ref().map(|_| Arc::new(EmailService::new()));
+
     Ok(Arc::new(AppState {
         domain_event_sink,
         account_service,
@@ -475,12 +460,14 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         connect_sync_service,
         ai_provider_service,
         ai_chat_service,
-        data_root,
-        db_path,
+        data_root: data_root.clone(),
+        database_url: database_url.to_string(),
         instance_id: settings.instance_id,
         secret_store,
         event_bus,
         auth: auth_manager,
+        user_repo,
+        email: email_service,
         device_enroll_service,
         app_sync_repository,
         device_sync_runtime,

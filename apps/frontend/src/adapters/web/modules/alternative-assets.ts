@@ -28,7 +28,10 @@ export function handleLinkLiability(
   url: string,
   payload: Record<string, unknown>,
 ): { url: string; body: string | undefined } {
-  const { liabilityId, request } = payload as { liabilityId: string; request: Record<string, unknown> };
+  const { liabilityId, request } = payload as {
+    liabilityId: string;
+    request: Record<string, unknown>;
+  };
   return { url: `${url}/${encodeURIComponent(liabilityId)}/link`, body: JSON.stringify(request) };
 }
 
@@ -50,5 +53,8 @@ export function handleUpdateAlternativeAssetMetadata(
     name?: string;
     notes?: string | null;
   };
-  return { url: `${url}/${encodeURIComponent(assetId)}/metadata`, body: JSON.stringify({ metadata, name, notes }) };
+  return {
+    url: `${url}/${encodeURIComponent(assetId)}/metadata`,
+    body: JSON.stringify({ metadata, name, notes }),
+  };
 }

@@ -2,11 +2,11 @@
 
 **Analysis Date:** 2026-04-20
 
-Wealthfolio is a 158k-LoC Rust + 161k-LoC TS/TSX monorepo (Cargo workspace +
-pnpm workspace). It has three deployment surfaces (Tauri desktop, Axum web
-server, iOS/Android via Tauri mobile) that share a `crates/core` business-logic
-layer. The issues below are grouped by theme; file paths and line numbers point
-to the actual offending sites.
+Whaleit is a 158k-LoC Rust + 161k-LoC TS/TSX monorepo (Cargo workspace + pnpm
+workspace). It has three deployment surfaces (Tauri desktop, Axum web server,
+iOS/Android via Tauri mobile) that share a `crates/core` business-logic layer.
+The issues below are grouped by theme; file paths and line numbers point to the
+actual offending sites.
 
 ## Tech Debt
 
@@ -154,7 +154,7 @@ zones:
   "permission detection" above).
 - Recommendations:
   1. Set a strict `csp` in `tauri.conf.json`
-     (`default-src 'self'; script-src 'self' blob:; connect-src 'self' https://wealthfolio.app https://api.wealthfolio.app ...`).
+     (`default-src 'self'; script-src 'self' blob:; connect-src 'self' https://whaleit.app https://api.whaleit.app ...`).
   2. Enforce declared permissions at the host-API boundary, not just UI consent.
   3. Audit `packages/addon-sdk/src/host-api.ts` (781 lines) to ensure every
      function checks the calling addon's declared categories.
@@ -402,7 +402,7 @@ zones:
 **Tauri v2 updater plugin:**
 
 - Endpoint:
-  `https://wealthfolio.app/releases/{{target}}/{{arch}}/{{current_version}}`
+  `https://whaleit.app/releases/{{target}}/{{arch}}/{{current_version}}`
   (`apps/tauri/tauri.conf.json:41`). Single point of failure — outage blocks
   auto-updates for all desktop users.
 - Public key is pinned (good).
@@ -441,8 +441,7 @@ zones:
   - Addon loading + context creation (`apps/frontend/src/addons/addons-core.ts`,
     `addons-runtime-context.ts`).
   - Device sync UI (`apps/frontend/src/features/devices-sync/`).
-  - Wealthfolio Connect auth flow
-    (`apps/frontend/src/features/wealthfolio-connect/`).
+  - Whaleit Connect auth flow (`apps/frontend/src/features/whaleit-connect/`).
 - Risk: UI regressions in security-critical flows (OAuth callback, device
   pairing) ship undetected.
 - Priority: **High** for addon loading and auth flows; **Medium** elsewhere.
@@ -470,7 +469,7 @@ zones:
   FX, CSV import, form validation, data grid, asset creation,
   holdings/performance, bulk holdings, symbol mapping.
 - What's not covered: Device sync pairing, addon installation, AI assistant
-  flows, Wealthfolio Connect login, backup/restore.
+  flows, Whaleit Connect login, backup/restore.
 - Priority: **Medium** — these are the features most likely to have UI
   regressions given their recent churn.
 

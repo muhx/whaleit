@@ -8,29 +8,35 @@ use chrono::{Duration, Utc};
 use uuid::Uuid;
 
 use crate::main_lib::AppState;
-use wealthfolio_core::events::DomainEvent;
-use wealthfolio_core::sync::APP_SYNC_TABLES;
-use wealthfolio_device_sync::engine::{
+use whaleit_core::events::DomainEvent;
+use whaleit_core::sync::APP_SYNC_TABLES;
+use whaleit_device_sync::engine::{
     self, CredentialStore, OutboxStore, ReadyReconcileStore, ReplayEvent, ReplayStore,
     SyncIdentity, SyncTransport, TransportError,
 };
-use wealthfolio_device_sync::{
+use whaleit_device_sync::{
     DeviceSyncClient, ReconcileReadyStateResponse, SyncPullResponse, SyncPushRequest,
     SyncPushResponse, SyncState,
 };
 
-fn transport_err_from_sync(e: wealthfolio_device_sync::DeviceSyncError) -> TransportError {
+fn transport_err_from_sync(e: whaleit_device_sync::DeviceSyncError) -> TransportError {
     TransportError {
         message: e.to_string(),
         retry_class: e.retry_class(),
         error_code: e.error_code().map(|s| s.to_string()),
         details: match &e {
-            wealthfolio_device_sync::DeviceSyncError::Api { details, .. } => details.clone(),
+            whaleit_device_sync::DeviceSyncError::Api { details, .. } => details.clone(),
             _ => None,
         },
     }
 }
-use wealthfolio_storage_sqlite::sync::{SqliteSyncEngineDbPorts, SyncTableRowCount};
+use whaleit_storage_postgres::sync::{
+    PgSyncEngineDbPorts, SyncTableRowCount as PgSyncTableRowCount,
+};
+
+type SyncTableRowCount = PgSyncTableRowCount;
+
+type EngineDbPorts = PgSyncEngineDbPorts;
 
 const SYNC_IDENTITY_KEY: &str = "sync_identity";
 static MIN_SNAPSHOT_CREATED_AT: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
@@ -44,9 +50,9 @@ fn is_snapshot_index_conflict(message: &str) -> bool {
     message.contains("sync_transaction_failed") && message.contains("snapshot index conflict")
 }
 
-fn is_pairing_already_confirmed_error(err: &wealthfolio_device_sync::DeviceSyncError) -> bool {
+fn is_pairing_already_confirmed_error(err: &whaleit_device_sync::DeviceSyncError) -> bool {
     match err {
-        wealthfolio_device_sync::DeviceSyncError::Api {
+        whaleit_device_sync::DeviceSyncError::Api {
             status,
             code,
             message,
@@ -62,9 +68,9 @@ fn is_pairing_already_confirmed_error(err: &wealthfolio_device_sync::DeviceSyncE
     }
 }
 
-fn is_pairing_already_approved_error(err: &wealthfolio_device_sync::DeviceSyncError) -> bool {
+fn is_pairing_already_approved_error(err: &whaleit_device_sync::DeviceSyncError) -> bool {
     match err {
-        wealthfolio_device_sync::DeviceSyncError::Api {
+        whaleit_device_sync::DeviceSyncError::Api {
             status,
             code,
             message,
@@ -186,7 +192,7 @@ fn get_sync_identity_from_store(state: &AppState) -> Option<SyncIdentity> {
         .get_secret(SYNC_IDENTITY_KEY)
         .ok()
         .flatten()?;
-    let identity: wealthfolio_device_sync::SyncIdentity = serde_json::from_str(&raw).ok()?;
+    let identity: whaleit_device_sync::SyncIdentity = serde_json::from_str(&raw).ok()?;
     Some(SyncIdentity {
         device_id: identity.device_id,
         root_key: identity.root_key,
@@ -321,9 +327,9 @@ fn encrypt_sync_payload(
         .as_ref()
         .ok_or_else(|| "Sync root key is not configured".to_string())?;
     let key_version = payload_key_version.max(1) as u32;
-    let dek = wealthfolio_device_sync::crypto::derive_dek(root_key, key_version)
+    let dek = whaleit_device_sync::crypto::derive_dek(root_key, key_version)
         .map_err(|e| format!("Failed to derive event DEK: {}", e))?;
-    wealthfolio_device_sync::crypto::encrypt(&dek, plaintext_payload)
+    whaleit_device_sync::crypto::encrypt(&dek, plaintext_payload)
         .map_err(|e| format!("Failed to encrypt sync payload: {}", e))
 }
 
@@ -337,9 +343,9 @@ fn decrypt_sync_payload(
         .as_ref()
         .ok_or_else(|| "Sync root key is not configured".to_string())?;
     let key_version = payload_key_version.max(1) as u32;
-    let dek = wealthfolio_device_sync::crypto::derive_dek(root_key, key_version)
+    let dek = whaleit_device_sync::crypto::derive_dek(root_key, key_version)
         .map_err(|e| format!("Failed to derive event DEK: {}", e))?;
-    wealthfolio_device_sync::crypto::decrypt(&dek, encrypted_payload)
+    whaleit_device_sync::crypto::decrypt(&dek, encrypted_payload)
         .map_err(|e| format!("Failed to decrypt sync payload: {}", e))
 }
 
@@ -348,7 +354,7 @@ fn is_sqlite_image(bytes: &[u8]) -> bool {
 }
 
 fn sha256_checksum(bytes: &[u8]) -> String {
-    wealthfolio_device_sync::crypto::sha256_checksum(bytes)
+    whaleit_device_sync::crypto::sha256_checksum(bytes)
 }
 
 fn decode_snapshot_sqlite_payload(
@@ -368,9 +374,9 @@ fn decode_snapshot_sqlite_payload(
 
     let blob_text = String::from_utf8(blob)
         .map_err(|_| "Snapshot payload is not valid UTF-8 (expected encrypted ciphertext)")?;
-    let dek = wealthfolio_device_sync::crypto::derive_dek(root_key, key_version as u32)
+    let dek = whaleit_device_sync::crypto::derive_dek(root_key, key_version as u32)
         .map_err(|e| format!("Failed to derive snapshot DEK: {}", e))?;
-    let decrypted = wealthfolio_device_sync::crypto::decrypt(&dek, blob_text.trim())
+    let decrypted = whaleit_device_sync::crypto::decrypt(&dek, blob_text.trim())
         .map_err(|e| format!("Failed to decrypt snapshot payload: {}", e))?;
 
     let sqlite_bytes = BASE64_STANDARD
@@ -384,12 +390,12 @@ fn decode_snapshot_sqlite_payload(
 
 struct ServerEnginePorts {
     state: Arc<AppState>,
-    db: SqliteSyncEngineDbPorts,
+    db: EngineDbPorts,
 }
 
 impl ServerEnginePorts {
     fn new(state: Arc<AppState>) -> Self {
-        let db = SqliteSyncEngineDbPorts::new(Arc::clone(&state.app_sync_repository));
+        let db = EngineDbPorts::new(Arc::clone(&state.app_sync_repository));
         Self { state, db }
     }
 }
@@ -399,7 +405,7 @@ impl OutboxStore for ServerEnginePorts {
     async fn list_pending_outbox(
         &self,
         limit: i64,
-    ) -> Result<Vec<wealthfolio_core::sync::SyncOutboxEvent>, String> {
+    ) -> Result<Vec<whaleit_core::sync::SyncOutboxEvent>, String> {
         self.db.list_pending_outbox(limit).await
     }
 
@@ -491,7 +497,7 @@ impl ReplayStore for ServerEnginePorts {
         self.db.prune_applied_events_up_to_seq(seq).await
     }
 
-    async fn get_engine_status(&self) -> Result<wealthfolio_core::sync::SyncEngineStatus, String> {
+    async fn get_engine_status(&self) -> Result<whaleit_core::sync::SyncEngineStatus, String> {
         self.db.get_engine_status().await
     }
 
@@ -511,7 +517,7 @@ impl SyncTransport for ServerEnginePorts {
         &self,
         token: &str,
         device_id: &str,
-    ) -> Result<wealthfolio_device_sync::SyncCursorResponse, TransportError> {
+    ) -> Result<whaleit_device_sync::SyncCursorResponse, TransportError> {
         create_client()
             .get_events_cursor(token, device_id)
             .await
@@ -656,7 +662,7 @@ pub async fn get_pairing_source_status(
         .get_device(&token, &device_id)
         .await
         .map_err(|e| e.to_string())?;
-    if sync_state.trust_state != wealthfolio_device_sync::TrustState::Trusted {
+    if sync_state.trust_state != whaleit_device_sync::TrustState::Trusted {
         return Err("Current device is not ready to connect another device yet.".to_string());
     }
 
@@ -913,12 +919,12 @@ async fn snapshot_satisfies_freshness_gate(
     client: &DeviceSyncClient,
     token: &str,
     device_id: &str,
-    latest: &wealthfolio_device_sync::SnapshotLatestResponse,
+    latest: &whaleit_device_sync::SnapshotLatestResponse,
     min_created_at: &str,
 ) -> Result<bool, String> {
-    let latest_created_at = wealthfolio_device_sync::parse_sync_datetime_to_utc(&latest.created_at)
+    let latest_created_at = whaleit_device_sync::parse_sync_datetime_to_utc(&latest.created_at)
         .map_err(|e| format!("Invalid snapshot created_at in metadata: {}", e))?;
-    let min_created_at = wealthfolio_device_sync::parse_sync_datetime_to_utc(min_created_at)
+    let min_created_at = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at)
         .map_err(|e| format!("Invalid min snapshot freshness gate: {}", e))?;
     if latest_created_at + Duration::seconds(SNAPSHOT_FRESHNESS_CLOCK_SKEW_LEEWAY_SECS)
         > min_created_at
@@ -978,7 +984,7 @@ pub async fn sync_bootstrap_snapshot_if_needed(
             .flatten()
     });
     let min_snapshot_created_at = match raw_freshness_gate {
-        Some(value) => match wealthfolio_device_sync::normalize_sync_datetime(&value) {
+        Some(value) => match whaleit_device_sync::normalize_sync_datetime(&value) {
             Ok(normalized) => Some(normalized),
             Err(_) => {
                 tracing::warn!(
@@ -1290,7 +1296,7 @@ pub async fn generate_snapshot_now(
         .get_device(&token, &device_id)
         .await
         .map_err(|e| e.to_string())?;
-    if sync_state.trust_state != wealthfolio_device_sync::TrustState::Trusted {
+    if sync_state.trust_state != whaleit_device_sync::TrustState::Trusted {
         return Ok(SyncSnapshotUploadResult {
             status: "skipped".to_string(),
             snapshot_id: None,
@@ -1371,7 +1377,7 @@ pub async fn generate_snapshot_now(
         server_cursor,
         base_seq
     );
-    let upload_headers = wealthfolio_device_sync::SnapshotUploadHeaders {
+    let upload_headers = whaleit_device_sync::SnapshotUploadHeaders {
         event_id: Some(Uuid::now_v7().to_string()),
         schema_version: 1,
         covers_tables: APP_SYNC_TABLES.iter().map(|v| v.to_string()).collect(),
@@ -1498,7 +1504,7 @@ pub async fn complete_pairing_with_transfer(
             &token,
             &device_id,
             &pairing_id,
-            wealthfolio_device_sync::CompletePairingRequest {
+            whaleit_device_sync::CompletePairingRequest {
                 encrypted_key_bundle,
                 sas_proof,
                 signature,
@@ -1556,7 +1562,7 @@ pub async fn confirm_pairing_with_bootstrap(
             &token,
             &device_id,
             &pairing_id,
-            wealthfolio_device_sync::ConfirmPairingRequest { proof },
+            whaleit_device_sync::ConfirmPairingRequest { proof },
         )
         .await
     {
@@ -1578,12 +1584,10 @@ pub async fn confirm_pairing_with_bootstrap(
 
     // 2. Set freshness gate
     if let Some(min_created_at) = min_snapshot_created_at.as_deref() {
-        if let Ok(parsed_min) = wealthfolio_device_sync::parse_sync_datetime_to_utc(min_created_at)
-        {
+        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at) {
             let max_allowed = chrono::Utc::now() + chrono::Duration::minutes(10);
             if parsed_min <= max_allowed {
-                if let Ok(normalized) =
-                    wealthfolio_device_sync::normalize_sync_datetime(min_created_at)
+                if let Ok(normalized) = whaleit_device_sync::normalize_sync_datetime(min_created_at)
                 {
                     let _ = set_min_snapshot_created_at_in_store(&device_id, &normalized);
                     let _ = state
@@ -1681,7 +1685,7 @@ pub async fn confirm_pairing_with_bootstrap(
 // Pairing Flow Coordinator
 // ─────────────────────────────────────────────────────────────────────────────
 
-use wealthfolio_device_sync::engine::{PairingFlowPhase, PairingFlowResponse};
+use whaleit_device_sync::engine::{PairingFlowPhase, PairingFlowResponse};
 
 pub async fn begin_pairing_confirm(
     state: Arc<AppState>,
@@ -1708,7 +1712,7 @@ pub async fn begin_pairing_confirm(
             &token,
             &device_id,
             &pairing_id,
-            wealthfolio_device_sync::ConfirmPairingRequest { proof: Some(proof) },
+            whaleit_device_sync::ConfirmPairingRequest { proof: Some(proof) },
         )
         .await
     {
@@ -1724,12 +1728,10 @@ pub async fn begin_pairing_confirm(
 
     // 2. Set freshness gate
     if let Some(min_created_at) = min_snapshot_created_at.as_deref() {
-        if let Ok(parsed_min) = wealthfolio_device_sync::parse_sync_datetime_to_utc(min_created_at)
-        {
+        if let Ok(parsed_min) = whaleit_device_sync::parse_sync_datetime_to_utc(min_created_at) {
             let max_allowed = chrono::Utc::now() + chrono::Duration::minutes(10);
             if parsed_min <= max_allowed {
-                if let Ok(normalized) =
-                    wealthfolio_device_sync::normalize_sync_datetime(min_created_at)
+                if let Ok(normalized) = whaleit_device_sync::normalize_sync_datetime(min_created_at)
                 {
                     let _ = set_min_snapshot_created_at_in_store(&device_id, &normalized);
                     let _ = state
@@ -1942,7 +1944,7 @@ mod tests {
 
     #[test]
     fn pairing_already_approved_error_is_detected() {
-        let err = wealthfolio_device_sync::DeviceSyncError::api_structured(
+        let err = whaleit_device_sync::DeviceSyncError::api_structured(
             409,
             "PAIRING_ALREADY_APPROVED",
             "Pairing already approved",
@@ -1954,7 +1956,7 @@ mod tests {
 
     #[test]
     fn pairing_invalid_approval_error_is_not_detected_as_idempotent() {
-        let err = wealthfolio_device_sync::DeviceSyncError::api_structured(
+        let err = whaleit_device_sync::DeviceSyncError::api_structured(
             400,
             "PAIRING_INVALID_STATE",
             "Pairing cannot be approved from this state",

@@ -14,7 +14,7 @@ pub trait SnapshotRepositoryTrait: Send + Sync {
     async fn save_snapshots(&self, snapshots: &[AccountStateSnapshot]) -> Result<()>;
 
     /// Get snapshots for a specific account within optional date range.
-    fn get_snapshots_by_account(
+    async fn get_snapshots_by_account(
         &self,
         account_id: &str,
         start_date: Option<NaiveDate>,
@@ -22,21 +22,21 @@ pub trait SnapshotRepositoryTrait: Send + Sync {
     ) -> Result<Vec<AccountStateSnapshot>>;
 
     /// Get the latest snapshot before or on the given date.
-    fn get_latest_snapshot_before_date(
+    async fn get_latest_snapshot_before_date(
         &self,
         account_id: &str,
         date: NaiveDate,
     ) -> Result<Option<AccountStateSnapshot>>;
 
     /// Get the latest snapshots for multiple accounts before or on the given date.
-    fn get_latest_snapshots_before_date(
+    async fn get_latest_snapshots_before_date(
         &self,
         account_ids: &[String],
         date: NaiveDate,
     ) -> Result<HashMap<String, AccountStateSnapshot>>;
 
     /// Get the latest snapshots for multiple accounts (no date filter).
-    fn get_all_latest_snapshots(
+    async fn get_all_latest_snapshots(
         &self,
         account_ids: &[String],
     ) -> Result<HashMap<String, AccountStateSnapshot>>;
@@ -75,7 +75,7 @@ pub trait SnapshotRepositoryTrait: Send + Sync {
     ) -> Result<()>;
 
     /// Get total portfolio snapshots.
-    fn get_total_portfolio_snapshots(
+    async fn get_total_portfolio_snapshots(
         &self,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
@@ -83,14 +83,14 @@ pub trait SnapshotRepositoryTrait: Send + Sync {
 
     /// Get all non-archived account snapshots.
     /// Uses is_archived=false filtering to include closed accounts in TOTAL aggregates.
-    fn get_all_non_archived_account_snapshots(
+    async fn get_all_non_archived_account_snapshots(
         &self,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
     ) -> Result<Vec<AccountStateSnapshot>>;
 
     /// Get the earliest snapshot date for an account.
-    fn get_earliest_snapshot_date(&self, account_id: &str) -> Result<Option<NaiveDate>>;
+    async fn get_earliest_snapshot_date(&self, account_id: &str) -> Result<Option<NaiveDate>>;
 
     /// Delete all snapshots for an account and save new ones atomically.
     async fn overwrite_all_snapshots_for_account(
@@ -110,11 +110,11 @@ pub trait SnapshotRepositoryTrait: Send + Sync {
 
     /// Get the count of non-calculated snapshots for an account.
     /// Non-calculated sources include: ManualEntry, BrokerImported, CsvImport, Synthetic.
-    fn get_non_calculated_snapshot_count(&self, account_id: &str) -> Result<usize>;
+    async fn get_non_calculated_snapshot_count(&self, account_id: &str) -> Result<usize>;
 
     /// Get the earliest non-calculated snapshot for an account.
     /// Used for creating synthetic backfill snapshots.
-    fn get_earliest_non_calculated_snapshot(
+    async fn get_earliest_non_calculated_snapshot(
         &self,
         account_id: &str,
     ) -> Result<Option<AccountStateSnapshot>>;

@@ -57,14 +57,14 @@ pub struct LegacyMigrationInfo {
 /// # Arguments
 /// * `asset_service` - The asset service for loading assets
 /// * `taxonomy_service` - The taxonomy service for checking assignments
-pub fn gather_legacy_migration_status(
+pub async fn gather_legacy_migration_status(
     asset_service: &dyn AssetServiceTrait,
     taxonomy_service: &dyn TaxonomyServiceTrait,
 ) -> Option<LegacyMigrationInfo> {
     use log::{error, info};
 
     // Get all assets
-    let assets = match asset_service.get_assets() {
+    let assets = match asset_service.get_assets().await {
         Ok(assets) => {
             debug!(
                 "gather_legacy_migration_status: loaded {} assets",
@@ -84,10 +84,15 @@ pub fn gather_legacy_migration_status(
     // Get GICS and Regions taxonomy info
     let gics_taxonomy = taxonomy_service
         .get_taxonomy("industries_gics")
+        .await
         .ok()
         .flatten();
 
-    let regions_taxonomy = taxonomy_service.get_taxonomy("regions").ok().flatten();
+    let regions_taxonomy = taxonomy_service
+        .get_taxonomy("regions")
+        .await
+        .ok()
+        .flatten();
 
     let mut assets_needing_migration = Vec::new();
     let mut assets_already_migrated = 0;
@@ -116,6 +121,7 @@ pub fn gather_legacy_migration_status(
         // Check if asset has taxonomy assignments for GICS or regions
         let assignments = taxonomy_service
             .get_asset_assignments(&asset.id)
+            .await
             .unwrap_or_default();
 
         let has_gics_assignment = gics_taxonomy

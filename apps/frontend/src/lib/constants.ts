@@ -6,8 +6,8 @@ export const DISPLAY_DECIMAL_PRECISION = 2;
 
 // WhaleIt Connect Portal URL - centralized configuration.
 // NOTE: The underlying infrastructure URL is intentionally still on the
-// Wealthfolio domain until infra URL rebranding is completed.
-export const WEALTHFOLIO_CONNECT_PORTAL_URL = "https://connect.wealthfolio.app";
+// Whaleit domain until infra URL rebranding is completed.
+export const WEALTHFOLIO_CONNECT_PORTAL_URL = "https://connect.whaleit.app";
 
 export const PORTFOLIO_ACCOUNT_ID = "TOTAL";
 

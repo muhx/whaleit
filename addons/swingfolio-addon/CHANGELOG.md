@@ -53,7 +53,7 @@ and this project adheres to
 - Migrated to Tailwind CSS v4 and updated shadcn components
 - Improved layout and mobile responsiveness
 - Updated ESLint and Prettier configuration
-- Upgraded addon for Wealthfolio 2.0.0 compatibility
+- Upgraded addon for Whaleit 2.0.0 compatibility
 
 ## [1.0.4] - 2025-08-31
 
@@ -100,7 +100,7 @@ and this project adheres to
 - Multi-currency support with exchange rate conversion
 - Integration with portfolio holdings for unrealized P/L
 - Sidebar navigation integration for easy access
-- Compatible with Wealthfolio addon SDK v1.0.0
+- Compatible with Whaleit addon SDK v1.0.0
 
 ### Permissions
 

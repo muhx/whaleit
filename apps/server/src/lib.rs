@@ -3,6 +3,7 @@ pub mod api;
 pub mod auth;
 pub mod config;
 mod domain_events;
+pub mod email;
 pub mod error;
 pub mod events;
 pub mod features;

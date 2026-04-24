@@ -395,6 +395,7 @@ impl HoldingsServiceTrait for HoldingsService {
         let latest_snapshot = match self
             .snapshot_service
             .get_latest_holdings_snapshot(account_id)
+            .await
         {
             Ok(Some(snap)) => snap,
             Ok(None) => {
@@ -428,7 +429,8 @@ impl HoldingsServiceTrait for HoldingsService {
         if !asset_ids.is_empty() {
             let classifications_map = self
                 .classification_service
-                .get_classifications_batch(&asset_ids);
+                .get_classifications_batch(&asset_ids)
+                .await;
             for holding in &mut holdings {
                 if let Some(ref mut instrument) = holding.instrument {
                     if let Some(classifications) = classifications_map.get(&instrument.id) {
@@ -459,6 +461,7 @@ impl HoldingsServiceTrait for HoldingsService {
         let latest_snapshot = match self
             .snapshot_service
             .get_latest_holdings_snapshot(account_id)
+            .await
         {
             Ok(Some(snap)) => snap,
             Ok(None) => {
@@ -531,6 +534,7 @@ impl HoldingsServiceTrait for HoldingsService {
             if let Ok(classifications) = self
                 .classification_service
                 .get_classifications(&instrument.id)
+                .await
             {
                 instrument.classifications = Some(classifications);
             }

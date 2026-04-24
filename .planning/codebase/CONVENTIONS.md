@@ -81,8 +81,8 @@ Frontend `tsconfig.json` (`apps/frontend/tsconfig.json`) adds:
 - `types: ["@tauri-apps/api", "vitest/globals"]`
 - Path aliases:
   - `@/*` → `./src/*`
-  - `@wealthfolio/ui` → `../../packages/ui/src`
-  - `@wealthfolio/addon-sdk` → `../../packages/addon-sdk/src`
+  - `@whaleit/ui` → `../../packages/ui/src`
+  - `@whaleit/addon-sdk` → `../../packages/addon-sdk/src`
   - `#platform` → `./src/adapters/tauri/core` (swapped to `web/core` at build
     time)
 
@@ -142,7 +142,7 @@ Observed order (no auto-sort plugin, but consistent across codebase):
 
 1. External packages (`react`, `@tanstack/react-query`, `@tauri-apps/api`)
 2. Internal alias imports (`@/lib/...`, `@/adapters`, `@/hooks/...`,
-   `@wealthfolio/ui`)
+   `@whaleit/ui`)
 3. Relative imports (`./constants`, `../schemas`)
 4. Type-only imports may be inlined with `import type { Foo }` or grouped with
    values
@@ -158,13 +158,13 @@ import { invoke, logger } from "./platform";
 
 **Path alias quick reference:**
 
-| Alias                    | Resolves to                                | Purpose                        |
-| ------------------------ | ------------------------------------------ | ------------------------------ |
-| `@/*`                    | `apps/frontend/src/*`                      | Frontend app internals         |
-| `@/adapters`             | `src/adapters/tauri` or `src/adapters/web` | Build-target specific          |
-| `#platform`              | `src/adapters/{target}/core`               | Used by shared adapter modules |
-| `@wealthfolio/ui`        | `packages/ui/src`                          | Shared UI package              |
-| `@wealthfolio/addon-sdk` | `packages/addon-sdk/src`                   | Addon SDK types/runtime        |
+| Alias                | Resolves to                                | Purpose                        |
+| -------------------- | ------------------------------------------ | ------------------------------ |
+| `@/*`                | `apps/frontend/src/*`                      | Frontend app internals         |
+| `@/adapters`         | `src/adapters/tauri` or `src/adapters/web` | Build-target specific          |
+| `#platform`          | `src/adapters/{target}/core`               | Used by shared adapter modules |
+| `@whaleit/ui`        | `packages/ui/src`                          | Shared UI package              |
+| `@whaleit/addon-sdk` | `packages/addon-sdk/src`                   | Addon SDK types/runtime        |
 
 ### Adapter / Backend Call Pattern
 
@@ -347,7 +347,7 @@ Per-crate `Cargo.toml` references workspace deps with `{ workspace = true }`.
 ### Naming Patterns
 
 - **Crates:** kebab-case on disk (`crates/market-data/`), `snake_case` in
-  `Cargo.toml` (`wealthfolio-core`, `wealthfolio-market-data`).
+  `Cargo.toml` (`whaleit-core`, `whaleit-market-data`).
 - **Modules:** `snake_case` (`activities_model`, `activities_service`,
   `device_sync_engine`).
 - **Files:** `snake_case.rs`. Common splits: `<domain>_model.rs`,

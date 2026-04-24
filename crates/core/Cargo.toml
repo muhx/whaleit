@@ -1,11 +1,11 @@
 [package]
-name = "wealthfolio-core"
+name = "whaleit-core"
 version.workspace = true
 edition.workspace = true
 description = "An Open Source Desktop Portfolio tracker"
 authors = ["Aziz Fadil"]
 license = "AGPL-3.0"
-repository = "https://github.com/afadil/wealthfolio"
+repository = "https://github.com/muhx/whaleit"
 
 [features]
 default = []
@@ -15,10 +15,6 @@ default = []
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-diesel = { workspace = true }
-diesel_migrations = { workspace = true }
-rusqlite = { workspace = true }
-r2d2 = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
@@ -32,7 +28,7 @@ log = { workspace = true }
 reqwest = { workspace = true, features = ["cookies"] }
 
 # Sibling crates
-wealthfolio-market-data = { path = "../market-data" }
+whaleit-market-data = { path = "../market-data" }
 
 # Additional dependencies not in workspace
 yahoo_finance_api = "4.1"

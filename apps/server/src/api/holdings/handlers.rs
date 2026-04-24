@@ -6,7 +6,8 @@ use axum::{
 };
 use chrono::{NaiveDate, Utc};
 use rust_decimal::Decimal;
-use wealthfolio_core::{
+use whaleit_core::portfolio::snapshot::SnapshotRepositoryTrait;
+use whaleit_core::{
     accounts::AccountServiceTrait,
     constants::PORTFOLIO_TOTAL_ACCOUNT_ID,
     portfolio::{
@@ -59,7 +60,7 @@ pub async fn get_asset_holdings(
     Query(q): Query<AssetHoldingsQuery>,
 ) -> ApiResult<Json<Vec<Holding>>> {
     let base = state.base_currency.read().unwrap().clone();
-    let accounts = state.account_service.get_active_accounts()?;
+    let accounts = state.account_service.get_active_accounts().await?;
 
     let mut result = Vec::new();
     for account in accounts {
@@ -94,7 +95,8 @@ pub async fn get_historical_valuations(
         .transpose()?;
     let vals = state
         .valuation_service
-        .get_historical_valuations(&q.account_id, start, end)?;
+        .get_historical_valuations(&q.account_id, start, end)
+        .await?;
     Ok(Json(vals))
 }
 
@@ -102,7 +104,7 @@ pub async fn get_latest_valuations(
     State(state): State<Arc<AppState>>,
     raw: axum::extract::RawQuery,
 ) -> ApiResult<Json<Vec<DailyAccountValuation>>> {
-    use wealthfolio_core::accounts::AccountServiceTrait;
+    use whaleit_core::accounts::AccountServiceTrait;
 
     // Parse query manually for robustness (supports accountIds and accountIds[])
     let mut ids: Vec<String> = Vec::new();
@@ -119,7 +121,8 @@ pub async fn get_latest_valuations(
     if ids.is_empty() {
         ids = state
             .account_service
-            .get_active_accounts()?
+            .get_active_accounts()
+            .await?
             .into_iter()
             .map(|a| a.id)
             .collect();
@@ -127,7 +130,7 @@ pub async fn get_latest_valuations(
     if ids.is_empty() {
         return Ok(Json(vec![]));
     }
-    let vals = state.valuation_service.get_latest_valuations(&ids)?;
+    let vals = state.valuation_service.get_latest_valuations(&ids).await?;
     Ok(Json(vals))
 }
 
@@ -164,10 +167,10 @@ pub async fn get_snapshots(
     let start_date = parse_date_optional(q.date_from, "dateFrom")?;
     let end_date = parse_date_optional(q.date_to, "dateTo")?;
 
-    let snapshots =
-        state
-            .snapshot_service
-            .get_holdings_keyframes(&q.account_id, start_date, end_date)?;
+    let snapshots = state
+        .snapshot_service
+        .get_holdings_keyframes(&q.account_id, start_date, end_date)
+        .await?;
 
     let result: Vec<SnapshotInfo> = snapshots
         .into_iter()
@@ -190,11 +193,10 @@ pub async fn get_snapshot_by_date(
     let target_date = parse_date(&q.date, "date")?;
 
     // Get keyframes for this specific date
-    let snapshots = state.snapshot_service.get_holdings_keyframes(
-        &q.account_id,
-        Some(target_date),
-        Some(target_date),
-    )?;
+    let snapshots = state
+        .snapshot_service
+        .get_holdings_keyframes(&q.account_id, Some(target_date), Some(target_date))
+        .await?;
 
     let snapshot = snapshots
         .into_iter()
@@ -218,11 +220,10 @@ pub async fn delete_snapshot_handler(
     let target_date = parse_date(&q.date, "date")?;
 
     // First verify the snapshot exists and is not CALCULATED
-    let snapshots = state.snapshot_service.get_holdings_keyframes(
-        &q.account_id,
-        Some(target_date),
-        Some(target_date),
-    )?;
+    let snapshots = state
+        .snapshot_service
+        .get_holdings_keyframes(&q.account_id, Some(target_date), Some(target_date))
+        .await?;
 
     let snapshot = snapshots
         .into_iter()
@@ -274,12 +275,18 @@ pub async fn delete_snapshot_handler(
     if let Ok(Some(total_snapshot)) = state
         .snapshot_service
         .get_latest_holdings_snapshot(PORTFOLIO_TOTAL_ACCOUNT_ID)
+        .await
     {
         let current_holdings: std::collections::HashMap<String, rust_decimal::Decimal> =
             total_snapshot
                 .positions
                 .iter()
-                .map(|(asset_id, position)| (asset_id.clone(), position.quantity))
+                .map(
+                    |(asset_id, position): (
+                        &String,
+                        &whaleit_core::portfolio::snapshot::Position,
+                    )| (asset_id.clone(), position.quantity),
+                )
                 .collect();
 
         if let Err(e) = state
@@ -321,7 +328,7 @@ pub async fn save_manual_holdings_handler(
     );
 
     // Get the account to verify it exists and get its currency
-    let account = state.account_service.get_account(&req.account_id)?;
+    let account = state.account_service.get_account(&req.account_id).await?;
 
     // Get base currency for FX pair registration
     let base_currency = state.base_currency.read().unwrap().clone();
@@ -413,7 +420,7 @@ pub async fn check_holdings_import_handler(
     );
 
     // Verify account exists
-    state.account_service.get_account(&req.account_id)?;
+    state.account_service.get_account(&req.account_id).await?;
 
     let mut validation_errors: Vec<String> = Vec::new();
     let mut valid_dates: Vec<NaiveDate> = Vec::new();
@@ -454,11 +461,10 @@ pub async fn check_holdings_import_handler(
     let existing_dates = if !valid_dates.is_empty() {
         let min_date = *valid_dates.iter().min().unwrap();
         let max_date = *valid_dates.iter().max().unwrap();
-        let existing = state.snapshot_service.get_holdings_keyframes(
-            &req.account_id,
-            Some(min_date),
-            Some(max_date),
-        )?;
+        let existing = state
+            .snapshot_service
+            .get_holdings_keyframes(&req.account_id, Some(min_date), Some(max_date))
+            .await?;
 
         let import_dates: std::collections::HashSet<NaiveDate> = valid_dates.into_iter().collect();
         existing
@@ -523,7 +529,7 @@ pub async fn import_holdings_csv_handler(
     );
 
     // Get the account to verify it exists and get its currency
-    let account = state.account_service.get_account(&req.account_id)?;
+    let account = state.account_service.get_account(&req.account_id).await?;
 
     // Get base currency for FX pair registration
     let base_currency = state.base_currency.read().unwrap().clone();

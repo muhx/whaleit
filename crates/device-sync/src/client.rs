@@ -1,4 +1,4 @@
-//! Device sync API client for communicating with the Wealthfolio Connect cloud service.
+//! Device sync API client for communicating with the Whaleit Connect cloud service.
 //!
 //! This client uses the REST API endpoints for device synchronization.
 
@@ -70,7 +70,7 @@ fn snapshot_backoff_with_jitter(attempt: usize) -> Duration {
     Duration::from_millis(backoff.saturating_add(jitter))
 }
 
-/// Client for the Wealthfolio device sync cloud API.
+/// Client for the Whaleit device sync cloud API.
 ///
 /// This client handles all communication with the cloud service for device
 /// registration, pairing, and key synchronization.
@@ -211,7 +211,7 @@ impl DeviceSyncClient {
     ///
     /// # Arguments
     ///
-    /// * `base_url` - The base URL of the cloud API (e.g., "https://api.wealthfolio.app")
+    /// * `base_url` - The base URL of the cloud API (e.g., "https://api.whaleit.app")
     pub fn new(base_url: &str) -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(DEFAULT_TIMEOUT_SECS))

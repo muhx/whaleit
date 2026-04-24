@@ -74,8 +74,8 @@ function ServiceUnavailableCard({ onRetry, isRetrying }: ServiceUnavailableCardP
             Service Temporarily Unavailable
           </h3>
           <p className="text-muted-foreground mb-4 max-w-sm text-sm">
-            We&apos;re having trouble connecting to WhaleIt Connect. This is usually temporary
-            and should resolve shortly.
+            We&apos;re having trouble connecting to WhaleIt Connect. This is usually temporary and
+            should resolve shortly.
           </p>
           <Button variant="outline" onClick={onRetry} disabled={isRetrying}>
             {isRetrying ? (

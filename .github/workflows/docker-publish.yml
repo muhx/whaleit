@@ -9,7 +9,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: docker.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/wealthfolio
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/whaleit
 
 jobs:
   build:
@@ -59,7 +59,7 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            ghcr.io/${{ github.repository_owner }}/wealthfolio
+            ghcr.io/${{ github.repository_owner }}/whaleit
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}

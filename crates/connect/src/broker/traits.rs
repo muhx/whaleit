@@ -10,8 +10,8 @@ use super::models::{
 use crate::broker_ingest::BrokerSyncState;
 use crate::broker_ingest::{ImportRun, ImportRunMode, ImportRunStatus, ImportRunSummary};
 use crate::platform::Platform;
-use wealthfolio_core::accounts::Account;
-use wealthfolio_core::errors::Result;
+use whaleit_core::accounts::Account;
+use whaleit_core::errors::Result;
 
 /// Trait for fetching data from the cloud broker API
 #[async_trait]
@@ -82,7 +82,7 @@ pub trait BrokerSyncServiceTrait: Send + Sync {
     ) -> Result<SyncAccountsResponse>;
 
     /// Get all synced accounts (accounts with provider_account_id set)
-    fn get_synced_accounts(&self) -> Result<Vec<Account>>;
+    async fn get_synced_accounts(&self) -> Result<Vec<Account>>;
 
     /// Get all platforms
     fn get_platforms(&self) -> Result<Vec<Platform>>;

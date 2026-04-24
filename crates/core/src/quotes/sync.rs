@@ -351,7 +351,7 @@ pub trait QuoteSyncServiceTrait: Send + Sync {
     async fn refresh_sync_state(&self) -> Result<()>;
 
     /// Get the current sync plan without executing it.
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>>;
 }
 
 // =============================================================================
@@ -412,16 +412,18 @@ where
     /// - First activity date (for backfill)
     /// - Last synced date (for incremental sync)
     /// - Current sync category (active, new, needs backfill, etc.)
-    pub fn build_sync_plan(&self, assets: &[Asset]) -> Vec<SymbolSyncPlan> {
+    pub async fn build_sync_plan(&self, assets: &[Asset]) -> Vec<SymbolSyncPlan> {
         let now = Utc::now();
         let asset_ids: Vec<String> = assets.iter().map(|asset| asset.id.clone()).collect();
         let existing_states = self
             .sync_state_store
             .get_by_asset_ids(&asset_ids)
+            .await
             .unwrap_or_default();
         let activity_bounds = self
             .activity_repo
             .get_activity_bounds_for_assets(&asset_ids)
+            .await
             .unwrap_or_default();
 
         // Compute quote bounds per provider
@@ -436,18 +438,25 @@ where
                 .push(asset.id.clone());
         }
         for (provider, ids) in &assets_by_provider {
-            if let Ok(bounds) = self.quote_store.get_quote_bounds_for_assets(ids, provider) {
+            if let Ok(bounds) = self
+                .quote_store
+                .get_quote_bounds_for_assets(ids, provider)
+                .await
+            {
                 quote_bounds.extend(bounds);
             }
         }
 
-        assets
-            .iter()
-            .filter(|a| self.should_sync_asset(a))
-            .filter_map(|asset| {
-                self.build_asset_sync_plan(asset, now, &activity_bounds, &quote_bounds)
-            })
-            .collect()
+        let mut plans = Vec::new();
+        for asset in assets.iter().filter(|a| self.should_sync_asset(a)) {
+            if let Some(plan) = self
+                .build_asset_sync_plan(asset, now, &activity_bounds, &quote_bounds)
+                .await
+            {
+                plans.push(plan);
+            }
+        }
+        plans
     }
 
     /// Check if an asset should be synced.
@@ -506,7 +515,11 @@ where
         };
 
         // Check if any quote already exists for this asset
-        if let Ok(Some(_)) = self.quote_store.latest(&AssetId(asset.id.clone()), None) {
+        if let Ok(Some(_)) = self
+            .quote_store
+            .latest(&AssetId(asset.id.clone()), None)
+            .await
+        {
             return;
         }
 
@@ -554,7 +567,7 @@ where
     }
 
     /// Build sync plan for a single asset.
-    fn build_asset_sync_plan(
+    async fn build_asset_sync_plan(
         &self,
         asset: &Asset,
         now: DateTime<Utc>,
@@ -567,6 +580,7 @@ where
         let state = self
             .sync_state_store
             .get_by_asset_id(&asset.id)
+            .await
             .ok()
             .flatten();
 
@@ -639,7 +653,7 @@ where
     ///
     /// - **BackfillHistory mode + FX asset**: Use global earliest activity date
     /// - **Incremental mode + FX asset**: Continue from quote_max (no backfill)
-    fn calculate_date_range_for_mode(
+    async fn calculate_date_range_for_mode(
         &self,
         inputs: &SyncPlanningInputs,
         mode: SyncMode,
@@ -678,6 +692,7 @@ where
                     let global_earliest = self
                         .activity_repo
                         .get_first_activity_date_overall()
+                        .await
                         .ok()
                         .map(|dt| dt.date_naive());
 
@@ -875,7 +890,7 @@ where
                             if let Some(actual_source) =
                                 quotes.first().map(|q| q.data_source.clone())
                             {
-                                match self.sync_state_store.get_by_asset_id(&asset.id) {
+                                match self.sync_state_store.get_by_asset_id(&asset.id).await {
                                     Ok(Some(mut state)) if state.data_source != actual_source => {
                                         state.data_source = actual_source;
                                         if let Err(e) = self.sync_state_store.upsert(&state).await {
@@ -999,7 +1014,7 @@ where
 
             // Get all assets for the plans
             let asset_ids: Vec<String> = plans.iter().map(|p| p.asset_id.clone()).collect();
-            let assets = match self.asset_repo.list_by_asset_ids(&asset_ids) {
+            let assets = match self.asset_repo.list_by_asset_ids(&asset_ids).await {
                 Ok(a) => a,
                 Err(e) => {
                     error!("Failed to get assets for sync: {:?}", e);
@@ -1067,16 +1082,17 @@ where
     ///
     /// This function computes both activity bounds and quote bounds on-the-fly
     /// from the operational tables, ensuring planning is based on fresh data.
-    fn generate_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+    async fn generate_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
         let states = self
             .sync_state_store
-            .get_assets_needing_sync(CLOSED_POSITION_GRACE_PERIOD_DAYS)?;
+            .get_assets_needing_sync(CLOSED_POSITION_GRACE_PERIOD_DAYS)
+            .await?;
 
         let now = Utc::now();
         let asset_ids: Vec<String> = states.iter().map(|state| state.asset_id.clone()).collect();
 
         // Fetch actual assets to check pricing_mode - filter out non-market-priced assets
-        let assets = self.asset_repo.list_by_asset_ids(&asset_ids)?;
+        let assets = self.asset_repo.list_by_asset_ids(&asset_ids).await?;
         let assets_by_id: HashMap<String, &Asset> = assets
             .iter()
             .map(|asset| (asset.id.clone(), asset))
@@ -1108,7 +1124,8 @@ where
         // Compute activity bounds on-the-fly from activities table
         let activity_bounds = self
             .activity_repo
-            .get_activity_bounds_for_assets(&asset_ids)?;
+            .get_activity_bounds_for_assets(&asset_ids)
+            .await?;
 
         // Compute quote bounds on-the-fly from quotes table, filtered by provider
         // Group states by data_source to batch quote bounds queries
@@ -1123,7 +1140,8 @@ where
                     .collect();
                 let bounds = self
                     .quote_store
-                    .get_quote_bounds_for_assets(&source_assets, &state.data_source)?;
+                    .get_quote_bounds_for_assets(&source_assets, &state.data_source)
+                    .await?;
                 quote_bounds_by_source.insert(state.data_source.clone(), bounds);
             }
         }
@@ -1263,7 +1281,7 @@ where
         let mut new_states = Vec::new();
 
         for asset in assets.iter().filter(|a| self.should_sync_asset(a)) {
-            let existing = self.sync_state_store.get_by_asset_id(&asset.id)?;
+            let existing = self.sync_state_store.get_by_asset_id(&asset.id).await?;
             if existing.is_none() {
                 // Don't set data_source here - it will be populated after first successful sync
                 // Using empty string so errors aren't incorrectly attributed to a specific provider
@@ -1286,7 +1304,7 @@ where
 
     /// Ensure sync states exist for all syncable assets.
     async fn ensure_sync_states_for_all_assets(&self) -> Result<()> {
-        let assets = self.asset_repo.list()?;
+        let assets = self.asset_repo.list().await?;
         self.ensure_sync_states_for_assets(&assets).await
     }
 }
@@ -1303,8 +1321,8 @@ where
         debug!("Starting sync (mode: {}) for {:?}", mode, asset_ids);
 
         let assets = match asset_ids {
-            Some(ids) if !ids.is_empty() => self.asset_repo.list_by_asset_ids(&ids)?,
-            _ => self.asset_repo.list()?,
+            Some(ids) if !ids.is_empty() => self.asset_repo.list_by_asset_ids(&ids).await?,
+            _ => self.asset_repo.list().await?,
         };
 
         if let Err(e) = self.ensure_sync_states_for_assets(&assets).await {
@@ -1348,10 +1366,14 @@ where
 
         let now = Utc::now();
         let syncable_ids: Vec<String> = syncable.iter().map(|asset| asset.id.clone()).collect();
-        let existing_states = self.sync_state_store.get_by_asset_ids(&syncable_ids)?;
+        let existing_states = self
+            .sync_state_store
+            .get_by_asset_ids(&syncable_ids)
+            .await?;
         let activity_bounds = self
             .activity_repo
-            .get_activity_bounds_for_assets(&syncable_ids)?;
+            .get_activity_bounds_for_assets(&syncable_ids)
+            .await?;
 
         // Compute quote bounds per provider
         let mut quote_bounds: HashMap<String, (NaiveDate, NaiveDate)> = HashMap::new();
@@ -1364,7 +1386,11 @@ where
                 .push(asset.id.clone());
         }
         for (provider, ids) in &assets_by_provider {
-            if let Ok(bounds) = self.quote_store.get_quote_bounds_for_assets(ids, provider) {
+            if let Ok(bounds) = self
+                .quote_store
+                .get_quote_bounds_for_assets(ids, provider)
+                .await
+            {
                 quote_bounds.extend(bounds);
             }
         }
@@ -1467,13 +1493,15 @@ where
                 continue;
             }
 
-            let (start_date, end_date) = self.calculate_date_range_for_mode(
-                &inputs,
-                mode,
-                effective_today,
-                fetch_end_date,
-                asset,
-            );
+            let (start_date, end_date) = self
+                .calculate_date_range_for_mode(
+                    &inputs,
+                    mode,
+                    effective_today,
+                    fetch_end_date,
+                    asset,
+                )
+                .await;
 
             plans.push(SymbolSyncPlan {
                 asset_id: asset.id.clone(),
@@ -1535,7 +1563,7 @@ where
             symbol, activity_date.0
         );
 
-        let existing = self.sync_state_store.get_by_asset_id(symbol)?;
+        let existing = self.sync_state_store.get_by_asset_id(symbol).await?;
 
         if let Some(mut state) = existing {
             // Check if we need backfill by computing quote bounds on-the-fly
@@ -1547,6 +1575,7 @@ where
             let quote_bounds = self
                 .quote_store
                 .get_quote_bounds_for_assets(&[symbol.to_string()], &state.data_source)
+                .await
                 .unwrap_or_default();
             let earliest_quote = quote_bounds.get(symbol).map(|(min, _)| *min);
 
@@ -1571,7 +1600,7 @@ where
             self.sync_state_store.upsert(&state).await?;
         } else {
             // Check if asset should be synced (only market-priced assets)
-            if let Ok(asset) = self.asset_repo.get_by_id(symbol) {
+            if let Ok(asset) = self.asset_repo.get_by_id(symbol).await {
                 if asset.quote_mode != QuoteMode::Market {
                     return Ok(());
                 }
@@ -1612,8 +1641,8 @@ where
         self.ensure_sync_states_for_all_assets().await
     }
 
-    fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
-        self.generate_sync_plan()
+    async fn get_sync_plan(&self) -> Result<Vec<SymbolSyncPlan>> {
+        self.generate_sync_plan().await
     }
 }
 

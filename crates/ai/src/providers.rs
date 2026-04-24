@@ -187,12 +187,13 @@ impl<E: AiEnvironment> ProviderService<E> {
     }
 
     /// Get the current AI settings (merged from catalog + stored settings).
-    pub fn get_settings(&self) -> Result<SimpleSettings, AiError> {
+    pub async fn get_settings(&self) -> Result<SimpleSettings, AiError> {
         // Load stored settings
         let stored: StoredAiSettings = self
             .env
             .settings_service()
             .get_setting_value(AI_SETTINGS_KEY)
+            .await
             .map_err(|e| AiError::Internal(e.to_string()))?
             .and_then(|s| serde_json::from_str(&s).ok())
             .unwrap_or_default();
@@ -303,7 +304,11 @@ impl<E: AiEnvironment> ProviderService<E> {
 
     /// Get model capabilities for a specific provider/model combination.
     /// Checks user capability overrides first, then falls back to catalog, then defaults.
-    pub fn get_model_capabilities(&self, provider_id: &str, model_id: &str) -> ModelCapabilities {
+    pub async fn get_model_capabilities(
+        &self,
+        provider_id: &str,
+        model_id: &str,
+    ) -> ModelCapabilities {
         // First, get base capabilities from catalog
         let catalog_capabilities = PROVIDER_CATALOG
             .providers
@@ -316,6 +321,7 @@ impl<E: AiEnvironment> ProviderService<E> {
             .env
             .settings_service()
             .get_setting_value(AI_PROVIDER_SETTINGS_KEY)
+            .await
             .ok()
             .flatten()
             .and_then(|s| serde_json::from_str::<AiProviderSettings>(&s).ok())
@@ -360,11 +366,12 @@ impl<E: AiEnvironment> ProviderService<E> {
 
     /// Get the tools allowlist for a provider.
     /// Returns None if all tools are allowed, Some(list) if only specific tools are allowed.
-    pub fn get_tools_allowlist(&self, provider_id: &str) -> Option<Vec<String>> {
+    pub async fn get_tools_allowlist(&self, provider_id: &str) -> Option<Vec<String>> {
         let stored: AiProviderSettings = self
             .env
             .settings_service()
             .get_setting_value(AI_PROVIDER_SETTINGS_KEY)
+            .await
             .ok()
             .flatten()
             .and_then(|s| serde_json::from_str(&s).ok())
@@ -380,7 +387,7 @@ impl<E: AiEnvironment> ProviderService<E> {
     /// user overrides persisted under `ai_provider_settings`. Returns an empty
     /// (all-`None`) `ProviderTuning` when neither the catalog nor the user has
     /// set anything — callers treat that as "leave provider defaults alone."
-    pub fn get_resolved_tuning(&self, provider_id: &str) -> ProviderTuning {
+    pub async fn get_resolved_tuning(&self, provider_id: &str) -> ProviderTuning {
         let catalog_tuning = PROVIDER_CATALOG
             .providers
             .get(provider_id)
@@ -391,6 +398,7 @@ impl<E: AiEnvironment> ProviderService<E> {
             .env
             .settings_service()
             .get_setting_value(AI_PROVIDER_SETTINGS_KEY)
+            .await
             .ok()
             .flatten()
             .and_then(|s| serde_json::from_str(&s).ok())
@@ -408,11 +416,12 @@ impl<E: AiEnvironment> ProviderService<E> {
     }
 
     /// Get provider URL (for local providers like Ollama).
-    pub fn get_provider_url(&self, provider_id: &str) -> Option<String> {
+    pub async fn get_provider_url(&self, provider_id: &str) -> Option<String> {
         let stored: AiProviderSettings = self
             .env
             .settings_service()
             .get_setting_value(AI_PROVIDER_SETTINGS_KEY)
+            .await
             .ok()
             .flatten()
             .and_then(|s| serde_json::from_str(&s).ok())
@@ -445,6 +454,7 @@ impl<E: AiEnvironment> ProviderService<E> {
             .env
             .settings_service()
             .get_setting_value(AI_SETTINGS_KEY)
+            .await
             .ok()
             .flatten()
             .and_then(|s| serde_json::from_str(&s).ok())
@@ -475,7 +485,7 @@ impl<E: AiEnvironment> ProviderService<E> {
             .await
             .map_err(|e| AiError::Internal(e.to_string()))?;
 
-        self.get_settings()
+        self.get_settings().await
     }
 }
 
