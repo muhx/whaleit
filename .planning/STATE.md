@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: context_captured
-stopped_at: "Phase 3 context gathered — ready for /gsd-plan-phase 3"
+status: ui_spec_approved
+stopped_at: "Phase 3 UI-SPEC approved — ready for /gsd-plan-phase 3"
 last_updated: "2026-04-25T00:00:00Z"
 last_activity: 2026-04-25
-resume_file: .planning/phases/03-bank-accounts-credit-cards/03-CONTEXT.md
+resume_file: .planning/phases/03-bank-accounts-credit-cards/03-UI-SPEC.md
 progress:
   total_phases: 12
   completed_phases: 2
