@@ -94,7 +94,7 @@ export function ResetPasswordPage() {
                   className="h-12 rounded-full shadow-none"
                 />
               </div>
-              {(validationError || loginError) ? (
+              {validationError || loginError ? (
                 <p className="text-destructive text-sm" role="alert">
                   {validationError || loginError}
                 </p>
@@ -105,10 +105,7 @@ export function ResetPasswordPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 text-center text-xs">
-            <Link
-              to="/login"
-              className="text-muted-foreground underline hover:no-underline"
-            >
+            <Link to="/login" className="text-muted-foreground underline hover:no-underline">
               Back to sign in
             </Link>
           </CardFooter>

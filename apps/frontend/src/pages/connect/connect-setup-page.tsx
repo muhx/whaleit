@@ -75,9 +75,7 @@ export function ConnectSetupPage({ onConnected }: ConnectSetupPageProps) {
             </div>
             <div className="space-y-2">
               <CardTitle>Connect to WhaleIt</CardTitle>
-              <CardDescription>
-                Enter your server URL and API key to get started.
-              </CardDescription>
+              <CardDescription>Enter your server URL and API key to get started.</CardDescription>
             </div>
           </CardHeader>
           <CardContent>

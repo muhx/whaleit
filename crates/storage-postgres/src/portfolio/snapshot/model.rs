@@ -39,8 +39,6 @@ pub struct AccountStateSnapshotDB {
 
 impl From<AccountStateSnapshotDB> for AccountStateSnapshot {
     fn from(db: AccountStateSnapshotDB) -> Self {
-        
-
         Self {
             id: db.id,
             account_id: db.account_id,

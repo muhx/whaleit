@@ -197,37 +197,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(
-    async (email: string, password: string, displayName?: string) => {
-      setLoginLoading(true);
-      setLoginError(null);
-      try {
-        const response = await fetch("/api/v1/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, displayName }),
-          credentials: "same-origin",
-        });
-        if (!response.ok) {
-          let message = "Registration failed";
-          try {
-            const body = await response.json();
-            message = body?.message ?? message;
-          } catch {
-            // ignore
-          }
-          throw new Error(message);
+  const register = useCallback(async (email: string, password: string, displayName?: string) => {
+    setLoginLoading(true);
+    setLoginError(null);
+    try {
+      const response = await fetch("/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, displayName }),
+        credentials: "same-origin",
+      });
+      if (!response.ok) {
+        let message = "Registration failed";
+        try {
+          const body = await response.json();
+          message = body?.message ?? message;
+        } catch {
+          // ignore
         }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Registration failed";
-        setLoginError(message);
-        throw error;
-      } finally {
-        setLoginLoading(false);
+        throw new Error(message);
       }
-    },
-    [],
-  );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Registration failed";
+      setLoginError(message);
+      throw error;
+    } finally {
+      setLoginLoading(false);
+    }
+  }, []);
 
   const verifyEmail = useCallback(async (token: string) => {
     setLoginLoading(true);

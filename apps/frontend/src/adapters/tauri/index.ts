@@ -54,12 +54,7 @@ export type {
   ThreadPage,
 } from "@/features/ai-assistant/types";
 
-export {
-  createAccount,
-  deleteAccount,
-  getAccounts,
-  updateAccount,
-} from "../shared/accounts";
+export { createAccount, deleteAccount, getAccounts, updateAccount } from "../shared/accounts";
 
 export {
   checkActivitiesImport,
@@ -245,10 +240,7 @@ export {
   updateDevice,
 } from "../shared/connect";
 
-export type {
-  PairingFlowPhase,
-  ConfirmPairingWithBootstrapResult,
-} from "../shared/connect";
+export type { PairingFlowPhase, ConfirmPairingWithBootstrapResult } from "../shared/connect";
 
 export {
   getAiProviders,

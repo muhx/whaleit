@@ -1,10 +1,4 @@
-import {
-  ApplicationShell,
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@whaleit/ui";
+import { ApplicationShell, Card, CardDescription, CardHeader, CardTitle } from "@whaleit/ui";
 import { Link } from "react-router-dom";
 
 export function RegisterPendingPage() {
@@ -23,14 +17,11 @@ export function RegisterPendingPage() {
             <div className="space-y-2">
               <CardTitle>Check Your Email</CardTitle>
               <CardDescription>
-                We&apos;ve sent a verification link to your email address. Please click it to
-                verify your account, then sign in.
+                We&apos;ve sent a verification link to your email address. Please click it to verify
+                your account, then sign in.
               </CardDescription>
             </div>
-            <Link
-              to="/login"
-              className="text-muted-foreground underline hover:no-underline"
-            >
+            <Link to="/login" className="text-muted-foreground underline hover:no-underline">
               Back to sign in
             </Link>
           </CardHeader>

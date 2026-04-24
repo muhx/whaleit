@@ -61,10 +61,7 @@ export function ForgotPasswordPage() {
               </div>
             </CardHeader>
             <CardFooter className="flex flex-col gap-2 text-center text-xs">
-              <Link
-                to="/login"
-                className="text-muted-foreground underline hover:no-underline"
-              >
+              <Link to="/login" className="text-muted-foreground underline hover:no-underline">
                 Back to sign in
               </Link>
             </CardFooter>
@@ -108,7 +105,7 @@ export function ForgotPasswordPage() {
                   placeholder="you@example.com"
                   className="h-12 rounded-full shadow-none"
                 />
-                {(validationError || loginError) ? (
+                {validationError || loginError ? (
                   <p className="text-destructive text-sm" role="alert">
                     {validationError || loginError}
                   </p>
@@ -120,10 +117,7 @@ export function ForgotPasswordPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 text-center text-xs">
-            <Link
-              to="/login"
-              className="text-muted-foreground underline hover:no-underline"
-            >
+            <Link to="/login" className="text-muted-foreground underline hover:no-underline">
               Back to sign in
             </Link>
           </CardFooter>

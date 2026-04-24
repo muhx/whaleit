@@ -362,7 +362,9 @@ async fn backup_database_to_path_route(
     fs::write(&backup_path_str, &output.stdout)
         .await
         .map_err(|e| anyhow::anyhow!("Failed to write backup file: {}", e))?;
-    Ok(Json(BackupToPathResponse { path: backup_path_str }))
+    Ok(Json(BackupToPathResponse {
+        path: backup_path_str,
+    }))
 }
 
 #[derive(serde::Deserialize)]

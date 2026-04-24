@@ -1,13 +1,18 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::{IntoResponse, Response}, Json};
-use chrono::{Duration, Utc};
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use base64::Engine as _;
-use rand::Rng;
-use serde::Deserialize;
 use crate::auth::{hash_password, hash_token};
 use crate::main_lib::AppState;
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine as _;
+use chrono::{Duration, Utc};
+use rand::Rng;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct RegisterRequest {
@@ -36,7 +41,10 @@ pub async fn register(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<Response, ApiAuthError> {
-    let user_repo = state.user_repo.as_ref().ok_or(ApiAuthError::NotConfigured)?;
+    let user_repo = state
+        .user_repo
+        .as_ref()
+        .ok_or(ApiAuthError::NotConfigured)?;
     let email_service = state.email.as_ref().ok_or(ApiAuthError::NotConfigured)?;
 
     let email = payload.email.trim().to_lowercase();
@@ -52,11 +60,7 @@ pub async fn register(
     let password_hash = hash_password(&payload.password)?;
 
     let user = user_repo
-        .create_user(
-            &email,
-            &password_hash,
-            payload.display_name.as_deref(),
-        )
+        .create_user(&email, &password_hash, payload.display_name.as_deref())
         .await
         .map_err(|e| {
             if e.to_string().contains("already registered") {
@@ -90,7 +94,10 @@ pub async fn verify_email(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<VerifyEmailRequest>,
 ) -> Result<Response, ApiAuthError> {
-    let user_repo = state.user_repo.as_ref().ok_or(ApiAuthError::NotConfigured)?;
+    let user_repo = state
+        .user_repo
+        .as_ref()
+        .ok_or(ApiAuthError::NotConfigured)?;
 
     let token_hash = hash_token(&payload.token);
 
@@ -119,7 +126,10 @@ pub async fn forgot_password(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<ForgotPasswordRequest>,
 ) -> Result<Response, ApiAuthError> {
-    let user_repo = state.user_repo.as_ref().ok_or(ApiAuthError::NotConfigured)?;
+    let user_repo = state
+        .user_repo
+        .as_ref()
+        .ok_or(ApiAuthError::NotConfigured)?;
     let email_service = state.email.as_ref().ok_or(ApiAuthError::NotConfigured)?;
 
     let email = payload.email.trim().to_lowercase();
@@ -149,7 +159,10 @@ pub async fn reset_password(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<ResetPasswordRequest>,
 ) -> Result<Response, ApiAuthError> {
-    let user_repo = state.user_repo.as_ref().ok_or(ApiAuthError::NotConfigured)?;
+    let user_repo = state
+        .user_repo
+        .as_ref()
+        .ok_or(ApiAuthError::NotConfigured)?;
 
     if payload.password.len() < 8 {
         return Err(ApiAuthError::BadRequest(

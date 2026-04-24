@@ -74,9 +74,7 @@ export function VerifyEmailPage() {
             </div>
             <div className="space-y-2">
               <CardTitle>Verify Your Email</CardTitle>
-              <CardDescription>
-                Enter the verification token sent to your email.
-              </CardDescription>
+              <CardDescription>Enter the verification token sent to your email.</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -105,10 +103,7 @@ export function VerifyEmailPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 text-center text-xs">
-            <Link
-              to="/login"
-              className="text-muted-foreground underline hover:no-underline"
-            >
+            <Link to="/login" className="text-muted-foreground underline hover:no-underline">
               Back to sign in
             </Link>
           </CardFooter>

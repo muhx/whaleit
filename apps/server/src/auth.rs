@@ -187,9 +187,10 @@ impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (status, message) = match &self {
             AuthError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()),
-            AuthError::InvalidCredentials => {
-                (StatusCode::UNAUTHORIZED, "Invalid email or password".to_string())
-            }
+            AuthError::InvalidCredentials => (
+                StatusCode::UNAUTHORIZED,
+                "Invalid email or password".to_string(),
+            ),
             AuthError::EmailNotVerified => (
                 StatusCode::FORBIDDEN,
                 "Email verification required".to_string(),
@@ -207,7 +208,9 @@ impl IntoResponse for AuthError {
         let mut response = (status, body).into_response();
         if matches!(self, AuthError::EmailNotVerified) {
             if let Ok(val) = HeaderValue::from_str("true") {
-                response.headers_mut().insert("X-Verification-Required", val);
+                response
+                    .headers_mut()
+                    .insert("X-Verification-Required", val);
             }
         }
         response
@@ -269,7 +272,7 @@ pub fn verify_password_hash(password: &str, hash: &str) -> Result<(), AuthError>
 }
 
 pub fn hash_password(password: &str) -> Result<String, AuthError> {
-    use argon2::password_hash::{SaltString, PasswordHasher};
+    use argon2::password_hash::{PasswordHasher, SaltString};
     use rand::rngs::OsRng;
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()

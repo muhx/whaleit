@@ -36,10 +36,7 @@ export const API_PREFIX = WEB_API_PREFIX;
 export const EVENTS_ENDPOINT = _EVENTS_ENDPOINT;
 export const AI_CHAT_STREAM_ENDPOINT = _AI_CHAT_STREAM_ENDPOINT;
 
-export const invoke = async <T>(
-  command: string,
-  payload?: Record<string, unknown>,
-): Promise<T> => {
+export const invoke = async <T>(command: string, payload?: Record<string, unknown>): Promise<T> => {
   const config = COMMANDS[command];
   if (!config) throw new Error(`Unsupported command ${command}`);
 

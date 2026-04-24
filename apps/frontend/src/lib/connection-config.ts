@@ -23,7 +23,9 @@ export function clearConnectionConfig(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export async function testConnection(config: ConnectionConfig): Promise<{ success: boolean; error?: string }> {
+export async function testConnection(
+  config: ConnectionConfig,
+): Promise<{ success: boolean; error?: string }> {
   try {
     const url = config.apiHost.replace(/\/+$/, "");
     const res = await fetch(`${url}/api/v1/auth/me`, {

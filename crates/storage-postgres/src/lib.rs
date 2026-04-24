@@ -49,10 +49,10 @@ pub use portfolio::{
     PgSnapshotRepository, PgValuationRepository, SnapshotRepository, ValuationRepository,
 };
 pub use settings::PgSettingsRepository;
-pub use users::PgUserRepository;
 pub use sync::{
     AppSyncRepository, BrokerSyncStateRepository, ImportRunRepository, PlatformRepository,
 };
+pub use users::PgUserRepository;
 
 // Re-export database utilities
 pub use db::{create_pool, init, run_migrations, PgPool};

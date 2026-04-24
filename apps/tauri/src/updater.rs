@@ -61,9 +61,7 @@ fn extract_screenshots(raw_json: &serde_json::Value) -> Option<Vec<String>> {
 /// Check for updates and return update info if available.
 /// Returns `Ok(Some(UpdateInfo))` if an update is available,
 /// `Ok(None)` if already up-to-date.
-pub async fn check_for_update(
-    app_handle: AppHandle,
-) -> Result<Option<UpdateInfo>, String> {
+pub async fn check_for_update(app_handle: AppHandle) -> Result<Option<UpdateInfo>, String> {
     let is_appstore = is_app_store_build();
 
     let update = app_handle

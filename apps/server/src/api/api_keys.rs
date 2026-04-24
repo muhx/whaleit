@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use crate::auth::{generate_api_key, AuthenticatedUser};
+use crate::main_lib::AppState;
 use axum::{
     extract::State,
     http::StatusCode,
@@ -7,8 +9,6 @@ use axum::{
     Extension, Json,
 };
 use serde::{Deserialize, Serialize};
-use crate::auth::{generate_api_key, AuthenticatedUser};
-use crate::main_lib::AppState;
 
 #[derive(Deserialize)]
 pub struct CreateApiKeyRequest {

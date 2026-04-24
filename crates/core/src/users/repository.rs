@@ -1,6 +1,6 @@
+use crate::errors::Result;
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
-use crate::errors::Result;
 
 use super::model::{ApiKey, User, VerificationToken};
 

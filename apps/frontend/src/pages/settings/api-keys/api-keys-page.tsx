@@ -138,7 +138,7 @@ export default function ApiKeysPage() {
                   again.
                 </p>
                 <div className="bg-muted rounded-md p-3">
-                  <code className="text-xs break-all">{createdKey}</code>
+                  <code className="break-all text-xs">{createdKey}</code>
                 </div>
                 <Button
                   variant="outline"
@@ -162,9 +162,7 @@ export default function ApiKeysPage() {
                     placeholder="e.g., My Script Key"
                     maxLength={100}
                   />
-                  {validationError && (
-                    <p className="text-destructive text-sm">{validationError}</p>
-                  )}
+                  {validationError && <p className="text-destructive text-sm">{validationError}</p>}
                 </div>
                 <DialogFooter>
                   <Button onClick={handleCreate} disabled={createMutation.isPending}>
@@ -179,9 +177,7 @@ export default function ApiKeysPage() {
       <Separator />
 
       {keys.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          No API keys yet. Create one to get started.
-        </p>
+        <p className="text-muted-foreground text-sm">No API keys yet. Create one to get started.</p>
       ) : (
         <div className="overflow-hidden rounded-lg border">
           {keys.map((key) => (

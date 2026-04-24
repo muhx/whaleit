@@ -234,10 +234,7 @@ export {
   updateDevice,
 } from "../shared/connect";
 
-export type {
-  PairingFlowPhase,
-  ConfirmPairingWithBootstrapResult,
-} from "../shared/connect";
+export type { PairingFlowPhase, ConfirmPairingWithBootstrapResult } from "../shared/connect";
 
 // ============================================================================
 // Platform-specific modules (different implementations for web vs desktop)

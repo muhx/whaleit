@@ -73,7 +73,7 @@ test.describe("Auth Flow: Sign-up → Verify → Login → API Key → Logout", 
     const res = await page.evaluate(async (token) => {
       const r = await fetch("/api/v1/auth/api-keys", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ name: "E2E Test Key" }),
       });
       return { status: r.status, body: await r.json() };
@@ -86,7 +86,7 @@ test.describe("Auth Flow: Sign-up → Verify → Login → API Key → Logout", 
   test("5. List API Keys", async () => {
     const res = await page.evaluate(async (token) => {
       const r = await fetch("/api/v1/auth/api-keys", {
-        headers: { "Authorization": "Bearer " + token },
+        headers: { Authorization: "Bearer " + token },
       });
       return { status: r.status, body: await r.json() };
     }, sessionToken);
@@ -140,7 +140,7 @@ test.describe("Auth Flow: Sign-up → Verify → Login → API Key → Logout", 
   test("8. Revoke API Key", async () => {
     const listRes = await page.evaluate(async (token) => {
       const r = await fetch("/api/v1/auth/api-keys", {
-        headers: { "Authorization": "Bearer " + token },
+        headers: { Authorization: "Bearer " + token },
       });
       return r.json();
     }, sessionToken);
@@ -148,14 +148,17 @@ test.describe("Auth Flow: Sign-up → Verify → Login → API Key → Logout", 
     expect(listRes.length).toBeGreaterThanOrEqual(1);
     const keyId = listRes[0].id;
 
-    const deleteRes = await page.evaluate(async ([token, id]) => {
-      const r = await fetch("/api/v1/auth/api-keys", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-        body: JSON.stringify({ id }),
-      });
-      return r.status;
-    }, [sessionToken, keyId] as [string, string]);
+    const deleteRes = await page.evaluate(
+      async ([token, id]) => {
+        const r = await fetch("/api/v1/auth/api-keys", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ id }),
+        });
+        return r.status;
+      },
+      [sessionToken, keyId] as [string, string],
+    );
     expect(deleteRes).toBe(204);
   });
 

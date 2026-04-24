@@ -15,10 +15,9 @@ use crate::schema::activities::dsl::*;
 use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use whaleit_core::activities::{
-    Activity, ActivityBulkMutationResult,
-    ActivityRepositoryTrait, ActivitySearchResponse, ActivitySearchResponseMeta,
-    ActivityUpdate as CoreActivityUpdate, BulkUpsertResult, ImportMapping,
-    ImportTemplate as CoreImportTemplate, NewActivity,
+    Activity, ActivityBulkMutationResult, ActivityRepositoryTrait, ActivitySearchResponse,
+    ActivitySearchResponseMeta, ActivityUpdate as CoreActivityUpdate, BulkUpsertResult,
+    ImportMapping, ImportTemplate as CoreImportTemplate, NewActivity,
 };
 use whaleit_core::limits::ContributionActivity;
 use whaleit_core::Result;

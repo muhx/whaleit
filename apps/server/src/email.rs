@@ -47,8 +47,8 @@ impl EmailService {
         let from_email = std::env::var("WF_MAIL_FROM")
             .or_else(|_| std::env::var("WF_SMTP_FROM"))
             .unwrap_or_else(|_| "noreply@localhost".to_string());
-        let from_name = std::env::var("WF_MAIL_FROM_NAME")
-            .unwrap_or_else(|_| "WhaleIt".to_string());
+        let from_name =
+            std::env::var("WF_MAIL_FROM_NAME").unwrap_or_else(|_| "WhaleIt".to_string());
         let app_url =
             std::env::var("WF_APP_URL").unwrap_or_else(|_| "http://localhost:8088".to_string());
 
@@ -111,11 +111,7 @@ impl EmailService {
         EmailProvider::Smtp(transport)
     }
 
-    pub async fn send_verification_email(
-        &self,
-        email: &str,
-        token: &str,
-    ) -> anyhow::Result<()> {
+    pub async fn send_verification_email(&self, email: &str, token: &str) -> anyhow::Result<()> {
         let url = format!("{}/auth/verify?token={}", self.app_url, token);
         let html = format!(
             "<p>Click <a href=\"{url}\">here</a> to verify your email address.</p>\
@@ -125,11 +121,7 @@ impl EmailService {
             .await
     }
 
-    pub async fn send_password_reset_email(
-        &self,
-        email: &str,
-        token: &str,
-    ) -> anyhow::Result<()> {
+    pub async fn send_password_reset_email(&self, email: &str, token: &str) -> anyhow::Result<()> {
         let url = format!("{}/auth/reset-password?token={}", self.app_url, token);
         let html = format!(
             "<p>Click <a href=\"{url}\">here</a> to reset your password.</p>\

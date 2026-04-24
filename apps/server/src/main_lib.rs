@@ -430,12 +430,9 @@ async fn build_state_postgres(
         .transpose()?
         .map(Arc::new);
 
-    let user_repo: Option<Arc<dyn UserRepositoryTrait>> = Some(Arc::new(
-        PgUserRepository::new(pool.clone()),
-    ));
-    let email_service = user_repo.as_ref().map(|_| {
-        Arc::new(EmailService::new())
-    });
+    let user_repo: Option<Arc<dyn UserRepositoryTrait>> =
+        Some(Arc::new(PgUserRepository::new(pool.clone())));
+    let email_service = user_repo.as_ref().map(|_| Arc::new(EmailService::new()));
 
     Ok(Arc::new(AppState {
         domain_event_sink,

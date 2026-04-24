@@ -109,9 +109,18 @@ pub fn app_router(state: Arc<AppState>, config: &Config) -> Router {
         .merge(ai_chat::router())
         .merge(health::router())
         .merge(custom_providers::router())
-        .route("/auth/api-keys", axum::routing::get(api_keys::list_api_keys))
-        .route("/auth/api-keys", axum::routing::post(api_keys::create_api_key))
-        .route("/auth/api-keys", axum::routing::delete(api_keys::delete_api_key));
+        .route(
+            "/auth/api-keys",
+            axum::routing::get(api_keys::list_api_keys),
+        )
+        .route(
+            "/auth/api-keys",
+            axum::routing::post(api_keys::create_api_key),
+        )
+        .route(
+            "/auth/api-keys",
+            axum::routing::delete(api_keys::delete_api_key),
+        );
 
     #[cfg(feature = "device-sync")]
     {
@@ -166,9 +175,13 @@ pub fn app_router(state: Arc<AppState>, config: &Config) -> Router {
         )
         .route(
             "/auth/register",
-            axum::routing::post(auth_handlers::register).layer(GovernorLayer::new(register_governor)),
+            axum::routing::post(auth_handlers::register)
+                .layer(GovernorLayer::new(register_governor)),
         )
-        .route("/auth/verify", axum::routing::post(auth_handlers::verify_email))
+        .route(
+            "/auth/verify",
+            axum::routing::post(auth_handlers::verify_email),
+        )
         .route(
             "/auth/forgot-password",
             axum::routing::post(auth_handlers::forgot_password),

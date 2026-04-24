@@ -116,7 +116,7 @@ export function RegisterPage() {
                   className="h-12 rounded-full shadow-none"
                 />
               </div>
-              {(validationError || loginError) ? (
+              {validationError || loginError ? (
                 <p className="text-destructive text-sm" role="alert">
                   {validationError || loginError}
                 </p>

@@ -27,7 +27,8 @@ Phase 02 — dual-database-engine
 
 ## Current Position
 
-Phase: 3 Plan: Not started Status: Ready to execute Last activity: 2026-04-22 - Completed quick task 20260422: Auth system
+Phase: 3 Plan: Not started Status: Ready to execute Last activity: 2026-04-22 -
+Completed quick task 20260422: Auth system
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -87,8 +88,8 @@ None yet.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
+| #        | Description                                                | Date       | Commit   | Directory                                             |
+| -------- | ---------------------------------------------------------- | ---------- | -------- | ----------------------------------------------------- |
 | 20260422 | Auth system (register, sign-in, forgot password, API keys) | 2026-04-22 | 7f6bc29c | [20260422-auth-system](./quick/20260422-auth-system/) |
 
 ## Session Continuity

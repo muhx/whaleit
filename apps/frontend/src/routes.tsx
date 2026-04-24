@@ -53,7 +53,15 @@ import ConnectSettingsPage from "./pages/settings/connect/connect-settings-page"
 import FirePlannerPage from "./pages/fire-planner/fire-planner-page";
 import FirePlannerSettingsPage from "./pages/settings/fire-planner/fire-planner-settings-page";
 
-const AUTH_ROUTES = ["/login", "/register", "/register/pending", "/verify-email", "/forgot-password", "/reset-password", "/auth/callback"];
+const AUTH_ROUTES = [
+  "/login",
+  "/register",
+  "/register/pending",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+  "/auth/callback",
+];
 
 function AuthGuard({ children, loginPage }: { children: ReactNode; loginPage: ReactNode }) {
   const { isAuthenticated, statusLoading, requiresAuth } = useAuth();
@@ -76,7 +84,9 @@ function AuthGuard({ children, loginPage }: { children: ReactNode; loginPage: Re
 }
 
 export function ProtectedAppRoutes({ isWeb, loginPage }: { isWeb: boolean; loginPage: ReactNode }) {
-  const [connectionReady, setConnectionReady] = useState(() => !isDesktop || !!getConnectionConfig());
+  const [connectionReady, setConnectionReady] = useState(
+    () => !isDesktop || !!getConnectionConfig(),
+  );
 
   if (isDesktop && !connectionReady) {
     return (
