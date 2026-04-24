@@ -12,6 +12,8 @@ ENV CONNECT_AUTH_PUBLISHABLE_KEY=${CONNECT_AUTH_PUBLISHABLE_KEY}
 
 WORKDIR /app
 
+COPY --from=xx / /
+
 RUN apk add --no-cache clang lld build-base git file pkgconfig
 RUN xx-apk add --no-cache musl-dev gcc openssl-dev openssl-libs-static postgresql-dev
 RUN rustup target add $(xx-cargo --print-target-triple)
