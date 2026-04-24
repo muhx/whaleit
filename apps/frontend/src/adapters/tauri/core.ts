@@ -78,8 +78,8 @@ export const invoke = async <T>(command: string, payload?: Record<string, unknow
     } catch {
       void 0;
     }
-    console.error(`[Invoke] Command "${command}" failed: ${msg}`);
-    throw new Error(msg);
+    logger.error(`[Invoke] Command "${command}" failed with status ${res.status}: ${msg}`);
+    throw new Error(`Command "${command}" failed with status ${res.status}: ${msg}`);
   }
   if (command === "backup_database") {
     const parsed = (await res.json()) as { filename: string; dataB64: string };

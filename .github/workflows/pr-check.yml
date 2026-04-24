@@ -104,6 +104,12 @@ jobs:
           DATABASE_URL: postgres://whaleit_test:test_password@localhost:5432/whaleit_test
           CONNECT_API_URL: http://test.local
 
+      - name: Parity tests
+        run: cargo test -p whaleit-storage-postgres --test parity_tests -- --include-ignored --test-threads=1
+        env:
+          DATABASE_URL: postgres://whaleit_test:test_password@localhost:5432/whaleit_test
+          CONNECT_API_URL: http://test.local
+
       - name: Check release build
         run: cargo check -p whaleit-server --release
         env:

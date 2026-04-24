@@ -25,7 +25,13 @@ function App() {
 
   const isWebEnv = isWeb;
 
-  window.__whaleit_query_client__ = queryClient;
+  const queryClientGlobals = window as Window &
+    typeof globalThis & {
+      __whaleit_query_client__?: QueryClient;
+      __whaleitQueryClient?: QueryClient;
+    };
+  queryClientGlobals.__whaleit_query_client__ = queryClient;
+  queryClientGlobals.__whaleitQueryClient = queryClient;
 
   return (
     <QueryClientProvider client={queryClient}>
