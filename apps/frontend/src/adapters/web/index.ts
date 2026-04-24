@@ -104,6 +104,70 @@ export {
   updateGoalsAllocations,
 } from "../shared/goals";
 
+// Exchange Rates Commands
+export {
+  addExchangeRate,
+  deleteExchangeRate,
+  getExchangeRates,
+  updateExchangeRate,
+} from "../shared/exchange-rates";
+
+// Contribution Limits Commands
+export {
+  calculateDepositsForLimit,
+  createContributionLimit,
+  deleteContributionLimit,
+  getContributionLimit,
+  updateContributionLimit,
+} from "../shared/contribution-limits";
+
+// Market Data & Asset Commands
+export {
+  checkQuotesImport,
+  createAsset,
+  deleteAsset,
+  deleteQuote,
+  fetchYahooDividends,
+  getAssetProfile,
+  getAssets,
+  getExchanges,
+  getLatestQuotes,
+  getMarketDataProviders,
+  getMarketDataProviderSettings,
+  getQuoteHistory,
+  importManualQuotes,
+  resolveSymbolQuote,
+  searchTicker,
+  syncHistoryQuotes,
+  syncMarketData,
+  updateAssetProfile,
+  updateMarketDataProviderSettings,
+  updateQuote,
+  updateQuoteMode,
+} from "../shared/market-data";
+
+// Custom Provider Commands
+export {
+  createCustomProvider,
+  deleteCustomProvider,
+  getCustomProviders,
+  testCustomProviderSource,
+  updateCustomProvider,
+} from "../shared/custom-provider";
+
+// Alternative Assets Commands
+export {
+  createAlternativeAsset,
+  deleteAlternativeAsset,
+  getAlternativeHoldings,
+  getNetWorth,
+  getNetWorthHistory,
+  linkLiability,
+  unlinkLiability,
+  updateAlternativeAssetMetadata,
+  updateAlternativeAssetValuation,
+} from "../shared/alternative-assets";
+
 // Secrets Commands
 export { deleteSecret, getSecret, setSecret } from "../shared/secrets";
 
