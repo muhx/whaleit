@@ -119,9 +119,16 @@ is the sole storage engine (SQLite has been removed).
 ### Unified Account List UX
 
 - **D-15:** **Keep** the existing `accounts-summary.tsx` group-based layout on
-  the dashboard. Introduce a **dedicated `/accounts` route** for the full
-  unified list + archive toggle. Account detail page (`account-page.tsx`) stays
-  per-account.
+  the dashboard. Host the unified list + archive toggle inside the existing
+  **`/settings/accounts`** page
+  (`apps/frontend/src/pages/settings/accounts/accounts-page.tsx`) — extend that
+  page rather than introducing a new top-level `/accounts` route. Existing
+  search and active/archived/hidden filters stay; new group-by behavior (Banking
+  / Credit Cards / Loans / Investments / Cash / Crypto) and CC-specific row
+  chips layer onto the same component. Account detail page (`account-page.tsx`)
+  stays per-account. **Amended 2026-04-25** based on user decision to
+  consolidate accounts UX under `/settings/accounts` instead of a new top-level
+  route.
 - **D-16:** Pre-seeded **default `group` values per `AccountType`** (used when
   the user does not set a custom group):
   - `CHECKING`, `SAVINGS` → `"Banking"`
@@ -145,10 +152,14 @@ is the sole storage engine (SQLite has been removed).
   autocomplete, no curation. Distinct from the existing `platform_id` which
   remains broker/sync-specific.
 - **D-19:** **Archive UX:** archived accounts are **hidden by default** from the
-  unified list, dashboard summary, and all account selectors. A "Show archived"
-  toggle on `/accounts` reveals them in a separate group. Opening an archived
-  account preserves full access to its historical data and edit page. No
-  un-archive lock — user can flip `is_archived` back off.
+  unified list, dashboard summary, and all account selectors. The existing
+  active/archived/hidden filter on `/settings/accounts` continues to surface
+  them; planner must verify selectors elsewhere in the app (account-selector,
+  account-selector-mobile, accounts-summary) consistently apply the
+  hidden-by-default rule. Opening an archived account preserves full access to
+  its historical data and edit page. No un-archive lock — user can flip
+  `is_archived` back off. **Amended 2026-04-25** to reflect host route change in
+  D-15.
 
 ### Claude's Discretion
 

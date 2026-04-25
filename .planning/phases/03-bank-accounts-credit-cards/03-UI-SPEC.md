@@ -11,12 +11,22 @@ created: 2026-04-24
 
 # Phase 3 — UI Design Contract
 
+> **AMENDMENT 2026-04-25 — Route Host Change.** Per CONTEXT.md D-15 (amended),
+> the unified list lives inside the existing `/settings/accounts` page, NOT a
+> new top-level `/accounts` route. Anywhere this document references `/accounts`
+> or `/accounts/new`, planner and executor MUST read `/settings/accounts` and
+> the existing `<AccountEditModal>` create flow respectively. The bottom-nav
+> entry, breadcrumb, and empty-state copy referenced as "/accounts" do not get a
+> new route — they reuse `/settings/accounts`. The visual/interaction contract
+> in the rest of this document still applies; only the URL host changes.
+>
 > Visual and interaction contract for the Bank Accounts & Credit Cards phase.
 > Produced by gsd-ui-researcher. Validated by gsd-ui-checker. Consumed by
 > gsd-planner and gsd-executor.
 >
-> Scope: `/accounts` unified list, Account create/edit flow (CHECKING / SAVINGS
-> / CREDIT_CARD / LOAN), Account detail extensions for credit cards, "Update
+> Scope: `/settings/accounts` unified list (per amendment), Account create/edit
+> flow (CHECKING / SAVINGS / CREDIT_CARD / LOAN) via the existing
+> `AccountEditModal`, Account detail extensions for credit cards, "Update
 > balance" action, archive toggle, empty + error states, responsive behavior.
 > Out of scope: transactions (Phase 4), statement history (deferred), rewards
 > rules (deferred), bank sync (out of scope per PROJECT.md).
