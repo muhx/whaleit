@@ -27,6 +27,17 @@ diesel::table! {
         provider_account_id -> Nullable<Text>,
         is_archived -> Bool,
         tracking_mode -> Text,
+        institution -> Nullable<Text>,
+        opening_balance -> Nullable<Numeric>,
+        current_balance -> Nullable<Numeric>,
+        balance_updated_at -> Nullable<Timestamp>,
+        credit_limit -> Nullable<Numeric>,
+        statement_cycle_day -> Nullable<SmallInt>,
+        statement_balance -> Nullable<Numeric>,
+        minimum_payment -> Nullable<Numeric>,
+        statement_due_date -> Nullable<Date>,
+        reward_points_balance -> Nullable<Integer>,
+        cashback_balance -> Nullable<Numeric>,
     }
 }
 

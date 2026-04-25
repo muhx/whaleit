@@ -5281,6 +5281,7 @@ dependencies = [
  "arrayvec",
  "borsh",
  "bytes",
+ "diesel",
  "num-traits",
  "rand 0.8.5",
  "rkyv",
