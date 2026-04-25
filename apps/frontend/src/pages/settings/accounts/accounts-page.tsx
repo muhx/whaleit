@@ -1,5 +1,6 @@
 import { getPlatforms } from "@/features/connect";
 import { useAccounts } from "@/hooks/use-accounts";
+import { defaultGroupForAccountType } from "@/lib/constants";
 import { QueryKeys } from "@/lib/query-keys";
 import type { Account, Platform } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +10,7 @@ import {
   Icons,
   Separator,
   Skeleton,
+  Switch,
   ToggleGroup,
   ToggleGroupItem,
 } from "@whaleit/ui";
@@ -18,6 +20,16 @@ import { SettingsHeader } from "../settings-header";
 import { AccountEditModal } from "./components/account-edit-modal";
 import { AccountItem } from "./components/account-item";
 import { useAccountMutations } from "./components/use-account-mutations";
+
+const GROUP_ORDER = [
+  "Banking",
+  "Credit Cards",
+  "Loans",
+  "Investments",
+  "Cash",
+  "Crypto",
+  "Uncategorized",
+] as const;
 
 type FilterType = "all" | "active" | "archived" | "hidden";
 
@@ -39,6 +51,7 @@ const SettingsAccountsPage = () => {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
+  const [showArchived, setShowArchived] = useState(false);
 
   const handleAddAccount = () => {
     setSelectedAccount(null);
@@ -103,11 +116,19 @@ const SettingsAccountsPage = () => {
     return result;
   }, [accounts, searchQuery, filter]);
 
+  // Apply Show-archived gate when "all" filter is selected. The other filter
+  // values explicitly opt-in to archived/hidden, so the Switch only narrows
+  // the default "all" view (D-19 amended).
+  const visibleAccounts = useMemo(() => {
+    if (filter !== "all" || showArchived) return filteredAccounts;
+    return filteredAccounts.filter((a) => !a.isArchived);
+  }, [filteredAccounts, filter, showArchived]);
+
   // Split accounts into active and hidden/archived sections
   const { activeAccounts, inactiveAccounts } = useMemo(() => {
-    const active = filteredAccounts.filter((a) => a.isActive && !a.isArchived);
+    const active = visibleAccounts.filter((a) => a.isActive && !a.isArchived);
     // Sort inactive: hidden first, then archived
-    const inactive = filteredAccounts
+    const inactive = visibleAccounts
       .filter((a) => !a.isActive || a.isArchived)
       .sort((a, b) => {
         // Hidden (not archived) comes before archived
@@ -116,7 +137,28 @@ const SettingsAccountsPage = () => {
         return 0;
       });
     return { activeAccounts: active, inactiveAccounts: inactive };
-  }, [filteredAccounts]);
+  }, [visibleAccounts]);
+
+  // Group active accounts by account.group ?? defaultGroupForAccountType,
+  // ordered per the canonical group order with custom groups appended alpha.
+  const activeGroups = useMemo(() => {
+    const buckets = new Map<string, Account[]>();
+    for (const acc of activeAccounts) {
+      const key = acc.group ?? defaultGroupForAccountType(acc.accountType) ?? "Uncategorized";
+      const list = buckets.get(key) ?? [];
+      list.push(acc);
+      buckets.set(key, list);
+    }
+    const ordered = GROUP_ORDER.filter((g) => buckets.has(g)).map((g) => ({
+      name: g,
+      accounts: buckets.get(g) ?? [],
+    }));
+    const custom = [...buckets.keys()]
+      .filter((g) => !GROUP_ORDER.includes(g as (typeof GROUP_ORDER)[number]))
+      .sort()
+      .map((g) => ({ name: g, accounts: buckets.get(g) ?? [] }));
+    return [...ordered, ...custom];
+  }, [activeAccounts]);
 
   // Counts for section headers
   const counts = useMemo(
@@ -196,37 +238,54 @@ const SettingsAccountsPage = () => {
             )}
           </div>
 
-          <ToggleGroup
-            type="single"
-            value={filter}
-            onValueChange={(value) => value && setFilter(value as FilterType)}
-            className="bg-muted h-9 rounded-md p-1"
-          >
-            <ToggleGroupItem
-              value="all"
-              className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                aria-describedby="show-archived-desc"
+              />
+              <label htmlFor="show-archived" className="text-sm">
+                Show archived
+              </label>
+              <span id="show-archived-desc" className="sr-only">
+                Reveal accounts you&apos;ve set aside
+              </span>
+            </div>
+
+            <ToggleGroup
+              type="single"
+              value={filter}
+              onValueChange={(value) => value && setFilter(value as FilterType)}
+              className="bg-muted h-9 rounded-md p-1"
             >
-              All
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="active"
-              className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
-            >
-              Active
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="hidden"
-              className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
-            >
-              Hidden
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="archived"
-              className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
-            >
-              Archived
-            </ToggleGroupItem>
-          </ToggleGroup>
+              <ToggleGroupItem
+                value="all"
+                className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
+              >
+                All
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="active"
+                className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
+              >
+                Active
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="hidden"
+                className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
+              >
+                Hidden
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="archived"
+                className="data-[state=on]:bg-background h-7 rounded px-3 text-xs"
+              >
+                Archived
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
 
         {/* Account Lists */}
@@ -243,24 +302,28 @@ const SettingsAccountsPage = () => {
                 Add an account
               </Button>
             </EmptyPlaceholder>
-          ) : filteredAccounts.length === 0 ? (
+          ) : visibleAccounts.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">
               No accounts match your search.
             </div>
           ) : showSections ? (
             <>
-              {/* Active Accounts Section */}
-              {activeAccounts.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-muted-foreground text-sm font-medium">Active Accounts</h3>
-                    <span className="bg-success/20 text-success rounded-full px-2 py-0.5 text-xs font-medium">
-                      {counts.active}
-                    </span>
-                  </div>
-                  <div className="divide-border bg-card divide-y rounded-md border">
-                    {activeAccounts.map(renderAccountItem)}
-                  </div>
+              {/* Active Accounts grouped by account.group ?? defaultGroupForAccountType */}
+              {activeGroups.length > 0 && (
+                <div className="space-y-6">
+                  {activeGroups.map((g) => (
+                    <div key={g.name} className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-muted-foreground text-sm font-medium">{g.name}</h3>
+                        <span className="bg-success/20 text-success rounded-full px-2 py-0.5 text-xs font-medium">
+                          {g.accounts.length} {g.accounts.length === 1 ? "account" : "accounts"}
+                        </span>
+                      </div>
+                      <div className="divide-border bg-card divide-y rounded-md border">
+                        {g.accounts.map(renderAccountItem)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -282,7 +345,7 @@ const SettingsAccountsPage = () => {
           ) : (
             /* Flat list when filtered */
             <div className="divide-border bg-card divide-y rounded-md border">
-              {filteredAccounts.map(renderAccountItem)}
+              {visibleAccounts.map(renderAccountItem)}
             </div>
           )}
         </div>
