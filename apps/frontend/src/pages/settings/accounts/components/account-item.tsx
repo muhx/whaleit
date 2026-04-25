@@ -23,6 +23,26 @@ const accountTypeConfig: Record<AccountType, { icon: Icon; bgClass: string; icon
     bgClass: "bg-orange-500/10",
     iconClass: "text-orange-500",
   },
+  CHECKING: {
+    icon: Icons.Wallet,
+    bgClass: "bg-blue-500/10",
+    iconClass: "text-blue-500",
+  },
+  SAVINGS: {
+    icon: Icons.Coins,
+    bgClass: "bg-green-500/10",
+    iconClass: "text-green-500",
+  },
+  CREDIT_CARD: {
+    icon: Icons.CreditCard,
+    bgClass: "bg-purple-500/10",
+    iconClass: "text-purple-500",
+  },
+  LOAN: {
+    icon: Icons.Building,
+    bgClass: "bg-red-500/10",
+    iconClass: "text-red-500",
+  },
 };
 
 export interface AccountItemProps {

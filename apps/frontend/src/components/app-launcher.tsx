@@ -66,6 +66,10 @@ const accountTypeIcons: Record<AccountType | typeof PORTFOLIO_ACCOUNT_ID, Icon> 
   [AccountType.SECURITIES]: Icons.Briefcase,
   [AccountType.CASH]: Icons.DollarSign,
   [AccountType.CRYPTOCURRENCY]: Icons.Bitcoin,
+  [AccountType.CHECKING]: Icons.Wallet,
+  [AccountType.SAVINGS]: Icons.Coins,
+  [AccountType.CREDIT_CARD]: Icons.CreditCard,
+  [AccountType.LOAN]: Icons.Building,
   [PORTFOLIO_ACCOUNT_ID]: Icons.Wallet,
 };
 

@@ -1,5 +1,6 @@
 import { Dialog, DialogContent } from "@whaleit/ui/components/ui/dialog";
 import { useIsMobileViewport } from "@/hooks/use-platform";
+import { AccountType } from "@/lib/constants";
 import { useSettingsContext } from "@/lib/settings-provider";
 import type { Account } from "@/lib/types";
 import { AccountForm } from "./account-form";
@@ -16,8 +17,8 @@ export function AccountEditModal({ account, open, onClose }: AccountEditModalPro
   const defaultValues = {
     id: account?.id ?? undefined,
     name: account?.name ?? "",
-    balance: account?.balance ?? 0,
-    accountType: (account?.accountType ?? "SECURITIES") as "SECURITIES" | "CASH" | "CRYPTOCURRENCY",
+    currentBalance: account?.currentBalance,
+    accountType: (account?.accountType ?? "SECURITIES") as AccountType,
     group: account?.group ?? undefined,
     currency: account?.currency ?? settings?.baseCurrency ?? "USD",
     isDefault: account?.isDefault ?? false,

@@ -38,7 +38,7 @@ export default function PortfolioInsightsPage() {
     id: PORTFOLIO_ACCOUNT_ID,
     name: "All Portfolio",
     accountType: "PORTFOLIO" as unknown as Account["accountType"],
-    balance: 0,
+    currentBalance: undefined,
     currency: "USD",
     isDefault: false,
     isActive: true,

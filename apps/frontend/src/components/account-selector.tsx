@@ -27,6 +27,10 @@ const accountTypeIcons: Record<string, Icon> = {
   SECURITIES: Icons.Briefcase,
   CASH: Icons.DollarSign,
   CRYPTOCURRENCY: Icons.Bitcoin,
+  CHECKING: Icons.Wallet,
+  SAVINGS: Icons.Coins,
+  CREDIT_CARD: Icons.CreditCard,
+  LOAN: Icons.Building,
   [PORTFOLIO_ACCOUNT_ID]: Icons.Wallet,
 };
 
@@ -56,7 +60,7 @@ function createPortfolioAccount(baseCurrency: string): UIAccount {
     id: PORTFOLIO_ACCOUNT_ID,
     name: "All Portfolio",
     accountType: PORTFOLIO_ACCOUNT_ID as UIAccountType,
-    balance: 0,
+    currentBalance: undefined,
     currency: baseCurrency,
     isDefault: false,
     isActive: true,
