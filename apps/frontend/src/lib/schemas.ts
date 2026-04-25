@@ -86,26 +86,29 @@ export const newAccountSchema = z
       .max(50, {
         message: "Name must not be longer than 50 characters.",
       }),
-    group: z.string().optional(),
+    group: z.string().nullish(),
     isDefault: z.boolean().optional(),
     isActive: z.boolean().optional(),
     isArchived: z.boolean().optional().default(false),
     accountType: accountTypeSchema,
     currency: z.string({ required_error: "Please select a currency." }),
     trackingMode: trackingModeSchema.optional().default("NOT_SET"),
-    meta: z.string().nullable().optional(),
-    // Phase 3 additions (D-06, D-11, D-12, D-18):
-    institution: z.string().optional(),
-    openingBalance: z.number().optional(),
-    currentBalance: z.number().optional(),
-    balanceUpdatedAt: z.coerce.date().optional(),
-    creditLimit: z.number().optional(),
-    statementCycleDay: z.number().int().min(1).max(31).optional(),
-    statementBalance: z.number().optional(),
-    minimumPayment: z.number().optional(),
-    statementDueDate: z.string().optional(),
-    rewardPointsBalance: z.number().int().min(0).optional(),
-    cashbackBalance: z.number().optional(),
+    meta: z.string().nullish(),
+    // Phase 3 additions (D-06, D-11, D-12, D-18). Server emits unset Option<T>
+    // as JSON null (not omitted) — accept both null and undefined here so
+    // edits on accounts with sparse fields (e.g. a LOAN whose CC columns are
+    // null) don't fail Zod resolver silently.
+    institution: z.string().nullish(),
+    openingBalance: z.number().nullish(),
+    currentBalance: z.number().nullish(),
+    balanceUpdatedAt: z.coerce.date().nullish(),
+    creditLimit: z.number().nullish(),
+    statementCycleDay: z.number().int().min(1).max(31).nullish(),
+    statementBalance: z.number().nullish(),
+    minimumPayment: z.number().nullish(),
+    statementDueDate: z.string().nullish(),
+    rewardPointsBalance: z.number().int().min(0).nullish(),
+    cashbackBalance: z.number().nullish(),
   })
   .superRefine((data, ctx) => {
     const isCC = data.accountType === "CREDIT_CARD";
@@ -136,15 +139,16 @@ export const newAccountSchema = z
         }
       }
     } else {
-      // CC required: creditLimit > 0 and statementCycleDay 1..31.
-      if (data.creditLimit === undefined || data.creditLimit <= 0) {
+      // CC required: creditLimit > 0 and statementCycleDay 1..31. Both null
+      // and undefined map to "not set" (server emits unset Option<T> as null).
+      if (data.creditLimit == null || data.creditLimit <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["creditLimit"],
           message: "Credit limit is required.",
         });
       }
-      if (data.statementCycleDay === undefined) {
+      if (data.statementCycleDay == null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["statementCycleDay"],
@@ -153,8 +157,9 @@ export const newAccountSchema = z
       }
     }
 
-    // D-11: openingBalance required for bank/CC/LOAN. 0 is a valid value.
-    if ((isBankOrLoan || isCC) && data.openingBalance === undefined) {
+    // D-11: openingBalance required for bank/CC/LOAN. 0 is a valid value;
+    // null and undefined both mean "not set".
+    if ((isBankOrLoan || isCC) && data.openingBalance == null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["openingBalance"],
