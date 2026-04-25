@@ -56,7 +56,7 @@ function createPortfolioAccount(baseCurrency: string): UIAccount {
     id: PORTFOLIO_ACCOUNT_ID,
     name: "All Portfolio",
     accountType: PORTFOLIO_ACCOUNT_ID as UIAccountType,
-    balance: 0,
+    currentBalance: undefined,
     currency: baseCurrency,
     isDefault: false,
     isActive: true,

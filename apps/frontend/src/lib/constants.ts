@@ -20,7 +20,7 @@ export function createPortfolioAccount(baseCurrency: string) {
     id: PORTFOLIO_ACCOUNT_ID,
     name: "All Portfolio",
     accountType: "PORTFOLIO" as never,
-    balance: 0,
+    currentBalance: undefined,
     currency: baseCurrency,
     isDefault: false,
     isActive: true,

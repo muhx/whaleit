@@ -58,7 +58,7 @@ export const HoldingsPage = () => {
     id: PORTFOLIO_ACCOUNT_ID,
     name: "All Portfolio",
     accountType: "PORTFOLIO" as unknown as Account["accountType"],
-    balance: 0,
+    currentBalance: undefined,
     currency: baseCurrency,
     isDefault: false,
     isActive: true,

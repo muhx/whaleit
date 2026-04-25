@@ -157,7 +157,7 @@ export interface Account {
   name: string;
   accountType: AccountType;
   group?: string;
-  balance: number;
+  currentBalance?: string;
   currency: string;
   isDefault: boolean;
   isActive: boolean;
@@ -170,6 +170,17 @@ export interface Account {
   meta?: string;
   provider?: string;
   providerAccountId?: string;
+  // Phase 3 additions
+  institution?: string;
+  openingBalance?: string;
+  balanceUpdatedAt?: Date;
+  creditLimit?: string;
+  statementCycleDay?: number;
+  statementBalance?: string;
+  minimumPayment?: string;
+  statementDueDate?: string;
+  rewardPointsBalance?: number;
+  cashbackBalance?: string;
 }
 
 /**
