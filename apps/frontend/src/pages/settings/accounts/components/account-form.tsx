@@ -74,9 +74,17 @@ interface AccountFormlProps {
 export function AccountForm({ defaultValues, onSuccess = () => undefined }: AccountFormlProps) {
   const { createAccountMutation, updateAccountMutation } = useAccountMutations({ onSuccess });
 
-  // Track initial tracking mode to detect changes
+  // Track initial tracking mode to detect changes.
+  // Non-investment account types (banking, credit, loan, cash) always use
+  // transactions — the tracking-mode picker is only meaningful for SECURITIES
+  // and CRYPTOCURRENCY where the user can opt for snapshot-style holdings.
+  const initialAccountType = defaultValues?.accountType;
+  const isInvestmentInitialType =
+    initialAccountType === "SECURITIES" || initialAccountType === "CRYPTOCURRENCY";
   const initialTrackingMode = defaultValues?.trackingMode;
-  const needsSetup = initialTrackingMode === "NOT_SET" || initialTrackingMode === undefined;
+  const needsSetup =
+    isInvestmentInitialType &&
+    (initialTrackingMode === "NOT_SET" || initialTrackingMode === undefined);
 
   // State for mode switch confirmation dialog
   const [showModeConfirmation, setShowModeConfirmation] = useState(false);
@@ -86,14 +94,24 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
     resolver: zodResolver(newAccountSchema),
     defaultValues: {
       ...defaultValues,
-      // Don't default to any mode if account needs setup (must come after spread)
-      trackingMode: needsSetup ? undefined : defaultValues?.trackingMode,
+      // Tracking mode rules (must come after spread):
+      // - Investment accounts that need setup → undefined (force user to pick).
+      // - Non-investment accounts with NOT_SET / undefined → TRANSACTIONS (only
+      //   meaningful mode for banking, credit, loan, cash).
+      // - Otherwise keep the existing value.
+      trackingMode: needsSetup
+        ? undefined
+        : !isInvestmentInitialType &&
+            (initialTrackingMode === "NOT_SET" || initialTrackingMode === undefined)
+          ? "TRANSACTIONS"
+          : defaultValues?.trackingMode,
     },
   });
 
   const currentTrackingMode = form.watch("trackingMode");
   const selectedType = form.watch("accountType");
   const isCreditCard = selectedType === "CREDIT_CARD";
+  const isInvestmentSelected = selectedType === "SECURITIES" || selectedType === "CRYPTOCURRENCY";
   const requiresInstitution =
     selectedType === "CHECKING" ||
     selectedType === "SAVINGS" ||
@@ -123,20 +141,30 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
   );
 
   function onSubmit(data: AccountFormOutput) {
+    // Non-investment account types (banking, credit, loan, cash) always use
+    // transactions — sanitize before any branching so a stale HOLDINGS value
+    // left over from an earlier type selection cannot reach the backend.
+    const isInvestment = data.accountType === "SECURITIES" || data.accountType === "CRYPTOCURRENCY";
+    const sanitized: AccountFormOutput = isInvestment
+      ? data
+      : { ...data, trackingMode: "TRANSACTIONS" };
+
     // Check if this is an existing account (update) and mode is switching from HOLDINGS to TRANSACTIONS
-    const isExistingAccount = !!data.id;
+    const isExistingAccount = !!sanitized.id;
     const isSwitchingFromHoldingsToTransactions =
-      !needsSetup && initialTrackingMode === "HOLDINGS" && data.trackingMode === "TRANSACTIONS";
+      !needsSetup &&
+      initialTrackingMode === "HOLDINGS" &&
+      sanitized.trackingMode === "TRANSACTIONS";
 
     if (isExistingAccount && isSwitchingFromHoldingsToTransactions) {
       // Show confirmation dialog
-      setPendingFormData(data);
+      setPendingFormData(sanitized);
       setShowModeConfirmation(true);
       return;
     }
 
     // Otherwise, submit directly
-    doSubmit(data);
+    doSubmit(sanitized);
   }
 
   // Handle confirmation dialog actions
@@ -437,91 +465,95 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
             />
           ) : null}
 
-          <FormField
-            control={form.control}
-            name="trackingMode"
-            render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel>Tracking Mode</FormLabel>
-                {needsSetup && !currentTrackingMode && (
-                  <Alert
-                    variant="warning"
-                    className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
-                  >
-                    <Icons.AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Choose how to track this account. This affects what data you enter and what
-                      metrics are available.{" "}
-                      <a
-                        href="https://whaleit.app/docs/concepts/activity-types"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-foreground underline"
-                      >
-                        Learn more
-                      </a>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-                  >
-                    <label
-                      className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
-                        field.value === "TRANSACTIONS"
-                          ? "border-primary bg-primary/5"
-                          : "border-muted"
-                      }`}
+          {isInvestmentSelected && (
+            <FormField
+              control={form.control}
+              name="trackingMode"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Tracking Mode</FormLabel>
+                  {needsSetup && !currentTrackingMode && (
+                    <Alert
+                      variant="warning"
+                      className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
                     >
-                      <RadioGroupItem value="TRANSACTIONS" className="mt-0.5" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">Transactions</span>
-                        <span className="text-muted-foreground text-xs">
-                          Track every trade for performance analytics
-                        </span>
-                      </div>
-                    </label>
-                    <label
-                      className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
-                        field.value === "HOLDINGS" ? "border-primary bg-primary/5" : "border-muted"
-                      }`}
+                      <Icons.AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Choose how to track this account. This affects what data you enter and what
+                        metrics are available.{" "}
+                        <a
+                          href="https://whaleit.app/docs/concepts/activity-types"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-foreground underline"
+                        >
+                          Learn more
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                     >
-                      <RadioGroupItem value="HOLDINGS" className="mt-0.5" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">Holdings</span>
-                        <span className="text-muted-foreground text-xs">
-                          Add holdings directly as snapshots
-                        </span>
-                      </div>
-                    </label>
-                  </RadioGroup>
-                </FormControl>
-                {field.value === "HOLDINGS" && (
-                  <Alert
-                    variant="warning"
-                    className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
-                  >
-                    <Icons.AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Performance metrics will be limited without transaction history.{" "}
-                      <a
-                        href="https://whaleit.app/docs/concepts/activity-types"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-foreground underline"
+                      <label
+                        className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
+                          field.value === "TRANSACTIONS"
+                            ? "border-primary bg-primary/5"
+                            : "border-muted"
+                        }`}
                       >
-                        Learn more
-                      </a>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                        <RadioGroupItem value="TRANSACTIONS" className="mt-0.5" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Transactions</span>
+                          <span className="text-muted-foreground text-xs">
+                            Track every trade for performance analytics
+                          </span>
+                        </div>
+                      </label>
+                      <label
+                        className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
+                          field.value === "HOLDINGS"
+                            ? "border-primary bg-primary/5"
+                            : "border-muted"
+                        }`}
+                      >
+                        <RadioGroupItem value="HOLDINGS" className="mt-0.5" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Holdings</span>
+                          <span className="text-muted-foreground text-xs">
+                            Add holdings directly as snapshots
+                          </span>
+                        </div>
+                      </label>
+                    </RadioGroup>
+                  </FormControl>
+                  {field.value === "HOLDINGS" && (
+                    <Alert
+                      variant="warning"
+                      className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
+                    >
+                      <Icons.AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Performance metrics will be limited without transaction history.{" "}
+                        <a
+                          href="https://whaleit.app/docs/concepts/activity-types"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-foreground underline"
+                        >
+                          Learn more
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
@@ -570,7 +602,12 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
           <DialogTrigger asChild>
             <Button variant="outline">Cancel</Button>
           </DialogTrigger>
-          <Button type="submit" disabled={needsSetup && !currentTrackingMode}>
+          <Button
+            type="submit"
+            disabled={
+              isInvestmentSelected && (!currentTrackingMode || currentTrackingMode === "NOT_SET")
+            }
+          >
             {defaultValues?.id ? (
               <Icons.Save className="h-4 w-4" />
             ) : (
