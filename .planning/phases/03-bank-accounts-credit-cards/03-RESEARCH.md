@@ -994,26 +994,43 @@ same authenticated `/api/v1/accounts` endpoints.
     (`name.trim().is_empty()`). Not a bug, but if the planner exposes the schema
     via a shared constant, make sure backend and frontend agree.
 
-## Open Questions for Planner
+## Open Questions for Planner (RESOLVED)
 
 1. **D-10 NUMERIC vs TEXT for money columns** — Must resolve before migration
    writing. See Executive Summary + Migration Pattern section. Recommended: TEXT
    (follow established pattern) with explicit flag in discuss-phase for user
    confirmation.
+   **RESOLVED:** NUMERIC(20,8) for new Phase 3 money columns. Plan 03-01
+   introduces rust_decimal Diesel Numeric SQL type wiring. Existing TEXT-stored
+   money columns are not migrated. User decision 2026-04-25.
 2. **`update_account_balance` as a distinct command?** — Recommendation: reuse
    `update_account`. See Balance Update Flow section. Planner decides.
+   **RESOLVED:** Reuse `update_account`. The "Update balance" UI action wraps
+   it; service-layer auto-bump in 03-04 stamps `balance_updated_at` server-side
+   when `current_balance` changes. CONTEXT.md D-12.
 3. **Settings AccountForm vs new /accounts form** — Should the new `/accounts`
    route's "New account" flow REPLACE `/settings/accounts` creation, or do both
    coexist? UI-SPEC section 1 implies one primary location; settings could
    redirect to `/accounts?new=true` to avoid duplication.
+   **RESOLVED:** Host unified list inside existing `/settings/accounts` page.
+   No new top-level `/accounts` route. CONTEXT.md D-15 amended 2026-04-25;
+   UI-SPEC.md amendment header added; planner plans 03-07 anchor on
+   `/settings/accounts/accounts-page.tsx`.
 4. **`balance` legacy TS field** — Audit blast radius and decide: deprecate,
    alias, or coexist. See Landmine 7.
+   **RESOLVED:** Rename to `current_balance` everywhere. Plan 03-05 covers the
+   audit list across `apps/frontend/src/lib/types/account.ts` and the consumer
+   call sites identified in RESEARCH Landmine 7.
 5. **Partial CC-field updates** — Does `AccountUpdate` allow nulling a CC field
    (e.g. clearing `statement_balance`)? If yes, the
    `From<AccountUpdate> for AccountDB` impl needs to distinguish "field absent
    in update" from "field explicitly set to null" — today the pattern is
    implicit (fields without `Option<Option<T>>` default to preservation). See
    Landmine 5.
+   **RESOLVED:** Keep current "always overwrite" semantics with all-fields-
+   present `AccountUpdate`. No `Option<Option<T>>`. If clearing a single field
+   is needed, expose a dedicated "Clear statement" action rather than
+   complicating the update path. Documented in 03-03 Landmine 5 follow-up.
 
 ## Sources
 

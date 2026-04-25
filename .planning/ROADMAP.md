@@ -110,7 +110,7 @@ must be TRUE):
 4. User can edit and archive accounts without losing any historical transaction
    data
 5. Credit card accounts show outstanding balance, available credit, statement
-   details, and reward points/cashback **Plans**: 8 plans **UI hint**: yes
+   details, and reward points/cashback **Plans**: 9 plans **UI hint**: yes
 
 Plans:
 
@@ -120,7 +120,8 @@ Plans:
 - [ ] 03-04-PLAN.md — HTTP DTOs + balance auto-bump in AccountService::update_account
 - [ ] 03-05-PLAN.md — Frontend constants/types/schemas + legacy `balance` rename + selector icon maps
 - [ ] 03-06-PLAN.md — Exhaustive Record landmines (app-launcher, account-page, account-item, account-form options)
-- [ ] 03-07-PLAN.md — /settings/accounts host extension (group-by, Show archived, dynamic CC form, Update balance modal, account-page CC sections)
+- [ ] 03-07-PLAN.md — credit-helpers + Update balance modal + dynamic CC form sections (account-form.tsx)
+- [ ] 03-07b-PLAN.md — /settings/accounts group-by + Show archived Switch + Available-credit chip + per-account-page CC sections + accounts-page.test.tsx
 - [ ] 03-08-PLAN.md — E2E Playwright spec + VALIDATION.md sign-off
 
 ### Phase 4: Transaction Core
