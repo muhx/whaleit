@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@whale
 import type { Account, AccountType, Platform } from "@/lib/types";
 import { Link } from "react-router-dom";
 import { AccountOperations } from "./account-operations";
+import { availableCredit } from "../credit-helpers";
 
 // Map account types to icons and colors for visual distinction
 const accountTypeConfig: Record<AccountType, { icon: Icon; bgClass: string; iconClass: string }> = {
@@ -144,6 +145,21 @@ export function AccountItem({
         </div>
       </div>
       <div className="flex items-center space-x-2">
+        {account.accountType === "CREDIT_CARD" &&
+          account.creditLimit &&
+          (() => {
+            const avail = availableCredit(account.creditLimit, account.currentBalance);
+            return avail !== undefined ? (
+              <span className="bg-success/10 text-success border-border inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
+                <Icons.CreditCard className="h-3 w-3" />
+                Available{" "}
+                {new Intl.NumberFormat(undefined, {
+                  style: "currency",
+                  currency: account.currency,
+                }).format(avail)}
+              </span>
+            ) : null;
+          })()}
         {account.isArchived && (
           <span className="inline-flex items-center gap-1 rounded-md border border-red-200/40 bg-red-100/30 px-2 py-1 text-xs font-medium text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
             <Icons.FileArchive className="h-3 w-3" />
