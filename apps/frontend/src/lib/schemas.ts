@@ -96,16 +96,16 @@ export const newAccountSchema = z
     meta: z.string().nullable().optional(),
     // Phase 3 additions (D-06, D-11, D-12, D-18):
     institution: z.string().optional(),
-    openingBalance: z.string().optional(),
-    currentBalance: z.string().optional(),
+    openingBalance: z.number().optional(),
+    currentBalance: z.number().optional(),
     balanceUpdatedAt: z.coerce.date().optional(),
-    creditLimit: z.string().optional(),
+    creditLimit: z.number().optional(),
     statementCycleDay: z.number().int().min(1).max(31).optional(),
-    statementBalance: z.string().optional(),
-    minimumPayment: z.string().optional(),
+    statementBalance: z.number().optional(),
+    minimumPayment: z.number().optional(),
     statementDueDate: z.string().optional(),
     rewardPointsBalance: z.number().int().min(0).optional(),
-    cashbackBalance: z.string().optional(),
+    cashbackBalance: z.number().optional(),
   })
   .superRefine((data, ctx) => {
     const isCC = data.accountType === "CREDIT_CARD";
@@ -137,7 +137,7 @@ export const newAccountSchema = z
       }
     } else {
       // CC required: creditLimit > 0 and statementCycleDay 1..31.
-      if (!data.creditLimit) {
+      if (data.creditLimit === undefined || data.creditLimit <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["creditLimit"],
@@ -153,8 +153,8 @@ export const newAccountSchema = z
       }
     }
 
-    // D-11: openingBalance required for bank/CC/LOAN.
-    if ((isBankOrLoan || isCC) && !data.openingBalance) {
+    // D-11: openingBalance required for bank/CC/LOAN. 0 is a valid value.
+    if ((isBankOrLoan || isCC) && data.openingBalance === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["openingBalance"],

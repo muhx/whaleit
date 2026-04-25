@@ -668,7 +668,7 @@ const AccountPage = () => {
                   <div>
                     <p className="text-muted-foreground text-xs">Balance</p>
                     <PrivacyAmount
-                      value={account.currentBalance ? Number.parseFloat(account.currentBalance) : 0}
+                      value={account.currentBalance ?? 0}
                       currency={account.currency}
                     />
                   </div>
@@ -706,13 +706,10 @@ const AccountPage = () => {
                   ) : null;
                 })()}
                 <div className="flex items-center justify-between">
-                  {account.creditLimit && (
+                  {account.creditLimit !== undefined && (
                     <p className="text-muted-foreground text-xs">
                       Limit{" "}
-                      <PrivacyAmount
-                        value={Number.parseFloat(account.creditLimit)}
-                        currency={account.currency}
-                      />
+                      <PrivacyAmount value={account.creditLimit} currency={account.currency} />
                     </p>
                   )}
                   <Button onClick={() => setBalanceModalOpen(true)}>Update balance</Button>
@@ -731,9 +728,9 @@ const AccountPage = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-muted-foreground text-xs">Statement balance</p>
-                        {account.statementBalance ? (
+                        {account.statementBalance !== undefined ? (
                           <PrivacyAmount
-                            value={Number.parseFloat(account.statementBalance)}
+                            value={account.statementBalance}
                             currency={account.currency}
                           />
                         ) : (
@@ -742,9 +739,9 @@ const AccountPage = () => {
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs">Minimum payment</p>
-                        {account.minimumPayment ? (
+                        {account.minimumPayment !== undefined ? (
                           <PrivacyAmount
-                            value={Number.parseFloat(account.minimumPayment)}
+                            value={account.minimumPayment}
                             currency={account.currency}
                           />
                         ) : (
@@ -771,7 +768,8 @@ const AccountPage = () => {
                 <CardTitle>Rewards</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {account.rewardPointsBalance !== undefined || account.cashbackBalance ? (
+                {account.rewardPointsBalance !== undefined ||
+                account.cashbackBalance !== undefined ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-muted-foreground text-xs">Points balance</p>
@@ -783,9 +781,9 @@ const AccountPage = () => {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Cashback balance</p>
-                      {account.cashbackBalance ? (
+                      {account.cashbackBalance !== undefined ? (
                         <PrivacyAmount
-                          value={Number.parseFloat(account.cashbackBalance)}
+                          value={account.cashbackBalance}
                           currency={account.currency}
                         />
                       ) : (
@@ -809,10 +807,7 @@ const AccountPage = () => {
             <CardContent className="space-y-3">
               <div>
                 <p className="text-muted-foreground text-xs">Current balance</p>
-                <PrivacyAmount
-                  value={account.currentBalance ? Number.parseFloat(account.currentBalance) : 0}
-                  currency={account.currency}
-                />
+                <PrivacyAmount value={account.currentBalance ?? 0} currency={account.currency} />
               </div>
               {account.balanceUpdatedAt && (
                 <p className="text-muted-foreground text-xs">

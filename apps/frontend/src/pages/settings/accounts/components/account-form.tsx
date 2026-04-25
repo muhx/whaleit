@@ -252,10 +252,8 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                   <FormLabel>Opening balance</FormLabel>
                   <FormControl>
                     <MoneyInput
-                      value={field.value ? Number.parseFloat(field.value) : undefined}
-                      onValueChange={(v) =>
-                        field.onChange(v !== null && v !== undefined ? String(v) : undefined)
-                      }
+                      value={field.value}
+                      onValueChange={(v) => field.onChange(v ?? undefined)}
                     />
                   </FormControl>
                   <p className="text-muted-foreground text-xs">
@@ -281,10 +279,8 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                     <FormLabel>Credit limit</FormLabel>
                     <FormControl>
                       <MoneyInput
-                        value={field.value ? Number.parseFloat(field.value) : undefined}
-                        onValueChange={(v) =>
-                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
-                        }
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -331,10 +327,8 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                     <FormLabel>Statement balance</FormLabel>
                     <FormControl>
                       <MoneyInput
-                        value={field.value ? Number.parseFloat(field.value) : undefined}
-                        onValueChange={(v) =>
-                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
-                        }
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -349,10 +343,8 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                     <FormLabel>Minimum payment</FormLabel>
                     <FormControl>
                       <MoneyInput
-                        value={field.value ? Number.parseFloat(field.value) : undefined}
-                        onValueChange={(v) =>
-                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
-                        }
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -408,10 +400,8 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
                     <FormLabel>Cashback balance</FormLabel>
                     <FormControl>
                       <MoneyInput
-                        value={field.value ? Number.parseFloat(field.value) : undefined}
-                        onValueChange={(v) =>
-                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
-                        }
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
                       />
                     </FormControl>
                     <FormMessage />

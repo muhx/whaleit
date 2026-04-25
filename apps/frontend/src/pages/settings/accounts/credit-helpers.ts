@@ -1,6 +1,7 @@
 /**
  * Credit-card derivation helpers (Phase 3, D-08, D-13).
- * String inputs match the wire format (Decimal-as-string) from the server.
+ * Decimal money values arrive as JSON numbers from the server (rust_decimal
+ * serde-float).
  */
 
 export type UtilizationTier = "success" | "warning" | "destructive";
@@ -10,15 +11,13 @@ export type UtilizationTier = "success" | "warning" | "destructive";
  * Per D-13, balance is stored positive; available = limit - balance.
  */
 export function availableCredit(
-  creditLimit: string | undefined,
-  currentBalance: string | undefined,
+  creditLimit: number | undefined,
+  currentBalance: number | undefined,
 ): number | undefined {
-  if (!creditLimit) return undefined;
-  const limit = Number.parseFloat(creditLimit);
-  if (!Number.isFinite(limit)) return undefined;
-  const balance = currentBalance ? Number.parseFloat(currentBalance) : 0;
-  if (!Number.isFinite(balance)) return limit;
-  return Math.max(limit - balance, 0);
+  if (creditLimit === undefined || !Number.isFinite(creditLimit)) return undefined;
+  const balance = currentBalance ?? 0;
+  if (!Number.isFinite(balance)) return creditLimit;
+  return Math.max(creditLimit - balance, 0);
 }
 
 /**
@@ -26,15 +25,15 @@ export function availableCredit(
  * Per D-08: utilization = current_balance / credit_limit * 100.
  */
 export function utilizationPercent(
-  creditLimit: string | undefined,
-  currentBalance: string | undefined,
+  creditLimit: number | undefined,
+  currentBalance: number | undefined,
 ): number | undefined {
-  if (!creditLimit) return undefined;
-  const limit = Number.parseFloat(creditLimit);
-  if (!Number.isFinite(limit) || limit <= 0) return undefined;
-  const balance = currentBalance ? Number.parseFloat(currentBalance) : 0;
+  if (creditLimit === undefined || !Number.isFinite(creditLimit) || creditLimit <= 0) {
+    return undefined;
+  }
+  const balance = currentBalance ?? 0;
   if (!Number.isFinite(balance)) return 0;
-  return Math.min(Math.round((balance / limit) * 100), 100);
+  return Math.min(Math.round((balance / creditLimit) * 100), 100);
 }
 
 /**

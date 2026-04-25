@@ -25,14 +25,10 @@ interface Props {
  * because the Phase 3 service does not persist notes (UI-SPEC §5 dead-UI rule).
  */
 export function UpdateBalanceModal({ account, open, onClose }: Props) {
-  const currentBalanceNum = account.currentBalance
-    ? Number.parseFloat(account.currentBalance)
-    : undefined;
-
-  const [newBalance, setNewBalance] = useState<number | undefined>(currentBalanceNum);
+  const [newBalance, setNewBalance] = useState<number | undefined>(account.currentBalance);
   const { updateAccountMutation } = useAccountMutations({});
 
-  const unchanged = newBalance === undefined || newBalance === currentBalanceNum;
+  const unchanged = newBalance === undefined || newBalance === account.currentBalance;
 
   const handleSave = () => {
     if (newBalance === undefined) return;
@@ -51,7 +47,7 @@ export function UpdateBalanceModal({ account, open, onClose }: Props) {
         // (Plan 03-04) sees current_balance changed alone.
         institution: account.institution,
         openingBalance: account.openingBalance,
-        currentBalance: String(newBalance),
+        currentBalance: newBalance,
         creditLimit: account.creditLimit,
         statementCycleDay: account.statementCycleDay,
         statementBalance: account.statementBalance,
@@ -84,7 +80,7 @@ export function UpdateBalanceModal({ account, open, onClose }: Props) {
         <div className="space-y-4">
           <p className="text-muted-foreground text-xs">
             Current balance{" "}
-            <PrivacyAmount value={currentBalanceNum ?? 0} currency={account.currency} />
+            <PrivacyAmount value={account.currentBalance ?? 0} currency={account.currency} />
             {account.balanceUpdatedAt
               ? ` as of ${new Date(account.balanceUpdatedAt).toLocaleDateString()}`
               : " (not yet recorded)"}

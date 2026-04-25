@@ -128,15 +128,15 @@ const baseBank = {
   name: "Chase Checking",
   accountType: "CHECKING" as const,
   currency: "USD",
-  openingBalance: "0",
+  openingBalance: 0,
 };
 
 const baseCC = {
   name: "Amex Gold",
   accountType: "CREDIT_CARD" as const,
   currency: "USD",
-  openingBalance: "0",
-  creditLimit: "5000",
+  openingBalance: 0,
+  creditLimit: 5000,
   statementCycleDay: 15,
 };
 
@@ -165,7 +165,7 @@ describe("newAccountSchema", () => {
   });
 
   it("rejects CHECKING with creditLimit set", () => {
-    const result = newAccountSchema.safeParse({ ...baseBank, creditLimit: "1000" });
+    const result = newAccountSchema.safeParse({ ...baseBank, creditLimit: 1000 });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.some((i) => i.path.includes("creditLimit"))).toBe(true);

@@ -3,37 +3,37 @@ import { availableCredit, utilizationPercent, utilizationTier } from "./credit-h
 
 describe("availableCredit", () => {
   it("returns undefined when limit is missing", () => {
-    expect(availableCredit(undefined, "100")).toBeUndefined();
+    expect(availableCredit(undefined, 100)).toBeUndefined();
   });
   it("treats missing balance as 0", () => {
-    expect(availableCredit("1000", undefined)).toBe(1000);
+    expect(availableCredit(1000, undefined)).toBe(1000);
   });
   it("subtracts balance from limit", () => {
-    expect(availableCredit("1000", "250")).toBe(750);
+    expect(availableCredit(1000, 250)).toBe(750);
   });
   it("clamps to 0 when balance exceeds limit", () => {
-    expect(availableCredit("1000", "1200")).toBe(0);
+    expect(availableCredit(1000, 1200)).toBe(0);
   });
-  it("returns undefined for non-numeric limit", () => {
-    expect(availableCredit("oops", "100")).toBeUndefined();
+  it("returns undefined for non-finite limit", () => {
+    expect(availableCredit(Number.NaN, 100)).toBeUndefined();
   });
 });
 
 describe("utilizationPercent", () => {
   it("returns undefined when limit is 0", () => {
-    expect(utilizationPercent("0", "100")).toBeUndefined();
+    expect(utilizationPercent(0, 100)).toBeUndefined();
   });
   it("returns 25 for 250/1000", () => {
-    expect(utilizationPercent("1000", "250")).toBe(25);
+    expect(utilizationPercent(1000, 250)).toBe(25);
   });
   it("clamps to 100 when balance > limit", () => {
-    expect(utilizationPercent("1000", "1500")).toBe(100);
+    expect(utilizationPercent(1000, 1500)).toBe(100);
   });
   it("treats missing balance as 0%", () => {
-    expect(utilizationPercent("1000", undefined)).toBe(0);
+    expect(utilizationPercent(1000, undefined)).toBe(0);
   });
   it("returns undefined when limit missing", () => {
-    expect(utilizationPercent(undefined, "100")).toBeUndefined();
+    expect(utilizationPercent(undefined, 100)).toBeUndefined();
   });
 });
 

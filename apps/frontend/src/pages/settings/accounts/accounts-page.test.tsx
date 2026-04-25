@@ -194,10 +194,16 @@ vi.mock("@whaleit/ui", () => ({
   SelectItem: () => null,
   SelectTrigger: () => null,
   SelectValue: () => null,
-  RadioGroup: ({ children, ...rest }: { children?: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+  RadioGroup: ({
+    children,
+    ...rest
+  }: { children?: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
     <div {...rest}>{children}</div>
   ),
-  RadioGroupItem: ({ value, ...rest }: { value?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
+  RadioGroupItem: ({
+    value,
+    ...rest
+  }: { value?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
     <input type="radio" value={value} {...rest} />
   ),
   CurrencyInput: () => null,
@@ -274,8 +280,8 @@ describe("SettingsAccountsPage", () => {
           id: "2",
           name: "Amex Gold",
           accountType: AccountType.CREDIT_CARD,
-          creditLimit: "5000",
-          currentBalance: "1000",
+          creditLimit: 5000,
+          currentBalance: 1000,
         }),
         makeAccount({ id: "3", name: "Mortgage", accountType: AccountType.LOAN }),
         makeAccount({ id: "4", name: "Brokerage", accountType: AccountType.SECURITIES }),
@@ -303,7 +309,7 @@ describe("SettingsAccountsPage", () => {
           id: "2",
           name: "Amex Gold",
           accountType: AccountType.CREDIT_CARD,
-          creditLimit: "5000",
+          creditLimit: 5000,
         }),
         makeAccount({ id: "3", name: "Mortgage", accountType: AccountType.LOAN }),
         makeAccount({ id: "4", name: "Brokerage", accountType: AccountType.SECURITIES }),
@@ -339,7 +345,7 @@ describe("SettingsAccountsPage", () => {
           name: "Old Card",
           accountType: AccountType.CREDIT_CARD,
           isArchived: true,
-          creditLimit: "1000",
+          creditLimit: 1000,
         }),
       ],
       isLoading: false,
@@ -360,7 +366,7 @@ describe("SettingsAccountsPage", () => {
           name: "Old Card",
           accountType: AccountType.CREDIT_CARD,
           isArchived: true,
-          creditLimit: "1000",
+          creditLimit: 1000,
         }),
       ],
       isLoading: false,
@@ -383,8 +389,8 @@ describe("SettingsAccountsPage", () => {
           id: "2",
           name: "Amex Gold",
           accountType: AccountType.CREDIT_CARD,
-          creditLimit: "5000",
-          currentBalance: "1000",
+          creditLimit: 5000,
+          currentBalance: 1000,
         }),
       ],
       isLoading: false,
@@ -414,10 +420,10 @@ describe("AccountEditModal pre-fill regression (H-01)", () => {
       name: "Amex Gold",
       accountType: AccountType.CREDIT_CARD,
       institution: "Chase Bank",
-      openingBalance: "0",
-      creditLimit: "5000",
+      openingBalance: 0,
+      creditLimit: 5000,
       statementCycleDay: 15,
-      currentBalance: "1000",
+      currentBalance: 1000,
     });
     render(
       <MemoryRouter>
@@ -442,7 +448,7 @@ describe("AccountEditModal pre-fill regression (H-01)", () => {
       name: "Daily Spending",
       accountType: AccountType.CHECKING,
       institution: "Wells Fargo",
-      openingBalance: "1234.56",
+      openingBalance: 1234.56,
     });
     render(
       <MemoryRouter>
