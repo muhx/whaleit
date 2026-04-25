@@ -110,7 +110,18 @@ must be TRUE):
 4. User can edit and archive accounts without losing any historical transaction
    data
 5. Credit card accounts show outstanding balance, available credit, statement
-   details, and reward points/cashback **Plans**: TBD **UI hint**: yes
+   details, and reward points/cashback **Plans**: 8 plans **UI hint**: yes
+
+Plans:
+
+- [ ] 03-01-PLAN.md — Schema migration (NUMERIC(20,8), 11 columns) + Diesel feature wiring + schema.rs regeneration
+- [ ] 03-02-PLAN.md — Rust core domain extension (AccountType constants, AccountKind helper, 11 fields, validate rules)
+- [ ] 03-03-PLAN.md — Storage-postgres extension (AccountDB + From impls + PG integration tests)
+- [ ] 03-04-PLAN.md — HTTP DTOs + balance auto-bump in AccountService::update_account
+- [ ] 03-05-PLAN.md — Frontend constants/types/schemas + legacy `balance` rename + selector icon maps
+- [ ] 03-06-PLAN.md — Exhaustive Record landmines (app-launcher, account-page, account-item, account-form options)
+- [ ] 03-07-PLAN.md — /settings/accounts host extension (group-by, Show archived, dynamic CC form, Update balance modal, account-page CC sections)
+- [ ] 03-08-PLAN.md — E2E Playwright spec + VALIDATION.md sign-off
 
 ### Phase 4: Transaction Core
 
