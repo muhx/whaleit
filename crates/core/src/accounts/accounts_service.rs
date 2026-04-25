@@ -86,6 +86,16 @@ impl AccountServiceTrait for AccountService {
         })?;
         let existing = self.repository.get_by_id(account_id).await?;
 
+        // D-12: auto-stamp balance_updated_at when current_balance changes.
+        // The client never gets to set this field — server is the source of truth
+        // for "when was the balance last touched".
+        let mut account_update = account_update;
+        if account_update.current_balance.is_some()
+            && account_update.current_balance != existing.current_balance
+        {
+            account_update.balance_updated_at = Some(chrono::Utc::now().naive_utc());
+        }
+
         let result = self.repository.update(account_update).await?;
 
         // Detect currency changes and register FX pair if needed
