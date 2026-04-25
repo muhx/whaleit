@@ -48,6 +48,10 @@ const accountTypes: ResponsiveSelectOption[] = [
   { label: "Securities", value: "SECURITIES" },
   { label: "Cash", value: "CASH" },
   { label: "Crypto", value: "CRYPTOCURRENCY" },
+  { label: "Checking", value: "CHECKING" },
+  { label: "Savings", value: "SAVINGS" },
+  { label: "Credit Card", value: "CREDIT_CARD" },
+  { label: "Loan", value: "LOAN" },
 ];
 
 // Input type (what the form receives)
