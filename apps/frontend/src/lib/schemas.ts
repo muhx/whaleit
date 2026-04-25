@@ -75,25 +75,93 @@ export const importMappingSchema = z.object({
 
 export const trackingModeSchema = z.enum(["TRANSACTIONS", "HOLDINGS", "NOT_SET"]);
 
-export const newAccountSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z
-    .string()
-    .min(2, {
-      message: "Name must be at least 2 characters.",
-    })
-    .max(50, {
-      message: "Name must not be longer than 50 characters.",
-    }),
-  group: z.string().optional(),
-  isDefault: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  isArchived: z.boolean().optional().default(false),
-  accountType: accountTypeSchema,
-  currency: z.string({ required_error: "Please select a currency." }),
-  trackingMode: trackingModeSchema.optional().default("NOT_SET"),
-  meta: z.string().nullable().optional(),
-});
+export const newAccountSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    name: z
+      .string()
+      .min(2, {
+        message: "Name must be at least 2 characters.",
+      })
+      .max(50, {
+        message: "Name must not be longer than 50 characters.",
+      }),
+    group: z.string().optional(),
+    isDefault: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+    isArchived: z.boolean().optional().default(false),
+    accountType: accountTypeSchema,
+    currency: z.string({ required_error: "Please select a currency." }),
+    trackingMode: trackingModeSchema.optional().default("NOT_SET"),
+    meta: z.string().nullable().optional(),
+    // Phase 3 additions (D-06, D-11, D-12, D-18):
+    institution: z.string().optional(),
+    openingBalance: z.string().optional(),
+    currentBalance: z.string().optional(),
+    balanceUpdatedAt: z.coerce.date().optional(),
+    creditLimit: z.string().optional(),
+    statementCycleDay: z.number().int().min(1).max(31).optional(),
+    statementBalance: z.string().optional(),
+    minimumPayment: z.string().optional(),
+    statementDueDate: z.string().optional(),
+    rewardPointsBalance: z.number().int().min(0).optional(),
+    cashbackBalance: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const isCC = data.accountType === "CREDIT_CARD";
+    const isBankOrLoan =
+      data.accountType === "CHECKING" ||
+      data.accountType === "SAVINGS" ||
+      data.accountType === "LOAN";
+
+    // D-06: CC-only fields must all be empty for non-CC accounts.
+    if (!isCC) {
+      const ccFields: Array<[keyof typeof data, string]> = [
+        ["creditLimit", "Credit limit"],
+        ["statementCycleDay", "Statement cycle day"],
+        ["statementBalance", "Statement balance"],
+        ["minimumPayment", "Minimum payment"],
+        ["statementDueDate", "Statement due date"],
+        ["rewardPointsBalance", "Reward points"],
+        ["cashbackBalance", "Cashback"],
+      ];
+      for (const [key, label] of ccFields) {
+        const v = data[key];
+        if (v !== undefined && v !== null && v !== "") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key as string],
+            message: `${label} is only valid for credit card accounts.`,
+          });
+        }
+      }
+    } else {
+      // CC required: creditLimit > 0 and statementCycleDay 1..31.
+      if (!data.creditLimit) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["creditLimit"],
+          message: "Credit limit is required.",
+        });
+      }
+      if (data.statementCycleDay === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["statementCycleDay"],
+          message: "Statement cycle day is required.",
+        });
+      }
+    }
+
+    // D-11: openingBalance required for bank/CC/LOAN.
+    if ((isBankOrLoan || isCC) && !data.openingBalance) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["openingBalance"],
+        message: "Opening balance is required for this account type.",
+      });
+    }
+  });
 
 export const newGoalSchema = z.object({
   id: z.string().uuid().optional(),
