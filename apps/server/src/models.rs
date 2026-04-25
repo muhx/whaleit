@@ -153,7 +153,7 @@ impl From<NewAccount> for core_accounts::NewAccount {
             institution: a.institution,
             opening_balance: a.opening_balance,
             current_balance: a.current_balance,
-            balance_updated_at: a.balance_updated_at,
+            balance_updated_at: None, // D-12: server-only field, client value discarded
             credit_limit: a.credit_limit,
             statement_cycle_day: a.statement_cycle_day,
             statement_balance: a.statement_balance,
@@ -219,7 +219,7 @@ impl From<AccountUpdate> for core_accounts::AccountUpdate {
             institution: a.institution,
             opening_balance: a.opening_balance,
             current_balance: a.current_balance,
-            balance_updated_at: a.balance_updated_at,
+            balance_updated_at: None, // D-12: server-only field, client value discarded
             credit_limit: a.credit_limit,
             statement_cycle_day: a.statement_cycle_day,
             statement_balance: a.statement_balance,

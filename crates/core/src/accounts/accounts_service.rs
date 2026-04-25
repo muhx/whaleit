@@ -86,14 +86,41 @@ impl AccountServiceTrait for AccountService {
         })?;
         let existing = self.repository.get_by_id(account_id).await?;
 
+        let mut account_update = account_update;
+
+        // D-06: when account type transitions out of CREDIT_CARD, sanitize
+        // the update payload to NULL all CC-only columns. Diesel's default
+        // AsChangeset skips columns when the Option is None, so we must
+        // actively set them to None here. The service-layer sanitization
+        // guarantees the correct shape before validate() sees the payload.
+        let type_transition_out_of_cc = existing.account_type
+            == super::accounts_constants::account_types::CREDIT_CARD
+            && account_update.account_type != super::accounts_constants::account_types::CREDIT_CARD;
+        if type_transition_out_of_cc {
+            account_update.credit_limit = None;
+            account_update.statement_cycle_day = None;
+            account_update.statement_balance = None;
+            account_update.minimum_payment = None;
+            account_update.statement_due_date = None;
+            account_update.reward_points_balance = None;
+            account_update.cashback_balance = None;
+        }
+
         // D-12: auto-stamp balance_updated_at when current_balance changes.
         // The client never gets to set this field — server is the source of truth
-        // for "when was the balance last touched".
-        let mut account_update = account_update;
+        // for "when was the balance last touched". Defense-in-depth: the inbound
+        // DTO already sets this to None per H-03 fix in apps/server/src/models.rs,
+        // but core code is the contract for ALL callers (Tauri IPC, future MCP,
+        // tests), so we re-assert here.
         if account_update.current_balance.is_some()
             && account_update.current_balance != existing.current_balance
         {
             account_update.balance_updated_at = Some(chrono::Utc::now().naive_utc());
+        } else {
+            // Belt and suspenders for D-12: discard any inbound value that
+            // bypassed the DTO sanitation (e.g., a Tauri caller passing the
+            // core type directly). Server is the SOLE writer of this field.
+            account_update.balance_updated_at = None;
         }
 
         let result = self.repository.update(account_update).await?;
