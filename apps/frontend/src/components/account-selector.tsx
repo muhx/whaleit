@@ -27,6 +27,10 @@ const accountTypeIcons: Record<string, Icon> = {
   SECURITIES: Icons.Briefcase,
   CASH: Icons.DollarSign,
   CRYPTOCURRENCY: Icons.Bitcoin,
+  CHECKING: Icons.Wallet,
+  SAVINGS: Icons.Coins,
+  CREDIT_CARD: Icons.CreditCard,
+  LOAN: Icons.Building,
   [PORTFOLIO_ACCOUNT_ID]: Icons.Wallet,
 };
 

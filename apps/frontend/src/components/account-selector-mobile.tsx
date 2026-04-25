@@ -25,6 +25,10 @@ const accountTypeIcons: Record<string, Icon> = {
   SECURITIES: Icons.Briefcase,
   CASH: Icons.DollarSign,
   CRYPTOCURRENCY: Icons.Bitcoin,
+  CHECKING: Icons.Wallet,
+  SAVINGS: Icons.Coins,
+  CREDIT_CARD: Icons.CreditCard,
+  LOAN: Icons.Building,
   [PORTFOLIO_ACCOUNT_ID]: Icons.Wallet,
 };
 
@@ -117,6 +121,14 @@ export const AccountSelectorMobile = forwardRef<HTMLButtonElement, AccountSelect
           return "Cash Accounts";
         case "CRYPTOCURRENCY":
           return "Cryptocurrency Accounts";
+        case "CHECKING":
+          return "Checking Accounts";
+        case "SAVINGS":
+          return "Savings Accounts";
+        case "CREDIT_CARD":
+          return "Credit Cards";
+        case "LOAN":
+          return "Loans";
         default:
           return "Other Accounts";
       }
