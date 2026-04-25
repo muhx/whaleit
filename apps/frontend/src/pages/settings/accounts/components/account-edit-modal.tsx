@@ -26,6 +26,16 @@ export function AccountEditModal({ account, open, onClose }: AccountEditModalPro
     isArchived: account?.isArchived ?? false,
     trackingMode: account?.trackingMode,
     meta: account?.meta,
+    // Phase 3 additions (D-06, D-11, D-18) — closes gap H-01:
+    institution: account?.institution,
+    openingBalance: account?.openingBalance,
+    creditLimit: account?.creditLimit,
+    statementCycleDay: account?.statementCycleDay,
+    statementBalance: account?.statementBalance,
+    minimumPayment: account?.minimumPayment,
+    statementDueDate: account?.statementDueDate,
+    rewardPointsBalance: account?.rewardPointsBalance,
+    cashbackBalance: account?.cashbackBalance,
   };
 
   return (
