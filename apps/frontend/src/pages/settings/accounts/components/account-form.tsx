@@ -9,10 +9,17 @@ import { Checkbox } from "@whaleit/ui/components/ui/checkbox";
 import { newAccountSchema } from "@/lib/schemas";
 import {
   CurrencyInput,
+  DatePickerInput,
+  MoneyInput,
   RadioGroup,
   RadioGroupItem,
   ResponsiveSelect,
   type ResponsiveSelectOption,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@whaleit/ui";
 import { Alert, AlertDescription } from "@whaleit/ui/components/ui/alert";
 import {
@@ -85,6 +92,14 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
   });
 
   const currentTrackingMode = form.watch("trackingMode");
+  const selectedType = form.watch("accountType");
+  const isCreditCard = selectedType === "CREDIT_CARD";
+  const requiresInstitution =
+    selectedType === "CHECKING" ||
+    selectedType === "SAVINGS" ||
+    selectedType === "CREDIT_CARD" ||
+    selectedType === "LOAN";
+  const requiresOpeningBalance = requiresInstitution; // same set per D-11
 
   // Perform the actual submit (after confirmation if needed)
   // Returns a promise when updating so it can be chained with other operations
@@ -206,6 +221,213 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
               </FormItem>
             )}
           />
+
+          {requiresInstitution && (
+            <FormField
+              control={form.control}
+              name="institution"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Institution</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. Chase, HSBC, SoFi"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground text-xs">Type the bank or issuer name.</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {requiresOpeningBalance && (
+            <FormField
+              control={form.control}
+              name="openingBalance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Opening balance</FormLabel>
+                  <FormControl>
+                    <MoneyInput
+                      value={field.value ? Number.parseFloat(field.value) : undefined}
+                      onValueChange={(v) =>
+                        field.onChange(v !== null && v !== undefined ? String(v) : undefined)
+                      }
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground text-xs">
+                    Today's balance becomes your starting point. Phase-4 transactions will use this
+                    as the opening entry.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {isCreditCard && (
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-xs">
+                You can edit these anytime as each statement closes.
+              </p>
+              <FormField
+                control={form.control}
+                name="creditLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credit limit</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value ? Number.parseFloat(field.value) : undefined}
+                        onValueChange={(v) =>
+                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="statementCycleDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statement cycle day</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value !== undefined ? String(field.value) : ""}
+                        onValueChange={(v) =>
+                          field.onChange(v ? Number.parseInt(v, 10) : undefined)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select day" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                            <SelectItem key={d} value={String(d)}>
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <p className="text-muted-foreground text-xs">
+                      Day the statement closes each month.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="statementBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statement balance</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value ? Number.parseFloat(field.value) : undefined}
+                        onValueChange={(v) =>
+                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="minimumPayment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Minimum payment</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value ? Number.parseFloat(field.value) : undefined}
+                        onValueChange={(v) =>
+                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="statementDueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statement due date</FormLabel>
+                    <FormControl>
+                      <DatePickerInput
+                        value={field.value ? new Date(field.value) : undefined}
+                        onChange={(d) =>
+                          field.onChange(d ? d.toISOString().slice(0, 10) : undefined)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="rewardPointsBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reward points balance</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === "" ? undefined : Number.parseInt(e.target.value, 10),
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cashbackBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cashback balance</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value ? Number.parseFloat(field.value) : undefined}
+                        onValueChange={(v) =>
+                          field.onChange(v !== null && v !== undefined ? String(v) : undefined)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {selectedType === "LOAN" && (
+            <div className="border-border bg-muted/40 text-muted-foreground rounded-md border p-3 text-xs">
+              Loans in v1 track name, institution, currency, and balance only. Amortization and
+              interest tracking are coming later.
+            </div>
+          )}
+
           {!defaultValues?.id ? (
             <FormField
               control={form.control}
