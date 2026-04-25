@@ -45,6 +45,10 @@ export const AccountType = {
   SECURITIES: "SECURITIES",
   CASH: "CASH",
   CRYPTOCURRENCY: "CRYPTOCURRENCY",
+  CHECKING: "CHECKING",
+  SAVINGS: "SAVINGS",
+  CREDIT_CARD: "CREDIT_CARD",
+  LOAN: "LOAN",
 } as const;
 
 export type AccountType = (typeof AccountType)[keyof typeof AccountType];
@@ -53,6 +57,10 @@ export const accountTypeSchema = z.enum([
   AccountType.SECURITIES,
   AccountType.CASH,
   AccountType.CRYPTOCURRENCY,
+  AccountType.CHECKING,
+  AccountType.SAVINGS,
+  AccountType.CREDIT_CARD,
+  AccountType.LOAN,
 ]);
 
 /**
@@ -66,8 +74,47 @@ export function defaultGroupForAccountType(accountType: AccountType): string {
       return "Cash";
     case AccountType.CRYPTOCURRENCY:
       return "Crypto";
+    case AccountType.CHECKING:
+    case AccountType.SAVINGS:
+      return "Banking";
+    case AccountType.CREDIT_CARD:
+      return "Credit Cards";
+    case AccountType.LOAN:
+      return "Loans";
     default:
       return "Investments";
+  }
+}
+
+export const AccountKind = {
+  ASSET: "ASSET",
+  LIABILITY: "LIABILITY",
+  INVESTMENT: "INVESTMENT",
+} as const;
+
+export type AccountKind = (typeof AccountKind)[keyof typeof AccountKind];
+
+/**
+ * Returns Asset / Liability / Investment classification for a given AccountType.
+ * Mirrors `account_kind` in `crates/core/src/accounts/accounts_constants.rs`.
+ */
+export function accountKind(accountType: AccountType): AccountKind {
+  switch (accountType) {
+    case AccountType.CHECKING:
+    case AccountType.SAVINGS:
+    case AccountType.CASH:
+      return AccountKind.ASSET;
+    case AccountType.CREDIT_CARD:
+    case AccountType.LOAN:
+      return AccountKind.LIABILITY;
+    case AccountType.SECURITIES:
+    case AccountType.CRYPTOCURRENCY:
+      return AccountKind.INVESTMENT;
+    default: {
+      const _exhaustive: never = accountType;
+      void _exhaustive;
+      return AccountKind.ASSET;
+    }
   }
 }
 
