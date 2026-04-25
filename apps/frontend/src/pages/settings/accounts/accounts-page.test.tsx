@@ -8,6 +8,7 @@ import type { Account, TrackingMode } from "@/lib/types";
 import { AccountType } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
 import SettingsAccountsPage from "./accounts-page";
+import { AccountEditModal } from "./components/account-edit-modal";
 
 vi.mock("@/hooks/use-accounts", () => ({
   useAccounts: vi.fn(),
@@ -29,16 +30,73 @@ vi.mock("./components/use-account-mutations", () => ({
   }),
 }));
 
-vi.mock("./components/account-edit-modal", () => ({
-  AccountEditModal: () => null,
-}));
-
 vi.mock("./components/account-operations", () => ({
   AccountOperations: () => null,
 }));
 
 vi.mock("../settings-header", () => ({
   SettingsHeader: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("@/lib/settings-provider", () => ({
+  useSettingsContext: () => ({ settings: { baseCurrency: "USD" } }),
+}));
+
+vi.mock("@/hooks/use-platform", () => ({
+  useIsMobileViewport: vi.fn().mockReturnValue(false),
+}));
+
+vi.mock("@whaleit/ui/components/ui/dialog", () => ({
+  Dialog: ({ children, open }: { children?: React.ReactNode; open?: boolean }) =>
+    open ? <div data-testid="dialog">{children}</div> : null,
+  DialogContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  DialogHeader: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children?: React.ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children?: React.ReactNode }) => <p>{children}</p>,
+  DialogFooter: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  DialogTrigger: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock("@whaleit/ui/components/ui/button", () => ({
+  Button: ({
+    children,
+    ...rest
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }) => (
+    <button {...rest}>{children}</button>
+  ),
+}));
+
+vi.mock("@whaleit/ui/components/ui/checkbox", () => ({
+  Checkbox: ({
+    checked,
+    onCheckedChange,
+    ...rest
+  }: {
+    checked?: boolean;
+    onCheckedChange?: (v: boolean) => void;
+  } & React.HTMLAttributes<HTMLInputElement>) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onCheckedChange?.(e.target.checked)}
+      {...rest}
+    />
+  ),
+}));
+
+vi.mock("@whaleit/ui/components/ui/alert", () => ({
+  Alert: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDescription: ({ children }: { children?: React.ReactNode }) => <p>{children}</p>,
+}));
+
+vi.mock("@whaleit/ui/components/ui/alert-dialog", () => ({
+  AlertDialog: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogHeader: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogTitle: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogDescription: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogFooter: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogCancel: ({ children }: { children?: React.ReactNode }) => <button>{children}</button>,
 }));
 
 vi.mock("@whaleit/ui", () => ({
@@ -94,6 +152,56 @@ vi.mock("@whaleit/ui", () => ({
   TooltipContent: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   TooltipProvider: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  // AccountForm components (used by AccountEditModal regression tests):
+  MoneyInput: ({
+    value,
+    onValueChange: _onValueChange,
+    ...rest
+  }: {
+    value?: number | string | null;
+    onValueChange?: (v: number | undefined) => void;
+  } & React.InputHTMLAttributes<HTMLInputElement>) => (
+    <input type="number" value={value ?? ""} onChange={() => undefined} readOnly {...rest} />
+  ),
+  ResponsiveSelect: ({
+    value,
+    onValueChange: _onValueChange,
+    ...rest
+  }: {
+    value?: string;
+    onValueChange?: (v: string) => void;
+    options?: unknown[];
+    placeholder?: string;
+    sheetTitle?: string;
+    sheetDescription?: string;
+    triggerClassName?: string;
+  } & React.HTMLAttributes<HTMLInputElement>) => (
+    <input type="text" value={value ?? ""} onChange={() => undefined} readOnly {...rest} />
+  ),
+  Select: ({
+    value,
+    children: _children,
+    onValueChange: _onValueChange,
+    ...rest
+  }: {
+    value?: string;
+    children?: React.ReactNode;
+    onValueChange?: (v: string) => void;
+  } & React.HTMLAttributes<HTMLInputElement>) => (
+    <input type="text" value={value ?? ""} onChange={() => undefined} readOnly {...rest} />
+  ),
+  SelectContent: () => null,
+  SelectItem: () => null,
+  SelectTrigger: () => null,
+  SelectValue: () => null,
+  RadioGroup: ({ children, ...rest }: { children?: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...rest}>{children}</div>
+  ),
+  RadioGroupItem: ({ value, ...rest }: { value?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
+    <input type="radio" value={value} {...rest} />
+  ),
+  CurrencyInput: () => null,
+  DatePickerInput: () => null,
 }));
 
 vi.mock("@whaleit/ui/components/ui/avatar", () => ({
@@ -296,5 +404,53 @@ describe("SettingsAccountsPage", () => {
     // Chip is in the same group as the CC, so its index sits between Credit Cards
     // header and the next group header. Sanity: not adjacent to the CHECKING row.
     expect(Math.abs(availIdx - ccIdx)).toBeLessThan(Math.abs(availIdx - chkIdx));
+  });
+});
+
+describe("AccountEditModal pre-fill regression (H-01)", () => {
+  it("pre-fills CC fields from the account prop", () => {
+    const ccAccount = makeAccount({
+      id: "cc-1",
+      name: "Amex Gold",
+      accountType: AccountType.CREDIT_CARD,
+      institution: "Chase Bank",
+      openingBalance: "0",
+      creditLimit: "5000",
+      statementCycleDay: 15,
+      currentBalance: "1000",
+    });
+    render(
+      <MemoryRouter>
+        <AccountEditModal account={ccAccount} open onClose={() => undefined} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByLabelText(/Institution/i)).toHaveValue("Chase Bank");
+    // openingBalance flows through MoneyInput → numeric value; must not be empty.
+    const openingInput = screen.getByLabelText(/Opening balance/i) as HTMLInputElement;
+    expect(openingInput.value).not.toBe("");
+    // creditLimit: "5000" → MoneyInput renders 5000
+    const creditLimitInput = screen.getByLabelText(/Credit limit/i) as HTMLInputElement;
+    expect(Number.parseFloat(creditLimitInput.value)).toBe(5000);
+    // statementCycleDay: 15 → Select renders "15"
+    const cycleDayInput = screen.getByLabelText(/Statement cycle day/i) as HTMLInputElement;
+    expect(Number.parseInt(cycleDayInput.value, 10)).toBe(15);
+  });
+
+  it("pre-fills CHECKING institution + openingBalance from the account prop", () => {
+    const checkingAccount = makeAccount({
+      id: "chk-1",
+      name: "Daily Spending",
+      accountType: AccountType.CHECKING,
+      institution: "Wells Fargo",
+      openingBalance: "1234.56",
+    });
+    render(
+      <MemoryRouter>
+        <AccountEditModal account={checkingAccount} open onClose={() => undefined} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByLabelText(/Institution/i)).toHaveValue("Wells Fargo");
+    const openingInput = screen.getByLabelText(/Opening balance/i) as HTMLInputElement;
+    expect(Number.parseFloat(openingInput.value)).toBeCloseTo(1234.56, 2);
   });
 });
