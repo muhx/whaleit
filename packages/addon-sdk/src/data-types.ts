@@ -133,6 +133,10 @@ export const AccountType = {
   SECURITIES: 'SECURITIES',
   CASH: 'CASH',
   CRYPTOCURRENCY: 'CRYPTOCURRENCY',
+  CHECKING: 'CHECKING',
+  SAVINGS: 'SAVINGS',
+  CREDIT_CARD: 'CREDIT_CARD',
+  LOAN: 'LOAN',
 } as const;
 
 export type AccountType = (typeof AccountType)[keyof typeof AccountType];

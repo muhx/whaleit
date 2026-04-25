@@ -83,6 +83,10 @@ const accountTypeIcons: Record<AccountType, Icon> = {
   SECURITIES: Icons.Briefcase,
   CASH: Icons.DollarSign,
   CRYPTOCURRENCY: Icons.Bitcoin,
+  CHECKING: Icons.Wallet,
+  SAVINGS: Icons.Coins,
+  CREDIT_CARD: Icons.CreditCard,
+  LOAN: Icons.Building,
 };
 
 // Helper function to get the initial date range (copied from dashboard)
