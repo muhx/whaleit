@@ -16,7 +16,7 @@ mod tests {
     use crate::quotes::sync_state::{ProviderSyncStats, QuoteSyncState, SyncStateStore};
     use crate::Result;
     use async_trait::async_trait;
-    use chrono::NaiveDate;
+    use chrono::{NaiveDate, NaiveDateTime};
     use rust_decimal::Decimal;
     use rust_decimal_macros::dec;
     use std::collections::HashMap;
@@ -339,6 +339,59 @@ mod tests {
         }
     }
 
+    fn existing_cc_full() -> Account {
+        Account {
+            id: "acc-1".to_string(),
+            name: "Card".to_string(),
+            account_type: "CREDIT_CARD".to_string(),
+            currency: "USD".to_string(),
+            is_active: true,
+            tracking_mode: TrackingMode::Transactions,
+            current_balance: Some(dec!(50)),
+            credit_limit: Some(dec!(5000)),
+            statement_cycle_day: Some(15),
+            statement_balance: Some(dec!(123.45)),
+            minimum_payment: Some(dec!(25)),
+            statement_due_date: Some(NaiveDate::from_ymd_opt(2026, 5, 1).unwrap()),
+            reward_points_balance: Some(1000),
+            cashback_balance: Some(dec!(12.34)),
+            ..Default::default()
+        }
+    }
+
+    fn update_with_type_change_keeping_cc_values(id: &str, new_type: &str) -> AccountUpdate {
+        // BUGGY CLIENT: changes type to non-CC but leaves CC fields populated.
+        // Today's service rejects this via validate() (non-CC type with CC is_some fields).
+        // The Task 2 fix must sanitize CC fields BEFORE validate(), so the update succeeds
+        // and the repository receives None for all 7 CC fields.
+        AccountUpdate {
+            id: Some(id.to_string()),
+            name: "Card".to_string(),
+            account_type: new_type.to_string(),
+            group: None,
+            is_default: false,
+            is_active: true,
+            platform_id: None,
+            account_number: None,
+            meta: None,
+            provider: None,
+            provider_account_id: None,
+            is_archived: None,
+            tracking_mode: None,
+            institution: None,
+            opening_balance: None,
+            current_balance: None,
+            balance_updated_at: None,
+            credit_limit: Some(dec!(5000)),
+            statement_cycle_day: Some(15),
+            statement_balance: Some(dec!(123.45)),
+            minimum_payment: Some(dec!(25)),
+            statement_due_date: Some(NaiveDate::from_ymd_opt(2026, 5, 1).unwrap()),
+            reward_points_balance: Some(1000),
+            cashback_balance: Some(dec!(12.34)),
+        }
+    }
+
     // -- Tests ---------------------------------------------------------------
 
     #[tokio::test]
@@ -377,6 +430,70 @@ mod tests {
         assert!(
             captured.balance_updated_at.is_none(),
             "balance_updated_at should not auto-stamp when current_balance not supplied"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_update_ignores_client_supplied_balance_updated_at_when_balance_unchanged() {
+        let (service, repo) = make_service(existing_cc(Some(dec!(100))));
+        let mut update = update_with_balance("acc-1", Some(dec!(100))); // balance unchanged
+                                                                        // Client tries to backdate the timestamp:
+        update.balance_updated_at = Some(NaiveDateTime::from_timestamp_opt(0, 0).unwrap());
+        service.update_account(update).await.unwrap();
+
+        let captured = repo.last_update.lock().unwrap().clone().unwrap();
+        assert!(
+            captured.balance_updated_at.is_none(),
+            "D-12: server must discard client-supplied balance_updated_at \
+             when balance is unchanged. Got {:?}",
+            captured.balance_updated_at
+        );
+    }
+
+    #[tokio::test]
+    async fn test_update_clears_cc_fields_on_type_transition_out_of_cc() {
+        let (service, repo) = make_service(existing_cc_full());
+        // Client sends a "stale" update: type changed to CHECKING but
+        // CC fields still populated. Today's service rejects this via
+        // validate(); the fix should sanitize the update FIRST.
+        let update = update_with_type_change_keeping_cc_values("acc-1", "CHECKING");
+        let result = service.update_account(update).await;
+        assert!(
+            result.is_ok(),
+            "D-06: service must sanitize CC fields when type transitions \
+             out of CREDIT_CARD before validation, not reject the update. \
+             Got {:?}",
+            result.err()
+        );
+
+        let captured = repo.last_update.lock().unwrap().clone().unwrap();
+        assert!(
+            captured.credit_limit.is_none(),
+            "D-06: credit_limit must be None after type transition"
+        );
+        assert!(
+            captured.statement_cycle_day.is_none(),
+            "D-06: statement_cycle_day must be None after type transition"
+        );
+        assert!(
+            captured.statement_balance.is_none(),
+            "D-06: statement_balance must be None after type transition"
+        );
+        assert!(
+            captured.minimum_payment.is_none(),
+            "D-06: minimum_payment must be None after type transition"
+        );
+        assert!(
+            captured.statement_due_date.is_none(),
+            "D-06: statement_due_date must be None after type transition"
+        );
+        assert!(
+            captured.reward_points_balance.is_none(),
+            "D-06: reward_points_balance must be None after type transition"
+        );
+        assert!(
+            captured.cashback_balance.is_none(),
+            "D-06: cashback_balance must be None after type transition"
         );
     }
 }
