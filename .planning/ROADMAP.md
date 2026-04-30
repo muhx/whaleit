@@ -139,8 +139,20 @@ Criteria** (what must be TRUE):
    amount range, date range, category, and account
 4. System detects and flags potential duplicate transactions for user review
 5. Transactions support multi-currency with FX conversion, split categories
-   across multiple budget lines, and show running balance per account **Plans**:
-   TBD **UI hint**: yes
+   across multiple budget lines, and show running balance per account **Plans**: 10 plans **UI hint**: yes
+
+Plans:
+
+- [ ] 04-01-PLAN.md — Schema migration (transactions + splits + payee_category_memory + running-balance VIEW + 'Transaction Categories' system taxonomy seed) + schema.rs regeneration
+- [ ] 04-02-PLAN.md — Rust core domain (model + traits + service + ofx_parser + duplicate_detector + merchant_normalizer + reconciliation hook + DomainEvent::TransactionsChanged)
+- [ ] 04-03-PLAN.md — PG storage repository (PgTransactionRepository + From-impls + atomic create_with_splits + running-balance VIEW reads + payee-memory upsert)
+- [ ] 04-04-PLAN.md — Axum routes + frontend command adapter wiring (18 commands; 10MB import cap; 30s OFX timeout)
+- [ ] 04-05-PLAN.md — Frontend types + Zod schemas + TanStack hooks (use-transactions / use-merchant-categories / use-transaction-templates) with cache-invalidation tests
+- [ ] 04-06-PLAN.md — Global ledger page /transactions (filter bar + transaction-row + duplicate banner + detail sheet + per-account RecentTransactions embed; replaces Phase-3 manual Update-balance CTA)
+- [ ] 04-07-PLAN.md — Manual transaction form (Income/Expense/Transfer toggle) + transfer-edit AlertDialog (D-04) + split editor (TXN-08) + Category Autocomplete with payee-memory pre-fill (D-15)
+- [ ] 04-08-PLAN.md — CSV/OFX import wizard fork (Upload → Mapping → Review → Confirm; OFX skips Mapping per D-19; templates with header_signature for D-17)
+- [ ] 04-09-PLAN.md — Duplicate-review surfaces (wizard inline list + post-import banner + review sheet with Discard new / Keep both copy)
+- [ ] 04-10-PLAN.md — Playwright E2E suite (7 specs covering TXN-01..09 + reconciliation + transfer pair) + 04-VALIDATION.md sign-off
 
 ### Phase 5: Budgeting
 
@@ -280,7 +292,7 @@ FREEL-01, FREEL-02, FREEL-03, FREEL-04, FREEL-05, FREEL-06 **Success Criteria**
 | 1. Codebase Health & Rebrand    | 5/5            | Complete    | 2026-04-21 |
 | 2. Dual Database Engine         | 6/6            | Complete    | 2026-04-21 |
 | 3. Bank Accounts & Credit Cards | 0/?            | Not started | -          |
-| 4. Transaction Core             | 0/?            | Not started | -          |
+| 4. Transaction Core             | 0/10           | Not started | -          |
 | 5. Budgeting                    | 0/?            | Not started | -          |
 | 6. Reporting & Net Worth        | 0/?            | Not started | -          |
 | 7. Subscription & Bill Tracking | 0/?            | Not started | -          |
