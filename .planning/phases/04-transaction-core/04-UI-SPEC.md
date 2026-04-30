@@ -1,12 +1,13 @@
 ---
 phase: 4
 slug: transaction-core
-status: draft
+status: approved
 shadcn_initialized: true
 preset:
   existing (packages/ui — baseColor slate, cssVariables, third-party registries
   @animate-ui + @diceui)
 created: 2026-04-30
+reviewed_at: 2026-04-30
 ---
 
 # Phase 4 — UI Design Contract
@@ -757,8 +758,8 @@ Rules:
 - **Back to single category**: `[← Back to single category]` ghost button
   beneath the indicator. Confirmation: if any split row has a non-default value,
   show inline confirm `"Discard splits and use a single category?"` with [Yes,
-  discard] / [Keep splits]. On accept, the form reverts to single-Category mode with
-  row 1's category as the active value.
+  discard] / [Keep splits]. On accept, the form reverts to single-Category mode
+  with row 1's category as the active value.
 
 Storage shape: planner determines the persistence model (likely a
 `transaction_splits` table with `transaction_id`, `category_id`, `amount`,
@@ -802,7 +803,7 @@ Exact copy. Executor uses verbatim.
 | Importer step 2                          | "Continue to review"                                                                              |
 | Importer step 3                          | "Continue to confirm"                                                                             |
 | Importer step 4                          | "Import {N} transactions"                                                                         |
-| Importer step navigation — cancel        | "Cancel import" (ghost, bottom-left of wizard footer — opens AlertDialog "Discard this import?") |
+| Importer step navigation — cancel        | "Cancel import" (ghost, bottom-left of wizard footer — opens AlertDialog "Discard this import?")  |
 | Duplicate banner                         | "Review duplicates"                                                                               |
 | Duplicate review sheet — primary action  | "Discard new"                                                                                     |
 | Duplicate review sheet — secondary       | "Keep both"                                                                                       |
@@ -846,11 +847,11 @@ FAB uses icon-only with `aria-label="New transaction"`.
 
 ### Destructive confirmations
 
-| Action                       | Dialog title                     | Body                                                                                                                      | Confirm label  | Dismiss label    |
-| ---------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------- |
-| Delete transaction           | "Delete this transaction?"       | "This will permanently remove the transaction and any splits attached to it. Account balances will update automatically." | "Delete"       | "Keep editing"   |
-| Discard import               | "Discard this import?"           | "Your file and column choices will be cleared. You can start over anytime."                                               | "Discard"      | "Keep editing"   |
-| Discard splits (within form) | (inline confirm, no AlertDialog) | "Discard splits and use a single category?"                                                                               | "Yes, discard" | "Keep splits"    |
+| Action                       | Dialog title                     | Body                                                                                                                      | Confirm label  | Dismiss label  |
+| ---------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------- |
+| Delete transaction           | "Delete this transaction?"       | "This will permanently remove the transaction and any splits attached to it. Account balances will update automatically." | "Delete"       | "Keep editing" |
+| Discard import               | "Discard this import?"           | "Your file and column choices will be cleared. You can start over anytime."                                               | "Discard"      | "Keep editing" |
+| Discard splits (within form) | (inline confirm, no AlertDialog) | "Discard splits and use a single category?"                                                                               | "Yes, discard" | "Keep splits"  |
 
 Note: Phase 4 IS hard-delete-capable for transactions (unlike Phase 3 accounts
 which only archive). This matches user expectations — transactions are
@@ -904,7 +905,7 @@ archive-only semantics from Phase 3.
 | Form direction change        | Selecting a different direction resets Category but preserves Amount/Account/Date/Payee/Notes                                                                                                                     |
 | Form submit                  | Cmd/Ctrl+Enter from anywhere in the form submits                                                                                                                                                                  |
 | Form escape                  | Closes sheet; if dirty, opens unsaved-changes confirm `AlertDialog`: title "Discard your changes?", body "Anything you typed will be lost.", confirm "Discard", cancel "Keep editing"                             |
-| Importer step navigation     | `[Continue to {next step}]` button advances; `[Cancel import]` opens cancel-confirmation dialog; `[← Back]` regresses without confirm                                                                                    |
+| Importer step navigation     | `[Continue to {next step}]` button advances; `[Cancel import]` opens cancel-confirmation dialog; `[← Back]` regresses without confirm                                                                             |
 | Importer file drop           | Reuse `FileDropzone` interaction patterns from activity import — drag-over highlights with `border-primary`                                                                                                       |
 | Duplicate sheet keyboard nav | `←` / `→` cycle pairs (matches `[‹ Previous]` / `[Next ›]`); `Esc` closes; `Enter` triggers focused button                                                                                                        |
 | Split row add                | New row animates in with `motion/react` slide-down (already used in `activity-import-page.tsx` line 12) — duration 150ms                                                                                          |
