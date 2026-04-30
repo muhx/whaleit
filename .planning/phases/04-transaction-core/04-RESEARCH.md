@@ -1690,14 +1690,16 @@ JWT/API-key surface. **Do not** invent new crypto for Phase 4.
     MUST use stable IDs (`cat_income`, `cat_dining`, etc.) rather than
     freshly-generated UUIDs.
 
-### Open Questions
+### Open Questions (RESOLVED)
+
+> All 7 open questions are resolved as of 2026-04-30. The planner has locked these recommendations into the execution plans (04-01..04-10).
 
 1. **Connection-pool sizing for import path.**
    - What we know: deadpool default is small (~10). Concurrent imports + normal
      traffic could starve the pool.
    - What's unclear: whether Phase 4 should bump the pool size or rely on
      bulk-insert batching to reduce concurrent connection demand.
-   - Recommendation: keep the default; chunk imports into ≤500-row batches;
+   - **RESOLVED:** keep the default; chunk imports into ≤500-row batches;
      revisit if real-world testing surfaces a wait.
 
 2. **Whether to expose `category_source` audit metadata in the API response.**
@@ -1705,7 +1707,7 @@ JWT/API-key surface. **Do not** invent new crypto for Phase 4.
      `category_source = 'MEMORY'` for AI training.
    - What's unclear: should the field be on the wire today (so Phase 8 can
      backfill against historical data), or wait until Phase 8?
-   - Recommendation: include on the wire NOW (it's free; fields are read
+   - **RESOLVED:** include on the wire NOW (it's free; fields are read
      anyway), do NOT surface in UI. Forward-compatible with Phase 8 with zero
      migration risk.
 
@@ -1713,14 +1715,14 @@ JWT/API-key surface. **Do not** invent new crypto for Phase 4.
    `initialize()`?**
    - What we know: existing `taxonomy_service.rs` has no analog seed at init
      time — the existing taxonomies were seeded via earlier migrations.
-   - Recommendation (also stated in §3): SQL migration. Atomic with schema;
+   - **RESOLVED** (also stated in §3): SQL migration. Atomic with schema;
      planner verifies that re-running migrations remains idempotent on a
      development DB with prior state.
 
 4. **OFX 2.x XML detection threshold.**
    - What we know: file header `OFXHEADER:100` (1.x) vs `<?xml ?>` (2.x).
    - What's unclear: do any exports omit both? Some custom bank exports do.
-   - Recommendation: detect by sniffing first 100 bytes; if neither header
+   - **RESOLVED:** detect by sniffing first 100 bytes; if neither header
      recognized, attempt 1.x parse first, fall through to 2.x XML if 1.x fails.
      Surface a warning to the user but don't block.
 
@@ -1729,7 +1731,7 @@ JWT/API-key surface. **Do not** invent new crypto for Phase 4.
      ambiguous when day ≤ 12.
    - What's unclear: what error to surface when both interpretations produce
      valid dates and the file has all values ≤ 12.
-   - Recommendation: when ambiguous, prompt the user via the Mapping step's
+   - **RESOLVED:** when ambiguous, prompt the user via the Mapping step's
      date-format dropdown. Default to `MM/DD/YYYY` (US bias — most common in
      tracked banks).
 
@@ -1738,13 +1740,13 @@ JWT/API-key surface. **Do not** invent new crypto for Phase 4.
      `is_system_generated = true`.
    - What's unclear: should synthesized rows ALSO get an idempotency key, or is
      `idempotency_key = NULL` acceptable for SYSTEM source?
-   - Recommendation: allow NULL for SYSTEM source. The UNIQUE constraint on
+   - **RESOLVED:** allow NULL for SYSTEM source. The UNIQUE constraint on
      `idempotency_key` permits multiple NULLs in PG. Document this.
 
 7. **`transfer_leg_role` synthesis.** The view-side running-balance formula
    needs the column. Is there a simpler model where direction alone implies the
    role?
-   - Answer: not really. A "TRANSFER" with positive amount could be either
+   - **RESOLVED:** not really. A "TRANSFER" with positive amount could be either
      source or destination of the pair without an explicit marker. Stick with
      the explicit column.
 
