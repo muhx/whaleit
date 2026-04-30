@@ -152,9 +152,9 @@ No new colors are introduced. The 60/30/10 split is identical to Phase 3.
 Accent (`--primary`) is reserved for and ONLY for:
 
 1. The single primary CTA per screen: "New transaction" on `/transactions`,
-   "Save" on the transaction form, "Import" on the importer wizard final step,
-   "Apply" in the filter sheet, "Keep both" / "Discard" primary on the duplicate
-   review sheet.
+   "Save transaction" / "Save changes" on the transaction form, "Import" on the
+   importer wizard final step, "Apply filters" in the filter sheet, "Discard
+   new" on the duplicate review sheet.
 2. The active/selected state in the transaction-direction `ToggleGroup` (Income
    / Expense / Transfer) on the transaction form (`data-state=on`).
 3. The active filter-chip state (when a filter is engaged, the chip uses
@@ -249,11 +249,11 @@ uses an `Autocomplete` (not plain `Select`). Typing a string that doesn't match
 any existing category surfaces a footer affordance:
 `+ Create category "{user input}"`. Clicking it opens a tiny inline `Popover`
 with: name (pre-filled from input), color (color picker, defaults to a
-hashed-by-name pick from the taxonomy palette), and "Create" button. On create,
-the new `TaxonomyCategory` is appended to the system "Transaction Categories"
-taxonomy and selected on the form. Planner verifies that the existing taxonomy
-adapter exposes a `createCategory` mutation reachable from the transaction form
-— if not, planner adds it.
+hashed-by-name pick from the taxonomy palette), and "Create category" button. On
+create, the new `TaxonomyCategory` is appended to the system "Transaction
+Categories" taxonomy and selected on the form. Planner verifies that the
+existing taxonomy adapter exposes a `createCategory` mutation reachable from the
+transaction form — if not, planner adds it.
 
 ---
 
@@ -278,7 +278,7 @@ Layout (desktop, `≥ md`):
 │   [All accounts ▾] [Last 30 days ▾] [Any category ▾] [Any amount ▾]  │
 │   [Show transfers ⚪]    [Clear filters]    ← right-aligned          │
 ├──────────────────────────────────────────────────────────────────────┤
-│ ⚠ 3 possible duplicates from your last import   [Review]             │  ← inline banner, only when duplicates pending
+│ ⚠ 3 possible duplicates from your last import   [Review duplicates]  │  ← inline banner, only when duplicates pending
 ├──────────────────────────────────────────────────────────────────────┤
 │ Apr 24, 2026 · 3 transactions · −$84.20                               │  Date-group header (sticky, bg-muted/30)
 │  ┌──────────────────────────────────────────────────────────────┐    │
@@ -432,8 +432,8 @@ Triggered by:
 
 - `[+ New transaction]` on `/transactions` (no pre-fill)
 - `[+ New transaction]` on the per-account empty state (pre-fills `accountId`)
-- Clicking a transaction row in the ledger and choosing "Edit" from the detail
-  sheet (loads existing values; submit calls `update` mutation)
+- Clicking a transaction row in the ledger and choosing "Edit transaction" from
+  the detail sheet (loads existing values; submit calls `update` mutation)
 
 Form sections (in render order):
 
@@ -494,7 +494,7 @@ Form sections (in render order):
 
 Footer actions:
 
-- Left: `[Cancel]` (ghost variant)
+- Left: `[Discard]` (ghost variant)
 - Right: primary CTA — `[Save transaction]` on create (accent), `[Save changes]`
   on edit. Disabled when form is invalid OR (in edit mode) when no field has
   changed from the loaded values.
@@ -542,7 +542,7 @@ Layout:
 │ Apr 24, 2026 · 7:42 PM                      │
 │                                             │
 ├─────────────────────────────────────────────┤
-│ [Delete]                       [Edit]       │  Footer
+│ [Delete transaction]       [Edit transaction]│  Footer
 └─────────────────────────────────────────────┘
 ```
 
@@ -553,10 +553,10 @@ Rules:
   links beneath.
 - For Split: render each split row beneath the amount as
   `{Category chip} · ${amount}` with the per-row notes if any.
-- `[Delete]` → opens `AlertDialog` (see Copywriting → Destructive). On confirm:
-  hard delete via `delete_transaction` mutation, close sheet, toast.
-- `[Edit]` → closes detail sheet, opens transaction form pre-filled with current
-  values.
+- `[Delete transaction]` → opens `AlertDialog` (see Copywriting → Destructive).
+  On confirm: hard delete via `delete_transaction` mutation, close sheet, toast.
+- `[Edit transaction]` → closes detail sheet, opens transaction form pre-filled
+  with current values.
 
 ---
 
@@ -630,7 +630,7 @@ below) appears at the top of the ledger.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│ ⚠ 3 possible duplicates from your last import          [Review →]    │
+│ ⚠ 3 possible duplicates from your last import   [Review duplicates →]│
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -641,8 +641,8 @@ below) appears at the top of the ledger.
 - Persistent across page reloads (driven by query of pending-duplicates).
 - Dismiss is implicit — banner disappears when count reaches 0.
 
-**Review sheet** (opens from the banner `[Review]` button — `Sheet` desktop /
-full-screen `Dialog` mobile):
+**Review sheet** (opens from the banner `[Review duplicates]` button — `Sheet`
+desktop / full-screen `Dialog` mobile):
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -683,8 +683,8 @@ Rules:
   - `[Discard new]` (accent — this is the most likely action; tied to the
     confidence ramp recommendation): deletes the new transaction. Single click,
     no further confirmation.
-  - `[Keep both]` (secondary): leaves both transactions in place. Mark this pair
-    as resolved.
+  - `[Keep both]` (secondary/outline): leaves both transactions in place. Mark
+    this pair as resolved.
 - **Pagination**:
   - `[‹ Previous]`, `[Next ›]` cycle through pending pairs.
   - `[Skip for now]` advances without resolving — pair remains in the queue,
@@ -736,8 +736,9 @@ Rules:
   selected before, with amount = transaction amount; row 2 starts empty. User
   adjusts amounts manually.
 - **Each split row**: bordered `border border-border rounded-md p-3 space-y-2`,
-  with `[Trash2]` icon button at top-right (12px icon, 32px tap target). Trash
-  is disabled when only 2 rows remain (minimum split).
+  with `[Trash2]` icon button at top-right (12px icon, 32px tap target,
+  `aria-label="Remove split row"`). Trash is disabled when only 2 rows remain
+  (minimum split).
 - **Category picker per row**: same `Autocomplete` as the single-category case,
   with the same inline `+ Create category` affordance.
 - **Amount input per row**: `MoneyInput`, currency locked to the transaction
@@ -794,20 +795,21 @@ Exact copy. Executor uses verbatim.
 | Per-account "Recent transactions" footer | "View all transactions in this account"                                                           |
 | Transaction form footer (create)         | "Save transaction"                                                                                |
 | Transaction form footer (edit)           | "Save changes"                                                                                    |
-| Transaction detail sheet                 | "Edit"                                                                                            |
-| Transaction detail sheet (destructive)   | "Delete"                                                                                          |
-| Importer step 1                          | "Continue"                                                                                        |
-| Importer step 2                          | "Continue"                                                                                        |
-| Importer step 3                          | "Continue"                                                                                        |
+| Transaction form footer (discard)        | "Discard"                                                                                         |
+| Transaction detail sheet                 | "Edit transaction"                                                                                |
+| Transaction detail sheet (destructive)   | "Delete transaction"                                                                              |
+| Importer step 1                          | "Continue to mapping"                                                                             |
+| Importer step 2                          | "Continue to review"                                                                              |
+| Importer step 3                          | "Continue to confirm"                                                                             |
 | Importer step 4                          | "Import {N} transactions"                                                                         |
-| Duplicate banner                         | "Review"                                                                                          |
+| Duplicate banner                         | "Review duplicates"                                                                               |
 | Duplicate review sheet — primary action  | "Discard new"                                                                                     |
 | Duplicate review sheet — secondary       | "Keep both"                                                                                       |
 | Duplicate review sheet — pagination      | "Skip for now"                                                                                    |
 | Split editor                             | "+ Split transaction" (entry); "+ Add another split" (within); "← Back to single category" (exit) |
-| Filter sheet (mobile)                    | "Apply"                                                                                           |
+| Filter sheet (mobile)                    | "Apply filters"                                                                                   |
 | Filter sheet — clear                     | "Clear filters"                                                                                   |
-| Inline category create                   | "Create"                                                                                          |
+| Inline category create                   | "Create category"                                                                                 |
 
 Never abbreviate. Never use "+" alone — pair with text label on desktop. Mobile
 FAB uses icon-only with `aria-label="New transaction"`.
@@ -882,6 +884,7 @@ archive-only semantics from Phase 3.
   `aria-label="Next duplicate pair"`, `aria-label="Skip this pair for now"`.
 - Split editor remainder indicator: `aria-live="polite"` so screen readers
   announce the running total as the user types.
+- Split editor row remove button: `aria-label="Remove split row"`.
 - Date-group headers: `role="heading" aria-level="2"`.
 
 ---
@@ -900,7 +903,7 @@ archive-only semantics from Phase 3.
 | Form direction change        | Selecting a different direction resets Category but preserves Amount/Account/Date/Payee/Notes                                                                                                                     |
 | Form submit                  | Cmd/Ctrl+Enter from anywhere in the form submits                                                                                                                                                                  |
 | Form escape                  | Closes sheet; if dirty, opens unsaved-changes confirm `AlertDialog`: title "Discard your changes?", body "Anything you typed will be lost.", confirm "Discard", cancel "Keep editing"                             |
-| Importer step navigation     | `[Continue]` button advances; `[Cancel]` opens cancel-confirmation dialog; `[← Back]` regresses without confirm                                                                                                   |
+| Importer step navigation     | `[Continue to {next step}]` button advances; `[Cancel]` opens cancel-confirmation dialog; `[← Back]` regresses without confirm                                                                                    |
 | Importer file drop           | Reuse `FileDropzone` interaction patterns from activity import — drag-over highlights with `border-primary`                                                                                                       |
 | Duplicate sheet keyboard nav | `←` / `→` cycle pairs (matches `[‹ Previous]` / `[Next ›]`); `Esc` closes; `Enter` triggers focused button                                                                                                        |
 | Split row add                | New row animates in with `motion/react` slide-down (already used in `activity-import-page.tsx` line 12) — duration 150ms                                                                                          |
@@ -919,7 +922,7 @@ Components that MUST be used (from `@whaleit/ui`):
 
 - `Page`, `PageHeader`, `PageContent` — page scaffolding (same as Phase 3).
 - `Button` — default, `variant="ghost"` for icon-only and "Back to single
-  category", `variant="destructive"` for "Delete" only.
+  category", `variant="destructive"` for "Delete transaction" only.
 - `Card`, `CardHeader`, `CardTitle`, `CardContent` — duplicate-pair surfaces,
   detail-sheet sections, "Recent transactions" container.
 - `Sheet` / `Dialog` — transaction form, transaction detail, duplicate review,
@@ -1084,55 +1087,15 @@ may seem natural:
 
 For checker/auditor traceability.
 
-| Field                            | Source                                                                                                                   |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Design System tokens             | `packages/ui/components.json` + Phase 3 UI-SPEC (`03-UI-SPEC.md`) inheritance                                            |
-| Spacing                          | Tailwind default + Phase 3 UI-SPEC inheritance                                                                           |
-| Typography                       | `apps/frontend/src/globals.css` + Phase 3 UI-SPEC inheritance                                                            |
-| Color palette                    | `apps/frontend/src/globals.css` `@theme` + `:root` (flexoki tokens)                                                      |
-| Accent reservation rules         | Phase 3 UI-SPEC §Color (60/30/10 discipline) + Phase 1 brand decisions                                                   |
-| Direction-color discipline       | New for Phase 4 — derived from "friendly companion" brand voice (no red-everywhere stress field)                         |
-| Row shape                        | `apps/frontend/src/pages/dashboard/accounts-summary.tsx` + `apps/frontend/src/pages/activity/components/activity-table/` |
-| Importer wizard scaffold         | `apps/frontend/src/pages/activity/import/activity-import-page.tsx` + steps + components (Q3 → A)                         |
-| Category model decision          | User answer Q2 → D; rationale derived from `apps/frontend/src/lib/types/taxonomy.ts` capability survey                   |
-| Duplicate review pattern         | User answer Q4 → A                                                                                                       |
-| Split editor pattern             | User answer Q5 → A                                                                                                       |
-| Route layout (global + per-acct) | User answer Q1 → C                                                                                                       |
-| Copy tone                        | `01-CONTEXT.md` brand voice + Phase 3 UI-SPEC tone re-assertion                                                          |
-| Registry list                    | `packages/ui/components.json` `registries` block                                                                         |
-
----
-
-## Open Questions for the Planner
-
-These are explicit deferrals to the planner, not blockers on the UI contract:
-
-1. **Cache invalidation strategy** when a new transaction is created — does the
-   planner invalidate `[QueryKeys.TRANSACTIONS]` globally, or per-account? UI
-   works either way.
-2. **Pagination vs infinite-scroll** for the global ledger. UI-SPEC accepts
-   either; planner picks based on TanStack Query patterns already in use.
-3. **OFX server-side parsing** — which Rust crate handles OFX parsing? Planner
-   confirms or proposes a vetted crate. UI surface is identical regardless.
-4. **Idempotency key** generation for imports (preventing duplicate imports of
-   the same file across retries) — planner specifies derivation strategy.
-5. **`Autocomplete` create-new affordance** — verify the existing `Autocomplete`
-   primitive (`packages/ui/src/components/ui/autocomplete.tsx`) supports a
-   custom footer slot for the `+ Create category` action. If not, planner adds
-   it.
-6. **Transaction-categories taxonomy seeding** — which migration / boot path
-   seeds the system "Transaction Categories" taxonomy with the 10 default
-   categories? Planner specifies.
-
----
-
-## Checker Sign-Off
-
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
-
-**Approval:** pending
+| Field                      | Source                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Design System tokens       | `packages/ui/components.json` + Phase 3 UI-SPEC (`03-UI-SPEC.md`) inheritance                                            |
+| Spacing                    | Tailwind default + Phase 3 UI-SPEC inheritance                                                                           |
+| Typography                 | `apps/frontend/src/globals.css` + Phase 3 UI-SPEC inheritance                                                            |
+| Color palette              | `apps/frontend/src/globals.css` `@theme` + `:root` (flexoki tokens)                                                      |
+| Accent reservation rules   | Phase 3 UI-SPEC §Color (60/30/10 discipline) + Phase 1 brand decisions                                                   |
+| Direction-color discipline | New for Phase 4 — derived from "friendly companion" brand voice (no red-everywhere stress field)                         |
+| Row shape                  | `apps/frontend/src/pages/dashboard/accounts-summary.tsx` + `apps/frontend/src/pages/activity/components/activity-table/` |
+| Importer wizard scaffold   | `apps/frontend/src/pages/activity/import/activity-import-page.tsx` + steps + components (Q3 → A)                         |
+| Category model decision    | User answer Q2 → D; rationale derived from `apps/frontend/src/lib/types/taxonomy.ts` capability survey                   |
+| Duplicate review pattern   | User answer Q4 → A                                                                                                       |
