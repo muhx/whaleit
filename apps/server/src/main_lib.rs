@@ -41,6 +41,10 @@ use whaleit_core::{
     secrets::SecretStore,
     settings::{SettingsRepositoryTrait, SettingsService, SettingsServiceTrait},
     taxonomies::{TaxonomyService, TaxonomyServiceTrait},
+    transactions::{
+        TransactionService, TransactionServiceTrait, TransactionTemplateService,
+        TransactionTemplateServiceTrait,
+    },
     users::UserRepositoryTrait,
 };
 use whaleit_device_sync::{engine::DeviceSyncRuntimeState, DeviceEnrollService};
@@ -63,6 +67,7 @@ use whaleit_storage_postgres::{
         PgPlatformRepository,
     },
     taxonomies::PgTaxonomyRepository,
+    transactions::{PgTransactionRepository, PgTransactionTemplateRepository},
     users::PgUserRepository,
     AppSyncRepository, SnapshotRepository,
 };
@@ -87,6 +92,8 @@ pub struct AppState {
     pub limits_service: Arc<dyn ContributionLimitServiceTrait + Send + Sync>,
     pub fx_service: Arc<dyn FxServiceTrait + Send + Sync>,
     pub activity_service: Arc<dyn ActivityServiceTrait + Send + Sync>,
+    pub transaction_service: Arc<dyn TransactionServiceTrait + Send + Sync>,
+    pub template_service: Arc<dyn TransactionTemplateServiceTrait + Send + Sync>,
     pub asset_service: Arc<dyn AssetServiceTrait + Send + Sync>,
     pub taxonomy_service: Arc<dyn TaxonomyServiceTrait + Send + Sync>,
     pub net_worth_service: Arc<dyn NetWorthServiceTrait + Send + Sync>,
@@ -326,6 +333,19 @@ async fn build_state_postgres(
         .with_event_sink(domain_event_sink.clone()),
     );
 
+    // Phase 4: Transaction service + CSV template service.
+    // PgTransactionRepository implements both TransactionRepositoryTrait and
+    // PayeeCategoryMemoryRepositoryTrait, so we instantiate it twice (once
+    // upcast to each trait object). The pool is Arc-cloned, so this is cheap.
+    let transaction_repo = Arc::new(PgTransactionRepository::new(pool.clone()));
+    let payee_memory_repo = Arc::new(PgTransactionRepository::new(pool.clone()));
+    let transaction_service: Arc<dyn TransactionServiceTrait + Send + Sync> =
+        Arc::new(TransactionService::new(transaction_repo, payee_memory_repo));
+
+    let transaction_template_repo = Arc::new(PgTransactionTemplateRepository::new(pool.clone()));
+    let template_service: Arc<dyn TransactionTemplateServiceTrait + Send + Sync> =
+        Arc::new(TransactionTemplateService::new(transaction_template_repo));
+
     let alternative_asset_repository: Arc<dyn AlternativeAssetRepositoryTrait + Send + Sync> =
         Arc::new(PgAlternativeAssetRepository::new(pool.clone()));
 
@@ -452,6 +472,8 @@ async fn build_state_postgres(
         limits_service,
         fx_service: fx_service.clone(),
         activity_service,
+        transaction_service,
+        template_service,
         asset_service,
         taxonomy_service,
         net_worth_service,
