@@ -70,6 +70,20 @@ export const QueryKeys = {
   aiThreadMessages: (threadId: string) => [QueryKeys.AI_THREAD_MESSAGES, threadId],
 
   transactions: "transactions",
+
+  // Transactions (Phase 4)
+  TRANSACTIONS: ["transactions"] as const,
+  TRANSACTIONS_SEARCH: (filters: unknown, page: number, pageSize: number, kw: string) =>
+    ["transactions", "search", filters, page, pageSize, kw] as const,
+  RUNNING_BALANCE: (accountId: string, from?: string, to?: string) =>
+    ["transactions", "running-balance", accountId, from ?? null, to ?? null] as const,
+  ACCOUNT_RECENT_TRANSACTIONS: (accountId: string, limit: number) =>
+    ["transactions", "by-account-recent", accountId, limit] as const,
+  MERCHANT_CATEGORIES: (accountId: string) => ["payee-category-memory", accountId] as const,
+  MERCHANT_CATEGORY_LOOKUP: (accountId: string, payee: string) =>
+    ["payee-category-memory", "lookup", accountId, payee] as const,
+  TRANSACTION_TEMPLATES: ["transaction-templates"] as const,
+  TRANSACTION_TEMPLATE: (id: string) => ["transaction-templates", id] as const,
   latestValuations: "latest-valuations",
 
   // Market Data
