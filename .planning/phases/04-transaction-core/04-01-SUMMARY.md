@@ -3,8 +3,15 @@ phase: 04-transaction-core
 plan: 01
 subsystem: database
 tags: [postgres, diesel, migrations, transactions, sql]
-status: in-progress
-blocked-on: Task 6 (user-action — diesel print-schema regeneration)
+status: complete
+completed: 2026-05-01
+notes: |
+  Task 6 resolved by user (diesel migration run + diesel print-schema).
+  Migration up.sql required surgical fix: dropped FK on category_id (taxonomy_categories
+  has composite PK (id, taxonomy_id) — matches asset_taxonomy_assignments convention,
+  service-layer integrity via TaxonomyService::delete_category). Seed ON CONFLICT
+  changed from (id) to (id, taxonomy_id). All 4 new table! macros present in
+  schema.rs; cargo check --workspace green (commit bf5fac4b).
 
 # Dependency graph
 requires:
