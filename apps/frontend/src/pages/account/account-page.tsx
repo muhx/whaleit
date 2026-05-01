@@ -68,6 +68,7 @@ import {
 } from "@whaleit/ui/components/ui/sheet";
 import { format, parseISO, subMonths } from "date-fns";
 import { useNavigate, useParams } from "react-router-dom";
+import { RecentTransactions } from "@/pages/transactions/recent-transactions";
 import { AccountContributionLimit } from "./account-contribution-limit";
 import AccountHoldings from "./account-holdings";
 import AccountMetrics from "./account-metrics";
@@ -646,6 +647,13 @@ const AccountPage = () => {
               </div>
 
               <AccountHoldings accountId={id} onAddHoldings={() => setIsEditingHoldings(true)} />
+              {!isHoldingsMode && (
+                <RecentTransactions
+                  accountId={id}
+                  baseCurrency={account?.currency ?? baseCurrency}
+                  limit={10}
+                />
+              )}
             </>
           ) : (
             <AccountHoldings

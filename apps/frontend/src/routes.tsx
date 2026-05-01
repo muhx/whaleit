@@ -22,6 +22,7 @@ import NotFoundPage from "@/pages/not-found";
 import PerformancePage from "@/pages/performance/performance-page";
 import SettingsAccountsPage from "@/pages/settings/accounts/accounts-page";
 import SettingsAppearancePage from "@/pages/settings/appearance/appearance-page";
+import TransactionsPage from "@/pages/transactions/transactions-page";
 import {
   ForgotPasswordPage,
   LoginPage,
@@ -152,6 +153,7 @@ export function AppRoutes() {
         <Route path="holdings-insights" element={<HoldingsInsightsPage />} />
         <Route path="holdings/:assetId" element={<AssetProfilePage />} />
         <Route path="import" element={<ActivityImportPage />} />
+        <Route path="transactions" element={<TransactionsPage />} />
         <Route path="accounts/:id" element={<AccountPage />} />
         <Route path="income" element={<IncomePage />} />
         <Route path="performance" element={<PerformancePage />} />

@@ -46,6 +46,13 @@ const staticNavigation: NavigationProps = {
       keywords: ["transactions", "trades", "history"],
       label: "View Activities",
     },
+    {
+      icon: <Icons.Receipt className="size-6" />,
+      title: "Transactions",
+      href: "/transactions",
+      keywords: ["transactions", "ledger", "spending", "income", "expense"],
+      label: "View Transactions",
+    },
     // {
     //   icon: <Icons.Target className="size-6" />,
     //   title: "FIRE Planner",
