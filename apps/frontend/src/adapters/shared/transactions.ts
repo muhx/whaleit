@@ -16,8 +16,12 @@ import type {
   NewTransferLeg,
   PayeeCategoryMemory,
   Transaction,
+  TransactionCsvImportRequest,
   TransactionFilters,
+  TransactionImportResult,
+  TransactionOfxImportRequest,
   TransactionSearchResult,
+  TransactionSort,
   TransactionTemplate,
   TransactionUpdate,
   TransactionWithRunningBalance,
@@ -31,15 +35,19 @@ import { invoke, logger } from "./platform";
 // ---------------------------------------------------------------------------
 
 export const searchTransactions = async (
-  filters: TransactionFilters,
   page: number,
   pageSize: number,
+  filters: TransactionFilters,
+  searchKeyword?: string,
+  sort?: TransactionSort,
 ): Promise<TransactionSearchResult> => {
   try {
     return await invoke<TransactionSearchResult>("search_transactions", {
       filters,
       page,
       pageSize,
+      searchKeyword,
+      sort,
     });
   } catch (err) {
     logger.error("Error searching transactions.");
@@ -126,9 +134,30 @@ export const getAccountRecentTransactions = async (
 };
 
 // ---------------------------------------------------------------------------
-// Import (CSV + OFX use multipart — implemented in platform-specific
-// `web/transactions.ts` and `tauri/transactions.ts`. Plan 04-05 wires those.)
+// Import (CSV + OFX use multipart — handled via direct fetch in web adapter)
 // ---------------------------------------------------------------------------
+
+export const importTransactionsCsv = async (
+  req: TransactionCsvImportRequest,
+): Promise<TransactionImportResult> => {
+  try {
+    return await invoke<TransactionImportResult>("import_transactions_csv", { req });
+  } catch (err) {
+    logger.error("Error importing CSV transactions.");
+    throw err;
+  }
+};
+
+export const importTransactionsOfx = async (
+  req: TransactionOfxImportRequest,
+): Promise<TransactionImportResult> => {
+  try {
+    return await invoke<TransactionImportResult>("import_transactions_ofx", { req });
+  } catch (err) {
+    logger.error("Error importing OFX transactions.");
+    throw err;
+  }
+};
 
 export const previewTransactionImport = async (
   candidates: NewTransaction[],
