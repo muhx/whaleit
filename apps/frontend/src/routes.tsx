@@ -13,6 +13,7 @@ import ConnectPage from "@/features/connect/pages/connect-page";
 import ActivityManagerPage from "@/pages/activity/activity-manager-page";
 import ActivityPage from "@/pages/activity/activity-page";
 import ActivityImportPage from "@/pages/activity/import/activity-import-page";
+import TransactionImportPage from "@/pages/transactions/import/transaction-import-page";
 import AssetsPage from "@/pages/asset/assets-page";
 import PortfolioPage from "@/pages/dashboard/portfolio-page";
 import HoldingsPage from "@/pages/holdings/holdings-page";
@@ -152,6 +153,7 @@ export function AppRoutes() {
         <Route path="holdings-insights" element={<HoldingsInsightsPage />} />
         <Route path="holdings/:assetId" element={<AssetProfilePage />} />
         <Route path="import" element={<ActivityImportPage />} />
+        <Route path="transactions/import" element={<TransactionImportPage />} />
         <Route path="accounts/:id" element={<AccountPage />} />
         <Route path="income" element={<IncomePage />} />
         <Route path="performance" element={<PerformancePage />} />
