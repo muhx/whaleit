@@ -6,6 +6,7 @@ import type { Logger } from "../types";
 
 import * as accountHandlers from "./modules/accounts";
 import * as activityHandlers from "./modules/activities";
+import * as transactionHandlers from "./modules/transactions";
 import * as holdingHandlers from "./modules/holdings";
 import * as portfolioHandlers from "./modules/portfolio";
 import * as goalHandlers from "./modules/goals";
@@ -97,6 +98,43 @@ export const COMMANDS: CommandMap = {
   get_import_template: { method: "GET", path: "/activities/import/templates/item" },
   save_import_template: { method: "POST", path: "/activities/import/templates" },
   delete_import_template: { method: "DELETE", path: "/activities/import/templates" },
+  // Transactions (Phase 4)
+  search_transactions: { method: "POST", path: "/transactions/search" },
+  get_transaction: { method: "GET", path: "/transactions/item" },
+  create_transaction: { method: "POST", path: "/transactions" },
+  update_transaction: { method: "PUT", path: "/transactions" },
+  delete_transaction: { method: "DELETE", path: "/transactions" },
+  list_running_balance: { method: "POST", path: "/transactions/running-balance" },
+  get_account_recent_transactions: {
+    method: "GET",
+    path: "/transactions/by-account/recent",
+  },
+  preview_transaction_import: { method: "POST", path: "/transactions/import/preview" },
+  detect_transaction_duplicates: {
+    method: "POST",
+    path: "/transactions/import/duplicates",
+  },
+  list_transaction_templates: { method: "GET", path: "/transactions/import/templates" },
+  save_transaction_template: { method: "POST", path: "/transactions/import/templates" },
+  delete_transaction_template: {
+    method: "DELETE",
+    path: "/transactions/import/templates",
+  },
+  get_transaction_template: {
+    method: "GET",
+    path: "/transactions/import/templates/item",
+  },
+  create_transfer: { method: "POST", path: "/transactions/transfer" },
+  update_transfer_leg: { method: "PUT", path: "/transactions/transfer/leg" },
+  break_transfer_pair: { method: "POST", path: "/transactions/transfer/break" },
+  lookup_payee_category: {
+    method: "POST",
+    path: "/transactions/payee-category-memory/lookup",
+  },
+  list_payee_category_memory: {
+    method: "GET",
+    path: "/transactions/payee-category-memory",
+  },
   // Market data providers
   get_exchanges: { method: "GET", path: "/exchanges" },
   get_market_data_providers: { method: "GET", path: "/providers" },
@@ -470,6 +508,44 @@ export function handleCommand(
       return activityHandlers.handleSaveImportTemplate(url, p!);
     case "link_account_template":
       return activityHandlers.handleLinkAccountTemplate(url, p!);
+
+    // ── Transactions (Phase 4) ──────────────────────────────
+    case "search_transactions":
+      return transactionHandlers.handleSearchTransactions(url, p!);
+    case "get_transaction":
+      return transactionHandlers.handleGetTransaction(url, p!);
+    case "create_transaction":
+      return transactionHandlers.handleCreateTransaction(url, p!);
+    case "update_transaction":
+      return transactionHandlers.handleUpdateTransaction(url, p!);
+    case "delete_transaction":
+      return transactionHandlers.handleDeleteTransaction(url, p!);
+    case "list_running_balance":
+      return transactionHandlers.handleListRunningBalance(url, p!);
+    case "get_account_recent_transactions":
+      return transactionHandlers.handleGetAccountRecentTransactions(url, p!);
+    case "preview_transaction_import":
+      return transactionHandlers.handlePreviewTransactionImport(url, p!);
+    case "detect_transaction_duplicates":
+      return transactionHandlers.handleDetectTransactionDuplicates(url, p!);
+    case "list_transaction_templates":
+      return { url, body: undefined };
+    case "save_transaction_template":
+      return transactionHandlers.handleSaveTransactionTemplate(url, p!);
+    case "delete_transaction_template":
+      return transactionHandlers.handleDeleteTransactionTemplate(url, p!);
+    case "get_transaction_template":
+      return transactionHandlers.handleGetTransactionTemplate(url, p!);
+    case "create_transfer":
+      return transactionHandlers.handleCreateTransfer(url, p!);
+    case "update_transfer_leg":
+      return transactionHandlers.handleUpdateTransferLeg(url, p!);
+    case "break_transfer_pair":
+      return transactionHandlers.handleBreakTransferPair(url, p!);
+    case "lookup_payee_category":
+      return transactionHandlers.handleLookupPayeeCategory(url, p!);
+    case "list_payee_category_memory":
+      return transactionHandlers.handleListPayeeCategoryMemory(url, p!);
 
     // ── Holdings / Snapshots ────────────────────────────────
     case "get_holdings":
