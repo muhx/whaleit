@@ -5818,6 +5818,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sgmlish"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15c08068b26a7f424e587d529b6b075e3cb4f346c2154063d235c4dd679cbf97"
+dependencies = [
+ "log",
+ "nom 7.1.3",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8008,7 +8020,9 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "sgmlish",
  "sha2 0.10.9",
+ "strsim",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",

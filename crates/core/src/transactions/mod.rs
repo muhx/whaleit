@@ -28,3 +28,7 @@ mod transactions_service_tests;
 
 pub use transactions_constants::*;
 pub use transactions_errors::TransactionError;
+pub use transactions_model::{
+    NewSplit, NewTransaction, PayeeCategoryMemory, SplitUpdate, Transaction, TransactionSplit,
+    TransactionUpdate,
+};
