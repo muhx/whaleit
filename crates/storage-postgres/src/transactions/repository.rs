@@ -27,7 +27,7 @@ use super::model::{
 };
 
 pub struct PgTransactionRepository {
-    pool: Arc<PgPool>,
+    pub(crate) pool: Arc<PgPool>,
 }
 
 impl PgTransactionRepository {
