@@ -154,11 +154,8 @@ export function AppRoutes() {
         <Route path="holdings-insights" element={<HoldingsInsightsPage />} />
         <Route path="holdings/:assetId" element={<AssetProfilePage />} />
         <Route path="import" element={<ActivityImportPage />} />
-<<<<<<< HEAD
         <Route path="transactions" element={<TransactionsPage />} />
-=======
         <Route path="transactions/import" element={<TransactionImportPage />} />
->>>>>>> worktree-agent-a46cd28585a09ddbe
         <Route path="accounts/:id" element={<AccountPage />} />
         <Route path="income" element={<IncomePage />} />
         <Route path="performance" element={<PerformancePage />} />
