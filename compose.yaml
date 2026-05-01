@@ -1,14 +1,3 @@
-# WhaleIt - Production Docker Compose
-#
-# All-in-one (backend serves frontend):
-#   docker compose up -d
-#
-# Separate containers (frontend via nginx, backend API-only):
-#   docker compose -f compose.yml -f compose.separate.yml up -d
-#
-# Dev overlay:
-#   docker compose -f compose.yml -f compose.dev.yml up
-
 services:
   postgres:
     image: postgres:17-alpine
@@ -17,9 +6,9 @@ services:
     environment:
       POSTGRES_DB: whaleit
       POSTGRES_USER: whaleit
-      POSTGRES_PASSWORD: "${WF_PG_PASSWORD:?Set WF_PG_PASSWORD}"
+      POSTGRES_PASSWORD: "${WF_PG_PASSWORD}"
     env_file:
-      - .env
+      - .env.web
     volumes:
       - whaleit-pgdata:/var/lib/postgresql/data
     ports:
@@ -46,7 +35,7 @@ services:
       WF_LISTEN_ADDR: "0.0.0.0:8088"
       DATABASE_URL: "postgres://whaleit:${WF_PG_PASSWORD}@postgres:5432/whaleit"
       WF_PG_POOL_SIZE: "${WF_PG_POOL_SIZE:-8}"
-      WF_SECRET_KEY: "${WF_SECRET_KEY:?Set WF_SECRET_KEY}"
+      WF_SECRET_KEY: "${WF_SECRET_KEY}"
 
       # ── Multi-user Authentication ────────────────────────────────────
       WF_MULTI_USER_AUTH: "${WF_MULTI_USER_AUTH:-true}"
@@ -68,6 +57,8 @@ services:
 
       # Persist secrets.json and installed addons under the writable /data volume
       WF_ADDONS_DIR: "/data/addons"
+    env_file:
+      - .env.web
     healthcheck:
       test:
         ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8088/api/v1/healthz"]
@@ -97,7 +88,7 @@ services:
     container_name: whaleit-frontend
     restart: unless-stopped
     ports:
-      - "${WF_PORT:-8088}:80"
+      - "${WF_PORT:-8443}:80"
     depends_on:
       backend:
         condition: service_healthy
