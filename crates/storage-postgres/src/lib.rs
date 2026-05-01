@@ -38,6 +38,7 @@ pub mod portfolio;
 pub mod settings;
 pub mod sync;
 pub mod taxonomies;
+pub mod transactions;
 pub mod users;
 
 // Re-export repository types for compatibility
