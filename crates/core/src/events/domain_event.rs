@@ -24,6 +24,13 @@ pub enum DomainEvent {
         earliest_activity_at_utc: Option<DateTime<Utc>>,
     },
 
+    /// Transactions were created, updated, or deleted (Phase 4).
+    TransactionsChanged {
+        account_ids: Vec<String>,
+        currencies: Vec<String>,
+        earliest_transaction_at_utc: Option<DateTime<Utc>>,
+    },
+
     /// Holdings snapshots were created or updated.
     HoldingsChanged {
         account_ids: Vec<String>,
@@ -92,6 +99,19 @@ impl DomainEvent {
             asset_ids,
             currencies,
             earliest_activity_at_utc,
+        }
+    }
+
+    /// Creates a TransactionsChanged event (Phase 4).
+    pub fn transactions_changed(
+        account_ids: Vec<String>,
+        currencies: Vec<String>,
+        earliest: Option<DateTime<Utc>>,
+    ) -> Self {
+        Self::TransactionsChanged {
+            account_ids,
+            currencies,
+            earliest_transaction_at_utc: earliest,
         }
     }
 
@@ -246,5 +266,32 @@ mod tests {
 
         let deserialized: DomainEvent = serde_json::from_str(&json).unwrap();
         assert!(matches!(deserialized, DomainEvent::DeviceSyncPullComplete));
+    }
+
+    #[test]
+    fn test_transactions_changed_round_trip() {
+        let timestamp = Utc.with_ymd_and_hms(2026, 5, 1, 12, 0, 0).unwrap();
+        let event = DomainEvent::transactions_changed(
+            vec!["acc-1".to_string()],
+            vec!["USD".to_string()],
+            Some(timestamp),
+        );
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("transactions_changed"));
+
+        let deserialized: DomainEvent = serde_json::from_str(&json).unwrap();
+        match deserialized {
+            DomainEvent::TransactionsChanged {
+                account_ids,
+                currencies,
+                earliest_transaction_at_utc,
+            } => {
+                assert_eq!(account_ids, vec!["acc-1"]);
+                assert_eq!(currencies, vec!["USD"]);
+                assert_eq!(earliest_transaction_at_utc, Some(timestamp));
+            }
+            _ => panic!("Expected TransactionsChanged"),
+        }
     }
 }
