@@ -105,8 +105,6 @@ export {
   getAccountRecentTransactions,
   getTransaction,
   getTransactionTemplate,
-  importTransactionsCsv,
-  importTransactionsOfx,
   listPayeeCategoryMemory,
   listRunningBalance,
   listTransactionTemplates,
@@ -117,6 +115,8 @@ export {
   updateTransaction,
   updateTransferLeg,
 } from "../shared/transactions";
+// Multipart import overrides (CSV/OFX use FormData, not JSON)
+export { importTransactionsCsv, importTransactionsOfx } from "./transactions";
 
 // Goal Commands
 export {
