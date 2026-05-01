@@ -1,4 +1,5 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use whaleit_core::accounts as core_accounts;
@@ -22,6 +23,23 @@ pub struct Account {
     pub meta: Option<String>,
     pub provider: Option<String>,
     pub provider_account_id: Option<String>,
+    pub institution: Option<String>,
+    #[schema(value_type = Option<String>)]
+    pub opening_balance: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub current_balance: Option<Decimal>,
+    pub balance_updated_at: Option<NaiveDateTime>,
+    #[schema(value_type = Option<String>)]
+    pub credit_limit: Option<Decimal>,
+    pub statement_cycle_day: Option<i16>,
+    #[schema(value_type = Option<String>)]
+    pub statement_balance: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub minimum_payment: Option<Decimal>,
+    pub statement_due_date: Option<NaiveDate>,
+    pub reward_points_balance: Option<i32>,
+    #[schema(value_type = Option<String>)]
+    pub cashback_balance: Option<Decimal>,
 }
 
 impl From<core_accounts::Account> for Account {
@@ -49,6 +67,17 @@ impl From<core_accounts::Account> for Account {
             meta: a.meta,
             provider: a.provider,
             provider_account_id: a.provider_account_id,
+            institution: a.institution,
+            opening_balance: a.opening_balance,
+            current_balance: a.current_balance,
+            balance_updated_at: a.balance_updated_at,
+            credit_limit: a.credit_limit,
+            statement_cycle_day: a.statement_cycle_day,
+            statement_balance: a.statement_balance,
+            minimum_payment: a.minimum_payment,
+            statement_due_date: a.statement_due_date,
+            reward_points_balance: a.reward_points_balance,
+            cashback_balance: a.cashback_balance,
         }
     }
 }
@@ -73,6 +102,23 @@ pub struct NewAccount {
     pub meta: Option<String>,
     pub provider: Option<String>,
     pub provider_account_id: Option<String>,
+    pub institution: Option<String>,
+    #[schema(value_type = Option<String>)]
+    pub opening_balance: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub current_balance: Option<Decimal>,
+    pub balance_updated_at: Option<NaiveDateTime>,
+    #[schema(value_type = Option<String>)]
+    pub credit_limit: Option<Decimal>,
+    pub statement_cycle_day: Option<i16>,
+    #[schema(value_type = Option<String>)]
+    pub statement_balance: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub minimum_payment: Option<Decimal>,
+    pub statement_due_date: Option<NaiveDate>,
+    pub reward_points_balance: Option<i32>,
+    #[schema(value_type = Option<String>)]
+    pub cashback_balance: Option<Decimal>,
 }
 
 fn default_tracking_mode() -> String {
@@ -104,6 +150,17 @@ impl From<NewAccount> for core_accounts::NewAccount {
             meta: a.meta,
             provider: a.provider,
             provider_account_id: a.provider_account_id,
+            institution: a.institution,
+            opening_balance: a.opening_balance,
+            current_balance: a.current_balance,
+            balance_updated_at: None, // D-12: server-only field, client value discarded
+            credit_limit: a.credit_limit,
+            statement_cycle_day: a.statement_cycle_day,
+            statement_balance: a.statement_balance,
+            minimum_payment: a.minimum_payment,
+            statement_due_date: a.statement_due_date,
+            reward_points_balance: a.reward_points_balance,
+            cashback_balance: a.cashback_balance,
         }
     }
 }
@@ -124,6 +181,23 @@ pub struct AccountUpdate {
     pub meta: Option<String>,
     pub provider: Option<String>,
     pub provider_account_id: Option<String>,
+    pub institution: Option<String>,
+    #[schema(value_type = Option<String>)]
+    pub opening_balance: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub current_balance: Option<Decimal>,
+    pub balance_updated_at: Option<NaiveDateTime>,
+    #[schema(value_type = Option<String>)]
+    pub credit_limit: Option<Decimal>,
+    pub statement_cycle_day: Option<i16>,
+    #[schema(value_type = Option<String>)]
+    pub statement_balance: Option<Decimal>,
+    #[schema(value_type = Option<String>)]
+    pub minimum_payment: Option<Decimal>,
+    pub statement_due_date: Option<NaiveDate>,
+    pub reward_points_balance: Option<i32>,
+    #[schema(value_type = Option<String>)]
+    pub cashback_balance: Option<Decimal>,
 }
 
 impl From<AccountUpdate> for core_accounts::AccountUpdate {
@@ -142,6 +216,17 @@ impl From<AccountUpdate> for core_accounts::AccountUpdate {
             meta: a.meta,
             provider: a.provider,
             provider_account_id: a.provider_account_id,
+            institution: a.institution,
+            opening_balance: a.opening_balance,
+            current_balance: a.current_balance,
+            balance_updated_at: None, // D-12: server-only field, client value discarded
+            credit_limit: a.credit_limit,
+            statement_cycle_day: a.statement_cycle_day,
+            statement_balance: a.statement_balance,
+            minimum_payment: a.minimum_payment,
+            statement_due_date: a.statement_due_date,
+            reward_points_balance: a.reward_points_balance,
+            cashback_balance: a.cashback_balance,
         }
     }
 }

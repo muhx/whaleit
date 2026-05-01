@@ -22,6 +22,7 @@ pub mod secrets;
 pub mod settings;
 pub mod sync;
 pub mod taxonomies;
+pub mod transactions;
 pub mod users;
 pub mod utils;
 

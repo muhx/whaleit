@@ -81,6 +81,23 @@ pub fn plan_portfolio_job(events: &[DomainEvent], timezone: &str) -> Option<Port
                     }
                 }
             }
+            DomainEvent::TransactionsChanged {
+                account_ids: acc_ids,
+                earliest_transaction_at_utc,
+                ..
+            } => {
+                has_recalc_event = true;
+                for id in acc_ids {
+                    if !id.is_empty() {
+                        account_ids.insert(id.clone());
+                    }
+                }
+                min_activity_at_utc = match (min_activity_at_utc, earliest_transaction_at_utc) {
+                    (Some(current), Some(new)) => Some(current.min(*new)),
+                    (None, Some(new)) => Some(*new),
+                    (current, None) => current,
+                };
+            }
             DomainEvent::ManualSnapshotSaved { account_id } => {
                 has_recalc_event = true;
                 if !account_id.is_empty() {

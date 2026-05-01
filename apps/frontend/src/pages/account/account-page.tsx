@@ -13,6 +13,7 @@ import {
   PageContent,
   PageHeader,
   PrivacyAmount,
+  Progress,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -26,7 +27,7 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { useRecalculatePortfolioMutation } from "@/hooks/use-calculate-portfolio";
 import { useValuationHistory } from "@/hooks/use-valuation-history";
 import { canAddHoldings } from "@/lib/activity-restrictions";
-import { AccountType } from "@/lib/constants";
+import { AccountKind, AccountType, accountKind } from "@/lib/constants";
 import { QueryKeys } from "@/lib/query-keys";
 import { useSettingsContext } from "@/lib/settings-provider";
 import {
@@ -70,6 +71,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AccountContributionLimit } from "./account-contribution-limit";
 import AccountHoldings from "./account-holdings";
 import AccountMetrics from "./account-metrics";
+import {
+  availableCredit,
+  utilizationPercent,
+  utilizationTier,
+} from "@/pages/settings/accounts/credit-helpers";
+import { UpdateBalanceModal } from "@/pages/settings/accounts/components/update-balance-modal";
 
 interface HistoryChartData {
   date: string;
@@ -83,6 +90,10 @@ const accountTypeIcons: Record<AccountType, Icon> = {
   SECURITIES: Icons.Briefcase,
   CASH: Icons.DollarSign,
   CRYPTOCURRENCY: Icons.Bitcoin,
+  CHECKING: Icons.Wallet,
+  SAVINGS: Icons.Coins,
+  CREDIT_CARD: Icons.CreditCard,
+  LOAN: Icons.Building,
 };
 
 // Helper function to get the initial date range (copied from dashboard)
@@ -120,10 +131,18 @@ const AccountPage = () => {
   const [selectedActivityDate, setSelectedActivityDate] = useState<string | null>(null);
   const [isActivitySheetOpen, setIsActivitySheetOpen] = useState(false);
   const [showBulkHoldingsForm, setShowBulkHoldingsForm] = useState(false);
+  const [balanceModalOpen, setBalanceModalOpen] = useState(false);
 
   const recalculatePortfolioMutation = useRecalculatePortfolioMutation();
   const { accounts, isLoading: isAccountsLoading } = useAccounts();
   const account = useMemo(() => accounts?.find((acc) => acc.id === id), [accounts, id]);
+
+  // Phase 3 render gates: split investment-only modules from CC / bank Balance card.
+  const isCreditCard = account?.accountType === AccountType.CREDIT_CARD;
+  const isInvestment = account
+    ? accountKind(account.accountType) === AccountKind.INVESTMENT
+    : false;
+  const isLiabilityOrAsset = account ? !isInvestment : false;
 
   // Check if this account is in HOLDINGS tracking mode
   const isHoldingsMode = useMemo(() => {
@@ -519,120 +538,285 @@ const AccountPage = () => {
         </div>
       </PageHeader>
       <PageContent>
-        {hasHoldings && !isHoldingsLoading ? (
-          <>
-            <div className="grid grid-cols-1 gap-4 pt-0 md:grid-cols-3">
-              <Card className="col-span-1 md:col-span-2">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-md">
-                    <PortfolioUpdateTrigger lastCalculatedAt={currentValuation?.calculatedAt}>
-                      <div className="flex items-start gap-2">
-                        <div>
-                          <p className="pt-3 text-xl font-bold">
-                            <PrivacyAmount
-                              value={currentValuation?.totalValue ?? 0}
-                              currency={account?.currency ?? baseCurrency}
-                            />
-                          </p>
-                          {!hasPerformanceError && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <GainAmount
-                                className="text-sm font-light"
-                                value={frontendGainLossAmount}
+        {isInvestment ? (
+          hasHoldings && !isHoldingsLoading ? (
+            <>
+              <div className="grid grid-cols-1 gap-4 pt-0 md:grid-cols-3">
+                <Card className="col-span-1 md:col-span-2">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <CardTitle className="text-md">
+                      <PortfolioUpdateTrigger lastCalculatedAt={currentValuation?.calculatedAt}>
+                        <div className="flex items-start gap-2">
+                          <div>
+                            <p className="pt-3 text-xl font-bold">
+                              <PrivacyAmount
+                                value={currentValuation?.totalValue ?? 0}
                                 currency={account?.currency ?? baseCurrency}
-                                displayCurrency={false}
                               />
-                              <GainPercent
-                                value={percentageToDisplay}
-                                variant="badge"
-                                className="text-xs"
-                              />
-                            </div>
-                          )}
+                            </p>
+                            {!hasPerformanceError && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <GainAmount
+                                  className="text-sm font-light"
+                                  value={frontendGainLossAmount}
+                                  currency={account?.currency ?? baseCurrency}
+                                  displayCurrency={false}
+                                />
+                                <GainPercent
+                                  value={percentageToDisplay}
+                                  variant="badge"
+                                  className="text-xs"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </PortfolioUpdateTrigger>
+                    </CardTitle>
+                    <div className="-mt-3 flex items-center gap-1 self-start">
+                      <PrivacyToggle />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={showSnapshotMarkers ? "default" : "secondary"}
+                              size="icon-xs"
+                              className={cn(
+                                "rounded-full",
+                                !showSnapshotMarkers && "bg-secondary/50",
+                              )}
+                              onClick={() => setShowSnapshotMarkers(!showSnapshotMarkers)}
+                            >
+                              <Icons.History className="size-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{showSnapshotMarkers ? "Hide" : "Show"} snapshot markers</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="w-full p-0">
+                      <div className="flex w-full flex-col">
+                        <div className="h-120 w-full">
+                          <HistoryChart
+                            data={chartData}
+                            isLoading={false}
+                            showMarkers={showSnapshotMarkers}
+                            snapshotDates={markerDates}
+                            onMarkerClick={(date) => {
+                              if (isHoldingsMode) {
+                                // Holdings mode: open edit holdings sheet
+                                setEditingSnapshotDate(date);
+                                setIsEditingHoldings(true);
+                              } else {
+                                // Transactions mode: open activities sheet for this date
+                                setSelectedActivityDate(date);
+                                setIsActivitySheetOpen(true);
+                              }
+                            }}
+                          />
+                          <IntervalSelector
+                            className="relative bottom-10 left-0 right-0 z-10"
+                            onIntervalSelect={handleIntervalSelect}
+                            isLoading={isValuationHistoryLoading}
+                            defaultValue={INITIAL_INTERVAL_CODE}
+                          />
                         </div>
                       </div>
-                    </PortfolioUpdateTrigger>
-                  </CardTitle>
-                  <div className="-mt-3 flex items-center gap-1 self-start">
-                    <PrivacyToggle />
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={showSnapshotMarkers ? "default" : "secondary"}
-                            size="icon-xs"
-                            className={cn(
-                              "rounded-full",
-                              !showSnapshotMarkers && "bg-secondary/50",
-                            )}
-                            onClick={() => setShowSnapshotMarkers(!showSnapshotMarkers)}
-                          >
-                            <Icons.History className="size-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{showSnapshotMarkers ? "Hide" : "Show"} snapshot markers</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex flex-col space-y-4">
+                  <AccountMetrics
+                    valuation={currentValuation}
+                    performance={accountPerformance}
+                    className="grow"
+                    isLoading={isLoading}
+                    isPerformanceLoading={isPerformanceHistoryLoading}
+                    performanceError={hasPerformanceError ? performanceErrorMessages[0] : undefined}
+                    hideBalanceEdit={isHoldingsMode}
+                    isHoldingsMode={isHoldingsMode}
+                  />
+                  <AccountContributionLimit accountId={id} />
+                </div>
+              </div>
+
+              <AccountHoldings accountId={id} onAddHoldings={() => setIsEditingHoldings(true)} />
+            </>
+          ) : (
+            <AccountHoldings
+              accountId={id}
+              showEmptyState={true}
+              onAddHoldings={() => setIsEditingHoldings(true)}
+            />
+          )
+        ) : null}
+
+        {account && isCreditCard && (
+          <div className="space-y-4 pt-0">
+            {/* Credit overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Credit overview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Balance</p>
+                    <PrivacyAmount
+                      value={account.currentBalance ?? 0}
+                      currency={account.currency}
+                    />
                   </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="w-full p-0">
-                    <div className="flex w-full flex-col">
-                      <div className="h-120 w-full">
-                        <HistoryChart
-                          data={chartData}
-                          isLoading={false}
-                          showMarkers={showSnapshotMarkers}
-                          snapshotDates={markerDates}
-                          onMarkerClick={(date) => {
-                            if (isHoldingsMode) {
-                              // Holdings mode: open edit holdings sheet
-                              setEditingSnapshotDate(date);
-                              setIsEditingHoldings(true);
-                            } else {
-                              // Transactions mode: open activities sheet for this date
-                              setSelectedActivityDate(date);
-                              setIsActivitySheetOpen(true);
-                            }
-                          }}
-                        />
-                        <IntervalSelector
-                          className="relative bottom-10 left-0 right-0 z-10"
-                          onIntervalSelect={handleIntervalSelect}
-                          isLoading={isValuationHistoryLoading}
-                          defaultValue={INITIAL_INTERVAL_CODE}
-                        />
+                  <div>
+                    <p className="text-muted-foreground text-xs">Available credit</p>
+                    {(() => {
+                      const avail = availableCredit(account.creditLimit, account.currentBalance);
+                      return avail !== undefined ? (
+                        <PrivacyAmount value={avail} currency={account.currency} />
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      );
+                    })()}
+                  </div>
+                </div>
+                {(() => {
+                  const pct = utilizationPercent(account.creditLimit, account.currentBalance);
+                  const tier = utilizationTier(pct);
+                  return pct !== undefined ? (
+                    <div>
+                      <p className="text-muted-foreground text-xs">Utilization {pct}%</p>
+                      <Progress
+                        value={pct}
+                        className={
+                          tier === "destructive"
+                            ? "[&>div]:bg-destructive"
+                            : tier === "warning"
+                              ? "[&>div]:bg-warning"
+                              : "[&>div]:bg-success"
+                        }
+                        aria-label="Credit utilization"
+                        aria-valuenow={pct}
+                      />
+                    </div>
+                  ) : null;
+                })()}
+                <div className="flex items-center justify-between">
+                  {account.creditLimit !== undefined && (
+                    <p className="text-muted-foreground text-xs">
+                      Limit{" "}
+                      <PrivacyAmount value={account.creditLimit} currency={account.currency} />
+                    </p>
+                  )}
+                  <Button onClick={() => setBalanceModalOpen(true)}>Update balance</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Statement snapshot */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Statement snapshot</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {account.statementBalance || account.minimumPayment || account.statementDueDate ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Statement balance</p>
+                        {account.statementBalance !== undefined ? (
+                          <PrivacyAmount
+                            value={account.statementBalance}
+                            currency={account.currency}
+                          />
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Minimum payment</p>
+                        {account.minimumPayment !== undefined ? (
+                          <PrivacyAmount
+                            value={account.minimumPayment}
+                            currency={account.currency}
+                          />
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </div>
                     </div>
+                    {account.statementDueDate && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Due date</p>
+                        <p>{new Date(account.statementDueDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No statement recorded yet.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Rewards */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Rewards</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {account.rewardPointsBalance !== undefined ||
+                account.cashbackBalance !== undefined ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Points balance</p>
+                      <p>
+                        {account.rewardPointsBalance !== undefined
+                          ? `${account.rewardPointsBalance.toLocaleString()} pts`
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Cashback balance</p>
+                      {account.cashbackBalance !== undefined ? (
+                        <PrivacyAmount
+                          value={account.cashbackBalance}
+                          currency={account.currency}
+                        />
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No rewards balance tracked.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-              <div className="flex flex-col space-y-4">
-                <AccountMetrics
-                  valuation={currentValuation}
-                  performance={accountPerformance}
-                  className="grow"
-                  isLoading={isLoading}
-                  isPerformanceLoading={isPerformanceHistoryLoading}
-                  performanceError={hasPerformanceError ? performanceErrorMessages[0] : undefined}
-                  hideBalanceEdit={isHoldingsMode}
-                  isHoldingsMode={isHoldingsMode}
-                />
-                <AccountContributionLimit accountId={id} />
+        {account && isLiabilityOrAsset && !isCreditCard && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Balance</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-muted-foreground text-xs">Current balance</p>
+                <PrivacyAmount value={account.currentBalance ?? 0} currency={account.currency} />
               </div>
-            </div>
-
-            <AccountHoldings accountId={id} onAddHoldings={() => setIsEditingHoldings(true)} />
-          </>
-        ) : (
-          <AccountHoldings
-            accountId={id}
-            showEmptyState={true}
-            onAddHoldings={() => setIsEditingHoldings(true)}
-          />
+              {account.balanceUpdatedAt && (
+                <p className="text-muted-foreground text-xs">
+                  Last updated: {new Date(account.balanceUpdatedAt).toLocaleDateString()}
+                </p>
+              )}
+              <Button onClick={() => setBalanceModalOpen(true)}>Update balance</Button>
+            </CardContent>
+          </Card>
         )}
       </PageContent>
 
@@ -700,6 +884,15 @@ const AccountPage = () => {
           setShowBulkHoldingsForm(false);
         }}
       />
+
+      {/* Update balance modal — shared by CC and bank/loan Balance card */}
+      {account && balanceModalOpen && (
+        <UpdateBalanceModal
+          account={account}
+          open={balanceModalOpen}
+          onClose={() => setBalanceModalOpen(false)}
+        />
+      )}
     </Page>
   );
 };

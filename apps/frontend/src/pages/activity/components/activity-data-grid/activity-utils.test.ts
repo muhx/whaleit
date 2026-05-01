@@ -17,7 +17,7 @@ const createMockAccount = (overrides: Partial<Account> = {}): Account => ({
   id: "account-1",
   name: "Test Account",
   accountType: "SECURITIES",
-  balance: 10000,
+  currentBalance: 10000,
   currency: "USD",
   isDefault: true,
   isActive: true,

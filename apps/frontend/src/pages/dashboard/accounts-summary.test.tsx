@@ -107,7 +107,7 @@ function createAccount(overrides: Partial<Account>): Account {
     name: overrides.name ?? "Account 1",
     accountType,
     group: overrides.group,
-    balance: overrides.balance ?? 0,
+    currentBalance: overrides.currentBalance,
     currency: overrides.currency ?? "USD",
     isDefault: overrides.isDefault ?? false,
     isActive: overrides.isActive ?? true,

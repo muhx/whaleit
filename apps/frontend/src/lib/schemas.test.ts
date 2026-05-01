@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { QuoteMode } from "./constants";
-import { importActivitySchema, importMappingSchema } from "./schemas";
+import { importActivitySchema, importMappingSchema, newAccountSchema } from "./schemas";
 
 describe("schemas", () => {
   describe("importMappingSchema", () => {
@@ -121,5 +121,64 @@ describe("schemas", () => {
         expect(result.data.quoteMode).toBeUndefined();
       }
     });
+  });
+});
+
+const baseBank = {
+  name: "Chase Checking",
+  accountType: "CHECKING" as const,
+  currency: "USD",
+  openingBalance: 0,
+};
+
+const baseCC = {
+  name: "Amex Gold",
+  accountType: "CREDIT_CARD" as const,
+  currency: "USD",
+  openingBalance: 0,
+  creditLimit: 5000,
+  statementCycleDay: 15,
+};
+
+describe("newAccountSchema", () => {
+  it("accepts a valid CHECKING account", () => {
+    expect(newAccountSchema.safeParse(baseBank).success).toBe(true);
+  });
+
+  it("accepts a valid CREDIT_CARD account", () => {
+    expect(newAccountSchema.safeParse(baseCC).success).toBe(true);
+  });
+
+  it("rejects CREDIT_CARD missing creditLimit", () => {
+    const { creditLimit: _, ...rest } = baseCC;
+    void _;
+    const result = newAccountSchema.safeParse(rest);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.includes("creditLimit"))).toBe(true);
+    }
+  });
+
+  it("rejects CREDIT_CARD with statementCycleDay = 32", () => {
+    const result = newAccountSchema.safeParse({ ...baseCC, statementCycleDay: 32 });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects CHECKING with creditLimit set", () => {
+    const result = newAccountSchema.safeParse({ ...baseBank, creditLimit: 1000 });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.includes("creditLimit"))).toBe(true);
+    }
+  });
+
+  it("rejects CHECKING missing openingBalance", () => {
+    const { openingBalance: _, ...rest } = baseBank;
+    void _;
+    const result = newAccountSchema.safeParse(rest);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.includes("openingBalance"))).toBe(true);
+    }
   });
 });

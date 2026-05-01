@@ -87,7 +87,7 @@ Thumbs.db
 .ralph-tui/
 .kiro/
 .conductor/
-db/
+/db/
 apps/db/
 apps/tauri/db/
 tasks

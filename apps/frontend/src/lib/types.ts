@@ -56,3 +56,4 @@ export * from "./types/net-worth";
 export * from "./types/fx";
 export * from "./types/common";
 export * from "./types/tag";
+export * from "./types/transaction";

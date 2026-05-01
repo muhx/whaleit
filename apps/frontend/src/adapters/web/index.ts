@@ -94,6 +94,30 @@ export {
 } from "../shared/activities";
 export { parseCsv } from "./activities";
 
+// Transaction Commands (Phase 4)
+export {
+  breakTransferPair,
+  createTransaction,
+  createTransfer,
+  deleteTransaction,
+  deleteTransactionTemplate,
+  detectTransactionDuplicates,
+  getAccountRecentTransactions,
+  getTransaction,
+  getTransactionTemplate,
+  importTransactionsCsv,
+  importTransactionsOfx,
+  listPayeeCategoryMemory,
+  listRunningBalance,
+  listTransactionTemplates,
+  lookupPayeeCategory,
+  previewTransactionImport,
+  saveTransactionTemplate,
+  searchTransactions,
+  updateTransaction,
+  updateTransferLeg,
+} from "../shared/transactions";
+
 // Goal Commands
 export {
   createGoal,

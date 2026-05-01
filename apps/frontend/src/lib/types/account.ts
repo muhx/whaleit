@@ -9,7 +9,7 @@ export interface Account {
   name: string;
   accountType: AccountType;
   group?: string; // Optional
-  balance: number;
+  currentBalance?: number; // Decimal serialized as JSON number (rust_decimal serde-float)
   currency: string;
   isDefault: boolean;
   isActive: boolean;
@@ -22,6 +22,17 @@ export interface Account {
   meta?: string; // Optional - additional metadata as JSON string
   provider?: string; // Optional - sync provider (e.g., 'SNAPTRADE', 'PLAID', 'MANUAL')
   providerAccountId?: string; // Optional - account ID in the provider's system
+  // Phase 3 additions (D-06, D-11, D-12, D-18):
+  institution?: string;
+  openingBalance?: number;
+  balanceUpdatedAt?: Date;
+  creditLimit?: number;
+  statementCycleDay?: number;
+  statementBalance?: number;
+  minimumPayment?: number;
+  statementDueDate?: string; // ISO date
+  rewardPointsBalance?: number;
+  cashbackBalance?: number;
 }
 
 export interface AccountSummaryView {

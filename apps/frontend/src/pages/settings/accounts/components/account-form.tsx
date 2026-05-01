@@ -9,10 +9,17 @@ import { Checkbox } from "@whaleit/ui/components/ui/checkbox";
 import { newAccountSchema } from "@/lib/schemas";
 import {
   CurrencyInput,
+  DatePickerInput,
+  MoneyInput,
   RadioGroup,
   RadioGroupItem,
   ResponsiveSelect,
   type ResponsiveSelectOption,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@whaleit/ui";
 import { Alert, AlertDescription } from "@whaleit/ui/components/ui/alert";
 import {
@@ -48,6 +55,10 @@ const accountTypes: ResponsiveSelectOption[] = [
   { label: "Securities", value: "SECURITIES" },
   { label: "Cash", value: "CASH" },
   { label: "Crypto", value: "CRYPTOCURRENCY" },
+  { label: "Checking", value: "CHECKING" },
+  { label: "Savings", value: "SAVINGS" },
+  { label: "Credit Card", value: "CREDIT_CARD" },
+  { label: "Loan", value: "LOAN" },
 ];
 
 // Input type (what the form receives)
@@ -63,9 +74,17 @@ interface AccountFormlProps {
 export function AccountForm({ defaultValues, onSuccess = () => undefined }: AccountFormlProps) {
   const { createAccountMutation, updateAccountMutation } = useAccountMutations({ onSuccess });
 
-  // Track initial tracking mode to detect changes
+  // Track initial tracking mode to detect changes.
+  // Non-investment account types (banking, credit, loan, cash) always use
+  // transactions — the tracking-mode picker is only meaningful for SECURITIES
+  // and CRYPTOCURRENCY where the user can opt for snapshot-style holdings.
+  const initialAccountType = defaultValues?.accountType;
+  const isInvestmentInitialType =
+    initialAccountType === "SECURITIES" || initialAccountType === "CRYPTOCURRENCY";
   const initialTrackingMode = defaultValues?.trackingMode;
-  const needsSetup = initialTrackingMode === "NOT_SET" || initialTrackingMode === undefined;
+  const needsSetup =
+    isInvestmentInitialType &&
+    (initialTrackingMode === "NOT_SET" || initialTrackingMode === undefined);
 
   // State for mode switch confirmation dialog
   const [showModeConfirmation, setShowModeConfirmation] = useState(false);
@@ -75,12 +94,30 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
     resolver: zodResolver(newAccountSchema),
     defaultValues: {
       ...defaultValues,
-      // Don't default to any mode if account needs setup (must come after spread)
-      trackingMode: needsSetup ? undefined : defaultValues?.trackingMode,
+      // Tracking mode rules (must come after spread):
+      // - Investment accounts that need setup → undefined (force user to pick).
+      // - Non-investment accounts with NOT_SET / undefined → TRANSACTIONS (only
+      //   meaningful mode for banking, credit, loan, cash).
+      // - Otherwise keep the existing value.
+      trackingMode: needsSetup
+        ? undefined
+        : !isInvestmentInitialType &&
+            (initialTrackingMode === "NOT_SET" || initialTrackingMode === undefined)
+          ? "TRANSACTIONS"
+          : defaultValues?.trackingMode,
     },
   });
 
   const currentTrackingMode = form.watch("trackingMode");
+  const selectedType = form.watch("accountType");
+  const isCreditCard = selectedType === "CREDIT_CARD";
+  const isInvestmentSelected = selectedType === "SECURITIES" || selectedType === "CRYPTOCURRENCY";
+  const requiresInstitution =
+    selectedType === "CHECKING" ||
+    selectedType === "SAVINGS" ||
+    selectedType === "CREDIT_CARD" ||
+    selectedType === "LOAN";
+  const requiresOpeningBalance = requiresInstitution; // same set per D-11
 
   // Perform the actual submit (after confirmation if needed)
   // Returns a promise when updating so it can be chained with other operations
@@ -104,20 +141,30 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
   );
 
   function onSubmit(data: AccountFormOutput) {
+    // Non-investment account types (banking, credit, loan, cash) always use
+    // transactions — sanitize before any branching so a stale HOLDINGS value
+    // left over from an earlier type selection cannot reach the backend.
+    const isInvestment = data.accountType === "SECURITIES" || data.accountType === "CRYPTOCURRENCY";
+    const sanitized: AccountFormOutput = isInvestment
+      ? data
+      : { ...data, trackingMode: "TRANSACTIONS" };
+
     // Check if this is an existing account (update) and mode is switching from HOLDINGS to TRANSACTIONS
-    const isExistingAccount = !!data.id;
+    const isExistingAccount = !!sanitized.id;
     const isSwitchingFromHoldingsToTransactions =
-      !needsSetup && initialTrackingMode === "HOLDINGS" && data.trackingMode === "TRANSACTIONS";
+      !needsSetup &&
+      initialTrackingMode === "HOLDINGS" &&
+      sanitized.trackingMode === "TRANSACTIONS";
 
     if (isExistingAccount && isSwitchingFromHoldingsToTransactions) {
       // Show confirmation dialog
-      setPendingFormData(data);
+      setPendingFormData(sanitized);
       setShowModeConfirmation(true);
       return;
     }
 
     // Otherwise, submit directly
-    doSubmit(data);
+    doSubmit(sanitized);
   }
 
   // Handle confirmation dialog actions
@@ -202,6 +249,203 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
               </FormItem>
             )}
           />
+
+          {requiresInstitution && (
+            <FormField
+              control={form.control}
+              name="institution"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Institution</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. Chase, HSBC, SoFi"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground text-xs">Type the bank or issuer name.</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {requiresOpeningBalance && (
+            <FormField
+              control={form.control}
+              name="openingBalance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Opening balance</FormLabel>
+                  <FormControl>
+                    <MoneyInput
+                      value={field.value}
+                      onValueChange={(v) => field.onChange(v ?? undefined)}
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground text-xs">
+                    Today's balance becomes your starting point. Phase-4 transactions will use this
+                    as the opening entry.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {isCreditCard && (
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-xs">
+                You can edit these anytime as each statement closes.
+              </p>
+              <FormField
+                control={form.control}
+                name="creditLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credit limit</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="statementCycleDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statement cycle day</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value !== undefined ? String(field.value) : ""}
+                        onValueChange={(v) =>
+                          field.onChange(v ? Number.parseInt(v, 10) : undefined)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select day" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                            <SelectItem key={d} value={String(d)}>
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <p className="text-muted-foreground text-xs">
+                      Day the statement closes each month.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="statementBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statement balance</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="minimumPayment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Minimum payment</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="statementDueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statement due date</FormLabel>
+                    <FormControl>
+                      <DatePickerInput
+                        value={field.value ? new Date(field.value) : undefined}
+                        onChange={(d) =>
+                          field.onChange(d ? d.toISOString().slice(0, 10) : undefined)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="rewardPointsBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reward points balance</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === "" ? undefined : Number.parseInt(e.target.value, 10),
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cashbackBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cashback balance</FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value}
+                        onValueChange={(v) => field.onChange(v ?? undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {selectedType === "LOAN" && (
+            <div className="border-border bg-muted/40 text-muted-foreground rounded-md border p-3 text-xs">
+              Loans in v1 track name, institution, currency, and balance only. Amortization and
+              interest tracking are coming later.
+            </div>
+          )}
+
           {!defaultValues?.id ? (
             <FormField
               control={form.control}
@@ -221,91 +465,95 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
             />
           ) : null}
 
-          <FormField
-            control={form.control}
-            name="trackingMode"
-            render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel>Tracking Mode</FormLabel>
-                {needsSetup && !currentTrackingMode && (
-                  <Alert
-                    variant="warning"
-                    className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
-                  >
-                    <Icons.AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Choose how to track this account. This affects what data you enter and what
-                      metrics are available.{" "}
-                      <a
-                        href="https://whaleit.app/docs/concepts/activity-types"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-foreground underline"
-                      >
-                        Learn more
-                      </a>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-                  >
-                    <label
-                      className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
-                        field.value === "TRANSACTIONS"
-                          ? "border-primary bg-primary/5"
-                          : "border-muted"
-                      }`}
+          {isInvestmentSelected && (
+            <FormField
+              control={form.control}
+              name="trackingMode"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Tracking Mode</FormLabel>
+                  {needsSetup && !currentTrackingMode && (
+                    <Alert
+                      variant="warning"
+                      className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
                     >
-                      <RadioGroupItem value="TRANSACTIONS" className="mt-0.5" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">Transactions</span>
-                        <span className="text-muted-foreground text-xs">
-                          Track every trade for performance analytics
-                        </span>
-                      </div>
-                    </label>
-                    <label
-                      className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
-                        field.value === "HOLDINGS" ? "border-primary bg-primary/5" : "border-muted"
-                      }`}
+                      <Icons.AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Choose how to track this account. This affects what data you enter and what
+                        metrics are available.{" "}
+                        <a
+                          href="https://whaleit.app/docs/concepts/activity-types"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-foreground underline"
+                        >
+                          Learn more
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                     >
-                      <RadioGroupItem value="HOLDINGS" className="mt-0.5" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">Holdings</span>
-                        <span className="text-muted-foreground text-xs">
-                          Add holdings directly as snapshots
-                        </span>
-                      </div>
-                    </label>
-                  </RadioGroup>
-                </FormControl>
-                {field.value === "HOLDINGS" && (
-                  <Alert
-                    variant="warning"
-                    className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
-                  >
-                    <Icons.AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Performance metrics will be limited without transaction history.{" "}
-                      <a
-                        href="https://whaleit.app/docs/concepts/activity-types"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-foreground underline"
+                      <label
+                        className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
+                          field.value === "TRANSACTIONS"
+                            ? "border-primary bg-primary/5"
+                            : "border-muted"
+                        }`}
                       >
-                        Learn more
-                      </a>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                        <RadioGroupItem value="TRANSACTIONS" className="mt-0.5" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Transactions</span>
+                          <span className="text-muted-foreground text-xs">
+                            Track every trade for performance analytics
+                          </span>
+                        </div>
+                      </label>
+                      <label
+                        className={`hover:bg-accent relative flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors ${
+                          field.value === "HOLDINGS"
+                            ? "border-primary bg-primary/5"
+                            : "border-muted"
+                        }`}
+                      >
+                        <RadioGroupItem value="HOLDINGS" className="mt-0.5" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Holdings</span>
+                          <span className="text-muted-foreground text-xs">
+                            Add holdings directly as snapshots
+                          </span>
+                        </div>
+                      </label>
+                    </RadioGroup>
+                  </FormControl>
+                  {field.value === "HOLDINGS" && (
+                    <Alert
+                      variant="warning"
+                      className="px-3 py-2.5 [&>svg]:left-3 [&>svg]:top-2.5 [&>svg~*]:pl-6"
+                    >
+                      <Icons.AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Performance metrics will be limited without transaction history.{" "}
+                        <a
+                          href="https://whaleit.app/docs/concepts/activity-types"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-foreground underline"
+                        >
+                          Learn more
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
@@ -354,7 +602,12 @@ export function AccountForm({ defaultValues, onSuccess = () => undefined }: Acco
           <DialogTrigger asChild>
             <Button variant="outline">Cancel</Button>
           </DialogTrigger>
-          <Button type="submit" disabled={needsSetup && !currentTrackingMode}>
+          <Button
+            type="submit"
+            disabled={
+              isInvestmentSelected && (!currentTrackingMode || currentTrackingMode === "NOT_SET")
+            }
+          >
             {defaultValues?.id ? (
               <Icons.Save className="h-4 w-4" />
             ) : (

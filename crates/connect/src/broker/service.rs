@@ -238,6 +238,17 @@ impl BrokerSyncServiceTrait for BrokerSyncService {
                 provider_account_id: Some(provider_account_id.clone()),
                 is_archived: false,
                 tracking_mode: TrackingMode::Holdings,
+                institution: None,
+                opening_balance: None,
+                current_balance: None,
+                balance_updated_at: None,
+                credit_limit: None,
+                statement_cycle_day: None,
+                statement_balance: None,
+                minimum_payment: None,
+                statement_due_date: None,
+                reward_points_balance: None,
+                cashback_balance: None,
             };
 
             // Create the account via AccountService (handles FX rate registration)

@@ -6,7 +6,7 @@ mod activities_model;
 mod activities_service;
 mod activities_traits;
 mod compiler;
-mod csv_parser;
+pub(crate) mod csv_parser;
 mod idempotency;
 mod import_run_model;
 

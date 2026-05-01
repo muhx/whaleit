@@ -48,6 +48,8 @@ scraper = "0.22"
 sha2 = "0.10"
 hex = "0.4"
 chrono-tz = "0.10"
+sgmlish = "0.2"
+strsim = "0.11"
 url = "2"
 
 [dev-dependencies]

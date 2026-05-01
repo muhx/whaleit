@@ -13,3 +13,6 @@ pub use accounts_traits::{AccountRepositoryTrait, AccountServiceTrait};
 
 #[cfg(test)]
 mod accounts_model_tests;
+
+#[cfg(test)]
+mod accounts_service_tests;
