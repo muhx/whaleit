@@ -41,18 +41,22 @@ pub struct NewTransferLeg {
 }
 
 /// Filter criteria for transaction search (TXN-03).
+///
+/// Empty `Vec` = no filter on that dimension; `Option::None` for scalars
+/// = no filter. `show_transfers = false` hides BOTH legs of paired transfers
+/// per D-03 toggle semantics.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionFilters {
-    pub account_ids: Option<Vec<String>>,
-    pub direction: Option<String>,
+    pub account_ids: Vec<String>,
+    pub category_ids: Vec<String>,
+    pub directions: Vec<String>,
+    pub amount_min: Option<Decimal>,
+    pub amount_max: Option<Decimal>,
     pub date_from: Option<NaiveDate>,
     pub date_to: Option<NaiveDate>,
-    pub payee_contains: Option<String>,
-    pub category_ids: Option<Vec<String>>,
-    pub show_transfers: Option<bool>,
-    pub source: Option<String>,
-    pub import_run_id: Option<String>,
+    pub show_transfers: bool,
+    pub search_keyword: Option<String>,
 }
 
 /// Paginated transaction search result.

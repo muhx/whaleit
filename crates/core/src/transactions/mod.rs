@@ -26,9 +26,17 @@ mod reconciliation_tests;
 #[cfg(test)]
 mod transactions_service_tests;
 
+pub use templates_model::{NewTransactionTemplate, TransactionTemplate, TransactionTemplateUpdate};
+pub use templates_traits::{TransactionTemplateRepositoryTrait, TransactionTemplateServiceTrait};
 pub use transactions_constants::*;
 pub use transactions_errors::TransactionError;
 pub use transactions_model::{
     NewSplit, NewTransaction, PayeeCategoryMemory, SplitUpdate, Transaction, TransactionSplit,
     TransactionUpdate,
+};
+pub use transactions_traits::{
+    CsvImportRequest, ImportResult, NewTransferLeg, OfxImportRequest,
+    PayeeCategoryMemoryRepositoryTrait, TransactionFilters, TransactionRepositoryTrait,
+    TransactionSearchResult, TransactionServiceTrait, TransactionWithRunningBalance,
+    TransferEditMode,
 };

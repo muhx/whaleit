@@ -34,7 +34,10 @@ impl From<NewTransactionTemplate> for TransactionTemplateDB {
         Self {
             id: Uuid::now_v7().to_string(),
             name: domain.name,
-            mapping: domain.mapping,
+            // CsvFieldMapping is a derive(Serialize) struct of String/Option<String>
+            // fields — serialization is infallible in practice.
+            mapping: serde_json::to_value(&domain.mapping)
+                .expect("CsvFieldMapping serialization is infallible"),
             header_signature: domain.header_signature.into_iter().map(Some).collect(),
             created_at: now,
             updated_at: now,
@@ -49,7 +52,11 @@ impl From<TransactionTemplateDB> for TransactionTemplate {
         Self {
             id: db.id,
             name: db.name,
-            mapping: db.mapping,
+            // The JSONB value is schema-controlled — only ever written by the
+            // From<NewTransactionTemplate> path above. Deserialization failure
+            // here means the JSONB was hand-edited or schema drifted.
+            mapping: serde_json::from_value(db.mapping)
+                .expect("transaction_csv_templates.mapping must round-trip CsvFieldMapping"),
             header_signature: db.header_signature.into_iter().flatten().collect(),
             created_at: db.created_at,
             updated_at: db.updated_at,
@@ -74,7 +81,9 @@ impl From<&TransactionTemplateUpdate> for TransactionTemplateChangesetDB {
     fn from(upd: &TransactionTemplateUpdate) -> Self {
         Self {
             name: upd.name.clone(),
-            mapping: upd.mapping.clone(),
+            mapping: upd.mapping.as_ref().map(|m| {
+                serde_json::to_value(m).expect("CsvFieldMapping serialization is infallible")
+            }),
             header_signature: upd
                 .header_signature
                 .as_ref()

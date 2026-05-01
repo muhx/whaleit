@@ -175,7 +175,10 @@ pub struct TransactionUpdate {
     pub is_system_generated: Option<bool>,
     pub is_user_modified: Option<bool>,
     pub category_source: Option<String>,
-    pub splits: Option<Vec<SplitUpdate>>,
+    /// Replacement semantics: when `Some`, ALL existing splits are deleted
+    /// and the supplied set is inserted (no per-split partial updates).
+    /// When `None`, existing splits are left untouched.
+    pub splits: Option<Vec<NewSplit>>,
 }
 
 impl TransactionUpdate {
@@ -222,7 +225,8 @@ impl TransactionUpdate {
 pub struct TransactionSplit {
     pub id: String,
     pub transaction_id: String,
-    pub category_id: Option<String>,
+    /// Splits MUST have a category (TXN-08) — DB column is NOT NULL.
+    pub category_id: String,
     pub amount: Decimal,
     pub notes: Option<String>,
     pub sort_order: i32,
@@ -234,7 +238,7 @@ pub struct TransactionSplit {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewSplit {
-    pub category_id: Option<String>,
+    pub category_id: String,
     pub amount: Decimal,
     pub notes: Option<String>,
     pub sort_order: i32,
