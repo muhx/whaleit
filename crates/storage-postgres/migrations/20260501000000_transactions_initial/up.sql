@@ -18,7 +18,11 @@ CREATE TABLE transactions (
     transaction_date        DATE NOT NULL,
     payee                   TEXT,
     notes                   TEXT,
-    category_id             TEXT REFERENCES taxonomy_categories(id) ON DELETE SET NULL,
+    -- category_id has no DB-level FK: taxonomy_categories has composite PK
+    -- (id, taxonomy_id), and the existing convention (asset_taxonomy_assignments)
+    -- enforces integrity at the service layer (TaxonomyService::delete_category
+    -- checks get_category_assignments before deletion).
+    category_id             TEXT,
     has_splits              BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- Multi-currency (TXN-07, D-02)
@@ -81,7 +85,7 @@ CREATE INDEX idx_tx_has_splits          ON transactions (account_id, transaction
 CREATE TABLE transaction_splits (
     id             TEXT PRIMARY KEY,
     transaction_id TEXT NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-    category_id    TEXT NOT NULL REFERENCES taxonomy_categories(id) ON DELETE RESTRICT,
+    category_id    TEXT NOT NULL,  -- FK omitted, see note in transactions table
     amount         NUMERIC(20,8) NOT NULL CHECK (amount > 0),
     notes          TEXT,
     sort_order     INTEGER NOT NULL DEFAULT 0,
@@ -98,7 +102,7 @@ CREATE INDEX idx_tx_splits_category ON transaction_splits (category_id);
 CREATE TABLE payee_category_memory (
     account_id          TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
     normalized_merchant TEXT NOT NULL,
-    category_id         TEXT NOT NULL REFERENCES taxonomy_categories(id) ON DELETE CASCADE,
+    category_id         TEXT NOT NULL,  -- FK omitted, see note in transactions table
     last_seen_at        TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
     seen_count          INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (account_id, normalized_merchant)
@@ -156,4 +160,4 @@ VALUES
     ('cat_transport',     'sys_taxonomy_transaction_categories', NULL, 'Transport',     'transport',     '#f5c873', NULL,  7, NOW() AT TIME ZONE 'utc', NOW() AT TIME ZONE 'utc'),
     ('cat_utilities',     'sys_taxonomy_transaction_categories', NULL, 'Utilities',     'utilities',     '#f5d770', NULL,  8, NOW() AT TIME ZONE 'utc', NOW() AT TIME ZONE 'utc'),
     ('cat_uncategorized', 'sys_taxonomy_transaction_categories', NULL, 'Uncategorized', 'uncategorized', '#b8b3a8', NULL, 99, NOW() AT TIME ZONE 'utc', NOW() AT TIME ZONE 'utc')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id, taxonomy_id) DO NOTHING;

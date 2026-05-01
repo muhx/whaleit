@@ -1,13 +1,4 @@
-// PostgreSQL schema definition for Whaleit.
-//
-// This schema mirrors the SQLite schema but uses native PostgreSQL types:
-// - boolean columns: Bool (native PG boolean, not Integer)
-// - timestamp columns: Timestamp (maps to NaiveDateTime in Rust models)
-// - text columns: Text (PG handles TEXT without length limits)
-//
-// IDs remain as Text to maintain compatibility with the existing UUID-as-string
-// pattern used by whaleit-core domain models. A future migration can convert
-// to native UUID columns.
+// @generated automatically by Diesel CLI.
 
 diesel::table! {
     accounts (id) {
@@ -32,11 +23,11 @@ diesel::table! {
         current_balance -> Nullable<Numeric>,
         balance_updated_at -> Nullable<Timestamp>,
         credit_limit -> Nullable<Numeric>,
-        statement_cycle_day -> Nullable<SmallInt>,
+        statement_cycle_day -> Nullable<Int2>,
         statement_balance -> Nullable<Numeric>,
         minimum_payment -> Nullable<Numeric>,
         statement_due_date -> Nullable<Date>,
-        reward_points_balance -> Nullable<Integer>,
+        reward_points_balance -> Nullable<Int4>,
         cashback_balance -> Nullable<Numeric>,
     }
 }
@@ -74,32 +65,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    import_account_templates (id) {
-        id -> Text,
-        account_id -> Text,
-        context_kind -> Text,
-        source_system -> Text,
-        template_id -> Text,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-    }
-}
-
-diesel::table! {
-    import_templates (id) {
-        id -> Text,
-        name -> Text,
-        scope -> Text,
-        kind -> Text,
-        source_system -> Text,
-        config_version -> Integer,
-        config -> Text,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-    }
-}
-
-diesel::table! {
     ai_messages (id) {
         id -> Text,
         thread_id -> Text,
@@ -130,6 +95,20 @@ diesel::table! {
 }
 
 diesel::table! {
+    api_keys (id) {
+        id -> Text,
+        user_id -> Text,
+        key_prefix -> Text,
+        key_hash -> Text,
+        name -> Text,
+        last_used_at -> Nullable<Timestamp>,
+        expires_at -> Nullable<Timestamp>,
+        is_active -> Bool,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     app_settings (setting_key) {
         setting_key -> Text,
         setting_value -> Text,
@@ -142,7 +121,7 @@ diesel::table! {
         asset_id -> Text,
         taxonomy_id -> Text,
         category_id -> Text,
-        weight -> Integer,
+        weight -> Int4,
         source -> Text,
         created_at -> Timestamp,
         updated_at -> Timestamp,
@@ -189,27 +168,13 @@ diesel::table! {
     contribution_limits (id) {
         id -> Text,
         group_name -> Text,
-        contribution_year -> Integer,
-        limit_amount -> Double,
+        contribution_year -> Int4,
+        limit_amount -> Float8,
         account_ids -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
         start_date -> Nullable<Text>,
         end_date -> Nullable<Text>,
-    }
-}
-
-diesel::table! {
-    market_data_custom_providers (id) {
-        id -> Text,
-        code -> Text,
-        name -> Text,
-        description -> Text,
-        enabled -> Bool,
-        priority -> Integer,
-        config -> Nullable<Text>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
     }
 }
 
@@ -235,7 +200,7 @@ diesel::table! {
         id -> Text,
         title -> Text,
         description -> Nullable<Text>,
-        target_amount -> Double,
+        target_amount -> Float8,
         is_achieved -> Bool,
     }
 }
@@ -243,7 +208,7 @@ diesel::table! {
 diesel::table! {
     goals_allocation (id) {
         id -> Text,
-        percent_allocation -> Integer,
+        percent_allocation -> Int4,
         goal_id -> Text,
         account_id -> Text,
     }
@@ -276,6 +241,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    import_account_templates (id) {
+        id -> Text,
+        account_id -> Text,
+        context_kind -> Text,
+        source_system -> Text,
+        template_id -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     import_runs (id) {
         id -> Text,
         account_id -> Text,
@@ -298,12 +275,40 @@ diesel::table! {
 }
 
 diesel::table! {
+    import_templates (id) {
+        id -> Text,
+        name -> Text,
+        scope -> Text,
+        kind -> Text,
+        source_system -> Text,
+        config_version -> Int4,
+        config -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    market_data_custom_providers (id) {
+        id -> Text,
+        code -> Text,
+        name -> Text,
+        description -> Text,
+        enabled -> Bool,
+        priority -> Int4,
+        config -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     market_data_providers (id) {
         id -> Text,
         name -> Text,
         description -> Text,
         url -> Nullable<Text>,
-        priority -> Integer,
+        priority -> Int4,
         enabled -> Bool,
         logo_filename -> Nullable<Text>,
         last_synced_at -> Nullable<Timestamp>,
@@ -311,6 +316,16 @@ diesel::table! {
         last_sync_error -> Nullable<Text>,
         provider_type -> Text,
         config -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    payee_category_memory (account_id, normalized_merchant) {
+        account_id -> Text,
+        normalized_merchant -> Text,
+        category_id -> Text,
+        last_seen_at -> Timestamp,
+        seen_count -> Int4,
     }
 }
 
@@ -332,8 +347,8 @@ diesel::table! {
         position_closed_date -> Nullable<Text>,
         last_synced_at -> Nullable<Timestamp>,
         data_source -> Text,
-        sync_priority -> Integer,
-        error_count -> Integer,
+        sync_priority -> Int4,
+        error_count -> Int4,
         last_error -> Nullable<Text>,
         profile_enriched_at -> Nullable<Timestamp>,
         created_at -> Timestamp,
@@ -363,7 +378,7 @@ diesel::table! {
 diesel::table! {
     sync_applied_events (event_id) {
         event_id -> Text,
-        seq -> BigInt,
+        seq -> Int8,
         entity -> Text,
         entity_id -> Text,
         applied_at -> Timestamp,
@@ -372,8 +387,8 @@ diesel::table! {
 
 diesel::table! {
     sync_cursor (id) {
-        id -> Integer,
-        cursor -> BigInt,
+        id -> Int4,
+        cursor -> Int8,
         updated_at -> Timestamp,
     }
 }
@@ -381,7 +396,7 @@ diesel::table! {
 diesel::table! {
     sync_device_config (device_id) {
         device_id -> Text,
-        key_version -> Nullable<Integer>,
+        key_version -> Nullable<Int4>,
         trust_state -> Text,
         last_bootstrap_at -> Nullable<Timestamp>,
         min_snapshot_created_at -> Nullable<Timestamp>,
@@ -390,15 +405,15 @@ diesel::table! {
 
 diesel::table! {
     sync_engine_state (id) {
-        id -> Integer,
-        lock_version -> BigInt,
+        id -> Int4,
+        lock_version -> Int8,
         last_push_at -> Nullable<Timestamp>,
         last_pull_at -> Nullable<Timestamp>,
         last_error -> Nullable<Text>,
-        consecutive_failures -> Integer,
+        consecutive_failures -> Int4,
         next_retry_at -> Nullable<Timestamp>,
         last_cycle_status -> Nullable<Text>,
-        last_cycle_duration_ms -> Nullable<BigInt>,
+        last_cycle_duration_ms -> Nullable<Int8>,
     }
 }
 
@@ -408,7 +423,7 @@ diesel::table! {
         entity_id -> Text,
         last_event_id -> Text,
         last_client_timestamp -> Timestamp,
-        last_seq -> BigInt,
+        last_seq -> Int8,
     }
 }
 
@@ -420,10 +435,10 @@ diesel::table! {
         op -> Text,
         client_timestamp -> Timestamp,
         payload -> Text,
-        payload_key_version -> Integer,
+        payload_key_version -> Int4,
         sent -> Bool,
         status -> Text,
-        retry_count -> Integer,
+        retry_count -> Int4,
         next_retry_at -> Nullable<Timestamp>,
         last_error -> Nullable<Text>,
         last_error_code -> Nullable<Text>,
@@ -449,7 +464,7 @@ diesel::table! {
         description -> Nullable<Text>,
         is_system -> Bool,
         is_single_select -> Bool,
-        sort_order -> Integer,
+        sort_order -> Int4,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
@@ -464,7 +479,60 @@ diesel::table! {
         key -> Text,
         color -> Text,
         description -> Nullable<Text>,
-        sort_order -> Integer,
+        sort_order -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    transaction_csv_templates (id) {
+        id -> Text,
+        name -> Text,
+        mapping -> Jsonb,
+        header_signature -> Array<Nullable<Text>>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    transaction_splits (id) {
+        id -> Text,
+        transaction_id -> Text,
+        category_id -> Text,
+        amount -> Numeric,
+        notes -> Nullable<Text>,
+        sort_order -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    transactions (id) {
+        id -> Text,
+        account_id -> Text,
+        direction -> Text,
+        amount -> Numeric,
+        currency -> Text,
+        transaction_date -> Date,
+        payee -> Nullable<Text>,
+        notes -> Nullable<Text>,
+        category_id -> Nullable<Text>,
+        has_splits -> Bool,
+        fx_rate -> Nullable<Numeric>,
+        fx_rate_source -> Nullable<Text>,
+        transfer_group_id -> Nullable<Text>,
+        counterparty_account_id -> Nullable<Text>,
+        transfer_leg_role -> Nullable<Text>,
+        idempotency_key -> Nullable<Text>,
+        import_run_id -> Nullable<Text>,
+        source -> Text,
+        external_ref -> Nullable<Text>,
+        is_system_generated -> Bool,
+        is_user_modified -> Bool,
+        category_source -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
@@ -495,60 +563,52 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    api_keys (id) {
-        id -> Text,
-        user_id -> Text,
-        key_prefix -> Text,
-        key_hash -> Text,
-        name -> Text,
-        last_used_at -> Nullable<Timestamp>,
-        expires_at -> Nullable<Timestamp>,
-        is_active -> Bool,
-        created_at -> Timestamp,
-    }
-}
-
 diesel::joinable!(accounts -> platforms (platform_id));
 diesel::joinable!(activities -> accounts (account_id));
 diesel::joinable!(activities -> assets (asset_id));
 diesel::joinable!(activities -> import_runs (import_run_id));
 diesel::joinable!(ai_messages -> ai_threads (thread_id));
 diesel::joinable!(ai_thread_tags -> ai_threads (thread_id));
+diesel::joinable!(api_keys -> users (user_id));
 diesel::joinable!(asset_taxonomy_assignments -> assets (asset_id));
+diesel::joinable!(asset_taxonomy_assignments -> taxonomies (taxonomy_id));
 diesel::joinable!(brokers_sync_state -> accounts (account_id));
 diesel::joinable!(brokers_sync_state -> import_runs (last_run_id));
 diesel::joinable!(goals_allocation -> accounts (account_id));
 diesel::joinable!(goals_allocation -> goals (goal_id));
+diesel::joinable!(import_account_templates -> accounts (account_id));
+diesel::joinable!(import_account_templates -> import_templates (template_id));
 diesel::joinable!(import_runs -> accounts (account_id));
+diesel::joinable!(payee_category_memory -> accounts (account_id));
+diesel::joinable!(quote_sync_state -> assets (asset_id));
 diesel::joinable!(quotes -> assets (asset_id));
 diesel::joinable!(taxonomy_categories -> taxonomies (taxonomy_id));
-diesel::joinable!(import_account_templates -> import_templates (template_id));
+diesel::joinable!(transaction_splits -> transactions (transaction_id));
 diesel::joinable!(verification_tokens -> users (user_id));
-diesel::joinable!(api_keys -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    api_keys,
-    import_account_templates,
     accounts,
     activities,
     ai_messages,
     ai_thread_tags,
     ai_threads,
+    api_keys,
     app_settings,
     asset_taxonomy_assignments,
     assets,
     brokers_sync_state,
     contribution_limits,
-    market_data_custom_providers,
     daily_account_valuation,
     goals,
     goals_allocation,
     health_issue_dismissals,
     holdings_snapshots,
-    import_templates,
+    import_account_templates,
     import_runs,
+    import_templates,
+    market_data_custom_providers,
     market_data_providers,
+    payee_category_memory,
     platforms,
     quote_sync_state,
     quotes,
@@ -561,6 +621,9 @@ diesel::allow_tables_to_appear_in_same_query!(
     sync_table_state,
     taxonomies,
     taxonomy_categories,
+    transaction_csv_templates,
+    transaction_splits,
+    transactions,
     users,
     verification_tokens,
 );
