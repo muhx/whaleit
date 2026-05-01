@@ -13,7 +13,7 @@ import {
   searchTransactions,
   updateTransaction,
   updateTransferLeg,
-} from "@/adapters/shared/transactions";
+} from "@/adapters";
 import { QueryKeys } from "@/lib/query-keys";
 import type {
   DuplicateCandidate,

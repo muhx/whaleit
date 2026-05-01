@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { listPayeeCategoryMemory, lookupPayeeCategory } from "@/adapters/shared/transactions";
+import { listPayeeCategoryMemory, lookupPayeeCategory } from "@/adapters";
 import { QueryKeys } from "@/lib/query-keys";
 import type { PayeeCategoryMemory } from "@/lib/types/transaction";
 

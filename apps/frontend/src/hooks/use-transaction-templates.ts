@@ -4,7 +4,7 @@ import {
   getTransactionTemplate,
   listTransactionTemplates,
   saveTransactionTemplate,
-} from "@/adapters/shared/transactions";
+} from "@/adapters";
 import { QueryKeys } from "@/lib/query-keys";
 import type { SaveTransactionTemplateRequest, TransactionTemplate } from "@/lib/types/transaction";
 
