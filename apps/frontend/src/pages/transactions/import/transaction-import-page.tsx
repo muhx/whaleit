@@ -45,7 +45,7 @@ const STEP_COMPONENTS = {
 // Wizard content (reads context — must be inside provider)
 // ----------------------------------------------------------------------------
 
-function WizardContent() {
+export function WizardContent() {
   const { state } = useTransactionImport();
   const steps = state.format === "OFX" ? OFX_STEPS : CSV_STEPS;
   const currentStepIndex = steps.findIndex((s) => s.id === state.currentStep);
