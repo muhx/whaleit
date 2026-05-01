@@ -88,6 +88,8 @@ export {
   getAccountRecentTransactions,
   getTransaction,
   getTransactionTemplate,
+  importTransactionsCsv,
+  importTransactionsOfx,
   listPayeeCategoryMemory,
   listRunningBalance,
   listTransactionTemplates,

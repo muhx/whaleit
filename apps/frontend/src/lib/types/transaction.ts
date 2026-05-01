@@ -1,144 +1,102 @@
-// Transaction-related type stubs (Phase 4, plan 04-04).
+// Transaction-domain TypeScript interfaces (Phase 4, plan 04-05).
 //
-// Plan 04-05 will expand these with proper hooks/zod schemas. This stub
-// exists so the adapter layer in plan 04-04 type-checks. The shapes mirror
-// the Rust core types in `crates/core/src/transactions/transactions_model.rs`
-// and `transactions_traits.rs`.
-//
-// Money fields are JSON numbers (rust_decimal `serde-float`).
-// Dates from the wire arrive as strings; hooks in 04-05 may normalize to Date.
+// Money fields are JSON numbers (rust_decimal `serde-float` — Phase 3 fix 7e9eb697).
+// Dates arrive as strings (ISO format); hooks normalize if needed.
 
-export interface CsvFieldMapping {
-  dateColumn: string;
-  amountColumn?: string;
-  debitColumn?: string;
-  creditColumn?: string;
-  payeeColumn: string;
-  categoryColumn?: string;
-  notesColumn?: string;
-  currencyColumn?: string;
-  externalIdColumn?: string;
-  dateFormat: string;
-  decimalSeparator: string;
-  thousandsSeparator?: string;
-}
+// ---------------------------------------------------------------------------
+// Enum-like string unions
+// ---------------------------------------------------------------------------
 
-export interface NewSplit {
-  categoryId: string;
-  amount: number;
-  notes?: string;
-  sortOrder: number;
-}
+export type TransactionDirection = "INCOME" | "EXPENSE" | "TRANSFER";
+export type TransactionSource = "MANUAL" | "CSV" | "OFX" | "SYSTEM";
+export type FxRateSource = "SYSTEM" | "MANUAL_OVERRIDE";
+export type TransferLegRole = "SOURCE" | "DESTINATION";
+export type CategorySource = "USER" | "MEMORY" | "IMPORT";
+export type TransferEditMode = "APPLY_BOTH" | "THIS_LEG_ONLY";
+export type DuplicateBucket = "ALMOST_CERTAIN" | "LIKELY" | "POSSIBLE";
+
+// ---------------------------------------------------------------------------
+// Core transaction types
+// ---------------------------------------------------------------------------
 
 export interface TransactionSplit {
   id: string;
   transactionId: string;
   categoryId: string;
   amount: number;
-  notes?: string;
+  notes: string | null;
   sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface NewSplit {
+  categoryId: string;
+  amount: number;
+  notes?: string | null;
+  sortOrder: number;
 }
 
 export interface Transaction {
   id: string;
   accountId: string;
-  direction: string;
+  direction: TransactionDirection;
   amount: number;
   currency: string;
-  transactionDate: string;
-  payee?: string;
-  notes?: string;
-  categoryId?: string;
+  transactionDate: string; // YYYY-MM-DD
+  payee: string | null;
+  notes: string | null;
+  categoryId: string | null;
   hasSplits: boolean;
-  fxRate?: number;
-  fxRateSource?: string;
-  transferGroupId?: string;
-  counterpartyAccountId?: string;
-  transferLegRole?: string;
-  idempotencyKey?: string;
-  importRunId?: string;
-  source: string;
-  externalRef?: string;
+  fxRate: number | null;
+  fxRateSource: FxRateSource | null;
+  transferGroupId: string | null;
+  counterpartyAccountId: string | null;
+  transferLegRole: TransferLegRole | null;
+  idempotencyKey: string | null;
+  importRunId: string | null;
+  source: TransactionSource;
+  externalRef: string | null;
   isSystemGenerated: boolean;
   isUserModified: boolean;
-  categorySource?: string;
+  categorySource: CategorySource | null;
   createdAt: string;
   updatedAt: string;
   splits: TransactionSplit[];
+  isFxStale?: boolean;
 }
 
 export interface NewTransaction {
   accountId: string;
-  direction: string;
+  direction: TransactionDirection;
   amount: number;
   currency: string;
   transactionDate: string;
-  payee?: string;
-  notes?: string;
-  categoryId?: string;
-  hasSplits: boolean;
-  fxRate?: number;
-  fxRateSource?: string;
-  transferGroupId?: string;
-  counterpartyAccountId?: string;
-  transferLegRole?: string;
-  idempotencyKey?: string;
-  importRunId?: string;
-  source: string;
-  externalRef?: string;
-  isSystemGenerated: boolean;
-  isUserModified: boolean;
-  categorySource?: string;
-  splits: NewSplit[];
+  payee?: string | null;
+  notes?: string | null;
+  categoryId?: string | null;
+  hasSplits?: boolean;
+  fxRate?: number | null;
+  fxRateSource?: FxRateSource | null;
+  transferGroupId?: string | null;
+  counterpartyAccountId?: string | null;
+  transferLegRole?: TransferLegRole | null;
+  source: TransactionSource;
+  externalRef?: string | null;
+  splits?: NewSplit[];
 }
 
 export interface TransactionUpdate {
   id: string;
-  direction?: string;
+  direction?: TransactionDirection;
   amount?: number;
   currency?: string;
   transactionDate?: string;
-  payee?: string;
-  notes?: string;
-  categoryId?: string;
+  payee?: string | null;
+  notes?: string | null;
+  categoryId?: string | null;
   hasSplits?: boolean;
-  fxRate?: number;
-  fxRateSource?: string;
-  transferGroupId?: string;
-  counterpartyAccountId?: string;
-  transferLegRole?: string;
-  idempotencyKey?: string;
-  importRunId?: string;
-  source?: string;
-  externalRef?: string;
-  isSystemGenerated?: boolean;
-  isUserModified?: boolean;
-  categorySource?: string;
+  fxRate?: number | null;
+  fxRateSource?: FxRateSource | null;
   splits?: NewSplit[];
-}
-
-export interface TransactionFilters {
-  accountIds: string[];
-  categoryIds: string[];
-  directions: string[];
-  amountMin?: number;
-  amountMax?: number;
-  dateFrom?: string;
-  dateTo?: string;
-  showTransfers: boolean;
-  searchKeyword?: string;
-}
-
-export interface TransactionSearchResult {
-  items: Transaction[];
-  total: number;
-}
-
-export interface TransactionWithRunningBalance {
-  txn: Transaction;
-  runningBalance: number;
 }
 
 export interface NewTransferLeg {
@@ -146,13 +104,57 @@ export interface NewTransferLeg {
   amount: number;
   currency: string;
   transactionDate: string;
-  notes?: string;
-  categoryId?: string;
-  fxRate?: number;
-  fxRateSource?: string;
+  notes?: string | null;
+  categoryId?: string | null;
 }
 
-export type TransferEditMode = "APPLY_BOTH" | "THIS_LEG_ONLY";
+export interface TransactionWithRunningBalance extends Transaction {
+  runningBalance: number;
+}
+
+// ---------------------------------------------------------------------------
+// Duplicate detection
+// ---------------------------------------------------------------------------
+
+export interface DuplicateCandidate {
+  candidateRowIndex: number;
+  existingTransactionId: string;
+  confidence: number; // 0..100
+  bucket: DuplicateBucket;
+}
+
+// Backward-compat alias (04-04 adapter uses DuplicateMatch)
+export type DuplicateMatch = DuplicateCandidate;
+
+// ---------------------------------------------------------------------------
+// Filters, sorting, search
+// ---------------------------------------------------------------------------
+
+export interface TransactionFilters {
+  accountIds?: string[];
+  categoryIds?: string[];
+  directions?: TransactionDirection[];
+  amountMin?: number;
+  amountMax?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  showTransfers?: boolean;
+  source?: TransactionSource[];
+}
+
+export interface TransactionSort {
+  field: "transactionDate" | "amount" | "payee" | "createdAt";
+  direction: "asc" | "desc";
+}
+
+export interface TransactionSearchResult {
+  items: Transaction[];
+  total: number;
+}
+
+// ---------------------------------------------------------------------------
+// Payee category memory (D-12/15)
+// ---------------------------------------------------------------------------
 
 export interface PayeeCategoryMemory {
   accountId: string;
@@ -162,44 +164,61 @@ export interface PayeeCategoryMemory {
   seenCount: number;
 }
 
-export type DuplicateBucket = "ALMOST_CERTAIN" | "LIKELY" | "POSSIBLE";
+// ---------------------------------------------------------------------------
+// CSV import
+// ---------------------------------------------------------------------------
 
-export interface DuplicateMatch {
-  candidateRowIndex: number;
-  existingTransactionId: string;
-  confidence: number;
-  bucket: DuplicateBucket;
-}
-
-/**
- * Result of a CSV or OFX import operation.
- *
- * `insertedRowIds[i]` is the ID of the transaction inserted from input row i.
- * Empty string sentinel for rows skipped due to idempotency / duplicate.
- */
-export interface ImportResult {
-  importRunId: string;
-  inserted: number;
-  skippedDuplicates: number;
-  errors: string[];
-  insertedRowIds: string[];
-  duplicateMatches: DuplicateMatch[];
+export interface CsvFieldMapping {
+  dateColumn: string;
+  amountColumn?: string | null;
+  debitColumn?: string | null;
+  creditColumn?: string | null;
+  payeeColumn: string;
+  categoryColumn?: string | null;
+  notesColumn?: string | null;
+  currencyColumn?: string | null;
+  externalIdColumn?: string | null;
+  dateFormat: string;
+  decimalSeparator: string;
+  thousandsSeparator?: string | null;
 }
 
 export interface TransactionCsvImportRequest {
   accountId: string;
-  accountCurrency: string;
   file: File | Blob;
   mapping: CsvFieldMapping;
-  importRunId?: string;
+  templateName?: string;
 }
 
 export interface TransactionOfxImportRequest {
   accountId: string;
-  accountCurrency: string;
   file: File | Blob;
-  importRunId?: string;
 }
+
+export interface TransactionImportResult {
+  importRunId: string;
+  inserted: number;
+  skippedDuplicates: number;
+  errors: string[];
+  pendingDuplicateCount: number;
+  /** Order-preserving: insertedRowIds[i] is the inserted txn id for input row i;
+   *  empty string sentinel for rows skipped due to idempotency/duplicate.
+   *  Required by plan 04-09 to wire pending duplicate pairs. */
+  insertedRowIds: string[];
+}
+
+// Backward-compat alias (04-04 had ImportResult without pendingDuplicateCount)
+export type ImportResult = TransactionImportResult;
+
+export interface TransactionImportPreview {
+  rows: NewTransaction[];
+  duplicates: DuplicateCandidate[];
+  compileErrors: { rowIndex: number; message: string }[];
+}
+
+// ---------------------------------------------------------------------------
+// Import templates (D-16/17/18)
+// ---------------------------------------------------------------------------
 
 export interface TransactionTemplate {
   id: string;
@@ -210,8 +229,12 @@ export interface TransactionTemplate {
   updatedAt: string;
 }
 
-export interface NewTransactionTemplate {
+export interface SaveTransactionTemplateRequest {
+  id?: string;
   name: string;
   mapping: CsvFieldMapping;
   headerSignature: string[];
 }
+
+// Backward-compat alias (04-04 adapter uses NewTransactionTemplate)
+export type NewTransactionTemplate = SaveTransactionTemplateRequest;
