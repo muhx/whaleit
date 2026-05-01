@@ -303,18 +303,125 @@ impl TransactionServiceTrait for TransactionService {
     }
 
     async fn import_ofx(&self, req: OfxImportRequest) -> Result<ImportResult> {
-        // OFX parser is a stub (plan 04-02 task 3 TODO). Return empty result.
-        // The timeout wrapper is applied at the Axum handler layer.
+        use super::ofx_parser::{direction_from_amount, parse_ofx};
+
         let import_run_id = req
             .import_run_id
             .unwrap_or_else(|| Uuid::new_v4().to_string());
 
+        // OFX is ASCII / UTF-8 in practice. UTF-8-lossy decoding tolerates the
+        // rare byte that doesn't decode, swapping it with U+FFFD instead of
+        // failing the whole file.
+        let text = String::from_utf8_lossy(&req.ofx_bytes).into_owned();
+        let parsed = parse_ofx(&text)?;
+
+        let mut new_transactions: Vec<NewTransaction> = Vec::with_capacity(parsed.len());
+        let mut errors: Vec<String> = Vec::new();
+
+        for (i, row) in parsed.into_iter().enumerate() {
+            // OFX TRNAMT sign is the direction signal; amount stored on the
+            // domain row is always positive (sign moves into `direction`).
+            let direction = direction_from_amount(row.amount).to_string();
+            let amount = row.amount.abs();
+
+            // Compose payee from NAME / PAYEE.NAME (preferred) plus MEMO when
+            // NAME is missing — banks vary on which tag carries the merchant.
+            let payee = row.name.clone().or_else(|| row.memo.clone());
+            let notes = match (row.name.as_ref(), row.memo.as_ref()) {
+                (Some(_), Some(memo)) => Some(memo.clone()),
+                _ => None,
+            };
+
+            let mut txn = NewTransaction {
+                account_id: req.account_id.clone(),
+                direction,
+                amount,
+                currency: req.account_currency.clone(),
+                transaction_date: row.date,
+                payee,
+                notes,
+                category_id: None,
+                has_splits: false,
+                fx_rate: None,
+                fx_rate_source: None,
+                transfer_group_id: None,
+                counterparty_account_id: None,
+                transfer_leg_role: None,
+                idempotency_key: None,
+                import_run_id: Some(import_run_id.clone()),
+                source: "OFX".to_string(),
+                // FITID is bank-stable per the OFX spec; preferred over a
+                // payload hash for de-duping re-imports.
+                external_ref: Some(row.fitid.clone()),
+                is_system_generated: false,
+                is_user_modified: false,
+                category_source: None,
+                splits: Vec::new(),
+            };
+            // Idempotency key uses FITID as the external_ref input — this lets
+            // get_by_idempotency_key short-circuit when a re-import sees a row
+            // it has already inserted, even if other fields drift.
+            let ikey = compute_transaction_idempotency_key(
+                &txn.account_id,
+                &txn.direction,
+                txn.transaction_date,
+                txn.amount,
+                &txn.currency,
+                txn.payee.as_deref(),
+                txn.external_ref.as_deref(),
+            );
+            txn.idempotency_key = Some(ikey);
+
+            if let Err(e) = txn.validate() {
+                errors.push(format!("Row {} (FITID {}): {}", i + 1, row.fitid, e));
+                continue;
+            }
+            new_transactions.push(txn);
+        }
+
+        let mut inserted_row_ids: Vec<String> = vec![String::new(); new_transactions.len()];
+        let mut inserted = 0usize;
+        let mut skipped_duplicates = 0usize;
+
+        for (idx, txn) in new_transactions.into_iter().enumerate() {
+            if let Some(ref key) = txn.idempotency_key {
+                if let Ok(Some(existing)) =
+                    self.repo.get_by_idempotency_key(&txn.account_id, key).await
+                {
+                    inserted_row_ids[idx] = existing.id.clone();
+                    skipped_duplicates += 1;
+                    continue;
+                }
+            }
+            match self.repo.create_with_splits(txn).await {
+                Ok(created) => {
+                    if let (Some(ref payee), Some(ref cat_id)) =
+                        (&created.payee, &created.category_id)
+                    {
+                        let mem = PayeeCategoryMemory {
+                            account_id: created.account_id.clone(),
+                            normalized_merchant: normalize_merchant(payee),
+                            category_id: cat_id.clone(),
+                            last_seen_at: created.created_at,
+                            seen_count: 1,
+                        };
+                        let _ = self.payee_memory.upsert(mem).await;
+                    }
+                    inserted_row_ids[idx] = created.id.clone();
+                    inserted += 1;
+                }
+                Err(e) => {
+                    errors.push(format!("Insert failed: {}", e));
+                }
+            }
+        }
+
         Ok(ImportResult {
             import_run_id,
-            inserted: 0,
-            skipped_duplicates: 0,
-            errors: vec!["OFX import not yet implemented (plan 04-02 task 3 TODO)".to_string()],
-            inserted_row_ids: Vec::new(),
+            inserted,
+            skipped_duplicates,
+            errors,
+            inserted_row_ids,
             duplicate_matches: Vec::new(),
         })
     }
